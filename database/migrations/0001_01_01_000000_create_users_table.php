@@ -20,7 +20,7 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->string('unique_id')->unique()->nullable();;
-
+            $table->boolean('is_profile_complete')->default(false);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
