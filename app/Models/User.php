@@ -10,6 +10,7 @@ use Silber\Bouncer\Database\HasRolesAndAbilities;
 use App\Models\Academician;
 use App\Models\Industry;
 use App\Models\Postgraduate;
+use App\Models\PostGrantForStudent;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -67,5 +68,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function postgraduate()
     {
         return $this->hasOne(Postgraduate::class, 'postgraduate_id', 'unique_id');
+    }
+
+    public function postGrants()
+    {
+        return $this->hasMany(PostGrantForStudent::class, 'academician_id', 'unique_id');
     }
 }
