@@ -14,7 +14,7 @@ const HeroSection = ({ auth }) => {
       <header className="w-full bg-white shadow-md">
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           {/* Logo */}
-          <div className="text-blue-600 text-lg font-bold">NexScholar</div>
+          <div className="text-blue-600 text-lg font-bold">Nexscholar</div>
 
           {/* Authentication Links */}
           <div className="flex items-center space-x-4">
