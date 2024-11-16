@@ -9,10 +9,14 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Dashboard', [// Pass user data to the frontend
-            'user' => Auth::user()->only('name', 'email'),// Pass user role to the frontend
-            'isAdmin' => Auth::user()->isA('admin'), // Pass admin role as boolean
-            'isAcademician' => Auth::user()->isA('academician'), // Pass academician role as boolean
+        $postGrants = Auth::user()->postGrants; // Retrieve post grants for the current user
+        dd($postGrants); // Debug to see if postGrants has data
+
+        return Inertia::render('Dashboard', [
+            'postGrants' => $postGrants,
+            'user' => Auth::user()->only('name', 'email'),
+            'isAdmin' => Auth::user()->isA('admin'),
+            'isAcademician' => Auth::user()->isA('academician'),
         ]);
 
     }
