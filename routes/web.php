@@ -1,14 +1,17 @@
 <?php
 
+use App\Http\Controllers\AcademicianController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\ProfileCompletionController;
+use App\Http\Controllers\PostgraduateController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PostGrantForStudentController;
+use Silber\Bouncer\BouncerFacade;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -38,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return Inertia::render('Dashboard', [
             'postGrants' => $postGrants,
+            'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
         ]);
 
     })->name('dashboard');
@@ -49,5 +53,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::resource('academicians', AcademicianController::class)
+->only(['index'])
+->middleware(['auth', 'verified']); 
+
+Route::resource('postgraduates', PostgraduateController::class)
+->only(['index'])
+->middleware(['auth', 'verified']); 
 
 require __DIR__.'/auth.php';

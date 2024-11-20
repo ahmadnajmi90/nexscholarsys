@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../Components/Sidebar';
 import { Head } from '@inertiajs/react';
 
-const MainLayout = ({ children, title }) => {
+const MainLayout = ({ children, title, isPostgraduate }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const toggleSidebar = () => {
@@ -12,7 +12,7 @@ const MainLayout = ({ children, title }) => {
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar Component with isOpen and toggleSidebar props */}
-            <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+            <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate} />
 
             {/* Main Content Area */}
             <div className={`flex-1 p-6 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>

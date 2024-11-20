@@ -1,92 +1,31 @@
 import React, { useState } from "react";
 
-// List of random names
-const randomNames = [
-  "Alice Johnson",
-  "Bob Smith",
-  "Charlie Brown",
-  "Diana Prince",
-  "Edward Norton",
-  "Fiona Gallagher",
-  "George Michael",
-  "Hannah Montana",
-  "Ian Curtis",
-  "Julia Roberts",
-  "Kevin Hart",
-  "Luna Lovegood",
-  "Mark Ruffalo",
-  "Nina Simone",
-  "Oscar Wilde",
-  "Penny Lane",
-  "Quentin Tarantino",
-  "Rachel Green",
-  "Steve Jobs",
-  "Taylor Swift",
-  "Uma Thurman",
-  "Victor Hugo",
-  "Will Smith",
-  "Xander Cage",
-  "Yara Shahidi",
-  "Zoe Saldana",
-  "Anna Kendrick",
-  "Brian May",
-  "Catherine Zeta-Jones",
-  "David Beckham",
-];
-
-// Mock data for universities in Malaysia
-const universities = [
-  "Universiti Malaya (UM)",
-  "Universiti Teknologi Malaysia (UTM)",
-  "Universiti Kebangsaan Malaysia (UKM)",
-  "Universiti Sains Malaysia (USM)",
-  "Universiti Putra Malaysia (UPM)",
-  "Universiti Teknologi MARA (UiTM)",
-  "Universiti Islam Antarabangsa Malaysia (UIAM)",
-  "Universiti Malaysia Sabah (UMS)",
-  "Universiti Malaysia Sarawak (UNIMAS)",
-  "Universiti Pendidikan Sultan Idris (UPSI)",
-];
-
-// Generate 30 sample profiles with random names and universities
-const profilesData = Array.from({ length: 30 }, (_, index) => ({
-  id: index + 1,
-  name: randomNames[index % randomNames.length], // Random names from the list
-  area: [
-    "Artificial Intelligence (Generative AI)",
-    "Quantum Computing",
-    "Clean Energy Technologies",
-    "Synthetic Biology",
-    "Climate Change Mitigation",
-    "Advanced Robotics",
-    "Natural Language Processing",
-    "Autonomous Vehicles",
-    "Space Exploration Technologies",
-    "Edge Computing",
-  ][index % 10], // Cycle through research areas
-  university: universities[index % universities.length], // Cycle through universities
-  followers: Math.floor(Math.random() * 100) + 1,
-  following: Math.floor(Math.random() * 50) + 1,
-}));
-
-const uniqueResearchAreas = [
-  ...new Set(profilesData.map((profile) => profile.area)),
-];
-const uniqueUniversities = [
-  ...new Set(profilesData.map((profile) => profile.university)),
-];
-
-const ProfileGridWithDualFilter = () => {
+const ProfileGridWithDualFilter = ({
+  profilesData,
+  supervisorAvailabilityKey, // Pass the specific key for supervisor availability as a prop
+}) => {
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
+  const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState(""); // Added supervisor availability
   const [currentPage, setCurrentPage] = useState(1);
   const profilesPerPage = 8;
 
-  // Filter profiles based on selected research area and university
+  // Extract unique research areas and universities dynamically from the provided data
+  const uniqueResearchAreas = [
+    ...new Set(profilesData.map((profile) => profile.field_of_study)),
+  ];
+  const uniqueUniversities = [
+    ...new Set(profilesData.map((profile) => profile.university)),
+  ];
+
+  // Filter profiles based on selected research area, university, and supervisor availability
   const filteredProfiles = profilesData.filter(
     (profile) =>
-      (selectedArea === "" || profile.area === selectedArea) &&
-      (selectedUniversity === "" || profile.university === selectedUniversity)
+      (selectedArea === "" || profile.field_of_study === selectedArea) &&
+      (selectedUniversity === "" || profile.university === selectedUniversity) &&
+      (selectedSupervisorAvailability === "" ||
+        profile[supervisorAvailabilityKey]?.toString() ===
+          selectedSupervisorAvailability) // Use dynamic key for supervisor availability
   );
 
   // Pagination logic
@@ -126,18 +65,50 @@ const ProfileGridWithDualFilter = () => {
           onChange={(e) => {
             setSelectedUniversity(e.target.value);
             setCurrentPage(1); // Reset to the first page when the filter changes
-          }}
-        >
-          <option value="">All Universities</option>
-          {uniqueUniversities.map((university) => (
+            }}
+          >
+            <option value="">All Universities</option>
+            {uniqueUniversities.map((university) => (
             <option key={university} value={university}>
               {university}
             </option>
-          ))}
-        </select>
-      </div>
+            ))}
+          </select>
 
-      {/* Profile Grid */}
+          {supervisorAvailabilityKey === "availability_as_supervisor" ?
+           (
+            <select
+            className="p-2 border border-gray-300 rounded"
+            value={selectedSupervisorAvailability}
+            onChange={(e) => {
+              setSelectedSupervisorAvailability(e.target.value);
+              setCurrentPage(1); // Reset to the first page when the filter changes
+            }}
+            >
+            <option value="">All Supervisor Availability</option>
+            <option value="1">Available as Supervisor</option>
+            <option value="0">Not Available as Supervisor</option>
+            </select>
+          )
+          :
+          (
+            <select
+            className="p-2 border border-gray-300 rounded"
+            value={selectedSupervisorAvailability}
+            onChange={(e) => {
+              setSelectedSupervisorAvailability(e.target.value);
+              setCurrentPage(1); // Reset to the first page when the filter changes
+            }}
+            >
+            <option value="">All Supervisor Availability</option>
+            <option value="1">Available to find Supervisor</option>
+            <option value="0">Not Available to find Supervisor</option>
+            </select>
+          )
+          }
+        </div>
+
+          {/* Profile Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {displayedProfiles.map((profile) => (
           <div
@@ -164,27 +135,26 @@ const ProfileGridWithDualFilter = () => {
 
             {/* Profile Info */}
             <div className="text-center mt-4">
-              <h2 className="text-lg font-semibold">{profile.name}</h2>
-              <p className="text-gray-500 text-sm">{profile.area}</p>
+              <h2 className="text-lg font-semibold">{profile.full_name}</h2>
+              <p className="text-gray-500 text-sm">{profile.field_of_study}</p>
               <p className="text-gray-500 text-sm">{profile.university}</p>
-              <p className="mt-2 text-gray-600 text-sm px-4">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-              </p>
+              <p className="mt-2 text-gray-600 text-sm px-4">{profile.bio}</p>
             </div>
 
-            {/* Followers and Following */}
+            {/* Supervisor Availability */}
             <div className="flex justify-between items-center mt-6 py-4 border-t px-6">
               <div className="text-center">
                 <h3 className="text-gray-700 text-sm font-semibold">
-                  {profile.followers}
+                  {profile[supervisorAvailabilityKey] === 1 ? "Yes" : "No"}
                 </h3>
-                <p className="text-gray-500 text-sm">Followers</p>
-              </div>
-              <div className="text-center">
-                <h3 className="text-gray-700 text-sm font-semibold">
-                  {profile.following}
-                </h3>
-                <p className="text-gray-500 text-sm">Following</p>
+                {supervisorAvailabilityKey === "availability_as_supervisor" ?
+                (
+                  <p className="text-gray-500 text-sm">Availability as Supervisor</p>
+                )
+                :
+                (
+                  <p className="text-gray-500 text-sm">Availability to find Supervisor</p>
+                )}
               </div>
             </div>
           </div>

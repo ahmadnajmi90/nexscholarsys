@@ -1,16 +1,13 @@
 import React from 'react';
 import MainLayout from '../Layouts/MainLayout';
 import RadarChart from '../Components/RadarChart';
-import ProfileCard from '@/Components/ProfileCard';
 
-
-
-const Dashboard = () => {
+const Dashboard = ( {isPostgraduate} ) => {
+    console.log(isPostgraduate);
     return (
-        <MainLayout title="Dashboard">
+        <MainLayout title="Dashboard" isPostgraduate={isPostgraduate}>
             <p>This is your dashboard content.</p>
             <RadarChart />
-            <ProfileCard />
         </MainLayout>
     );
 };
