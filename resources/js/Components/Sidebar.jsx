@@ -58,13 +58,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <FaTachometerAlt className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Dashboard</span>
                         </Link>
-                        <Link href="#" className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaNewspaper className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Newsfeed</span>
+                        <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
+                            <div className="flex items-center">
+                                <FaNewspaper className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Newsfeed</span>
+                            </div>
+                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
+                                Soon
+                            </span> */}
                         </Link>
-                        <Link href="#" className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaUsers className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Forums</span>
+
+                        <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
+                            <div className="flex items-center">
+                                <FaUsers className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Forums</span>
+                            </div>
+
+                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
+                                Soon
+                            </span> */}
                         </Link>
                         <Link href={route('post-grants.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                             <FaUniversity className="text-gray-600" />
@@ -88,14 +100,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Postgraduate</Link>
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Academician</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Industry</Link>
+
                             </div>
                         )}
                     </div>
 
                     {/* Research Section */}
                     <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Research</h3>
+                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Research - In Development</h3>
                         <button
                             onClick={() => toggleMenu('research')}
                             className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
