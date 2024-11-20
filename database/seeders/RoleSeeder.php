@@ -28,5 +28,22 @@ class RoleSeeder extends Seeder
             'email' => 'ahmadnajmi.acac@utm.my',
              'password' => bcrypt('password'),
             ]);
+
+        $postgraduate = User::create([
+            'name' => 'Postgraduate',
+            'email' => 'postgraduate@example.com',
+                'password' => bcrypt('password'),
+            ]);
+
+            Bouncer::disallow($postgraduate)->to('post-grants');
+        $postgraduate->assign('postgraduate');
+
+        $academician = User::create([
+            'name' => 'Academician',
+            'email' => 'academician@example.com',
+                'password' => bcrypt('password'),
+            ]);
+        $academician->assign('academician');
+
     }
 }

@@ -15,7 +15,7 @@ import {
     FaCog,
 } from 'react-icons/fa';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
     const user = usePage().props.auth.user;
 
     const [menuOpen, setMenuOpen] = useState({
@@ -78,10 +78,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                 Soon
                             </span> */}
                         </Link>
+                        {!isPostgraduate && (
                         <Link href={route('post-grants.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                             <FaUniversity className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post Grants</span>
-                        </Link>
+                        </Link>)}
 
                     </div>
 
@@ -98,9 +99,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </button>
                         {menuOpen.networking && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Postgraduate</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Academician</Link>
-
+                                <Link href="/postgraduates" className="block py-2 hover:bg-gray-100 rounded">Postgraduate</Link>
+                                <Link href="/academicians" className="block py-2 hover:bg-gray-100 rounded">Academician</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Industry</Link>
                             </div>
                         )}
                     </div>

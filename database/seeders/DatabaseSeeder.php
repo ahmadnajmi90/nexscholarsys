@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PostGrantForStudentSeeder::class,
             RoleSeeder::class,
+            AcademicianSeeder::class,
+            PostgraduateSeeder::class,
         ]);
     }
 }
