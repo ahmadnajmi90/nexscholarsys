@@ -35,7 +35,7 @@ class RoleSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]);
 
-            Bouncer::disallow($postgraduate)->to('post-grants');
+            Bouncer::disallow($postgraduate)->to('post-grants'); // Disallow the postgraduate user to create post grants
         $postgraduate->assign('postgraduate');
 
         $academician = User::create([
