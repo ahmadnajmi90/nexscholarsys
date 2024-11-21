@@ -35,7 +35,6 @@ class RoleSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]);
 
-            Bouncer::disallow($postgraduate)->to('post-grants');
         $postgraduate->assign('postgraduate');
 
         $academician = User::create([
@@ -44,6 +43,16 @@ class RoleSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]);
         $academician->assign('academician');
+
+        Bouncer::ability()->firstOrCreate([
+            'name' => 'post-grants',
+            'title' => 'Post Grants',
+        ]);
+
+        Bouncer::allow('academician')->to('post-grants');
+        Bouncer::allow('industry')->to('post-grants');
+        Bouncer::allow('admin')->to('post-grants');
+        Bouncer::disallow('postgraduate')->to('post-grants');
 
     }
 }
