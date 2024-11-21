@@ -19,9 +19,10 @@ return new class extends Migration
             $table->string('profile_picture')->nullable();
             $table->string('current_position')->nullable();
             $table->string('department')->nullable();
-            $table->string('university')->nullable();
+            $table->unsignedBigInteger('university'); 
+            $table->foreign('university')->references('id')->on('university_list')->onDelete('cascade')->nullable();
             $table->string('highest_degree')->nullable();
-            $table->string('field_of_study')->nullable();
+            $table->json('field_of_study')->nullable();
             $table->text('research_interests')->nullable();
             $table->text('ongoing_research')->nullable();
             $table->string('website')->nullable();

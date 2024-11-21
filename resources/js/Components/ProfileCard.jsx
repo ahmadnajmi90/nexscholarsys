@@ -2,31 +2,34 @@ import React, { useState } from "react";
 
 const ProfileGridWithDualFilter = ({
   profilesData,
-  supervisorAvailabilityKey, // Pass the specific key for supervisor availability as a prop
+  supervisorAvailabilityKey,
+  universitiesList, // Pass the complete list of universities
 }) => {
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedUniversity, setSelectedUniversity] = useState("");
-  const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState(""); // Added supervisor availability
+  const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const profilesPerPage = 8;
 
-  // Extract unique research areas and universities dynamically from the provided data
+  // Extract unique research areas dynamically from the array data
   const uniqueResearchAreas = [
-    ...new Set(profilesData.map((profile) => profile.field_of_study)),
-  ];
-  const uniqueUniversities = [
-    ...new Set(profilesData.map((profile) => profile.university)),
+    ...new Set(
+      profilesData.flatMap((profile) => profile.field_of_study || []) // Flatten arrays
+    ),
   ];
 
   // Filter profiles based on selected research area, university, and supervisor availability
-  const filteredProfiles = profilesData.filter(
-    (profile) =>
-      (selectedArea === "" || profile.field_of_study === selectedArea) &&
-      (selectedUniversity === "" || profile.university === selectedUniversity) &&
-      (selectedSupervisorAvailability === "" ||
-        profile[supervisorAvailabilityKey]?.toString() ===
-          selectedSupervisorAvailability) // Use dynamic key for supervisor availability
-  );
+  const filteredProfiles = profilesData.filter((profile) => {
+    const hasSelectedArea =
+      selectedArea === "" || (profile.field_of_study || []).includes(selectedArea);
+    const hasSelectedUniversity =
+      selectedUniversity === "" || profile.university === parseInt(selectedUniversity);
+    const hasSelectedSupervisorAvailability =
+      selectedSupervisorAvailability === "" ||
+      profile[supervisorAvailabilityKey]?.toString() === selectedSupervisorAvailability;
+
+    return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability;
+  });
 
   // Pagination logic
   const totalPages = Math.ceil(filteredProfiles.length / profilesPerPage);
@@ -37,6 +40,12 @@ const ProfileGridWithDualFilter = ({
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  // Get university full_name by ID
+  const getUniversityNameById = (id) => {
+    const university = universitiesList.find((u) => u.id === id);
+    return university ? university.full_name : "Unknown University";
   };
 
   return (
@@ -51,7 +60,7 @@ const ProfileGridWithDualFilter = ({
             setCurrentPage(1); // Reset to the first page when the filter changes
           }}
         >
-          <option value="">All Research Areas</option>
+          <option value="">All Field of Study</option>
           {uniqueResearchAreas.map((area) => (
             <option key={area} value={area}>
               {area}
@@ -65,50 +74,40 @@ const ProfileGridWithDualFilter = ({
           onChange={(e) => {
             setSelectedUniversity(e.target.value);
             setCurrentPage(1); // Reset to the first page when the filter changes
-            }}
-          >
-            <option value="">All Universities</option>
-            {uniqueUniversities.map((university) => (
-            <option key={university} value={university}>
-              {university}
+          }}
+        >
+          <option value="">All Universities</option>
+          {universitiesList.map((university) => (
+            <option key={university.id} value={university.id}>
+              {university.full_name}
             </option>
-            ))}
-          </select>
+          ))}
+        </select>
 
-          {supervisorAvailabilityKey === "availability_as_supervisor" ?
-           (
-            <select
-            className="p-2 border border-gray-300 rounded"
-            value={selectedSupervisorAvailability}
-            onChange={(e) => {
-              setSelectedSupervisorAvailability(e.target.value);
-              setCurrentPage(1); // Reset to the first page when the filter changes
-            }}
-            >
-            <option value="">All Supervisor Availability</option>
-            <option value="1">Available as Supervisor</option>
-            <option value="0">Not Available as Supervisor</option>
-            </select>
-          )
-          :
-          (
-            <select
-            className="p-2 border border-gray-300 rounded"
-            value={selectedSupervisorAvailability}
-            onChange={(e) => {
-              setSelectedSupervisorAvailability(e.target.value);
-              setCurrentPage(1); // Reset to the first page when the filter changes
-            }}
-            >
-            <option value="">All Supervisor Availability</option>
-            <option value="1">Available to find Supervisor</option>
-            <option value="0">Not Available to find Supervisor</option>
-            </select>
-          )
-          }
-        </div>
+        <select
+          className="p-2 border border-gray-300 rounded"
+          value={selectedSupervisorAvailability}
+          onChange={(e) => {
+            setSelectedSupervisorAvailability(e.target.value);
+            setCurrentPage(1); // Reset to the first page when the filter changes
+          }}
+        >
+          <option value="">All Supervisor Availability</option>
+          {supervisorAvailabilityKey === "availability_as_supervisor" ? (
+            <>
+              <option value="1">Available as Supervisor</option>
+              <option value="0">Not Available as Supervisor</option>
+            </>
+          ) : (
+            <>
+              <option value="1">Available to Find Supervisor</option>
+              <option value="0">Not Available to Find Supervisor</option>
+            </>
+          )}
+        </select>
+      </div>
 
-          {/* Profile Grid */}
+      {/* Profile Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {displayedProfiles.map((profile) => (
           <div
@@ -136,8 +135,15 @@ const ProfileGridWithDualFilter = ({
             {/* Profile Info */}
             <div className="text-center mt-4">
               <h2 className="text-lg font-semibold">{profile.full_name}</h2>
-              <p className="text-gray-500 text-sm">{profile.field_of_study}</p>
-              <p className="text-gray-500 text-sm">{profile.university}</p>
+              {/* Display field_of_study as a comma-separated string */}
+              <p className="text-gray-500 text-sm">
+                {Array.isArray(profile.field_of_study) && profile.field_of_study.length > 0
+                  ? profile.field_of_study.join(", ")
+                  : profile.field_of_study}
+              </p>
+              <p className="text-gray-500 text-sm">
+                {getUniversityNameById(profile.university)}
+              </p>
               <p className="mt-2 text-gray-600 text-sm px-4">{profile.bio}</p>
             </div>
 
@@ -147,14 +153,11 @@ const ProfileGridWithDualFilter = ({
                 <h3 className="text-gray-700 text-sm font-semibold">
                   {profile[supervisorAvailabilityKey] === 1 ? "Yes" : "No"}
                 </h3>
-                {supervisorAvailabilityKey === "availability_as_supervisor" ?
-                (
-                  <p className="text-gray-500 text-sm">Availability as Supervisor</p>
-                )
-                :
-                (
-                  <p className="text-gray-500 text-sm">Availability to find Supervisor</p>
-                )}
+                <p className="text-gray-500 text-sm">
+                  {supervisorAvailabilityKey === "availability_as_supervisor"
+                    ? "Availability as Supervisor"
+                    : "Availability to Find Supervisor"}
+                </p>
               </div>
             </div>
           </div>

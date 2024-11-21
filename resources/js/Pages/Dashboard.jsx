@@ -8,7 +8,7 @@ import DashboardInsights from '../Components/DashboardInsights';
 const Dashboard = ( {isPostgraduate} ) => {
     console.log(isPostgraduate);
     return (
-        <MainLayout title="Dashboard">
+        <MainLayout title="Dashboard" isPostgraduate={isPostgraduate}>
             <DashboardInsights />
             {/* <RadarChart />
             <ProfileCard /> */}

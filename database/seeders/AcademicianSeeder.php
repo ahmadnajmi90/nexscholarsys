@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\UniversityList;
 
 class AcademicianSeeder extends Seeder
 {
@@ -20,13 +21,8 @@ class AcademicianSeeder extends Seeder
             "Zoe Saldana", "Anna Kendrick", "Brian May", "Catherine Zeta-Jones", "David Beckham",
         ];
 
-        // List of universities in Malaysia
-        $universities = [
-            "Universiti Malaya (UM)", "Universiti Teknologi Malaysia (UTM)", "Universiti Kebangsaan Malaysia (UKM)",
-            "Universiti Sains Malaysia (USM)", "Universiti Putra Malaysia (UPM)", "Universiti Teknologi MARA (UiTM)",
-            "Universiti Islam Antarabangsa Malaysia (UIAM)", "Universiti Malaysia Sabah (UMS)",
-            "Universiti Malaysia Sarawak (UNIMAS)", "Universiti Pendidikan Sultan Idris (UPSI)",
-        ];
+        // Fetch all universities from the university_list table
+        $universities = UniversityList::all()->pluck('id')->toArray(); // Get university IDs
 
         // List of research areas
         $researchAreas = [
@@ -36,17 +32,22 @@ class AcademicianSeeder extends Seeder
             "Edge Computing",
         ];
 
+        $getRandomResearchAreas = function ($researchAreas) {
+            $count = rand(1, 3); // Select 1 to 3 research areas randomly
+            return json_encode(array_rand(array_flip($researchAreas), $count));
+        };
+
         // Generate 30 dummy academician profiles
         $academicians = [];
         for ($i = 0; $i < 30; $i++) {
             $academicians[] = [
                 'academician_id' => 'ACAD-' . Str::random(8), // Unique ID
                 'full_name' => $randomNames[$i % count($randomNames)],
-                'university' => $universities[$i % count($universities)],
+                'university' => $universities[array_rand($universities)], // Random university ID
                 'current_position' => 'Lecturer', // Example static value
                 'department' => 'Computer Science Department', // Example static value
                 'highest_degree' => 'PhD',
-                'field_of_study' => $researchAreas[$i % count($researchAreas)],
+                'field_of_study' => $getRandomResearchAreas($researchAreas),
                 'research_interests' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
                 'ongoing_research' => 'Example ongoing research project description.',
                 'website' => 'https://example.com',

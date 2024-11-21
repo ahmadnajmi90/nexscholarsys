@@ -16,6 +16,7 @@ use Inertia\Response;
 use App\Models\Academician;
 use App\Models\Industry;
 use App\Models\Postgraduate;
+use App\Models\UniversityList;
 
 class ProfileCompletionController extends Controller
 {
@@ -24,7 +25,9 @@ class ProfileCompletionController extends Controller
      */
     public function show(): Response
     {
-        return Inertia::render('Auth/CompleteProfile');
+        return Inertia::render('Auth/CompleteProfile', [
+            'universities' => UniversityList::all(),
+        ]);
     }
 
     /**
@@ -46,7 +49,7 @@ class ProfileCompletionController extends Controller
         // Additional validation and unique ID generation based on role
         if ($request->role === 'Academician') {
             $request->validate([
-                'university' => 'required|string|max:255',
+                'university' => 'required|exists:university_list,id',
             ]);
 
             // Generate a unique ID for the user if it does not already exist
@@ -89,7 +92,7 @@ class ProfileCompletionController extends Controller
 
         } elseif ($request->role === 'Postgraduate') {
             $request->validate([
-                'university' => 'required|string|max:255',
+                'university' => 'required|exists:university_list,id',
             ]);
 
             $uniqueId = 'PG-' . Str::random(8);

@@ -33,8 +33,17 @@ class Postgraduate extends Model
         'bio',
     ];
 
+    protected $casts = [
+        'field_of_study' => 'array', // Cast field_of_study as an array
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'postgraduate_id', 'unique_id');
+    }
+
+    public function universityDetails()
+    {
+        return $this->belongsTo(UniversityList::class, 'university', 'id');
     }
 }

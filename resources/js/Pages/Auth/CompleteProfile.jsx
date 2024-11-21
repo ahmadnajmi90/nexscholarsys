@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function CompleteProfile() {
+export default function CompleteProfile( {universities} ) {
     const { data, setData, post, processing, errors, reset } = useForm({
         full_name: '',
         university: '',
@@ -72,9 +72,11 @@ export default function CompleteProfile() {
                             required
                         >
                             <option value="" disabled>Select your University</option>
-                            <option value="UTM JOHOR BAHRU">UTM JOHOR BAHRU</option>
-                            <option value="UTM KUALA LUMPUR">UTM KUALA LUMPUR</option>
-                            <option value="UTM PAGOH">UTM PAGOH</option>
+                            {universities.map((university) => (
+                                <option key={university.id} value={university.id}>
+                                    {university.full_name} ({university.short_name}) - {university.country}
+                                </option>
+                            ))}
                         </select>
                         <InputError message={errors.university} className="mt-2" />
                     </div>
