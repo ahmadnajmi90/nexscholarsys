@@ -59,9 +59,9 @@ class PostGrantForStudentController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
             ]);
-    
+
             auth()->user()->postGrants()->create($request->only('title', 'description'));
-    
+
             return redirect()->route('post-grants.index')->with('success', 'Post grant created successfully.');
         }
     }
@@ -91,10 +91,10 @@ class PostGrantForStudentController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
             ]);
-    
+
             $postGrant = auth()->user()->postGrants()->findOrFail($id);
             $postGrant->update($request->only('title', 'description'));
-    
+
             return redirect()->route('post-grants.index')->with('success', 'Post grant updated successfully.');
         }
     }
@@ -108,7 +108,7 @@ class PostGrantForStudentController extends Controller
         else{
             $postGrant = auth()->user()->postGrants()->findOrFail($id);
             $postGrant->delete();
-    
+
             return redirect()->route('post-grants.index')->with('success', 'Post grant deleted successfully.');
         }
     }
