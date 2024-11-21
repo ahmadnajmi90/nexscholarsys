@@ -5,9 +5,10 @@ import RadarChart from '../Components/RadarChart';
 const Dashboard = ( {isPostgraduate} ) => {
     console.log(isPostgraduate);
     return (
-        <MainLayout title="Dashboard" isPostgraduate={isPostgraduate}>
-            <p>This is your dashboard content.</p>
-            <RadarChart />
+        <MainLayout title="Dashboard">
+            <DashboardInsights />
+            {/* <RadarChart />
+            <ProfileCard /> */}
         </MainLayout>
     );
 };
