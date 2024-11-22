@@ -40,12 +40,12 @@ class PostGrantForStudentPolicy
 
     public function update(User $user, PostGrantForStudent $postGrantForStudent)
     {
-        return $user->unique_id === $postGrantForStudent->academician_id;
+        return $user->unique_id === $postGrantForStudent->author_id;
     }
 
     public function delete(User $user, PostGrantForStudent $postGrantForStudent)
     {
-        return $user->unique_id === $postGrantForStudent->academician_id;
+        return $user->unique_id === $postGrantForStudent->author_id;
     }
 
     /**
