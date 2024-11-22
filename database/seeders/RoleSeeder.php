@@ -27,6 +27,7 @@ class RoleSeeder extends Seeder
             'name' => 'Academician',
             'email' => 'ahmadnajmi.acac@utm.my',
              'password' => bcrypt('password'),
+            'is_profile_complete' => 1,
             ]);
 
         $postgraduate = User::create([
