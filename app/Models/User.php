@@ -72,6 +72,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function postGrants()
     {
-        return $this->hasMany(PostGrantForStudent::class, 'academician_id', 'unique_id');
+        return $this->hasMany(PostGrantForStudent::class, 'author_id', 'unique_id');
     }
 }
