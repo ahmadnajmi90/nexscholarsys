@@ -13,10 +13,6 @@ class PostGrantForStudentSeeder extends Seeder
      */
     public function run(): void
     {
-        PostGrantForStudent::create([
-            'academician_id' => '1',
-            'title' => 'Post Grant for Student 1',
-            'description' => 'Description for Post Grant for Student 1',
-        ]);
+
     }
 }
