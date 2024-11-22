@@ -10,7 +10,7 @@ const MainLayout = ({ children, title, isPostgraduate }) => {
     };
 
     return (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar Component with isOpen and toggleSidebar props */}
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate} />
 
