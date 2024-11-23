@@ -25,6 +25,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
         researchManagement: false,
         event: false,
         survey: false,
+        profile: false, // Added profile toggle state
     });
 
     const toggleMenu = (menu) => {
@@ -186,10 +187,27 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                     {/* Survey Section */}
                     <div>
                         <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Setting</h3>
-                        <Link href={route('profile.edit')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaUser className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Profile</span>
-                        </Link>
+                        {/* Profile Section */}
+                        <div>
+                            <button
+                                onClick={() => toggleMenu('profile')}
+                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaUser className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Profile</span>
+                                {isOpen && <span className="ml-auto">{menuOpen.profile ? '-' : '+'}</span>}
+                            </button>
+                            {menuOpen.profile && (
+                                <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                    <Link href={route('profile.edit')} className="block py-2 hover:bg-gray-100 rounded">
+                                        General Account Setting
+                                    </Link>
+                                    <Link href={route('role.edit')} className="block py-2 hover:bg-gray-100 rounded">
+                                        Personal Information
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                         <Link href={route('logout')} method="post" as="button" className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                             <FaCog className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Log Out</span>

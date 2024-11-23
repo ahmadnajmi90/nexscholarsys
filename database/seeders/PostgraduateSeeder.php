@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\UniversityList;
+use App\Models\FacultyList;
 
 class PostgraduateSeeder extends Seeder
 {
@@ -24,6 +25,9 @@ class PostgraduateSeeder extends Seeder
         // Fetch all universities from the university_list table
         $universities = UniversityList::all()->pluck('id')->toArray(); // Get university IDs
 
+        // Group faculties by university_id
+        $facultiesByUniversity = FacultyList::all()->groupBy('university_id'); // Group faculties by university_id
+
         // List of research areas (same as AcademicianSeeder)
         $researchAreas = [
             "Artificial Intelligence (Generative AI)", "Quantum Computing", "Clean Energy Technologies",
@@ -40,15 +44,24 @@ class PostgraduateSeeder extends Seeder
         // Generate 30 dummy postgraduate profiles
         $postgraduates = [];
         for ($i = 0; $i < 30; $i++) {
+            // Randomly select a university
+            $universityId = $universities[array_rand($universities)];
+
+            // Get faculties for the selected university
+            $faculties = $facultiesByUniversity[$universityId] ?? collect();
+
+            // Randomly select a faculty if available
+            $facultyId = $faculties->isNotEmpty() ? $faculties->random()->id : null;
+
             $postgraduates[] = [
                 'postgraduate_id' => 'PG-' . Str::random(8), // Unique ID
                 'full_name' => $randomNames[$i % count($randomNames)],
                 'university' => $universities[array_rand($universities)], // Random university ID
-                'faculty' => 'Faculty of Science', // Example static value
+                'faculty' => $facultyId, // Faculty based on the selected university
                 'highest_degree' => 'MSc', // Example static value
                 'field_of_study' => $getRandomResearchAreas($researchAreas),
-                'research_interests' => 'Example research interests in the selected field.',
-                'ongoing_research' => 'Example description of ongoing postgraduate research.',
+                'research_interests' => $getRandomResearchAreas($researchAreas),
+                'ongoing_research' => $getRandomResearchAreas($researchAreas),
                 'website' => 'https://example.com',
                 'linkedin' => 'https://linkedin.com/in/example',
                 'google_scholar' => 'https://scholar.google.com/example',

@@ -6,19 +6,26 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, useForm } from '@inertiajs/react';
 
-export default function CompleteProfile( {universities} ) {
+export default function CompleteProfile({ universities, faculties }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         full_name: '',
         university: '',
         role: '',
         industry: '',
+        faculty: '', // Add faculty field to the form state
     });
+
+    // State to hold the filtered faculties
+    const [selectedUniversity, setSelectedUniversity] = useState(data.university);
+    const filteredFaculties = faculties.filter(
+        (faculty) => faculty.university_id === parseInt(selectedUniversity)
+    );
 
     const submit = (e) => {
         e.preventDefault();
 
         post(route('profile.complete'), {
-            onFinish: () => reset('full_name', 'university', 'role', 'industry'),
+            onFinish: () => reset('full_name', 'university', 'role', 'industry', 'faculty'),
         });
     };
 
@@ -45,8 +52,8 @@ export default function CompleteProfile( {universities} ) {
                     <InputError message={errors.role} className="mt-2" />
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="full_name" value="Full Name" />
+                <div className='mt-4'>
+                    <InputLabel htmlFor="full_name" value="Full Name"/>
                     <TextInput
                         id="full_name"
                         name="full_name"
@@ -61,27 +68,54 @@ export default function CompleteProfile( {universities} ) {
                 </div>
 
                 {data.role !== 'Industry' ? (
-                    <div className="mt-4">
-                        <InputLabel htmlFor="university" value="University" />
-                        <select
-                            id="university"
-                            name="university"
-                            className="w-full border rounded-md p-2"
-                            value={data.university}
-                            onChange={(e) => setData('university', e.target.value)}
-                            required
-                        >
-                            <option value="" disabled>Select your University</option>
-                            {universities.map((university) => (
-                                <option key={university.id} value={university.id}>
-                                    {university.full_name} ({university.short_name}) - {university.country}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.university} className="mt-2" />
-                    </div>
+                    <>
+                        {/* University */}
+                        <div className='mt-4'>
+                            <InputLabel htmlFor="university" value="University" required />
+                            <select
+                                id="university"
+                                className="mt-1 block w-full border rounded-md p-2"
+                                value={selectedUniversity || ''}
+                                onChange={(e) => {
+                                    const universityId = e.target.value;
+                                    setSelectedUniversity(universityId);
+                                    setData('university', universityId);
+                                }}
+                            >
+                                <option value="" hidden>Select your University</option>
+                                {universities.map((university) => (
+                                    <option key={university.id} value={university.id}>
+                                        {university.full_name}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError className="mt-2" message={errors.university} />
+                        </div>
+
+                        {/* Faculty */}
+                        {selectedUniversity && (
+                            <div className='mt-4'>
+                                <InputLabel htmlFor="faculty" value="Faculty" required />
+                                <select
+                                    id="faculty"
+                                    className="mt-1 block w-full border rounded-md p-2"
+                                    value={data.faculty || ''}
+                                    onChange={(e) => setData('faculty', e.target.value)}
+                                >
+                                    <option value="" hidden>Select your Faculty</option>
+                                    {filteredFaculties.map((faculty) => (
+                                        <option key={faculty.id} value={faculty.id}>
+                                            {faculty.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {data.role === 'Academician' && <p className="mt-2 text-red-500 text-sm">*Select carefully as it is not allowed to change after this</p>}
+                                <InputError className="mt-2" message={errors.faculty} />
+                            </div>
+                        )}
+                    </>
                 ) : (
-                    <div className="mt-4">
+                    <div className="mt-4 text-sm">
                         <InputLabel htmlFor="industry" value="Industry" />
                         <TextInput
                             id="industry"

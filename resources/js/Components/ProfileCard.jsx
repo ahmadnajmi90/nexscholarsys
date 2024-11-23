@@ -149,9 +149,18 @@ const ProfileGridWithDualFilter = ({
 
                         {/* Profile Image */}
                         <div className="flex justify-center -mt-12">
-                            <img
-                                src={`https://i.pravatar.cc/300?img=${profile.id}`}
-                                alt="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-lg" /> </div>
+                            <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                                <img
+                                    src={
+                                        profile.profile_picture !== null
+                                            ? `/storage/${profile.profile_picture}`
+                                            : '/storage/profile_pictures/default.jpg'
+                                    }
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
 
                         {/* Profile Info */}
                         <div className="text-center mt-4">
