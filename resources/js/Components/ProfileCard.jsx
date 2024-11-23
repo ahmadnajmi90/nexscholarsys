@@ -5,6 +5,8 @@ const ProfileGridWithDualFilter = ({
     profilesData,
     supervisorAvailabilityKey,
     universitiesList, // Pass the complete list of universities
+    isPostgraduateList,
+    users
 }) => {
     const [selectedArea, setSelectedArea] = useState("");
     const [selectedUniversity, setSelectedUniversity] = useState("");
@@ -110,8 +112,8 @@ const ProfileGridWithDualFilter = ({
                         </>
                     ) : (
                         <>
-                            <option value="1">Available to Find Supervisor</option>
-                            <option value="0">Not Available to Find Supervisor</option>
+                            <option value="1">Looking for a Supervisor</option>
+                            <option value="0">Not Looking for a Supervisor</option>
                         </>
                     )}
                 </select>
@@ -128,6 +130,7 @@ const ProfileGridWithDualFilter = ({
                         <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px]  font-semibold px-2.5 py-0.5  rounded-full">
                             {getUniversityNameById(profile.university)}
                         </div>
+                        {!isPostgraduateList && profile.verified === 1 &&(
                         <div className="relative group">
                             <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] text-purple-700 cursor-pointer">
                                 Verified
@@ -137,6 +140,7 @@ const ProfileGridWithDualFilter = ({
                                 This account is verified by {getUniversityNameById(profile.university)}
                             </div>
                         </div>
+                        )}
 
                         {/* Banner */}
                         <div className="h-32">
@@ -170,22 +174,18 @@ const ProfileGridWithDualFilter = ({
                             <p className="text-gray-500 text-sm">
                                 {Array.isArray(profile.field_of_study) && profile.field_of_study.length > 0
                                     ? profile.field_of_study[0] // Display the first field of study
+                                    : profile.field_of_study && profile.field_of_study.length > 0
+                                    ? profile.field_of_study // Display the field_of_study directly if not an array but has content
                                     : "No Field of Study"}
                             </p>
                             <p className="text-gray-500 text-sm">{profile.current_position}</p>
                             {/* Quick Info Button */}
-                            {Array.isArray(profile.field_of_study) &&
-                                profile.field_of_study.length > 1 && (
                                     <button
                                         onClick={() => handleQuickInfoClick(profile)}
                                         className="mt-2 bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
                                     >
                                         Quick Info
                                     </button>
-
-
-                                )}
-
 
                         </div>
 
@@ -279,14 +279,14 @@ const ProfileGridWithDualFilter = ({
             : selectedProfile.field_of_study || "No fields of study"}
         </p>
         <p className="text-gray-600">
-          <span className="font-semibold">Supervisor Availability:</span>{" "}
+            {supervisorAvailabilityKey == "availability_as_supervisor" ? (<span className="font-semibold">Available as supervisor:</span>) : (<span className="font-semibold">Looking for a supervisor:</span>)}
           {selectedProfile[supervisorAvailabilityKey] === 1
-            ? "Available"
-            : "Not Available"}
+            ? " Yes"
+            : " No"}
         </p>
         <p className="text-gray-600">
           <span className="font-semibold">Email:</span>{" "}
-          {selectedProfile.email || "No email provided"}
+          {users.find((user) => user.unique_id === (selectedProfile.academician_id || selectedProfile.postgraduate_id))?.email || "No email provided"}
         </p>
       </div>
 

@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UniversityList;
+use App\Models\User;
 
 use Illuminate\Http\Request;
 
@@ -18,6 +19,7 @@ class AcademicianController extends Controller
             'academicians' => Academician::all(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             'universities' => UniversityList::all(),
+            'users' => User::all(),
         ]);
     }
 

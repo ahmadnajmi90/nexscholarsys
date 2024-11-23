@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('researchgate')->nullable();
             $table->string('orcid')->nullable();
             $table->text('bio')->nullable();
-            $table->string('verified')->nullable(); // this is for verification status by the faculty dean / admin
+            $table->boolean('verified')->default(false); // this is for verification status by the faculty dean / admin
             $table->boolean('availability_for_collaboration')->default(false);
             $table->boolean('availability_as_supervisor')->default(false);
             $table->timestamps();

@@ -47,7 +47,7 @@ export default function CompleteProfile({ universities, faculties }) {
                         <option value="" disabled>Select your Role</option>
                         <option value="Academician">Academician</option>
                         <option value="Postgraduate">Postgraduate</option>
-                        <option value="Industry">Industry</option>
+                        {/* <option value="Industry">Industry</option> */}
                     </select>
                     <InputError message={errors.role} className="mt-2" />
                 </div>

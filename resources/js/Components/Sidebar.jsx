@@ -102,7 +102,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/postgraduates" className="block py-2 hover:bg-gray-100 rounded">Postgraduate</Link>
                                 <Link href="/academicians" className="block py-2 hover:bg-gray-100 rounded">Academician</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Industry</Link>
+                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Industry</Link> */}
                             </div>
                         )}
                     </div>

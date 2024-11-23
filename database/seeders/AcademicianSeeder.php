@@ -72,7 +72,7 @@ class AcademicianSeeder extends Seeder
                 'bio' => 'This is a short bio for the academician.',
                 'availability_for_collaboration' => rand(0, 1),
                 'availability_as_supervisor' => rand(0, 1),
-                'verified' => rand(0, 1) ? 'Yes' : 'No',
+                'verified' => rand(0, 1),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
