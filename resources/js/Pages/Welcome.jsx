@@ -4,6 +4,7 @@ import { FaSearch, FaUsers, FaProjectDiagram, FaChartLine, FaUniversity, FaComme
 
 
 const HeroSection = ({ auth }) => {
+
     const currentYear = new Date().getFullYear(); // Get the current year dynamically
   return (
     <div>
