@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\UniversityList;
+use App\Models\FacultyList;
 
 class AcademicianSeeder extends Seeder
 {
@@ -21,8 +22,11 @@ class AcademicianSeeder extends Seeder
             "Zoe Saldana", "Anna Kendrick", "Brian May", "Catherine Zeta-Jones", "David Beckham",
         ];
 
-        // Fetch all universities from the university_list table
+        // Fetch all universities
         $universities = UniversityList::all()->pluck('id')->toArray(); // Get university IDs
+
+        // Group faculties by university_id
+        $facultiesByUniversity = FacultyList::all()->groupBy('university_id'); // Group faculties by university_id
 
         // List of research areas
         $researchAreas = [
@@ -40,16 +44,26 @@ class AcademicianSeeder extends Seeder
         // Generate 30 dummy academician profiles
         $academicians = [];
         for ($i = 0; $i < 30; $i++) {
+            // Randomly select a university
+            $universityId = $universities[array_rand($universities)];
+
+            // Get faculties for the selected university
+            $faculties = $facultiesByUniversity[$universityId] ?? collect();
+
+            // Randomly select a faculty if available
+            $facultyId = $faculties->isNotEmpty() ? $faculties->random()->id : null;
+
             $academicians[] = [
                 'academician_id' => 'ACAD-' . Str::random(8), // Unique ID
                 'full_name' => $randomNames[$i % count($randomNames)],
-                'university' => $universities[array_rand($universities)], // Random university ID
+                'university' => $universityId, // Random university ID
+                'faculty' => $facultyId, // Faculty based on the selected university
                 'current_position' => 'Lecturer', // Example static value
                 'department' => 'Computer Science Department', // Example static value
                 'highest_degree' => 'PhD',
                 'field_of_study' => $getRandomResearchAreas($researchAreas),
-                'research_interests' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                'ongoing_research' => 'Example ongoing research project description.',
+                'research_interests' => $getRandomResearchAreas($researchAreas),
+                'ongoing_research' => $getRandomResearchAreas($researchAreas),
                 'website' => 'https://example.com',
                 'linkedin' => 'https://linkedin.com/in/example',
                 'google_scholar' => 'https://scholar.google.com/example',
@@ -58,7 +72,7 @@ class AcademicianSeeder extends Seeder
                 'bio' => 'This is a short bio for the academician.',
                 'availability_for_collaboration' => rand(0, 1),
                 'availability_as_supervisor' => rand(0, 1),
-                'verified' => rand(0, 1) ? 'Yes' : 'No',
+                'verified' => rand(0, 1),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

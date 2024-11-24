@@ -1,11 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Edit({ mustVerifyEmail, status }) {
+    const { isPostgraduate } = usePage().props;
     return (
         <MainLayout
             header={
@@ -13,6 +14,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     Profile
                 </h2>
             }
+            isPostgraduate={isPostgraduate}
         >
             <Head title="Profile" />
 

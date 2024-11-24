@@ -46,4 +46,9 @@ class Postgraduate extends Model
     {
         return $this->belongsTo(UniversityList::class, 'university', 'id');
     }
+
+    public function faculty()
+    {
+        return $this->belongsTo(FacultyList::class, 'faculty');
+    }
 }

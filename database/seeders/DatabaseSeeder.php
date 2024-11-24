@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             PostGrantForStudentSeeder::class,
             RoleSeeder::class,
             UniversityListSeeder::class,
+            FacultyListSeeder::class,
             AcademicianSeeder::class,
             PostgraduateSeeder::class,
         ]);

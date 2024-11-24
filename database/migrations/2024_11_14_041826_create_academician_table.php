@@ -19,20 +19,21 @@ return new class extends Migration
             $table->string('profile_picture')->nullable();
             $table->string('current_position')->nullable();
             $table->string('department')->nullable();
-            $table->string('faculty')->nullable();
             $table->unsignedBigInteger('university');
             $table->foreign('university')->references('id')->on('university_list')->onDelete('cascade')->nullable();
+            $table->unsignedBigInteger('faculty')->nullable(); // Faculty foreign key
+            $table->foreign('faculty')->references('id')->on('faculty_list')->onDelete('cascade');
             $table->string('highest_degree')->nullable();
             $table->json('field_of_study')->nullable();
-            $table->text('research_interests')->nullable();
-            $table->text('ongoing_research')->nullable();
+            $table->json('research_interests')->nullable();
+            $table->json('ongoing_research')->nullable();
             $table->string('website')->nullable();
             $table->string('linkedin')->nullable();
             $table->string('google_scholar')->nullable();
             $table->string('researchgate')->nullable();
             $table->string('orcid')->nullable();
             $table->text('bio')->nullable();
-            $table->string('verified')->nullable(); // this is for verification status by the faculty dean / admin
+            $table->boolean('verified')->default(false); // this is for verification status by the faculty dean / admin
             $table->boolean('availability_for_collaboration')->default(false);
             $table->boolean('availability_as_supervisor')->default(false);
             $table->timestamps();

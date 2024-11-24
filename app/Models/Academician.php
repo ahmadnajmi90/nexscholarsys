@@ -20,6 +20,7 @@ class Academician extends Model
         'current_position',
         'department',
         'university',
+        'faculty',
         'highest_degree',
         'field_of_study',
         'research_interests',
@@ -47,5 +48,10 @@ class Academician extends Model
     public function universityDetails()
     {
         return $this->belongsTo(UniversityList::class, 'university', 'id');
+    }
+
+    public function faculty()
+    {
+        return $this->belongsTo(FacultyList::class, 'faculty');
     }
 }

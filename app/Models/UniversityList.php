@@ -16,4 +16,9 @@ class UniversityList extends Model
     {
         return $this->hasMany(Postgraduate::class, 'university', 'id');
     }
+
+    public function faculties()
+    {
+        return $this->hasMany(FacultyList::class, 'university_id');
+    }
 }
