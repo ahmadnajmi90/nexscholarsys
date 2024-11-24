@@ -3,17 +3,17 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 
 const Index = () => {
-    const { postGrants } = usePage().props;
+    const { postProjects } = usePage().props;
 
     return (
-        <MainLayout title="Your Grants">
+        <MainLayout title="Your Projects">
             <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-semibold">Your Grants</h1>
+                <h1 className="text-2xl font-semibold">Your Projects</h1>
                 <Link
-                    href={route('post-grants.create')}
+                    href={route('post-projects.create')}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
-                    Add New Grant
+                    Add New Project
                 </Link>
             </div>
 
@@ -22,10 +22,8 @@ const Index = () => {
                     <thead>
                         <tr>
                             <th className="py-2 px-4 border-b">Title</th>
-                            <th className="py-2 px-4 border-b">Post Status</th>
-                            <th className="py-2 px-4 border-b">Grant Status</th>
-                            <th className="py-2 px-4 border-b">Category</th>
-                            <th className="py-2 px-4 border-b">Sponsored By</th>
+                            <th className="py-2 px-4 border-b">Project Type</th>
+                            <th className="py-2 px-4 border-b">Purpose</th>
                             <th className="py-2 px-4 border-b">Location</th>
                             <th className="py-2 px-4 border-b">Start Date</th>
                             <th className="py-2 px-4 border-b">End Date</th>
@@ -34,26 +32,24 @@ const Index = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {postGrants.map(grant => (
-                            <tr key={grant.id} className="border-b">
-                                <td className="py-2 px-4 font-semibold text-center">{grant.title}</td>
-                                <td className="py-2 px-4 text-center">{grant.post_status}</td>
-                                <td className="py-2 px-4 text-center">{grant.grant_status}</td>
-                                <td className="py-2 px-4 text-center">{grant.category}</td>
-                                <td className="py-2 px-4 text-center">{grant.sponsored_by}</td>
-                                <td className="py-2 px-4 text-center">{grant.location}</td>
-                                <td className="py-2 px-4 text-center">{grant.start_date}</td>
-                                <td className="py-2 px-4 text-center">{grant.end_date}</td>
-                                <td className="py-2 px-4 text-center">{grant.budget}</td>
+                        {postProjects?.map(project => (
+                            <tr key={project.id} className="border-b">
+                                <td className="py-2 px-4 font-semibold text-center">{project.title}</td>
+                                <td className="py-2 px-4 text-center">{project.project_type}</td>
+                                <td className="py-2 px-4 text-center">{project.purpose}</td>
+                                <td className="py-2 px-4 text-center">{project.location}</td>
+                                <td className="py-2 px-4 text-center">{project.start_date}</td>
+                                <td className="py-2 px-4 text-center">{project.end_date}</td>
+                                <td className="py-2 px-4 text-center">{project.budget}</td>
                                 <td className="py-2 px-4 text-center">
                                     <Link
-                                        href={route('post-grants.edit', grant.id)}
+                                        href={route('post-projects.edit', project.id)}
                                         className="text-blue-500 hover:underline mr-2"
                                     >
                                         Edit
                                     </Link>
                                     <Link
-                                        href={route('post-grants.destroy', grant.id)}
+                                        href={route('post-projects.destroy', project.id)}
                                         method="delete"
                                         as="button"
                                         className="text-red-500 hover:underline"

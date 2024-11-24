@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\PostGrantForStudent;
+use App\Models\PostGrant;
 
-class PostGrantForStudentSeeder extends Seeder
+class PostGrantSeeder extends Seeder
 {
     /**
      * Run the database seeds.

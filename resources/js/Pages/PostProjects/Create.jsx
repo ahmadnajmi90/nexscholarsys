@@ -1,127 +1,75 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import axios from 'axios';
+import { useState } from "react";
 
+export default function Create() {
+  const { auth } = usePage().props;
 
-export default function Edit({ postGrant, auth }) {
-  const { data, setData, put, processing, errors } = useForm({
-    title: postGrant.title || "",
-    description: postGrant.description || "",
-    // image: null,
-    post_status: postGrant.post_status || "draft",
-    grant_status: postGrant.grant_status || "open",
-    category: postGrant.category || "",
-    tags: postGrant.tags ? JSON.parse(postGrant.tags) : [],
-    sponsored_by: postGrant.sponsored_by || "",
-    location: postGrant.location || "",
-    email: postGrant.email || "",
-    contact_number: postGrant.contact_number || "",
-    purpose: postGrant.purpose || "find_pgstudent",
-    start_date: postGrant.start_date || "",
-    end_date: postGrant.end_date || "",
-    budget: postGrant.budget || "",
-    eligibility_criteria: postGrant.eligibility_criteria || "",
-    is_featured: postGrant.is_featured || false,
-    application_url: postGrant.application_url || "",
-    // attachment: null,
+  const { data, setData, post, processing, errors } = useForm({
+    title: "",
+    description: "",
+    image: null,
+    project_type: "",
+    purpose: "find_sponsorship",
+    start_date: "",
+    end_date: "",
+    tags: [],
+    email: "",
+    contact_number: "",
+    location: "",
+    budget: "",
+    is_featured: false,
+    attachment: null
   });
-
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [customTag, setCustomTag] = useState("");
+  
+  const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+  const [customTag, setCustomTag] = useState(""); // State to manage custom tag input
 
   const handleAddCustomTag = () => {
     if (customTag.trim() !== "" && !data.tags?.includes(customTag)) {
-      setData("tags", [...(data.tags || []), customTag]);
-      setCustomTag("");
+      setData("tags", [...(data.tags || []), customTag]); // Add the custom tag
+      setCustomTag(""); // Clear the input field
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
-    setData("tags", data.tags?.filter((tag) => tag !== tagToRemove));
+    setData("tags", data.tags?.filter((tag) => tag !== tagToRemove)); // Remove the tag
   };
 
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     const formData = new FormData();
-
-//     Object.keys(data).forEach((key) => {
-//       if (data[key] instanceof File) {
-//         formData.append(key, data[key]);
-//       } else if (Array.isArray(data[key])) {
-//         formData.append(key, JSON.stringify(data[key]));
-//       } else {
-//         formData.append(key, data[key]);
-//       }
-//     });
-
-//     console.log("Form submitted");
-//     console.log("Form Data: ", formData); // Log the form data
-
-//     put(route("post-grants.update", postGrant.id), {
-//       data: formData,
-//       headers: { "Content-Type": "multipart/form-data" },
-//     });
-//   };
-
-const handleSubmit = async (e) => {
+  function handleSubmit(e) {
     e.preventDefault();
 
     const formData = new FormData();
 
-    // Add all data to FormData
+    // Add all other fields to FormData
     Object.keys(data).forEach((key) => {
         if (data[key] instanceof File) {
-            formData.append(key, data[key]);
-        } else if (Array.isArray(data[key])) {
-            formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON
+            formData.append(key, data[key]); // Append file fields
         } else {
-            formData.append(key, data[key]);
+            formData.append(key, data[key]); // Append non-file fields
         }
     });
 
-    // Debug FormData
-    console.log("Form Data Contents:");
-    for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
-    }
+    console.log("Form submitted");
+    console.log("Form Data: ", formData); // Log the form data
 
-    try {
-        formData.append('_method', 'POST'); // or 'PUT'
-        const response = await axios.post(
-            `/dashboard/post-grants/${postGrant.id}`, // Update the endpoint for your route
-            formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data', // Required for FormData
-                },
-            }
-        );
-
-        console.log("Form submitted successfully:", response.data);
-
-        // Optionally redirect or show success message
-        window.location.href = "/dashboard/post-grants";
-    } catch (error) {
-        if (error.response && error.response.data) {
-            console.error("Validation errors:", error.response.data.errors);
-            // Handle validation errors if needed
-        } else {
-            console.error("An error occurred:", error);
-        }
-    }
-};
+    // Submit the form using Inertia.js
+    post(route("post-projects.store"), {
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+  }
 
   return (
-    <MainLayout title="Edit Grant">
+    <MainLayout title="Add New Project">
       <div className="p-8">
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-lg max-w-lg mx-auto space-y-6 shadow-lg"
         >
           <h1 className="text-xl font-semibold text-gray-700 text-center">
-            Edit Grant
+            Add New Project
           </h1>
 
           {/* Title */}
@@ -134,7 +82,7 @@ const handleSubmit = async (e) => {
               value={data.title}
               onChange={(e) => setData("title", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter grant title"
+              placeholder="Enter project title"
             />
             {errors.title && (
               <p className="text-red-500 text-xs mt-1">{errors.title}</p>
@@ -158,59 +106,56 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Image Upload */}
-          {/* <div>
-            <label className="block text-gray-700 font-medium">
-              Upload Image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setData("image", e.target.files[0])}
-              className="w-full rounded-lg border-gray-200 p-2 text-sm"
-            />
-            {postGrant.image && (
-              <p className="text-gray-600 text-sm mt-2">
-                Current Image:{" "}
-                <a
-                  href={`/storage/${postGrant.image}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  View Image
-                </a>
-              </p>
-            )}
-            {errors.image && (
-              <p className="text-red-500 text-xs mt-1">{errors.image}</p>
-            )}
-          </div> */}
-
-          {/* Post Status */}
           <div>
-            <label className="block text-gray-700 font-medium">Post Status</label>
-            <select
-              value={data.post_status}
-              onChange={(e) => setData("post_status", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
+              <label className="block text-gray-700 font-medium">
+                  Upload Image
+              </label>
+              <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setData("image", e.target.files[0])}
+                  className="w-full rounded-lg border-gray-200 p-2 text-sm"
+              />
+              {errors.image && (
+                  <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+              )}
           </div>
 
-          {/* Grant Status */}
+          {/* Project Type */}
           <div>
-            <label className="block text-gray-700 font-medium">
-              Grant Status
+            <label htmlFor="project_type" className="block text-gray-700 font-medium">
+              Project Type
             </label>
             <select
-              value={data.grant_status}
-              onChange={(e) => setData("grant_status", e.target.value)}
+              id="project_type"
+              name="project_type"
+              value={data.project_type}
+              onChange={(e) => setData("project_type", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
             >
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
+              <option value="" disabled hidden>
+                Select a Project Type
+              </option>
+              <option value="Fundamental Research">Fundamental Research</option>
+              <option value="Applied Research">Applied Research</option>
+              <option value="Fundamental + Applied">Fundamental + Applied</option>
+              <option value="Knowledge Transfer Program (KTP)">Knowledge Transfer Program (KTP)</option>
+              <option value="CSR (Corporate Social Responsibility)">CSR (Corporate Social Responsibility)</option>
+            </select>
+            {errors.project_type && <p className="text-red-500 text-xs mt-1">{errors.project_type}</p>}
+          </div>
+
+          {/* Purpose */}
+          <div>
+            <label className="block text-gray-700 font-medium">Purpose</label>
+            <select
+              value={data.purpose}
+              onChange={(e) => setData("purpose", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="find_accollaboration">Find Academician Collaboration</option>
+              <option value="find_incollaboration">Find Industry Collaboration</option>
+              <option value="find_sponsorship">Find Sponsorship</option>
             </select>
           </div>
 
@@ -240,18 +185,6 @@ const handleSubmit = async (e) => {
             </div>
           </div>
 
-          {/* Budget */}
-          <div>
-            <label className="block text-gray-700 font-medium">Budget</label>
-            <input
-              type="number"
-              value={data.budget}
-              onChange={(e) => setData("budget", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter budget (e.g., 5000.00)"
-            />
-          </div>
-
           {/* Tags */}
           <div className="relative">
             <label htmlFor="tags" className="block text-gray-700 font-medium">
@@ -260,13 +193,16 @@ const handleSubmit = async (e) => {
             <button
               type="button"
               className="w-full text-left border rounded-lg p-2 mt-1 text-sm bg-white"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
+              onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
             >
               Select or Add Tags
             </button>
+
+            {/* Dropdown Menu */}
             {dropdownOpen && (
               <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
                 <div className="flex flex-col p-2 max-h-40 overflow-y-auto">
+                  {/* Predefined Tags */}
                   <label className="inline-flex items-center py-1">
                     <input
                       type="checkbox"
@@ -286,6 +222,7 @@ const handleSubmit = async (e) => {
                     />
                     <span className="ml-2">Artificial Intelligence</span>
                   </label>
+
                   <label className="inline-flex items-center py-1">
                     <input
                       type="checkbox"
@@ -306,7 +243,7 @@ const handleSubmit = async (e) => {
                     <span className="ml-2">Quantum Computing</span>
                   </label>
 
-                <label className="inline-flex items-center py-1">
+                  <label className="inline-flex items-center py-1">
                     <input
                       type="checkbox"
                       name="tags"
@@ -367,6 +304,7 @@ const handleSubmit = async (e) => {
                   </label>
                 </div>
 
+                {/* Input for Custom Tag */}
                 <div className="border-t border-gray-200 p-2 mt-2">
                   <input
                     type="text"
@@ -385,6 +323,8 @@ const handleSubmit = async (e) => {
                 </div>
               </div>
             )}
+
+            {/* Display Selected Tags */}
             <div className="mt-3 flex flex-wrap gap-2">
               {data.tags?.map((tag) => (
                 <div
@@ -402,73 +342,56 @@ const handleSubmit = async (e) => {
                 </div>
               ))}
             </div>
+
+            {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
           </div>
-          {/* Category */}
+
+          {/* Email */}
           <div>
-            <label htmlFor="category" className="block text-gray-700 font-medium">
-              Category
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={data.category}
-              onChange={(e) => setData("category", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select a Category
-              </option>
-              <option value="STEM">STEM (Science, Technology, Engineering, Mathematics)</option>
-              <option value="Humanities">Humanities</option>
-              <option value="Social Sciences">Social Sciences</option>
-              <option value="Arts">Arts</option>
-              <option value="Health & Medicine">Health & Medicine</option>
-              <option value="Business & Economics">Business & Economics</option>
-              <option value="Environment & Sustainability">Environment & Sustainability</option>
-              <option value="Education">Education</option>
-              <option value="Technology">Technology</option>
-              <option value="Innovation">Innovation</option>
-              <option value="Entrepreneurship">Entrepreneurship</option>
-              <option value="Agriculture">Agriculture</option>
-              <option value="Energy">Energy</option>
-              <option value="Climate Action">Climate Action</option>
-              <option value="Transport & Infrastructure">Transport & Infrastructure</option>
-              <option value="Public Policy">Public Policy</option>
-              <option value="Culture & Heritage">Culture & Heritage</option>
-              <option value="Law & Governance">Law & Governance</option>
-              <option value="Mental Health">Mental Health</option>
-              <option value="Sports & Recreation">Sports & Recreation</option>
-              <option value="Community Development">Community Development</option>
-            </select>
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+              <label className="block text-gray-700 font-medium">Email</label>
+              <input
+                  type="email"
+                  value={data.email}
+                  onChange={(e) => setData("email", e.target.value)}
+                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
+                  placeholder="Enter email"
+              />
+              {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
+              {/* Use Personal Email Checkbox */}
+              <div className="mt-2 flex items-center">
+                  <input
+                      type="checkbox"
+                      id="usePersonalEmail"
+                      checked={data.email === auth.email}
+                      onChange={(e) => {
+                          if (e.target.checked) {
+                              setData("email", auth.email); // Set email to personal email
+                          } else {
+                              setData("email", ""); // Clear email field
+                          }
+                      }}
+                      className="form-checkbox h-5 w-5 text-blue-600"
+                  />
+                  <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
+                      Use personal email ({auth.email})
+                  </label>
+              </div>
           </div>
 
-
-          {/* Sponsored By */}
+          {/* Contact Number */}
           <div>
             <label className="block text-gray-700 font-medium">
-              Sponsored By
+              Contact Number
             </label>
             <input
               type="text"
-              value={data.sponsored_by}
-              onChange={(e) => setData("sponsored_by", e.target.value)}
+              value={data.contact_number}
+              onChange={(e) => setData("contact_number", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter sponsor"
+              placeholder="Enter contact number"
             />
-          </div>
-
-          {/* Purpose */}
-          <div>
-            <label className="block text-gray-700 font-medium">Purpose</label>
-            <select
-              value={data.purpose}
-              onChange={(e) => setData("purpose", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="find_pgstudent">Find Postgraduate Student</option>
-              <option value="find_collaboration">Find Collaboration</option>
-            </select>
           </div>
 
           {/* Location */}
@@ -493,72 +416,22 @@ const handleSubmit = async (e) => {
             {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
           </div>
 
-          {/* Email */}
-            <div>
-                <label className="block text-gray-700 font-medium">Email</label>
-                <input
-                    type="email"
-                    value={data.email}
-                    onChange={(e) => setData("email", e.target.value)}
-                    className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                    placeholder="Enter email"
-                />
-                {errors.email && (
-                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
-                {/* Use Personal Email Checkbox */}
-                <div className="mt-2 flex items-center">
-                    <input
-                        type="checkbox"
-                        id="usePersonalEmail"
-                        checked={data.email === auth.email}
-                        onChange={(e) => {
-                            if (e.target.checked) {
-                                setData("email", auth.email); // Set email to personal email
-                            } else {
-                                setData("email", ""); // Clear email field
-                            }
-                        }}
-                        className="form-checkbox h-5 w-5 text-blue-600"
-                    />
-                    <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
-                        Use personal email ({auth.email})
-                    </label>
-                </div>
-            </div>
-
-
-          {/* Contact Number */}
+          {/* Budget */}
           <div>
-            <label className="block text-gray-700 font-medium">
-              Contact Number
-            </label>
+            <label className="block text-gray-700 font-medium">Budget</label>
             <input
-              type="text"
-              value={data.contact_number}
-              onChange={(e) => setData("contact_number", e.target.value)}
+              type="number"
+              value={data.budget}
+              onChange={(e) => setData("budget", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter contact number"
+              placeholder="Enter budget (e.g., 5000.00)"
             />
           </div>
 
-          {/* Eligibility Criteria */}
+          {/* Featured Project */}
           <div>
             <label className="block text-gray-700 font-medium">
-              Eligibility Criteria
-            </label>
-            <textarea
-              value={data.eligibility_criteria}
-              onChange={(e) => setData("eligibility_criteria", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter eligibility criteria"
-            ></textarea>
-          </div>
-
-          {/* Featured Grant */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Featured Grant
+              Featured Project
             </label>
             <div className="flex items-center space-x-4 mt-2">
               <label className="flex items-center">
@@ -579,7 +452,7 @@ const handleSubmit = async (e) => {
                   value="false"
                   checked={data.is_featured === 0}
                   onChange={() => setData("is_featured", 0)}
-                  className="form-radio h-5 w-5 text-blue-600" 
+                  className="form-radio h-5 w-5 text-blue-600"
                 />
                 <span className="ml-2 text-gray-700">No</span>
               </label>
@@ -587,52 +460,22 @@ const handleSubmit = async (e) => {
             {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
           </div>
 
-          {/* Application URL */}
+          {/* Attachment Upload */}
           <div>
               <label className="block text-gray-700 font-medium">
-                  Application URL
+                  Upload Attachment
               </label>
               <input
-                  type="url"
-                  value={data.application_url}
-                  onChange={(e) => setData("application_url", e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                  placeholder="Enter application URL"
+                  type="file"
+                  onChange={(e) => setData("attachment", e.target.files[0])}
+                  className="w-full rounded-lg border-gray-200 p-2 text-sm"
               />
-              {errors.application_url && (
-                  <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>
+              {errors.attachment && (
+                  <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
               )}
           </div>
 
-          {/* Attachment Upload */}
-          {/* <div>
-            <label className="block text-gray-700 font-medium">
-              Upload Attachment
-            </label>
-            <input
-              type="file"
-              onChange={(e) => setData("attachment", e.target.files[0])}
-              className="w-full rounded-lg border-gray-200 p-2 text-sm"
-            />
-            {postGrant.attachment && (
-              <p className="text-gray-600 text-sm mt-2">
-                Current Attachment:{" "}
-                <a
-                  href={`/storage/${postGrant.attachment}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  View Attachment
-                </a>
-              </p>
-            )}
-            {errors.attachment && (
-              <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
-            )}
-          </div> */}
-
-          {/* Save Button */}
+          {/* Buttons */}
           <div className="flex space-x-4">
             <button
               type="button"
@@ -646,7 +489,7 @@ const handleSubmit = async (e) => {
               disabled={processing}
               className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
             >
-              Update
+              Save
             </button>
           </div>
         </form>

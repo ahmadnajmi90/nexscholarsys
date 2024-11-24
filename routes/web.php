@@ -10,9 +10,10 @@ use App\Http\Controllers\Auth\ProfileCompletionController;
 use App\Http\Controllers\PostgraduateController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use App\Http\Controllers\PostGrantForStudentController;
+use App\Http\Controllers\PostGrantController;
 use Silber\Bouncer\BouncerFacade;
 use App\Http\Controllers\RoleProfileController;
+use App\Http\Controllers\PostProjectController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -26,12 +27,12 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/complete-profile', [ProfileCompletionController::class, 'show'])->name('profile.complete');
     Route::post('/complete-profile', [ProfileCompletionController::class, 'update']);
-    Route::get('/dashboard/post-grants', [PostGrantForStudentController::class, 'index'])->name('post-grants.index');
-    Route::get('/dashboard/post-grants/create', [PostGrantForStudentController::class, 'create'])->name('post-grants.create');
-    Route::post('/dashboard/post-grants', [PostGrantForStudentController::class, 'store'])->name('post-grants.store');
-    Route::get('/dashboard/post-grants/{id}/edit', [PostGrantForStudentController::class, 'edit'])->name('post-grants.edit');
-    Route::put('/dashboard/post-grants/{id}', [PostGrantForStudentController::class, 'update'])->name('post-grants.update');
-    Route::delete('/dashboard/post-grants/{id}', [PostGrantForStudentController::class, 'destroy'])->name('post-grants.destroy');
+    Route::get('/dashboard/post-grants', [PostGrantController::class, 'index'])->name('post-grants.index');
+    Route::get('/dashboard/post-grants/create', [PostGrantController::class, 'create'])->name('post-grants.create');
+    Route::post('/dashboard/post-grants', [PostGrantController::class, 'store'])->name('post-grants.store');
+    Route::get('/dashboard/post-grants/{id}/edit', [PostGrantController::class, 'edit'])->name('post-grants.edit');
+    Route::post('/dashboard/post-grants/{id}', [PostGrantController::class, 'update'])->name('post-grants.update');
+    Route::delete('/dashboard/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
 
     Route::get('/dashboard', function (Request $request) {
         if (!Auth::user()->is_profile_complete) {
@@ -68,5 +69,15 @@ Route::resource('academicians', AcademicianController::class)
 Route::resource('postgraduates', PostgraduateController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']); 
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/post-projects', [PostProjectController::class, 'index'])->name('post-projects.index');
+    Route::get('/post-projects/create', [PostProjectController::class, 'create'])->name('post-projects.create');
+    Route::post('/post-projects', [PostProjectController::class, 'store'])->name('post-projects.store');
+    Route::get('/post-projects/{id}/edit', [PostProjectController::class, 'edit'])->name('post-projects.edit');
+    Route::post('/post-projects/{id}', [PostProjectController::class, 'update'])->name('post-projects.update');
+    Route::delete('/post-projects/{id}', [PostProjectController::class, 'destroy'])->name('post-projects.destroy');
+});
+
 
 require __DIR__.'/auth.php';

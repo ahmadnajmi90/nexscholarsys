@@ -16,6 +16,7 @@ export default function UpdateProfileInformation({
     const academician = usePage().props.academician; // Related academician data
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
 
+    // const variable =
     const { data, setData, post, errors, processing, recentlySuccessful } =
         useForm({
             //data both have 
