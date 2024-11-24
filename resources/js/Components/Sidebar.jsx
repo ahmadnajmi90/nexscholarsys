@@ -146,8 +146,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         </button>
                         {menuOpen.grant && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Sponsorship</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Research Collaboration</Link>
+                                <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">Grant</Link>
+                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Sponsorship</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Research Collaboration</Link> */}
                             </div>
                         )}
                          <button
@@ -160,9 +161,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         </button>
                         {menuOpen.researchManagement && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Project</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Paper</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Thesis</Link>
+                                <Link href="/project" className="block py-2 hover:bg-gray-100 rounded">Project</Link>
+                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Paper</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Thesis</Link> */}
                             </div>
                         )}
 
@@ -176,8 +177,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         </button>
                         {menuOpen.event && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link>
+                                <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">Event</Link>
+                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
                             </div>
                         )}
                           <button

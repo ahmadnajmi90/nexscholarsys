@@ -15,6 +15,9 @@ use Silber\Bouncer\BouncerFacade;
 use App\Http\Controllers\RoleProfileController;
 use App\Http\Controllers\PostProjectController;
 use App\Http\Controllers\PostEventController;
+use App\Http\Controllers\ShowProjectController;
+use App\Http\Controllers\ShowEventController;
+use App\Http\Controllers\ShowGrantController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -70,6 +73,18 @@ Route::resource('academicians', AcademicianController::class)
 Route::resource('postgraduates', PostgraduateController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']); 
+
+Route::resource('project', ShowProjectController::class)
+->only(['index'])
+->middleware(['auth', 'verified']);
+
+Route::resource('event', ShowEventController::class)
+->only(['index'])
+->middleware(['auth', 'verified']);
+
+Route::resource('grant', ShowGrantController::class)
+->only(['index'])
+->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-projects', [PostProjectController::class, 'index'])->name('post-projects.index');
