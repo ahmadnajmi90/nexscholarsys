@@ -17,7 +17,7 @@ export default function UpdateProfileInformation({
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
 
     // const variable =
-    const { data, setData, post, errors, processing, recentlySuccessful } =
+    const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
             //data both have 
             phone_number: academician?.phone_number || postgraduate?.phone_number || '',
@@ -77,8 +77,10 @@ export default function UpdateProfileInformation({
             // Add all form fields to FormData
             Object.keys(data).forEach((key) => {
                 if (key === 'profile_picture') {
-                    if (data[key] instanceof File) {
-                        formData.append(key, data[key]); // Only append if it's a valid file
+                    if (data.profile_picture instanceof File) {
+                        formData.append('profile_picture', data.profile_picture); // Append file if new one is uploaded
+                    } else if (typeof data.profile_picture === 'string') {
+                        formData.append('profile_picture', data.profile_picture); // Append existing path if no new file is uploaded
                     }
                 } else if (Array.isArray(data[key])) {
                     formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON strings
@@ -88,12 +90,9 @@ export default function UpdateProfileInformation({
             });
             console.log(formData);
             
-            post(route('role.update'), {
+            patch(route('role.update'), {
                 data: formData,
                 headers: { 'Content-Type': 'multipart/form-data' },
-                onSuccess: () => {
-                    alert("Profile updated successfully!");
-                },
                 onError: (errors) => {
                     console.error('Error updating profile:', errors);
                     alert("Failed to update the profile. Please try again.");
@@ -171,10 +170,9 @@ export default function UpdateProfileInformation({
                         className="mt-1 block w-full"
                         onChange={(e) => {
                             if (e.target.files[0]) {
-                                setData('profile_picture', e.target.files[0]); // Store the new file
-                            }
-                            else {
-                                setData('profile_picture', null); // Set null if no file is selected
+                                setData('profile_picture', e.target.files[0]); // Set new file
+                            } else {
+                                setData('profile_picture', academician?.profile_picture || postgraduate?.profile_picture); // Keep existing path
                             }
                         }}
                     />

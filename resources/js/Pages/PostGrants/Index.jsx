@@ -3,10 +3,10 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 
 const Index = () => {
-    const { postGrants } = usePage().props;
+    const { postGrants, isPostgraduate } = usePage().props;
 
     return (
-        <MainLayout title="Your Grants">
+        <MainLayout title="Your Grants" isPostgraduate={isPostgraduate}>
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold">Your Grants</h1>
                 <Link

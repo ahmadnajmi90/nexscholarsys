@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import axios from 'axios';
 
 
-export default function Edit({ postProject, auth }) {
-  const { data, setData, put, processing, errors } = useForm({
+export default function Edit({ postProject, auth, isPostgraduate }) {
+  const { data, setData, post, processing, errors } = useForm({
     title: postProject.title || "",
     description: postProject.description || "",
-    // image: null,
+    image: postProject.image || null,
     project_type: postProject.project_type || "",
     purpose: postProject.purpose || "find_sponsorship",
     start_date: postProject.start_date || "",
@@ -19,7 +18,7 @@ export default function Edit({ postProject, auth }) {
     location: postProject.location || "",
     budget: postProject.budget || "",
     is_featured: postProject.is_featured || false,
-    // attachment: null,
+    attachment: postProject.attachment || null,
   });
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -36,30 +35,6 @@ export default function Edit({ postProject, auth }) {
     setData("tags", data.tags?.filter((tag) => tag !== tagToRemove));
   };
 
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     const formData = new FormData();
-
-//     Object.keys(data).forEach((key) => {
-//       if (data[key] instanceof File) {
-//         formData.append(key, data[key]);
-//       } else if (Array.isArray(data[key])) {
-//         formData.append(key, JSON.stringify(data[key]));
-//       } else {
-//         formData.append(key, data[key]);
-//       }
-//     });
-
-//     console.log("Form submitted");
-//     console.log("Form Data: ", formData); // Log the form data
-
-//     put(route("post-grants.update", postGrant.id), {
-//       data: formData,
-//       headers: { "Content-Type": "multipart/form-data" },
-//     });
-//   };
-
 const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -67,8 +42,13 @@ const handleSubmit = async (e) => {
 
     // Add all data to FormData
     Object.keys(data).forEach((key) => {
-        if (data[key] instanceof File) {
-            formData.append(key, data[key]);
+        if (key === 'image' || key === 'attachment') {
+          // Check if the field contains a file or existing path
+          if (data[key] instanceof File) {
+              formData.append(key, data[key]); // Append file
+          } else if (typeof data[key] === 'string') {
+              formData.append(key, data[key]); // Append existing path
+          }
         } else if (Array.isArray(data[key])) {
             formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON
         } else {
@@ -76,40 +56,26 @@ const handleSubmit = async (e) => {
         }
     });
 
-    // Debug FormData
     console.log("Form Data Contents:");
     for (let pair of formData.entries()) {
         console.log(pair[0] + ": " + pair[1]);
     }
-
-    try {
-        formData.append('_method', 'POST'); // or 'PUT'
-        const response = await axios.post(
-            `/post-projects/${postProject.id}`, // Update the endpoint for your route
-            formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data', // Required for FormData
-                },
-            }
-        );
-
-        console.log("Form submitted successfully:", response.data);
-
-        // Optionally redirect or show success message
-        window.location.href = "/post-projects";
-    } catch (error) {
-        if (error.response && error.response.data) {
-            console.error("Validation errors:", error.response.data.errors);
-            // Handle validation errors if needed
-        } else {
-            console.error("An error occurred:", error);
-        }
-    }
+            
+    post(route('post-projects.update', postProject.id), {
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onSuccess: () => {
+            alert("Project updated successfully!");
+        },
+        onError: (errors) => {
+            console.error('Error updating project:', errors);
+            alert("Failed to update the project. Please try again.");
+        },
+    });
 };
 
   return (
-    <MainLayout title="Edit Project">
+    <MainLayout title="Edit Project" isPostgraduate={isPostgraduate}>
       <div className="p-8">
         <form
           onSubmit={handleSubmit}
@@ -153,21 +119,28 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Image Upload */}
-          {/* <div>
+          <div>
             <label className="block text-gray-700 font-medium">
               Upload Image
             </label>
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setData("image", e.target.files[0])}
-              className="w-full rounded-lg border-gray-200 p-2 text-sm"
+                type="file"
+                id="image"
+                name="image"
+                className="mt-1 block w-full"
+                onChange={(e) => {
+                    if (e.target.files[0]) {
+                        setData('image', e.target.files[0]); // Set new file
+                    } else {
+                        setData('image', postProject.image); // Keep existing path
+                    }
+                }}
             />
-            {postGrant.image && (
+            {postProject.image && (
               <p className="text-gray-600 text-sm mt-2">
                 Current Image:{" "}
                 <a
-                  href={`/storage/${postGrant.image}`}
+                  href={`/storage/${postProject.image}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 underline"
@@ -179,7 +152,7 @@ const handleSubmit = async (e) => {
             {errors.image && (
               <p className="text-red-500 text-xs mt-1">{errors.image}</p>
             )}
-          </div> */}
+          </div>
 
           {/* Project Type */}
           <div>
@@ -514,20 +487,26 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Attachment Upload */}
-          {/* <div>
+          <div>
             <label className="block text-gray-700 font-medium">
               Upload Attachment
             </label>
             <input
-              type="file"
-              onChange={(e) => setData("attachment", e.target.files[0])}
-              className="w-full rounded-lg border-gray-200 p-2 text-sm"
+                type="file"
+                className="mt-1 block w-full"
+                onChange={(e) => {
+                    if (e.target.files[0]) {
+                        setData('attachment', e.target.files[0]); // Set new file
+                    } else {
+                        setData('attachment', postProject.attachment); // Keep existing path
+                    }
+                }}
             />
-            {postGrant.attachment && (
+            {postProject.attachment && (
               <p className="text-gray-600 text-sm mt-2">
                 Current Attachment:{" "}
                 <a
-                  href={`/storage/${postGrant.attachment}`}
+                  href={`/storage/${postProject.attachment}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 underline"
@@ -539,7 +518,7 @@ const handleSubmit = async (e) => {
             {errors.attachment && (
               <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
             )}
-          </div> */}
+          </div>
 
           {/* Save Button */}
           <div className="flex space-x-4">

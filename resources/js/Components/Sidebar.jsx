@@ -91,6 +91,12 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post Projects</span>
                         </Link>)}
 
+                        {!isPostgraduate && (
+                        <Link href={route('post-events.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                            <FaUniversity className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post Events</span>
+                        </Link>)}
+
                     </div>
 
                     {/* Networking Section */}

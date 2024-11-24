@@ -12,6 +12,7 @@ use App\Models\Industry;
 use App\Models\Postgraduate;
 use App\Models\PostGrant;
 use App\Models\PostProject;
+use App\Models\PostEvent;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -79,5 +80,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function postProjects()
     {
         return $this->hasMany(PostProject::class, 'author_id', 'unique_id');
+    }
+
+    public function postEvents()
+    {
+        return $this->hasMany(PostEvent::class, 'author_id', 'unique_id');
     }
 }

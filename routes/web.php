@@ -14,6 +14,7 @@ use App\Http\Controllers\PostGrantController;
 use Silber\Bouncer\BouncerFacade;
 use App\Http\Controllers\RoleProfileController;
 use App\Http\Controllers\PostProjectController;
+use App\Http\Controllers\PostEventController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -58,7 +59,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/role', [RoleProfileController::class, 'edit'])->name('role.edit');
-    Route::post('/role', [RoleProfileController::class, 'update'])->name('role.update');
+    Route::patch('/role', [RoleProfileController::class, 'update'])->name('role.update');
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
 });
 
@@ -77,6 +78,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-projects/{id}/edit', [PostProjectController::class, 'edit'])->name('post-projects.edit');
     Route::post('/post-projects/{id}', [PostProjectController::class, 'update'])->name('post-projects.update');
     Route::delete('/post-projects/{id}', [PostProjectController::class, 'destroy'])->name('post-projects.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/post-events', [PostEventController::class, 'index'])->name('post-events.index');
+    Route::get('/post-events/create', [PostEventController::class, 'create'])->name('post-events.create');
+    Route::post('/post-events', [PostEventController::class, 'store'])->name('post-events.store');
+    Route::get('/post-events/{id}/edit', [PostEventController::class, 'edit'])->name('post-events.edit');
+    Route::post('/post-events/{id}', [PostEventController::class, 'update'])->name('post-events.update');
+    Route::delete('/post-events/{id}', [PostEventController::class, 'destroy'])->name('post-events.destroy');
 });
 
 

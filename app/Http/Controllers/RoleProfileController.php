@@ -43,24 +43,19 @@ class RoleProfileController extends Controller
 
         if ($request->hasFile('profile_picture')) {
             logger()->info('hasFile');
-            $file = $request->file('profile_picture');
-    
             // Delete the old profile picture if it exists
             if ($isPostgraduate && $user->postgraduate && $user->postgraduate->profile_picture) {
                 Storage::disk('public')->delete($user->postgraduate->profile_picture);
             } elseif ($isAcademician && $user->academician && $user->academician->profile_picture) {
                 Storage::disk('public')->delete($user->academician->profile_picture);
             }
-    
+
             // Store the new profile picture
-            $filePath = $file->store('profile_pictures', 'public');
+            $filePath = $request->file('profile_picture')->store('profile_pictures', 'public');
             $validatedData['profile_picture'] = $filePath; // Add file path to validated data
         } else {
-            if ($isPostgraduate) {
-                $validatedData['profile_picture'] = $user->postgraduate->profile_picture; // Keep the existing path
-            } elseif ($isAcademician) {
-                $validatedData['profile_picture'] = $user->academician->profile_picture;
-            }
+            // Keep the existing path
+            $validatedData['profile_picture'] = $request->input('profile_picture');
         }
 
         // Decode the JSON fields only if they are strings

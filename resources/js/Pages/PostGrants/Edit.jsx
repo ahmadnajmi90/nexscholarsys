@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import axios from 'axios';
 
 
-export default function Edit({ postGrant, auth }) {
-  const { data, setData, put, processing, errors } = useForm({
+export default function Edit({ postGrant, auth, isPostgraduate }) {
+  const { data, setData, post, processing, errors } = useForm({
     title: postGrant.title || "",
     description: postGrant.description || "",
-    // image: null,
+    image: postGrant.image || null,
     post_status: postGrant.post_status || "draft",
     grant_status: postGrant.grant_status || "open",
     category: postGrant.category || "",
@@ -24,7 +23,7 @@ export default function Edit({ postGrant, auth }) {
     eligibility_criteria: postGrant.eligibility_criteria || "",
     is_featured: postGrant.is_featured || false,
     application_url: postGrant.application_url || "",
-    // attachment: null,
+    attachment: postGrant.attachment || null,
   });
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -41,30 +40,6 @@ export default function Edit({ postGrant, auth }) {
     setData("tags", data.tags?.filter((tag) => tag !== tagToRemove));
   };
 
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     const formData = new FormData();
-
-//     Object.keys(data).forEach((key) => {
-//       if (data[key] instanceof File) {
-//         formData.append(key, data[key]);
-//       } else if (Array.isArray(data[key])) {
-//         formData.append(key, JSON.stringify(data[key]));
-//       } else {
-//         formData.append(key, data[key]);
-//       }
-//     });
-
-//     console.log("Form submitted");
-//     console.log("Form Data: ", formData); // Log the form data
-
-//     put(route("post-grants.update", postGrant.id), {
-//       data: formData,
-//       headers: { "Content-Type": "multipart/form-data" },
-//     });
-//   };
-
 const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -72,8 +47,13 @@ const handleSubmit = async (e) => {
 
     // Add all data to FormData
     Object.keys(data).forEach((key) => {
-        if (data[key] instanceof File) {
-            formData.append(key, data[key]);
+        if (key === 'image' || key === 'attachment') {
+          // Check if the field contains a file or existing path
+          if (data[key] instanceof File) {
+              formData.append(key, data[key]); // Append file
+          } else if (typeof data[key] === 'string') {
+              formData.append(key, data[key]); // Append existing path
+          }
         } else if (Array.isArray(data[key])) {
             formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON
         } else {
@@ -87,34 +67,21 @@ const handleSubmit = async (e) => {
         console.log(pair[0] + ": " + pair[1]);
     }
 
-    try {
-        formData.append('_method', 'POST'); // or 'PUT'
-        const response = await axios.post(
-            `/dashboard/post-grants/${postGrant.id}`, // Update the endpoint for your route
-            formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data', // Required for FormData
-                },
-            }
-        );
-
-        console.log("Form submitted successfully:", response.data);
-
-        // Optionally redirect or show success message
-        window.location.href = "/dashboard/post-grants";
-    } catch (error) {
-        if (error.response && error.response.data) {
-            console.error("Validation errors:", error.response.data.errors);
-            // Handle validation errors if needed
-        } else {
-            console.error("An error occurred:", error);
-        }
-    }
+    post(route('post-grants.update', postGrant.id), {
+      data: formData,
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onSuccess: () => {
+        alert("Grant updated successfully!");
+      },
+      onError: (errors) => {
+          console.error('Error updating grant:', errors);
+          alert("Failed to update the grant. Please try again.");
+      },
+    });
 };
 
   return (
-    <MainLayout title="Edit Grant">
+    <MainLayout title="Edit Grant" isPostgraduate={isPostgraduate}>
       <div className="p-8">
         <form
           onSubmit={handleSubmit}
@@ -158,15 +125,22 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Image Upload */}
-          {/* <div>
+          <div>
             <label className="block text-gray-700 font-medium">
               Upload Image
             </label>
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setData("image", e.target.files[0])}
-              className="w-full rounded-lg border-gray-200 p-2 text-sm"
+                type="file"
+                id="image"
+                name="image"
+                className="mt-1 block w-full"
+                onChange={(e) => {
+                    if (e.target.files[0]) {
+                        setData('image', e.target.files[0]); // Set new file
+                    } else {
+                        setData('image', postGrant.image); // Keep existing path
+                    }
+                }}
             />
             {postGrant.image && (
               <p className="text-gray-600 text-sm mt-2">
@@ -184,7 +158,7 @@ const handleSubmit = async (e) => {
             {errors.image && (
               <p className="text-red-500 text-xs mt-1">{errors.image}</p>
             )}
-          </div> */}
+          </div>
 
           {/* Post Status */}
           <div>
@@ -605,14 +579,20 @@ const handleSubmit = async (e) => {
           </div>
 
           {/* Attachment Upload */}
-          {/* <div>
+          <div>
             <label className="block text-gray-700 font-medium">
               Upload Attachment
             </label>
             <input
-              type="file"
-              onChange={(e) => setData("attachment", e.target.files[0])}
-              className="w-full rounded-lg border-gray-200 p-2 text-sm"
+                type="file"
+                className="mt-1 block w-full"
+                onChange={(e) => {
+                    if (e.target.files[0]) {
+                        setData('attachment', e.target.files[0]); // Set new file
+                    } else {
+                        setData('attachment', postGrant.attachment); // Keep existing path
+                    }
+                }}
             />
             {postGrant.attachment && (
               <p className="text-gray-600 text-sm mt-2">
@@ -630,7 +610,7 @@ const handleSubmit = async (e) => {
             {errors.attachment && (
               <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
             )}
-          </div> */}
+          </div>
 
           {/* Save Button */}
           <div className="flex space-x-4">

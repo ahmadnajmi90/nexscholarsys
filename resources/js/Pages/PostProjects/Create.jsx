@@ -4,7 +4,7 @@ import MainLayout from "../../Layouts/MainLayout";
 import { useState } from "react";
 
 export default function Create() {
-  const { auth } = usePage().props;
+  const { auth, isPostgraduate } = usePage().props;
 
   const { data, setData, post, processing, errors } = useForm({
     title: "",
@@ -62,7 +62,7 @@ export default function Create() {
   }
 
   return (
-    <MainLayout title="Add New Project">
+    <MainLayout title="Add New Project" isPostgraduate={isPostgraduate}>
       <div className="p-8">
         <form
           onSubmit={handleSubmit}
