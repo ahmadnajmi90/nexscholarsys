@@ -22,7 +22,9 @@ const MainLayout = ({ children, title, isPostgraduate }) => {
                     {children}
                 </div>
             </div>
+
         </div>
+
     );
 };
 
