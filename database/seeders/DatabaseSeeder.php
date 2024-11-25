@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
 
 
         $this->call([
-            PostGrantForStudentSeeder::class,
+            PostGrantSeeder::class,
             RoleSeeder::class,
             UniversityListSeeder::class,
             FacultyListSeeder::class,

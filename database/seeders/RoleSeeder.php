@@ -50,10 +50,30 @@ class RoleSeeder extends Seeder
             'title' => 'Post Grants',
         ]);
 
+        Bouncer::ability()->firstOrCreate([
+            'name' => 'post-projects',
+            'title' => 'Post Projects',
+        ]);
+
+        Bouncer::ability()->firstOrCreate([
+            'name' => 'post-events',
+            'title' => 'Post Events',
+        ]);
+
         Bouncer::allow('academician')->to('post-grants');
         Bouncer::allow('industry')->to('post-grants');
         Bouncer::allow('admin')->to('post-grants');
         Bouncer::disallow('postgraduate')->to('post-grants');
+
+        Bouncer::allow('academician')->to('post-projects');
+        Bouncer::allow('industry')->to('post-projects');
+        Bouncer::allow('admin')->to('post-projects');
+        Bouncer::disallow('postgraduate')->to('post-projects');
+
+        Bouncer::allow('academician')->to('post-events');
+        Bouncer::allow('industry')->to('post-events');
+        Bouncer::allow('admin')->to('post-events');
+        Bouncer::disallow('postgraduate')->to('post-events');
 
     }
 }

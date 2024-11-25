@@ -1,80 +1,88 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import { useState } from "react";
 
-export default function Create() {
-  const { auth, isPostgraduate } = usePage().props;
 
+export default function Edit({ postProject, auth, isPostgraduate }) {
   const { data, setData, post, processing, errors } = useForm({
-    title: "",
-    description: "",
-    image: null,
-    post_status: "draft",
-    grant_status: "open",
-    category: "",
-    tags: [],
-    sponsored_by: "",
-    location: "",
-    email: "",
-    contact_number: "",
-    purpose: "find_pgstudent",
-    start_date: "",
-    end_date: "",
-    budget: "",
-    eligibility_criteria: "",
-    is_featured: false,
-    application_url: "",
-    attachment: null
+    title: postProject.title || "",
+    description: postProject.description || "",
+    image: postProject.image || null,
+    project_type: postProject.project_type || "",
+    purpose: postProject.purpose || "find_sponsorship",
+    start_date: postProject.start_date || "",
+    end_date: postProject.end_date || "",
+    tags: postProject.tags ? JSON.parse(postProject.tags) : [],
+    email: postProject.email || "",
+    contact_number: postProject.contact_number || "",
+    location: postProject.location || "",
+    budget: postProject.budget || "",
+    is_featured: postProject.is_featured || false,
+    attachment: postProject.attachment || null,
   });
-  
-  const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
-  const [customTag, setCustomTag] = useState(""); // State to manage custom tag input
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [customTag, setCustomTag] = useState("");
 
   const handleAddCustomTag = () => {
     if (customTag.trim() !== "" && !data.tags?.includes(customTag)) {
-      setData("tags", [...(data.tags || []), customTag]); // Add the custom tag
-      setCustomTag(""); // Clear the input field
+      setData("tags", [...(data.tags || []), customTag]);
+      setCustomTag("");
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
-    setData("tags", data.tags?.filter((tag) => tag !== tagToRemove)); // Remove the tag
+    setData("tags", data.tags?.filter((tag) => tag !== tagToRemove));
   };
 
-  function handleSubmit(e) {
+const handleSubmit = async (e) => {
     e.preventDefault();
 
     const formData = new FormData();
 
-    // Add all other fields to FormData
+    // Add all data to FormData
     Object.keys(data).forEach((key) => {
-        if (data[key] instanceof File) {
-            formData.append(key, data[key]); // Append file fields
+        if (key === 'image' || key === 'attachment') {
+          // Check if the field contains a file or existing path
+          if (data[key] instanceof File) {
+              formData.append(key, data[key]); // Append file
+          } else if (typeof data[key] === 'string') {
+              formData.append(key, data[key]); // Append existing path
+          }
+        } else if (Array.isArray(data[key])) {
+            formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON
         } else {
-            formData.append(key, data[key]); // Append non-file fields
+            formData.append(key, data[key]);
         }
     });
 
-    console.log("Form submitted");
-    console.log("Form Data: ", formData); // Log the form data
-
-    // Submit the form using Inertia.js
-    post(route("post-grants.store"), {
+    console.log("Form Data Contents:");
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ": " + pair[1]);
+    }
+            
+    post(route('post-projects.update', postProject.id), {
         data: formData,
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onSuccess: () => {
+            alert("Project updated successfully!");
+        },
+        onError: (errors) => {
+            console.error('Error updating project:', errors);
+            alert("Failed to update the project. Please try again.");
+        },
     });
-  }
+};
 
   return (
-    <MainLayout title="Add New Grant" isPostgraduate={isPostgraduate}>
+    <MainLayout title="Edit Project" isPostgraduate={isPostgraduate}>
       <div className="p-8">
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-lg max-w-lg mx-auto space-y-6 shadow-lg"
         >
           <h1 className="text-xl font-semibold text-gray-700 text-center">
-            Add New Grant
+            Edit Project
           </h1>
 
           {/* Title */}
@@ -87,7 +95,7 @@ export default function Create() {
               value={data.title}
               onChange={(e) => setData("title", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter grant title"
+              placeholder="Enter project title"
             />
             {errors.title && (
               <p className="text-red-500 text-xs mt-1">{errors.title}</p>
@@ -112,45 +120,75 @@ export default function Create() {
 
           {/* Image Upload */}
           <div>
-              <label className="block text-gray-700 font-medium">
-                  Upload Image
-              </label>
-              <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData("image", e.target.files[0])}
-                  className="w-full rounded-lg border-gray-200 p-2 text-sm"
-              />
-              {errors.image && (
-                  <p className="text-red-500 text-xs mt-1">{errors.image}</p>
-              )}
-          </div>
-
-          {/* Post Status */}
-          <div>
-            <label className="block text-gray-700 font-medium">Post Status</label>
-            <select
-              value={data.post_status}
-              onChange={(e) => setData("post_status", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-
-          {/* Grant Status */}
-          <div>
             <label className="block text-gray-700 font-medium">
-              Grant Status
+              Upload Image
+            </label>
+            <input
+                type="file"
+                id="image"
+                name="image"
+                className="mt-1 block w-full"
+                onChange={(e) => {
+                    if (e.target.files[0]) {
+                        setData('image', e.target.files[0]); // Set new file
+                    } else {
+                        setData('image', postProject.image); // Keep existing path
+                    }
+                }}
+            />
+            {postProject.image && (
+              <p className="text-gray-600 text-sm mt-2">
+                Current Image:{" "}
+                <a
+                  href={`/storage/${postProject.image}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  View Image
+                </a>
+              </p>
+            )}
+            {errors.image && (
+              <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+            )}
+          </div>
+
+          {/* Project Type */}
+          <div>
+            <label htmlFor="project_type" className="block text-gray-700 font-medium">
+              Project Type
             </label>
             <select
-              value={data.grant_status}
-              onChange={(e) => setData("grant_status", e.target.value)}
+              id="project_type"
+              name="project_type"
+              value={data.project_type}
+              onChange={(e) => setData("project_type", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
             >
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
+              <option value="" disabled hidden>
+                Select a Project Type
+              </option>
+              <option value="Fundamental Research">Fundamental Research</option>
+              <option value="Applied Research">Applied Research</option>
+              <option value="Fundamental + Applied">Fundamental + Applied</option>
+              <option value="Knowledge Transfer Program (KTP)">Knowledge Transfer Program (KTP)</option>
+              <option value="CSR (Corporate Social Responsibility)">CSR (Corporate Social Responsibility)</option>
+            </select>
+            {errors.project_type && <p className="text-red-500 text-xs mt-1">{errors.project_type}</p>}
+          </div>
+
+          {/* Purpose */}
+          <div>
+            <label className="block text-gray-700 font-medium">Purpose</label>
+            <select
+              value={data.purpose}
+              onChange={(e) => setData("purpose", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="find_accollaboration">Find Academician Collaboration</option>
+              <option value="find_incollaboration">Find Industry Collaboration</option>
+              <option value="find_sponsorship">Find Sponsorship</option>
             </select>
           </div>
 
@@ -180,18 +218,6 @@ export default function Create() {
             </div>
           </div>
 
-          {/* Budget */}
-          <div>
-            <label className="block text-gray-700 font-medium">Budget</label>
-            <input
-              type="number"
-              value={data.budget}
-              onChange={(e) => setData("budget", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter budget (e.g., 5000.00)"
-            />
-          </div>
-
           {/* Tags */}
           <div className="relative">
             <label htmlFor="tags" className="block text-gray-700 font-medium">
@@ -200,16 +226,13 @@ export default function Create() {
             <button
               type="button"
               className="w-full text-left border rounded-lg p-2 mt-1 text-sm bg-white"
-              onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
+              onClick={() => setDropdownOpen(!dropdownOpen)}
             >
               Select or Add Tags
             </button>
-
-            {/* Dropdown Menu */}
             {dropdownOpen && (
               <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
                 <div className="flex flex-col p-2 max-h-40 overflow-y-auto">
-                  {/* Predefined Tags */}
                   <label className="inline-flex items-center py-1">
                     <input
                       type="checkbox"
@@ -229,7 +252,6 @@ export default function Create() {
                     />
                     <span className="ml-2">Artificial Intelligence</span>
                   </label>
-
                   <label className="inline-flex items-center py-1">
                     <input
                       type="checkbox"
@@ -250,7 +272,7 @@ export default function Create() {
                     <span className="ml-2">Quantum Computing</span>
                   </label>
 
-                  <label className="inline-flex items-center py-1">
+                <label className="inline-flex items-center py-1">
                     <input
                       type="checkbox"
                       name="tags"
@@ -311,7 +333,6 @@ export default function Create() {
                   </label>
                 </div>
 
-                {/* Input for Custom Tag */}
                 <div className="border-t border-gray-200 p-2 mt-2">
                   <input
                     type="text"
@@ -330,8 +351,6 @@ export default function Create() {
                 </div>
               </div>
             )}
-
-            {/* Display Selected Tags */}
             <div className="mt-3 flex flex-wrap gap-2">
               {data.tags?.map((tag) => (
                 <div
@@ -349,78 +368,58 @@ export default function Create() {
                 </div>
               ))}
             </div>
-
-            {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
           </div>
 
-          {/* Category */}
-          <div>
-            <label htmlFor="category" className="block text-gray-700 font-medium">
-              Category
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={data.category}
-              onChange={(e) => setData("category", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select a Category
-              </option>
-              <option value="STEM">STEM (Science, Technology, Engineering, Mathematics)</option>
-              <option value="Humanities">Humanities</option>
-              <option value="Social Sciences">Social Sciences</option>
-              <option value="Arts">Arts</option>
-              <option value="Health & Medicine">Health & Medicine</option>
-              <option value="Business & Economics">Business & Economics</option>
-              <option value="Environment & Sustainability">Environment & Sustainability</option>
-              <option value="Education">Education</option>
-              <option value="Technology">Technology</option>
-              <option value="Innovation">Innovation</option>
-              <option value="Entrepreneurship">Entrepreneurship</option>
-              <option value="Agriculture">Agriculture</option>
-              <option value="Energy">Energy</option>
-              <option value="Climate Action">Climate Action</option>
-              <option value="Transport & Infrastructure">Transport & Infrastructure</option>
-              <option value="Public Policy">Public Policy</option>
-              <option value="Culture & Heritage">Culture & Heritage</option>
-              <option value="Law & Governance">Law & Governance</option>
-              <option value="Mental Health">Mental Health</option>
-              <option value="Sports & Recreation">Sports & Recreation</option>
-              <option value="Community Development">Community Development</option>
-            </select>
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-          </div>
+          {/* Email */}
+            <div>
+                <label className="block text-gray-700 font-medium">Email</label>
+                <input
+                    type="email"
+                    value={data.email}
+                    onChange={(e) => setData("email", e.target.value)}
+                    className="w-full rounded-lg border-gray-200 p-4 text-sm"
+                    placeholder="Enter email"
+                />
+                {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
+                {/* Use Personal Email Checkbox */}
+                <div className="mt-2 flex items-center">
+                    <input
+                        type="checkbox"
+                        id="usePersonalEmail"
+                        checked={data.email === auth.email}
+                        onChange={(e) => {
+                            if (e.target.checked) {
+                                setData("email", auth.email); // Set email to personal email
+                            } else {
+                                setData("email", ""); // Clear email field
+                            }
+                        }}
+                        className="form-checkbox h-5 w-5 text-blue-600"
+                    />
+                    <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
+                        Use personal email ({auth.email})
+                    </label>
+                </div>
+            </div>
 
 
-          {/* Sponsored By */}
+          {/* Contact Number */}
           <div>
             <label className="block text-gray-700 font-medium">
-              Sponsored By
+              Contact Number
             </label>
             <input
               type="text"
-              value={data.sponsored_by}
-              onChange={(e) => setData("sponsored_by", e.target.value)}
+              value={data.contact_number}
+              onChange={(e) => setData("contact_number", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter sponsor"
+              placeholder="Enter contact number"
             />
           </div>
 
-          {/* Purpose */}
-          <div>
-            <label className="block text-gray-700 font-medium">Purpose</label>
-            <select
-              value={data.purpose}
-              onChange={(e) => setData("purpose", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="find_pgstudent">Find Postgraduate Student</option>
-              <option value="find_collaboration">Find Collaboration</option>
-            </select>
-          </div>
-
+          
           {/* Location */}
           <div>
             <label htmlFor="location" className="block text-gray-700 font-medium">
@@ -442,72 +441,23 @@ export default function Create() {
             </select>
             {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
           </div>
-
-          {/* Email */}
+          
+          {/* Budget */}
           <div>
-              <label className="block text-gray-700 font-medium">Email</label>
-              <input
-                  type="email"
-                  value={data.email}
-                  onChange={(e) => setData("email", e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                  placeholder="Enter email"
-              />
-              {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-              )}
-              {/* Use Personal Email Checkbox */}
-              <div className="mt-2 flex items-center">
-                  <input
-                      type="checkbox"
-                      id="usePersonalEmail"
-                      checked={data.email === auth.email}
-                      onChange={(e) => {
-                          if (e.target.checked) {
-                              setData("email", auth.email); // Set email to personal email
-                          } else {
-                              setData("email", ""); // Clear email field
-                          }
-                      }}
-                      className="form-checkbox h-5 w-5 text-blue-600"
-                  />
-                  <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
-                      Use personal email ({auth.email})
-                  </label>
-              </div>
-          </div>
-
-          {/* Contact Number */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Contact Number
-            </label>
+            <label className="block text-gray-700 font-medium">Budget</label>
             <input
-              type="text"
-              value={data.contact_number}
-              onChange={(e) => setData("contact_number", e.target.value)}
+              type="number"
+              value={data.budget}
+              onChange={(e) => setData("budget", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter contact number"
+              placeholder="Enter budget (e.g., 5000.00)"
             />
           </div>
 
-          {/* Eligibility Criteria */}
+          {/* Featured Project */}
           <div>
             <label className="block text-gray-700 font-medium">
-              Eligibility Criteria
-            </label>
-            <textarea
-              value={data.eligibility_criteria}
-              onChange={(e) => setData("eligibility_criteria", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter eligibility criteria"
-            ></textarea>
-          </div>
-
-          {/* Featured Grant */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Featured Grant
+              Featured Project
             </label>
             <div className="flex items-center space-x-4 mt-2">
               <label className="flex items-center">
@@ -536,39 +486,41 @@ export default function Create() {
             {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
           </div>
 
-          {/* Application URL */}
-          <div>
-              <label className="block text-gray-700 font-medium">
-                  Application URL
-              </label>
-              <input
-                  type="url"
-                  value={data.application_url}
-                  onChange={(e) => setData("application_url", e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                  placeholder="Enter application URL"
-              />
-              {errors.application_url && (
-                  <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>
-              )}
-          </div>
-
           {/* Attachment Upload */}
           <div>
-              <label className="block text-gray-700 font-medium">
-                  Upload Attachment
-              </label>
-              <input
-                  type="file"
-                  onChange={(e) => setData("attachment", e.target.files[0])}
-                  className="w-full rounded-lg border-gray-200 p-2 text-sm"
-              />
-              {errors.attachment && (
-                  <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
-              )}
+            <label className="block text-gray-700 font-medium">
+              Upload Attachment
+            </label>
+            <input
+                type="file"
+                className="mt-1 block w-full"
+                onChange={(e) => {
+                    if (e.target.files[0]) {
+                        setData('attachment', e.target.files[0]); // Set new file
+                    } else {
+                        setData('attachment', postProject.attachment); // Keep existing path
+                    }
+                }}
+            />
+            {postProject.attachment && (
+              <p className="text-gray-600 text-sm mt-2">
+                Current Attachment:{" "}
+                <a
+                  href={`/storage/${postProject.attachment}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  View Attachment
+                </a>
+              </p>
+            )}
+            {errors.attachment && (
+              <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
+            )}
           </div>
 
-          {/* Buttons */}
+          {/* Save Button */}
           <div className="flex space-x-4">
             <button
               type="button"
@@ -582,7 +534,7 @@ export default function Create() {
               disabled={processing}
               className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
             >
-              Save
+              Update
             </button>
           </div>
         </form>

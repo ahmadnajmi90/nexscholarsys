@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('post_grant_for_students', function (Blueprint $table) {
+        Schema::create('post_grants', function (Blueprint $table) {
             $table->id();
             $table->string('author_id');
             $table->string('title')->nullable();
@@ -34,8 +34,6 @@ return new class extends Migration
             $table->string('application_url')->nullable(); // Suggested
             $table->string('attachment')->nullable(); // Suggested
             $table->timestamps();
-
-
         });
     }
 
@@ -45,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('post_grant_for_students');
+        Schema::dropIfExists('post_grants');
     }
 };

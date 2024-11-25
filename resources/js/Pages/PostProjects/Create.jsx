@@ -10,21 +10,16 @@ export default function Create() {
     title: "",
     description: "",
     image: null,
-    post_status: "draft",
-    grant_status: "open",
-    category: "",
-    tags: [],
-    sponsored_by: "",
-    location: "",
-    email: "",
-    contact_number: "",
-    purpose: "find_pgstudent",
+    project_type: "",
+    purpose: "find_sponsorship",
     start_date: "",
     end_date: "",
+    tags: [],
+    email: "",
+    contact_number: "",
+    location: "",
     budget: "",
-    eligibility_criteria: "",
     is_featured: false,
-    application_url: "",
     attachment: null
   });
   
@@ -60,21 +55,21 @@ export default function Create() {
     console.log("Form Data: ", formData); // Log the form data
 
     // Submit the form using Inertia.js
-    post(route("post-grants.store"), {
+    post(route("post-projects.store"), {
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
     });
   }
 
   return (
-    <MainLayout title="Add New Grant" isPostgraduate={isPostgraduate}>
+    <MainLayout title="Add New Project" isPostgraduate={isPostgraduate}>
       <div className="p-8">
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-lg max-w-lg mx-auto space-y-6 shadow-lg"
         >
           <h1 className="text-xl font-semibold text-gray-700 text-center">
-            Add New Grant
+            Add New Project
           </h1>
 
           {/* Title */}
@@ -87,7 +82,7 @@ export default function Create() {
               value={data.title}
               onChange={(e) => setData("title", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter grant title"
+              placeholder="Enter project title"
             />
             {errors.title && (
               <p className="text-red-500 text-xs mt-1">{errors.title}</p>
@@ -126,31 +121,41 @@ export default function Create() {
               )}
           </div>
 
-          {/* Post Status */}
+          {/* Project Type */}
           <div>
-            <label className="block text-gray-700 font-medium">Post Status</label>
-            <select
-              value={data.post_status}
-              onChange={(e) => setData("post_status", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-
-          {/* Grant Status */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Grant Status
+            <label htmlFor="project_type" className="block text-gray-700 font-medium">
+              Project Type
             </label>
             <select
-              value={data.grant_status}
-              onChange={(e) => setData("grant_status", e.target.value)}
+              id="project_type"
+              name="project_type"
+              value={data.project_type}
+              onChange={(e) => setData("project_type", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
             >
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
+              <option value="" disabled hidden>
+                Select a Project Type
+              </option>
+              <option value="Fundamental Research">Fundamental Research</option>
+              <option value="Applied Research">Applied Research</option>
+              <option value="Fundamental + Applied">Fundamental + Applied</option>
+              <option value="Knowledge Transfer Program (KTP)">Knowledge Transfer Program (KTP)</option>
+              <option value="CSR (Corporate Social Responsibility)">CSR (Corporate Social Responsibility)</option>
+            </select>
+            {errors.project_type && <p className="text-red-500 text-xs mt-1">{errors.project_type}</p>}
+          </div>
+
+          {/* Purpose */}
+          <div>
+            <label className="block text-gray-700 font-medium">Purpose</label>
+            <select
+              value={data.purpose}
+              onChange={(e) => setData("purpose", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="find_accollaboration">Find Academician Collaboration</option>
+              <option value="find_incollaboration">Find Industry Collaboration</option>
+              <option value="find_sponsorship">Find Sponsorship</option>
             </select>
           </div>
 
@@ -178,18 +183,6 @@ export default function Create() {
                 className="w-full rounded-lg border-gray-200 p-4 text-sm"
               />
             </div>
-          </div>
-
-          {/* Budget */}
-          <div>
-            <label className="block text-gray-700 font-medium">Budget</label>
-            <input
-              type="number"
-              value={data.budget}
-              onChange={(e) => setData("budget", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter budget (e.g., 5000.00)"
-            />
           </div>
 
           {/* Tags */}
@@ -353,96 +346,6 @@ export default function Create() {
             {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
           </div>
 
-          {/* Category */}
-          <div>
-            <label htmlFor="category" className="block text-gray-700 font-medium">
-              Category
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={data.category}
-              onChange={(e) => setData("category", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select a Category
-              </option>
-              <option value="STEM">STEM (Science, Technology, Engineering, Mathematics)</option>
-              <option value="Humanities">Humanities</option>
-              <option value="Social Sciences">Social Sciences</option>
-              <option value="Arts">Arts</option>
-              <option value="Health & Medicine">Health & Medicine</option>
-              <option value="Business & Economics">Business & Economics</option>
-              <option value="Environment & Sustainability">Environment & Sustainability</option>
-              <option value="Education">Education</option>
-              <option value="Technology">Technology</option>
-              <option value="Innovation">Innovation</option>
-              <option value="Entrepreneurship">Entrepreneurship</option>
-              <option value="Agriculture">Agriculture</option>
-              <option value="Energy">Energy</option>
-              <option value="Climate Action">Climate Action</option>
-              <option value="Transport & Infrastructure">Transport & Infrastructure</option>
-              <option value="Public Policy">Public Policy</option>
-              <option value="Culture & Heritage">Culture & Heritage</option>
-              <option value="Law & Governance">Law & Governance</option>
-              <option value="Mental Health">Mental Health</option>
-              <option value="Sports & Recreation">Sports & Recreation</option>
-              <option value="Community Development">Community Development</option>
-            </select>
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
-          </div>
-
-
-          {/* Sponsored By */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Sponsored By
-            </label>
-            <input
-              type="text"
-              value={data.sponsored_by}
-              onChange={(e) => setData("sponsored_by", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter sponsor"
-            />
-          </div>
-
-          {/* Purpose */}
-          <div>
-            <label className="block text-gray-700 font-medium">Purpose</label>
-            <select
-              value={data.purpose}
-              onChange={(e) => setData("purpose", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="find_pgstudent">Find Postgraduate Student</option>
-              <option value="find_collaboration">Find Collaboration</option>
-            </select>
-          </div>
-
-          {/* Location */}
-          <div>
-            <label htmlFor="location" className="block text-gray-700 font-medium">
-              Location
-            </label>
-            <select
-              id="location"
-              name="location"
-              value={data.location}
-              onChange={(e) => setData("location", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select a Location
-              </option>
-              <option value="On-Campus">On-Campus</option>
-              <option value="Remote">Remote</option>
-              <option value="Hybrid">Hybrid</option>
-            </select>
-            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
-          </div>
-
           {/* Email */}
           <div>
               <label className="block text-gray-700 font-medium">Email</label>
@@ -491,23 +394,44 @@ export default function Create() {
             />
           </div>
 
-          {/* Eligibility Criteria */}
+          {/* Location */}
           <div>
-            <label className="block text-gray-700 font-medium">
-              Eligibility Criteria
+            <label htmlFor="location" className="block text-gray-700 font-medium">
+              Location
             </label>
-            <textarea
-              value={data.eligibility_criteria}
-              onChange={(e) => setData("eligibility_criteria", e.target.value)}
+            <select
+              id="location"
+              name="location"
+              value={data.location}
+              onChange={(e) => setData("location", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter eligibility criteria"
-            ></textarea>
+            >
+              <option value="" disabled hidden>
+                Select a Location
+              </option>
+              <option value="On-Campus">On-Campus</option>
+              <option value="Remote">Remote</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
           </div>
 
-          {/* Featured Grant */}
+          {/* Budget */}
+          <div>
+            <label className="block text-gray-700 font-medium">Budget</label>
+            <input
+              type="number"
+              value={data.budget}
+              onChange={(e) => setData("budget", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              placeholder="Enter budget (e.g., 5000.00)"
+            />
+          </div>
+
+          {/* Featured Project */}
           <div>
             <label className="block text-gray-700 font-medium">
-              Featured Grant
+              Featured Project
             </label>
             <div className="flex items-center space-x-4 mt-2">
               <label className="flex items-center">
@@ -534,23 +458,6 @@ export default function Create() {
               </label>
             </div>
             {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
-          </div>
-
-          {/* Application URL */}
-          <div>
-              <label className="block text-gray-700 font-medium">
-                  Application URL
-              </label>
-              <input
-                  type="url"
-                  value={data.application_url}
-                  onChange={(e) => setData("application_url", e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                  placeholder="Enter application URL"
-              />
-              {errors.application_url && (
-                  <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>
-              )}
           </div>
 
           {/* Attachment Upload */}
