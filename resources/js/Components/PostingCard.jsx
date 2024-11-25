@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import axios from 'axios';
+import axios from "axios";
 
 const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [filter, setFilter] = useState(""); // Filter value
+  const [currentPage, setCurrentPage] = useState(1); // Current page
 
   const handleQuickInfoClick = (item) => {
     setSelectedItem(item);
@@ -15,58 +17,142 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
     setSelectedItem(null);
   };
 
-    function trackClick(entityType, entityId, action) {
-        axios.post('/click-tracking', {
-            entity_type: entityType,
-            entity_id: entityId,
-            action: action,
-        })
-        .then(response => {
-            console.log('Click tracked successfully:', response.data);
-        })
-        .catch(error => {
-            console.error('Error tracking click:', error);
-        });
-    }
+  function trackClick(entityType, entityId, action) {
+    axios
+      .post("/click-tracking", {
+        entity_type: entityType,
+        entity_id: entityId,
+        action: action,
+      })
+      .then((response) => {
+        console.log("Click tracked successfully:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error tracking click:", error);
+      });
+  }
 
+  // Extract unique filter options dynamically
+  const uniqueFilterOptions = [
+    ...new Set(
+      data.map((item) =>
+        isProject
+          ? item.project_type
+          : isEvent
+          ? item.event_type
+          : isGrant
+          ? item.category
+          : null
+      )
+    ),
+  ].filter(Boolean);
+
+  // Filter data based on the selected filter value
+  const filteredData = data.filter((item) =>
+    filter === ""
+      ? true
+      : isProject
+      ? item.project_type === filter
+      : isEvent
+      ? item.event_type === filter
+      : isGrant
+      ? item.category === filter
+      : true
+  );
+
+  // Pagination logic
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const displayedDatas = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="container mx-auto px-4">
+       {/* Filter Section */}
+       <div className="mb-6 flex justify-center">
+        <select
+          className="p-2 border border-gray-300 rounded w-full sm:w-1/6"
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value);
+            setCurrentPage(1); // Reset to page 1 when filter changes
+          }}
+        >
+          <option value="">
+            {isProject ? "All Project Types" : isEvent ? "All Event Types" : "All Categories"}
+          </option>
+          {uniqueFilterOptions.map((option, index) => (
+            <option key={index} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {data?.map((item, index) => (
+        {displayedDatas.map((item, index) => (
           <div
             key={index}
             className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8"
           >
             {/* Image Section */}
             <img
-              src={item.image !== null ? `/storage/${item.image}` : '/storage/default.jpg'}
+              src={item.image !== null ? `/storage/${item.image}` : "/storage/default.jpg"}
               alt={item[title]}
               className="w-full h-48 object-cover"
             />
 
             {/* Content Section */}
             <div className="p-8">
-              <h2 className="text-xl font-semibold text-gray-800 text-center">{item[title]}</h2>
+              <h2 className="text-xl font-semibold text-gray-800 text-center">
+                {item[title]}
+              </h2>
               <p className="text-gray-600 mt-4 text-center">{item.description}</p>
             </div>
 
             {/* Button Section */}
             <button
-                onClick={() => {
-                    handleQuickInfoClick(item);
-                    trackClick(isProject ? 'project' : isEvent ? 'event' : 'grant', item.id, 'view_details');
-                }}
-                className="inline-block rounded-full border border-gray-3 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-3 dark:text-dark-6"
+              onClick={() => {
+                handleQuickInfoClick(item);
+                trackClick(
+                  isProject ? "project" : isEvent ? "event" : "grant",
+                  item.id,
+                  "view_details"
+                );
+              }}
+              className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
             >
-                View Details
+              View Details
             </button>
           </div>
         ))}
       </div>
 
-      {/* Modal Section */}
-      {isModalOpen && selectedItem && (
+      {/* Pagination */}
+      <div className="flex justify-center mt-6 space-x-2">
+                {Array.from({ length: totalPages }, (_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => handlePageChange(index + 1)}
+                        className={`px-4 py-2 border rounded ${currentPage === index + 1
+                            ? "bg-blue-500 text-white"
+                            : "bg-white text-gray-700"
+                            }`}
+                    >
+                        {index + 1}
+                    </button>
+                ))}
+            </div>
+
+            {/* Modal Section */}
+            {isModalOpen && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative">
 
@@ -93,6 +179,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         <span className="font-semibold">Project Duration:</span>{" "}
                         {selectedItem.start_date ? `${selectedItem.start_date} - ${selectedItem.end_date}` : "Not provided"}
                     </p>
+
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Purpose:</span>{" "}
@@ -132,10 +219,11 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                             >
                             View Attachment
                             </a>
-                        ):
-                        "No attachment available."
-                        }
-                    </p>
+                        ) : (
+                            "No attachment available."
+                        )}
+                        </p>
+
                     
                     </>
                 )}
@@ -171,6 +259,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         <span className="font-semibold">Event Duration:</span>{" "}
                         {selectedItem.start_date_time ? `${selectedItem.start_date_time} - ${selectedItem.end_date_time}` : "Not provided"}
                     </p>
+
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Target Audience:</span>{" "}
@@ -235,10 +324,11 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                             >
                             View Attachment
                             </a>
-                        ):
-                        "No attachment available."
-                        }
+                        ) : (
+                            "No attachment available."
+                        )}
                     </p>
+
                     
                     </>
                 )}
@@ -307,10 +397,11 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                             >
                             View Attachment
                             </a>
-                        ):
-                        "No attachment available."
-                        }
-                    </p>
+                        ) : (
+                            "No attachment available."
+                        )}
+                        </p>
+
                     
                     </>
                 )}
