@@ -7,6 +7,7 @@ import MainLayout from '@/Layouts/MainLayout';
 
 export default function Edit({ mustVerifyEmail, status }) {
     const { isPostgraduate } = usePage().props;
+
     return (
         <MainLayout
             header={
@@ -19,24 +20,31 @@ export default function Edit({ mustVerifyEmail, status }) {
             <Head title="Profile" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdateProfileInformationForm
-                            mustVerifyEmail={mustVerifyEmail}
-                            status={status}
-                            className="max-w-xl"
-                        />
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    {/* Flex container to position Account Info and Update Password side by side */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Account Information Section */}
+                        <div className="bg-white p-6 shadow sm:rounded-lg">
+                            <UpdateProfileInformationForm
+                                mustVerifyEmail={mustVerifyEmail}
+                                status={status}
+                                className="w-full"
+                            />
+                        </div>
+
+                        {/* Update Password Section */}
+                        <div className="bg-white p-6 shadow sm:rounded-lg">
+                            <UpdatePasswordForm className="w-full" />
+                        </div>
                     </div>
 
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <UpdatePasswordForm className="max-w-xl" />
-                    </div>
-
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <DeleteUserForm className="max-w-xl" />
+                    {/* Delete Account Section */}
+                    <div className="mt-6 bg-white p-6 shadow sm:rounded-lg">
+                        <DeleteUserForm className="w-full" />
                     </div>
                 </div>
             </div>
         </MainLayout>
     );
 }
+
