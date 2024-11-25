@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use Silber\Bouncer\BouncerFacade;
+use Illuminate\Support\Facades\DB;
 
 class PostGrantController extends Controller
 {
@@ -19,23 +20,19 @@ class PostGrantController extends Controller
             abort(403, 'Unauthorized access.');
         }
         else{
-            $postGrants = auth()->user()->postGrants;
-            return Inertia::render('PostGrants/Index', [
-                'postGrants' => $postGrants,
-                'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-            ]);
-
             $search = $request->input('search');
 
             $postGrants = PostGrant::query()
-            ->when($search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            })
-            ->paginate(10); // Adjust the number per page as needed
+                ->where('author_id', Auth::user()->unique_id) // Ensure only user's posts
+                ->when($search, function ($query, $search) {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                })
+                ->paginate(10); // Paginate results with 10 items per page
 
             return inertia('PostGrants/Index', [
                 'postGrants' => $postGrants,
+                'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'search' => $search,
             ]);
         }
@@ -273,5 +270,23 @@ class PostGrantController extends Controller
 
             return redirect()->route('post-grants.index')->with('success', 'Post grant deleted successfully.');
         }
+    }
+
+    public function track(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|string|in:grant,project,event',
+            'item_id' => 'required|integer',
+        ]);
+
+        // Log the click
+        DB::table('click_tracking')->insert([
+            'user_id' => Auth::id(),
+            'type' => $validated['type'],
+            'item_id' => $validated['item_id'],
+            'clicked_at' => now(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from 'axios';
 
 const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +14,21 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
     setIsModalOpen(false);
     setSelectedItem(null);
   };
+
+    function trackClick(entityType, entityId, action) {
+        axios.post('/click-tracking', {
+            entity_type: entityType,
+            entity_id: entityId,
+            action: action,
+        })
+        .then(response => {
+            console.log('Click tracked successfully:', response.data);
+        })
+        .catch(error => {
+            console.error('Error tracking click:', error);
+        });
+    }
+
 
   return (
     <div className="container mx-auto px-4">
@@ -37,7 +53,10 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
             {/* Button Section */}
             <button
-                onClick={() => handleQuickInfoClick(item)}
+                onClick={() => {
+                    handleQuickInfoClick(item);
+                    trackClick(isProject ? 'project' : isEvent ? 'event' : 'grant', item.id, 'view_details');
+                }}
                 className="inline-block rounded-full border border-gray-3 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-3 dark:text-dark-6"
             >
                 View Details
@@ -130,7 +149,22 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Event type:</span>{" "}
-                        {selectedItem.event_type || "Not provided"}
+                        {(() => {
+                                        switch (selectedItem.event_type) {
+                                            case 'competition':
+                                                return 'Competition';
+                                            case 'conference':
+                                                return 'Conference';
+                                            case 'workshop':
+                                                return 'Workshop';
+                                            case 'seminar':
+                                                return 'Seminar';
+                                            case 'webinar':
+                                                return 'Webinar';
+                                            default:
+                                                return 'Not provided';
+                                        }
+                                    })()}
                     </p>
 
                     <p className="text-gray-600">
@@ -140,9 +174,19 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Target Audience:</span>{" "}
-                        {Array.isArray(selectedItem.target_audience)
-                            ? selectedItem.target_audience.join(", ") // Join array items into a comma-separated string
-                            : selectedItem.target_audience || "Not provided"} // Fallback for non-array or empty data
+                        {(() => {
+                            try {
+                                // Attempt to parse target_audience as JSON
+                                const parsedAudience = JSON.parse(selectedItem.target_audience);
+                                if (Array.isArray(parsedAudience)) {
+                                    return parsedAudience.join(", "); // Join array items into a comma-separated string
+                                }
+                                return "Invalid format"; // Handle cases where JSON is not an array
+                            } catch (e) {
+                                // Fallback if JSON parsing fails
+                                return selectedItem.target_audience || "Not provided";
+                            }
+                        })()}
                     </p>
 
                     <p className="text-gray-600">
@@ -234,7 +278,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Contact Email:</span>{" "}
-                        {selectedItem.contact_email || "Not provided"}
+                        {selectedItem.email || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
