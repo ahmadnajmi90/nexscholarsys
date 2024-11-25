@@ -16,7 +16,7 @@ class ShowProjectController extends Controller
     {
         return Inertia::render('ResearchTool/Project', [
             // Pass any data you want to the component here
-            'projects' => PostProject::all(),
+            'projects' => PostProject::orderBy('start_date')->get(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             // 'universities' => UniversityList::all(),
             'users' => User::all(),

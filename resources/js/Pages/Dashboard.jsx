@@ -8,10 +8,11 @@ const Dashboard = ({
     clicksByType,
     isAdmin,
     isPostgraduate,
+    events
 }) => {
     return (
             <MainLayout title="Dashboard" isPostgraduate={isPostgraduate}>
-                <DashboardInsights totalUsers={totalUsers} onlineUsers={onlineUsers} clicksByType={clicksByType} isAdmin={isAdmin}/>
+                <DashboardInsights totalUsers={totalUsers} onlineUsers={onlineUsers} clicksByType={clicksByType} isAdmin={isAdmin} events={events}/>
                 {/* <RadarChart />
                 <ProfileCard /> */}
             </MainLayout>
