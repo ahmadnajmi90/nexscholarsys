@@ -15,18 +15,23 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $postGrants = auth()->user()->postGrants;
+        if (!Auth::user()->is_profile_complete) {
+            return redirect()->route('profile.complete');
+        }
+        else{
+            $postGrants = auth()->user()->postGrants;
 
-        return Inertia::render('Dashboard', [
-            'postGrants' => $postGrants,
-            'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-            'isAdmin' => BouncerFacade::is(Auth::user())->an('admin'),
-            'totalUsers' => User::where('id', '!=', Auth::id())->count(), // Except admin itself
-            'onlineUsers' => User::where('id', '!=', Auth::id())
-                ->where('last_activity', '>=', now()->subMinutes(5))
-                ->count(),
-            'clicksByType' => $this->getClickDetails(), // Corrected method call
-        ]);
+            return Inertia::render('Dashboard', [
+                'postGrants' => $postGrants,
+                'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isAdmin' => BouncerFacade::is(Auth::user())->an('admin'),
+                'totalUsers' => User::where('id', '!=', Auth::id())->count(), // Except admin itself
+                'onlineUsers' => User::where('id', '!=', Auth::id())
+                    ->where('last_activity', '>=', now()->subMinutes(5))
+                    ->count(),
+                'clicksByType' => $this->getClickDetails(), // Corrected method call
+            ]);
+        }
     }
 
     public function getClickDetails()

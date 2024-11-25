@@ -2,9 +2,6 @@ import React from 'react';
 import MainLayout from '../Layouts/MainLayout';
 import DashboardInsights from '../Components/DashboardInsights';
 import SuccessAlert4 from '@/Components/WelcomeMessage';
-
-
-
 const Dashboard = ({
     totalUsers,
     onlineUsers,
