@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react'; // Import useState if not already imported
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -12,6 +13,8 @@ export default function Register() {
         password: '',
         password_confirmation: '',
     });
+
+    const [isAgreed, setIsAgreed] = useState(false); // State for the checkbox
 
     const submit = (e) => {
         e.preventDefault();
@@ -107,10 +110,39 @@ export default function Register() {
                                 <InputError message={errors.password_confirmation} className="mt-2" />
                             </div>
 
+                             {/* Checkbox Section */}
+                             <div className="col-span-6">
+                                <label className="inline-flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                        checked={isAgreed}
+                                        onChange={(e) => setIsAgreed(e.target.checked)}
+                                    />
+                                    <span className="ml-2 text-sm text-gray-600">
+                                        I agree to the{' '}
+                                        <a
+                                            href="#"
+                                            className="text-blue-600 underline hover:text-blue-500"
+                                        >
+                                            data privacy
+                                        </a>{' '}
+                                        and{' '}
+                                        <a
+                                            href="#"
+                                            className="text-blue-600 underline hover:text-blue-500"
+                                        >
+                                            terms and conditions
+                                        </a>
+                                    </span>
+                                </label>
+                            </div>
+
+                            {/* Submit Button */}
                             <div className="col-span-6 sm:flex sm:items-center sm:gap-4">
                                 <PrimaryButton
                                     className="w-full sm:w-auto"
-                                    disabled={processing}
+                                    disabled={processing || !isAgreed} // Disable if not agreed
                                 >
                                     Create an Account
                                 </PrimaryButton>

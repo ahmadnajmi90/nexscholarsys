@@ -67,66 +67,51 @@ export default function Create() {
   }
 
   return (
-    <MainLayout title="Add New Grant" isPostgraduate={isPostgraduate}>
-      <div className="p-8">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-lg max-w-lg mx-auto space-y-6 shadow-lg"
-        >
-          <h1 className="text-xl font-semibold text-gray-700 text-center">
-            Add New Grant
-          </h1>
+    <MainLayout title="" isPostgraduate={isPostgraduate}>
+    <div className="p-4">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6"
+      >
+        <h1 className="text-xl font-bold text-gray-700 text-center">
+          Add New Grant
+        </h1>
 
-          {/* Title */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={data.title}
-              onChange={(e) => setData("title", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter grant title"
-            />
-            {errors.title && (
-              <p className="text-red-500 text-xs mt-1">{errors.title}</p>
-            )}
-          </div>
+        {/* Title */}
+        <div>
+          <label className="block text-gray-700 font-medium">
+            Title <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={data.title}
+            onChange={(e) => setData("title", e.target.value)}
+            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter grant title"
+          />
+          {errors.title && (
+            <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+          )}
+        </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={data.description}
-              onChange={(e) => setData("description", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter description"
-            ></textarea>
-            {errors.description && (
-              <p className="text-red-500 text-xs mt-1">{errors.description}</p>
-            )}
-          </div>
+        {/* Description */}
+        <div>
+          <label className="block text-gray-700 font-medium">
+            Description <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={data.description}
+            onChange={(e) => setData("description", e.target.value)}
+            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter description"
+          ></textarea>
+          {errors.description && (
+            <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+          )}
+        </div>
 
-          {/* Image Upload */}
-          <div>
-              <label className="block text-gray-700 font-medium">
-                  Upload Image
-              </label>
-              <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData("image", e.target.files[0])}
-                  className="w-full rounded-lg border-gray-200 p-2 text-sm"
-              />
-              {errors.image && (
-                  <p className="text-red-500 text-xs mt-1">{errors.image}</p>
-              )}
-          </div>
-
-          {/* Post Status */}
+        {/* Post Status and Grant Status */}
+        <div className="grid grid-cols-2 gap-8">
           <div>
             <label className="block text-gray-700 font-medium">Post Status</label>
             <select
@@ -138,12 +123,8 @@ export default function Create() {
               <option value="published">Published</option>
             </select>
           </div>
-
-          {/* Grant Status */}
           <div>
-            <label className="block text-gray-700 font-medium">
-              Grant Status
-            </label>
+            <label className="block text-gray-700 font-medium">Grant Status</label>
             <select
               value={data.grant_status}
               onChange={(e) => setData("grant_status", e.target.value)}
@@ -153,207 +134,42 @@ export default function Create() {
               <option value="closed">Closed</option>
             </select>
           </div>
+        </div>
 
-          {/* Start and End Date */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-700 font-medium">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={data.start_date}
-                onChange={(e) => setData("start_date", e.target.value)}
-                className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 font-medium">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={data.end_date}
-                onChange={(e) => setData("end_date", e.target.value)}
-                className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Budget */}
+        {/* Start and End Date */}
+        <div className="grid grid-cols-2 gap-8">
           <div>
-            <label className="block text-gray-700 font-medium">Budget</label>
+            <label className="block text-gray-700 font-medium">Start Date</label>
             <input
-              type="number"
-              value={data.budget}
-              onChange={(e) => setData("budget", e.target.value)}
+              type="date"
+              value={data.start_date}
+              onChange={(e) => setData("start_date", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter budget (e.g., 5000.00)"
             />
           </div>
-
-          {/* Tags */}
-          <div className="relative">
-            <label htmlFor="tags" className="block text-gray-700 font-medium">
-              Tags
-            </label>
-            <button
-              type="button"
-              className="w-full text-left border rounded-lg p-2 mt-1 text-sm bg-white"
-              onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
-            >
-              Select or Add Tags
-            </button>
-
-            {/* Dropdown Menu */}
-            {dropdownOpen && (
-              <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-                <div className="flex flex-col p-2 max-h-40 overflow-y-auto">
-                  {/* Predefined Tags */}
-                  <label className="inline-flex items-center py-1">
-                    <input
-                      type="checkbox"
-                      name="tags"
-                      value="Artificial Intelligence"
-                      checked={data.tags?.includes("Artificial Intelligence")}
-                      onChange={(e) => {
-                        const tag = e.target.value;
-                        setData(
-                          "tags",
-                          e.target.checked
-                            ? [...(data.tags || []), tag]
-                            : data.tags.filter((t) => t !== tag)
-                        );
-                      }}
-                      className="form-checkbox rounded text-blue-500"
-                    />
-                    <span className="ml-2">Artificial Intelligence</span>
-                  </label>
-
-                  <label className="inline-flex items-center py-1">
-                    <input
-                      type="checkbox"
-                      name="tags"
-                      value="Quantum Computing"
-                      checked={data.tags?.includes("Quantum Computing")}
-                      onChange={(e) => {
-                        const tag = e.target.value;
-                        setData(
-                          "tags",
-                          e.target.checked
-                            ? [...(data.tags || []), tag]
-                            : data.tags.filter((t) => t !== tag)
-                        );
-                      }}
-                      className="form-checkbox rounded text-blue-500"
-                    />
-                    <span className="ml-2">Quantum Computing</span>
-                  </label>
-
-                  <label className="inline-flex items-center py-1">
-                    <input
-                      type="checkbox"
-                      name="tags"
-                      value="Climate Change"
-                      checked={data.tags?.includes("Climate Change")}
-                      onChange={(e) => {
-                        const tag = e.target.value;
-                        setData(
-                          "tags",
-                          e.target.checked
-                            ? [...(data.tags || []), tag]
-                            : data.tags.filter((t) => t !== tag)
-                        );
-                      }}
-                      className="form-checkbox rounded text-blue-500"
-                    />
-                    <span className="ml-2">Climate Change</span>
-                  </label>
-
-                  <label className="inline-flex items-center py-1">
-                    <input
-                      type="checkbox"
-                      name="tags"
-                      value="Clean Energy"
-                      checked={data.tags?.includes("Clean Energy")}
-                      onChange={(e) => {
-                        const tag = e.target.value;
-                        setData(
-                          "tags",
-                          e.target.checked
-                            ? [...(data.tags || []), tag]
-                            : data.tags.filter((t) => t !== tag)
-                        );
-                      }}
-                      className="form-checkbox rounded text-blue-500"
-                    />
-                    <span className="ml-2">Clean Energy</span>
-                  </label>
-
-                  <label className="inline-flex items-center py-1">
-                    <input
-                      type="checkbox"
-                      name="tags"
-                      value="Robotics"
-                      checked={data.tags?.includes("Robotics")}
-                      onChange={(e) => {
-                        const tag = e.target.value;
-                        setData(
-                          "tags",
-                          e.target.checked
-                            ? [...(data.tags || []), tag]
-                            : data.tags.filter((t) => t !== tag)
-                        );
-                      }}
-                      className="form-checkbox rounded text-blue-500"
-                    />
-                    <span className="ml-2">Robotics</span>
-                  </label>
-                </div>
-
-                {/* Input for Custom Tag */}
-                <div className="border-t border-gray-200 p-2 mt-2">
-                  <input
-                    type="text"
-                    value={customTag}
-                    onChange={(e) => setCustomTag(e.target.value)}
-                    placeholder="Add custom tag"
-                    className="w-full p-2 border rounded-md text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCustomTag}
-                    className="mt-2 w-full bg-blue-500 text-white p-2 rounded-md text-sm hover:bg-blue-600"
-                  >
-                    Add Tag
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Display Selected Tags */}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {data.tags?.map((tag) => (
-                <div
-                  key={tag}
-                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
+          <div>
+            <label className="block text-gray-700 font-medium">End Date</label>
+            <input
+              type="date"
+              value={data.end_date}
+              onChange={(e) => setData("end_date", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            />
           </div>
+        </div>
 
-          {/* Category */}
+        {/* Sponsored By and Category */}
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <label className="block text-gray-700 font-medium">Sponsored By</label>
+            <input
+              type="text"
+              value={data.sponsored_by}
+              onChange={(e) => setData("sponsored_by", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              placeholder="Enter sponsor"
+            />
+          </div>
           <div>
             <label htmlFor="category" className="block text-gray-700 font-medium">
               Category
@@ -368,47 +184,24 @@ export default function Create() {
               <option value="" disabled hidden>
                 Select a Category
               </option>
-              <option value="STEM">STEM (Science, Technology, Engineering, Mathematics)</option>
-              <option value="Humanities">Humanities</option>
-              <option value="Social Sciences">Social Sciences</option>
-              <option value="Arts">Arts</option>
-              <option value="Health & Medicine">Health & Medicine</option>
-              <option value="Business & Economics">Business & Economics</option>
-              <option value="Environment & Sustainability">Environment & Sustainability</option>
-              <option value="Education">Education</option>
-              <option value="Technology">Technology</option>
-              <option value="Innovation">Innovation</option>
-              <option value="Entrepreneurship">Entrepreneurship</option>
-              <option value="Agriculture">Agriculture</option>
-              <option value="Energy">Energy</option>
-              <option value="Climate Action">Climate Action</option>
-              <option value="Transport & Infrastructure">Transport & Infrastructure</option>
-              <option value="Public Policy">Public Policy</option>
-              <option value="Culture & Heritage">Culture & Heritage</option>
-              <option value="Law & Governance">Law & Governance</option>
-              <option value="Mental Health">Mental Health</option>
-              <option value="Sports & Recreation">Sports & Recreation</option>
-              <option value="Community Development">Community Development</option>
+              <option value="Fundamental Research">Fundamental Research</option>
+              <option value="Applied Research">Applied Research</option>
+              <option value="Fundamental + Applied">Fundamental + Applied</option>
+              <option value="Knowledge Transfer Program (KTP)">
+                Knowledge Transfer Program (KTP)
+              </option>
+              <option value="CSR (Corporate Social Responsibility)">
+                CSR (Corporate Social Responsibility)
+              </option>
             </select>
-            {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
+            {errors.category && (
+              <p className="text-red-500 text-xs mt-1">{errors.category}</p>
+            )}
           </div>
+        </div>
 
-
-          {/* Sponsored By */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Sponsored By
-            </label>
-            <input
-              type="text"
-              value={data.sponsored_by}
-              onChange={(e) => setData("sponsored_by", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter sponsor"
-            />
-          </div>
-
-          {/* Purpose */}
+        {/* Purpose and Location */}
+        <div className="grid grid-cols-2 gap-8">
           <div>
             <label className="block text-gray-700 font-medium">Purpose</label>
             <select
@@ -420,10 +213,11 @@ export default function Create() {
               <option value="find_collaboration">Find Collaboration</option>
             </select>
           </div>
-
-          {/* Location */}
           <div>
-            <label htmlFor="location" className="block text-gray-700 font-medium">
+            <label
+              htmlFor="location"
+              className="block text-gray-700 font-medium"
+            >
               Location
             </label>
             <select
@@ -440,44 +234,24 @@ export default function Create() {
               <option value="Remote">Remote</option>
               <option value="Hybrid">Hybrid</option>
             </select>
-            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
+            {errors.location && (
+              <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+            )}
           </div>
+        </div>
 
-          {/* Email */}
+        {/* Email and Contact Number */}
+        <div className="grid grid-cols-2 gap-8">
           <div>
-              <label className="block text-gray-700 font-medium">Email</label>
-              <input
-                  type="email"
-                  value={data.email}
-                  onChange={(e) => setData("email", e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                  placeholder="Enter email"
-              />
-              {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-              )}
-              {/* Use Personal Email Checkbox */}
-              <div className="mt-2 flex items-center">
-                  <input
-                      type="checkbox"
-                      id="usePersonalEmail"
-                      checked={data.email === auth.email}
-                      onChange={(e) => {
-                          if (e.target.checked) {
-                              setData("email", auth.email); // Set email to personal email
-                          } else {
-                              setData("email", ""); // Clear email field
-                          }
-                      }}
-                      className="form-checkbox h-5 w-5 text-blue-600"
-                  />
-                  <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
-                      Use personal email ({auth.email})
-                  </label>
-              </div>
+            <label className="block text-gray-700 font-medium">Email</label>
+            <input
+              type="email"
+              value={data.email}
+              onChange={(e) => setData("email", e.target.value)}
+              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              placeholder="Enter email"
+            />
           </div>
-
-          {/* Contact Number */}
           <div>
             <label className="block text-gray-700 font-medium">
               Contact Number
@@ -490,52 +264,57 @@ export default function Create() {
               placeholder="Enter contact number"
             />
           </div>
+        </div>
 
-          {/* Eligibility Criteria */}
+        {/* Image and Attachment Upload */}
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <label className="block text-gray-700 font-medium">Upload Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setData("image", e.target.files[0])}
+              className="w-full rounded-lg border-gray-200 p-2 text-sm"
+            />
+          </div>
           <div>
             <label className="block text-gray-700 font-medium">
-              Eligibility Criteria
+              Upload Attachment
             </label>
-            <textarea
-              value={data.eligibility_criteria}
-              onChange={(e) => setData("eligibility_criteria", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter eligibility criteria"
-            ></textarea>
+            <input
+              type="file"
+              onChange={(e) => setData("attachment", e.target.files[0])}
+              className="w-full rounded-lg border-gray-200 p-2 text-sm"
+            />
           </div>
+        </div>
 
-          {/* Featured Grant */}
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Featured Grant
-            </label>
-            <div className="flex items-center space-x-4 mt-2">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="is_featured"
-                  value="true"
-                  checked={data.is_featured === 1}
-                  onChange={() => setData("is_featured", 1)}
-                  className="form-radio h-5 w-5 text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">Yes</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="is_featured"
-                  value="false"
-                  checked={data.is_featured === 0}
-                  onChange={() => setData("is_featured", 0)}
-                  className="form-radio h-5 w-5 text-blue-600"
-                />
-                <span className="ml-2 text-gray-700">No</span>
-              </label>
-            </div>
-            {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
-          </div>
+        {/* Budget */}
+        <div>
+          <label className="block text-gray-700 font-medium">Budget</label>
+          <input
+            type="number"
+            value={data.budget}
+            onChange={(e) => setData("budget", e.target.value)}
+            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter budget (e.g., 5000.00)"
+          />
+        </div>
 
+        {/* Eligibility Criteria */}
+        <div>
+          <label className="block text-gray-700 font-medium">
+            Eligibility Criteria
+          </label>
+          <textarea
+            value={data.eligibility_criteria}
+            onChange={(e) => setData("eligibility_criteria", e.target.value)}
+            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter eligibility criteria"
+          ></textarea>
+        </div>
+
+        
           {/* Application URL */}
           <div>
               <label className="block text-gray-700 font-medium">
@@ -553,40 +332,161 @@ export default function Create() {
               )}
           </div>
 
-          {/* Attachment Upload */}
-          <div>
-              <label className="block text-gray-700 font-medium">
-                  Upload Attachment
-              </label>
-              <input
-                  type="file"
-                  onChange={(e) => setData("attachment", e.target.files[0])}
-                  className="w-full rounded-lg border-gray-200 p-2 text-sm"
-              />
-              {errors.attachment && (
-                  <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
-              )}
-          </div>
+          <div className="grid grid-cols-2 gap-8">
+  {/* Tags */}
+  <div className="relative">
+    <label htmlFor="tags" className="block text-gray-700 font-medium">
+      Tags
+    </label>
+    <button
+      type="button"
+      className="w-full text-left border rounded-lg p-4 mt-2 text-sm bg-white"
+      onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
+    >
+      Select or Add Tags
+    </button>
 
-          {/* Buttons */}
-          <div className="flex space-x-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={processing}
-              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
-            >
-              Save
-            </button>
-          </div>
-        </form>
+    {/* Dropdown Menu */}
+    {dropdownOpen && (
+      <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+        <div className="flex flex-col p-2 max-h-40 overflow-y-auto">
+          {/* Predefined Tags */}
+          <label className="inline-flex items-center py-1">
+            <input
+              type="checkbox"
+              name="tags"
+              value="Artificial Intelligence"
+              checked={data.tags?.includes("Artificial Intelligence")}
+              onChange={(e) => {
+                const tag = e.target.value;
+                setData(
+                  "tags",
+                  e.target.checked
+                    ? [...(data.tags || []), tag]
+                    : data.tags.filter((t) => t !== tag)
+                );
+              }}
+              className="form-checkbox rounded text-blue-500"
+            />
+            <span className="ml-2">Artificial Intelligence</span>
+          </label>
+
+          {/* Other tags */}
+          <label className="inline-flex items-center py-1">
+            <input
+              type="checkbox"
+              name="tags"
+              value="Quantum Computing"
+              checked={data.tags?.includes("Quantum Computing")}
+              onChange={(e) => {
+                const tag = e.target.value;
+                setData(
+                  "tags",
+                  e.target.checked
+                    ? [...(data.tags || []), tag]
+                    : data.tags.filter((t) => t !== tag)
+                );
+              }}
+              className="form-checkbox rounded text-blue-500"
+            />
+            <span className="ml-2">Quantum Computing</span>
+          </label>
+        </div>
+
+        {/* Input for Custom Tag */}
+        <div className="border-t border-gray-200 p-2 mt-2">
+          <input
+            type="text"
+            value={customTag}
+            onChange={(e) => setCustomTag(e.target.value)}
+            placeholder="Add custom tag"
+            className="w-full p-2 border rounded-md text-sm"
+          />
+          <button
+            type="button"
+            onClick={handleAddCustomTag}
+            className="mt-2 w-full bg-blue-500 text-white p-2 rounded-md text-sm hover:bg-blue-600"
+          >
+            Add Tag
+          </button>
+        </div>
       </div>
-    </MainLayout>
+    )}
+
+    {/* Display Selected Tags */}
+    <div className="mt-3 flex flex-wrap gap-2">
+      {data.tags?.map((tag) => (
+        <div
+          key={tag}
+          className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+        >
+          {tag}
+          <button
+            type="button"
+            onClick={() => handleRemoveTag(tag)}
+            className="text-red-500 hover:text-red-700"
+          >
+            &times;
+          </button>
+        </div>
+      ))}
+    </div>
+
+    {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
+  </div>
+
+  {/* Featured Grant */}
+  <div>
+    <label className="block text-gray-700 font-medium">Featured Grant</label>
+    <div className="flex items-center space-x-4 mt-2">
+      <label className="flex items-center">
+        <input
+          type="radio"
+          name="is_featured"
+          value="true"
+          checked={data.is_featured === 1}
+          onChange={() => setData("is_featured", 1)}
+          className="form-radio h-5 w-5 text-blue-600"
+        />
+        <span className="ml-2 text-gray-700">Yes</span>
+      </label>
+      <label className="flex items-center">
+        <input
+          type="radio"
+          name="is_featured"
+          value="false"
+          checked={data.is_featured === 0}
+          onChange={() => setData("is_featured", 0)}
+          className="form-radio h-5 w-5 text-blue-600"
+        />
+        <span className="ml-2 text-gray-700">No</span>
+      </label>
+    </div>
+    {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
+  </div>
+</div>
+
+
+
+        {/* Buttons */}
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-700"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={processing}
+            className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </MainLayout>
   );
 }

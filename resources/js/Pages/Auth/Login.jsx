@@ -127,13 +127,21 @@ export default function Login({ status, canResetPassword }) {
                                 Forgot your password?
                             </a>
                         )}
-                        <button
-                            type="submit"
-                            className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
-                            disabled={processing}
-                        >
-                            Log in
-                        </button>
+                        <div className="flex space-x-4">
+                            <button
+                                type="submit"
+                                className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+                                disabled={processing}
+                            >
+                                Log in
+                            </button>
+                            <a
+                                href={route('register')} // Replace with your route for sign-up (adjust the route name as needed)
+                                className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                            >
+                                Sign up
+                            </a>
+                        </div>  
                     </div>
                 </form>
             </div>
