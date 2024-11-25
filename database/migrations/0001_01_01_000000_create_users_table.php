@@ -19,8 +19,9 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
-            $table->string('unique_id')->unique()->nullable();;
+            $table->string('unique_id')->unique()->nullable();
             $table->boolean('is_profile_complete')->default(false);
+            $table->timestamp('last_activity')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

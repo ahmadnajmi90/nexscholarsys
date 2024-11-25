@@ -18,6 +18,9 @@ use App\Http\Controllers\PostEventController;
 use App\Http\Controllers\ShowProjectController;
 use App\Http\Controllers\ShowEventController;
 use App\Http\Controllers\ShowGrantController;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\ClickTrackingController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -27,6 +30,9 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+
+Route::post('/click-tracking', [ClickTrackingController::class, 'store'])->name('click-tracking.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/complete-profile', [ProfileCompletionController::class, 'show'])->name('profile.complete');
@@ -38,19 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/dashboard/post-grants/{id}', [PostGrantController::class, 'update'])->name('post-grants.update');
     Route::delete('/dashboard/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
 
-    Route::get('/dashboard', function (Request $request) {
-        if (!Auth::user()->is_profile_complete) {
-            return redirect()->route('profile.complete');
-        }
-
-        $postGrants = auth()->user()->postGrants;
-
-        return Inertia::render('Dashboard', [
-            'postGrants' => $postGrants,
-            'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-        ]);
-
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
 

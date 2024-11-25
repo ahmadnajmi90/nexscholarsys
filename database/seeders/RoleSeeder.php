@@ -14,11 +14,14 @@ class RoleSeeder extends Seeder
     {
         $admin = User::create([
             'name' => 'Admin User',
-            'email' => 'ahmadnajmi.an@utm.my',
-             'password' => bcrypt('password'),
+            // 'email' => 'ahmadnajmi.an@utm.my',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+            'unique_id' => 'admin',
+            'is_profile_complete' => 1,
             ]);
 
-            Bouncer::allow($admin)->to('create-user');
 
         // Assign the Admin role to the user
         $admin->assign('admin');

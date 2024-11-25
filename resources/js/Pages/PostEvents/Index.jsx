@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 
 const Index = () => {
-    const { postEvents, isPostgraduate } = usePage().props;
+    const { postEvents, isPostgraduate, search } = usePage().props;
+    const [searchTerm, setSearchTerm] = useState(search || ''); // Store the search term locally
+
+    let debounceTimeout;
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+
+        // Clear the previous debounce timeout
+        if (debounceTimeout) {
+            clearTimeout(debounceTimeout);
+        }
+
+        // Set a new debounce timeout to delay form submission
+        debounceTimeout = setTimeout(() => {
+            const form = document.getElementById('search-form');
+            form.submit(); // Automatically submit the form
+        }, 300); // Adjust delay (300ms) as needed
+    };
 
     return (
         <MainLayout title="Your Events" isPostgraduate={isPostgraduate}>
@@ -15,6 +34,20 @@ const Index = () => {
                 >
                     Add New Event
                 </Link>
+            </div>
+
+            {/* Search bar */}
+            <div className="mb-4">
+                <form id="search-form" method="GET" action={route('post-events.index')}>
+                    <input
+                        type="text"
+                        name="search"
+                        value={searchTerm}
+                        onChange={handleSearchChange} // Handle the input change with debounce
+                        placeholder="Search events..."
+                        className="border rounded-lg px-4 py-2 w-full"
+                    />
+                </form>
             </div>
 
             <div className="overflow-x-auto bg-white rounded-lg shadow-md p-4">
@@ -32,10 +65,27 @@ const Index = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {postEvents.map(event => (
+                        {postEvents.data.map(event => (
                             <tr key={event.id} className="border-b">
                                 <td className="py-2 px-4 font-semibold text-center">{event.event_name}</td>
-                                <td className="py-2 px-4 text-center">{event.event_type}</td>
+                                <td className="py-2 px-4 text-center">
+                                    {(() => {
+                                        switch (event.event_type) {
+                                            case 'competition':
+                                                return 'Competition';
+                                            case 'conference':
+                                                return 'Conference';
+                                            case 'workshop':
+                                                return 'Workshop';
+                                            case 'seminar':
+                                                return 'Seminar';
+                                            case 'webinar':
+                                                return 'Webinar';
+                                            default:
+                                                return 'Other';
+                                        }
+                                    })()}
+                                </td>
                                 <td className="py-2 px-4 text-center">
                                     {event.theme ? JSON.parse(event.theme).join(', ') : 'N/A'}
                                 </td>
@@ -63,6 +113,22 @@ const Index = () => {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Pagination Links */}
+            <div className="mt-4 flex justify-center">
+                {postEvents.links.map((link, index) => (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        className={`mx-1 px-4 py-2 rounded ${
+                            link.active
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ))}
             </div>
         </MainLayout>
     );

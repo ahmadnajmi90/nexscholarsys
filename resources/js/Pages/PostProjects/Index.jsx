@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 
 const Index = () => {
-    const { postProjects, isPostgraduate } = usePage().props;
+    const { postProjects, isPostgraduate, search  } = usePage().props;
+    const [searchTerm, setSearchTerm] = useState(search || ''); // Store the search term locally
+
+    let debounceTimeout;
+
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+
+        // Clear the previous debounce timeout
+        if (debounceTimeout) {
+            clearTimeout(debounceTimeout);
+        }
+
+        // Set a new debounce timeout to delay form submission
+        debounceTimeout = setTimeout(() => {
+            const form = document.getElementById('search-form');
+            form.submit(); // Automatically submit the form
+        }, 300); // Adjust delay (300ms) as needed
+    };
 
     return (
         <MainLayout title="Your Projects" isPostgraduate={isPostgraduate}>
@@ -15,6 +34,20 @@ const Index = () => {
                 >
                     Add New Project
                 </Link>
+            </div>
+
+            {/* Search bar */}
+            <div className="mb-4">
+                <form id="search-form" method="GET" action={route('post-projects.index')}>
+                    <input
+                        type="text"
+                        name="search"
+                        value={searchTerm}
+                        onChange={handleSearchChange} // Handle the input change with debounce
+                        placeholder="Search projects..."
+                        className="border rounded-lg px-4 py-2 w-full"
+                    />
+                </form>
             </div>
 
             <div className="overflow-x-auto bg-white rounded-lg shadow-md p-4">
@@ -32,7 +65,7 @@ const Index = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {postProjects?.map(project => (
+                        {postProjects?.data.map(project => (
                             <tr key={project.id} className="border-b">
                                 <td className="py-2 px-4 font-semibold text-center">{project.title}</td>
                                 <td className="py-2 px-4 text-center">{project.project_type}</td>
@@ -65,6 +98,22 @@ const Index = () => {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Pagination Links */}
+            <div className="mt-4 flex justify-center">
+                {postProjects.links.map((link, index) => (
+                    <Link
+                        key={index}
+                        href={link.url}
+                        className={`mx-1 px-4 py-2 rounded ${
+                            link.active
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                ))}
             </div>
         </MainLayout>
     );
