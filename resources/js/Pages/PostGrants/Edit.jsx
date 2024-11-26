@@ -228,30 +228,18 @@ const handleSubmit = async (e) => {
             </select>
           </div>
           <div>
-            <label
-              htmlFor="location"
-              className="block text-gray-700 font-medium"
-            >
-              Location
-            </label>
-            <select
-              id="location"
-              name="location"
-              value={data.location}
-              onChange={(e) => setData("location", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select a Location
-              </option>
-              <option value="On-Campus">On-Campus</option>
-              <option value="Remote">Remote</option>
-              <option value="Hybrid">Hybrid</option>
-            </select>
-            {errors.location && (
-              <p className="text-red-500 text-xs mt-1">{errors.location}</p>
-            )}
-          </div>
+          <label className="block text-gray-700 font-medium">Location</label>
+          <input
+            type="text"
+            value={data.location}
+            onChange={(e) => setData("location", e.target.value)}
+            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter location"
+          />
+          {errors.location && (
+            <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+          )}
+        </div>
         </div>
 
         {/* Email and Contact Number */}

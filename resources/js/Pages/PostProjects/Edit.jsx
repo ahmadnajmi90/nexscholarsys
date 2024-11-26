@@ -282,22 +282,18 @@ const handleSubmit = async (e) => {
 
       {/* Location and Budget */}
       <div className="grid grid-cols-2 gap-8">
-        <div>
+      <div>
           <label className="block text-gray-700 font-medium">Location</label>
-          <select
-            id="location"
-            name="location"
+          <input
+            type="text"
             value={data.location}
             onChange={(e) => setData("location", e.target.value)}
             className="w-full rounded-lg border-gray-200 p-4 text-sm"
-          >
-            <option value="" disabled hidden>
-              Select a Location
-            </option>
-            <option value="On-Campus">On-Campus</option>
-            <option value="Remote">Remote</option>
-            <option value="Hybrid">Hybrid</option>
-          </select>
+            placeholder="Enter location"
+          />
+          {errors.location && (
+            <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+          )}
         </div>
         <div>
           <label className="block text-gray-700 font-medium">Budget</label>
