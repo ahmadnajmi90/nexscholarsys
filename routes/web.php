@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/role', [RoleProfileController::class, 'edit'])->name('role.edit');
-    Route::patch('/role', [RoleProfileController::class, 'update'])->name('role.update');
+    Route::post('/role', [RoleProfileController::class, 'update'])->name('role.update');
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
 });
 

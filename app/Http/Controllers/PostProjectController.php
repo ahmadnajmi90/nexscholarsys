@@ -89,17 +89,45 @@ class PostProjectController extends Controller
 
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
-                    $imagePath = $request->file('image')->store('project_images', 'public');
-                    $validated['image'] =  $imagePath;
-                    logger('Image: Im here ', ['path' => $imagePath]);
+                    
+                    // Define the destination path directly in the public directory
+                    $destinationPath = public_path('storage/project_images');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    // Store the uploaded file in the public/storage/event_images folder
+                    $image = $request->file('image');
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($destinationPath, $imageName);
+                    
+                    // Save the path relative to public/storage
+                    $validated['image'] = 'project_images/' . $imageName;
+                    logger('Image: Im here ', ['path' => $validated['image']]);
                 }
-            
+                
                 // Handle attachment upload
                 if ($request->hasFile('attachment')) {
                     logger('Attachment: Im here ');
-                    $attachmentPath = $request->file('attachment')->store('project_attachments', 'public');
-                    $validated['attachment'] = $attachmentPath;
-                    logger('Attachment: Im here ', ['path' => $attachmentPath]);
+                    
+                    // Define the destination path directly in the public directory
+                    $destinationPath = public_path('storage/project_attachments');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    // Store the uploaded file in the public/storage/event_images folder
+                    $attachment = $request->file('attachment');
+                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                    $attachment->move($destinationPath, $attachmentName);
+                    
+                    // Save the path relative to public/storage
+                    $validated['attachment'] = 'project_attachments/' . $attachmentName;
+                    logger('Attachment: Im here ', ['path' => $validated['attachment']]);
                 }
                 // Log validated data
                 logger('Validated Data:', $validated);
@@ -150,31 +178,63 @@ class PostProjectController extends Controller
                 // Handle image upload
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
+                    
                     // Delete the old image if it exists
                     if ($postProject->image) {
-                        Storage::disk('public')->delete($postProject->image);
+                        $oldImagePath = public_path('storage/' . $postProject->image);
+                        if (file_exists($oldImagePath)) {
+                            unlink($oldImagePath); // Delete the old image
+                        }
                     }
                 
-                    // Store the new image
-                    $imagePath = $request->file('image')->store('project_images', 'public');
-                    $request->merge(['image' => $imagePath]); // Add file path to validated data
-                }else {
+                    // Define the destination path
+                    $imageDestination = public_path('storage/project_images');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($imageDestination)) {
+                        mkdir($imageDestination, 0755, true);
+                    }
+                    
+                    // Save the new image
+                    $image = $request->file('image');
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($imageDestination, $imageName);
+                    
+                    // Save the relative path
+                    $request->merge(['image' => 'project_images/' . $imageName]);
+                } else {
                     // Keep the existing path
                     $request->merge(['image' => $postProject->image]);
                 }
-
-                // // Handle attachment upload
+                
+                // Handle attachment upload
                 if ($request->hasFile('attachment')) {
-                    logger('attachment: Im here ');
+                    logger('Attachment: Im here ');
+                
                     // Delete the old attachment if it exists
                     if ($postProject->attachment) {
-                        Storage::disk('public')->delete($postProject->attachment);
+                        $oldAttachmentPath = public_path('storage/' . $postProject->attachment);
+                        if (file_exists($oldAttachmentPath)) {
+                            unlink($oldAttachmentPath); // Delete the old attachment
+                        }
                     }
                 
-                    // Store the new attachment
-                    $attachmentPath = $request->file('attachment')->store('project_attachments', 'public');
-                    $request->merge(['attachment' => $attachmentPath]); // Add file path to validated data
-                }else {
+                    // Define the destination path
+                    $attachmentDestination = public_path('storage/project_attachments');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($attachmentDestination)) {
+                        mkdir($attachmentDestination, 0755, true);
+                    }
+                    
+                    // Save the new attachment
+                    $attachment = $request->file('attachment');
+                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                    $attachment->move($attachmentDestination, $attachmentName);
+                    
+                    // Save the relative path
+                    $request->merge(['attachment' => 'project_attachments/' . $attachmentName]);
+                } else {
                     // Keep the existing path
                     $request->merge(['attachment' => $postProject->attachment]);
                 }
@@ -198,33 +258,21 @@ class PostProjectController extends Controller
 
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
-                    // Delete the old image if it exists
-                    if ($postProject->image) {
-                        Storage::disk('public')->delete($postProject->image);
-                    }
-                
-                    // Store the new image
-                    $imagePath = $request->file('image')->store('project_images', 'public');
-                    $validated['image'] =  $imagePath;
-                }else {
+                    // Save the relative path
+                    $validated['image'] = 'project_images/' . $imageName;
+                } else {
                     // Keep the existing path
-                    $request->merge(['image' => $postProject->image]);
+                    $validated['image'] = $postProject->image;
                 }
-
-                // // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('attachment: Im here ');
-                    // Delete the old attachment if it exists
-                    if ($postProject->attachment) {
-                        Storage::disk('public')->delete($postProject->attachment);
-                    }
                 
-                    // Store the new attachment
-                    $attachmentPath = $request->file('attachment')->store('project_attachments', 'public');
-                    $validated['attachment'] =  $attachmentPath;
-                }else {
+                // Handle attachment upload
+                if ($request->hasFile('attachment')) {
+                    logger('Attachment: Im here ');
+                    // Save the relative path
+                    $validated['attachment'] = 'project_attachments/' . $attachmentName;
+                } else {
                     // Keep the existing path
-                    $request->merge(['attachment' => $postProject->attachment]);
+                    $validated['attachment'] = $postProject->attachment;
                 }
 
                 // Handle tags

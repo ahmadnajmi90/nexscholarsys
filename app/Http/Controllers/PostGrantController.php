@@ -96,17 +96,45 @@ class PostGrantController extends Controller
 
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
-                    $imagePath = $request->file('image')->store('grant_images', 'public');
-                    $validated['image'] =  $imagePath;
-                    logger('Image: Im here ', ['path' => $imagePath]);
+                    
+                    // Define the destination path directly in the public directory
+                    $destinationPath = public_path('storage/grant_images');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    // Store the uploaded file in the public/storage/event_images folder
+                    $image = $request->file('image');
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($destinationPath, $imageName);
+                    
+                    // Save the path relative to public/storage
+                    $validated['image'] = 'grant_images/' . $imageName;
+                    logger('Image: Im here ', ['path' => $validated['image']]);
                 }
-            
+                
                 // Handle attachment upload
                 if ($request->hasFile('attachment')) {
                     logger('Attachment: Im here ');
-                    $attachmentPath = $request->file('attachment')->store('grant_attachments', 'public');
-                    $validated['attachment'] = $attachmentPath;
-                    logger('Attachment: Im here ', ['path' => $attachmentPath]);
+                    
+                    // Define the destination path directly in the public directory
+                    $destinationPath = public_path('storage/grant_attachments');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    // Store the uploaded file in the public/storage/event_images folder
+                    $attachment = $request->file('attachment');
+                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                    $attachment->move($destinationPath, $attachmentName);
+                    
+                    // Save the path relative to public/storage
+                    $validated['attachment'] = 'grant_attachments/' . $attachmentName;
+                    logger('Attachment: Im here ', ['path' => $validated['attachment']]);
                 }
         
                 // Log validated data
@@ -155,33 +183,65 @@ class PostGrantController extends Controller
                     'is_featured' => filter_var($request->input('is_featured'), FILTER_VALIDATE_BOOLEAN),
                 ]);
                 // Handle image upload
-            if ($request->hasFile('image')) {
-                logger('Image: Im here ');
-                // Delete the old image if it exists
-                if ($postGrant->image) {
-                    Storage::disk('public')->delete($postGrant->image);
-                }
-            
-                // Store the new image
-                $imagePath = $request->file('image')->store('grant_images', 'public');
-                $request->merge(['image' => $imagePath]); // Add file path to validated data
-                }else {
+                if ($request->hasFile('image')) {
+                    logger('Image: Im here ');
+                    
+                    // Delete the old image if it exists
+                    if ($postGrant->image) {
+                        $oldImagePath = public_path('storage/' . $postGrant->image);
+                        if (file_exists($oldImagePath)) {
+                            unlink($oldImagePath); // Delete the old image
+                        }
+                    }
+                
+                    // Define the destination path
+                    $imageDestination = public_path('storage/grant_images');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($imageDestination)) {
+                        mkdir($imageDestination, 0755, true);
+                    }
+                    
+                    // Save the new image
+                    $image = $request->file('image');
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($imageDestination, $imageName);
+                    
+                    // Save the relative path
+                    $request->merge(['image' => 'grant_images/' . $imageName]);
+                } else {
                     // Keep the existing path
                     $request->merge(['image' => $postGrant->image]);
                 }
-
-                // // Handle attachment upload
+                
+                // Handle attachment upload
                 if ($request->hasFile('attachment')) {
-                    logger('attachment: Im here ');
+                    logger('Attachment: Im here ');
+                
                     // Delete the old attachment if it exists
                     if ($postGrant->attachment) {
-                        Storage::disk('public')->delete($postGrant->attachment);
+                        $oldAttachmentPath = public_path('storage/' . $postGrant->attachment);
+                        if (file_exists($oldAttachmentPath)) {
+                            unlink($oldAttachmentPath); // Delete the old attachment
+                        }
                     }
                 
-                    // Store the new attachment
-                    $attachmentPath = $request->file('attachment')->store('grant_attachments', 'public');
-                    $request->merge(['attachment' => $attachmentPath]); // Add file path to validated data
-                }else {
+                    // Define the destination path
+                    $attachmentDestination = public_path('storage/grant_attachments');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($attachmentDestination)) {
+                        mkdir($attachmentDestination, 0755, true);
+                    }
+                    
+                    // Save the new attachment
+                    $attachment = $request->file('attachment');
+                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                    $attachment->move($attachmentDestination, $attachmentName);
+                    
+                    // Save the relative path
+                    $request->merge(['attachment' => 'grant_attachments/' . $attachmentName]);
+                } else {
                     // Keep the existing path
                     $request->merge(['attachment' => $postGrant->attachment]);
                 }
@@ -210,33 +270,21 @@ class PostGrantController extends Controller
 
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
-                    // Delete the old image if it exists
-                    if ($postGrant->image) {
-                        Storage::disk('public')->delete($postGrant->image);
-                    }
-                
-                    // Store the new image
-                    $imagePath = $request->file('image')->store('grant_images', 'public');
-                    $validated['image'] =  $imagePath;
-                }else {
+                    // Save the relative path
+                    $validated['image'] = 'grant_images/' . $imageName;
+                } else {
                     // Keep the existing path
-                    $request->merge(['image' => $postGrant->image]);
+                    $validated['image'] = $postGrant->image;
                 }
-    
-                // // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('attachment: Im here ');
-                    // Delete the old attachment if it exists
-                    if ($postGrant->attachment) {
-                        Storage::disk('public')->delete($postGrant->attachment);
-                    }
                 
-                    // Store the new attachment
-                    $attachmentPath = $request->file('attachment')->store('grant_attachments', 'public');
-                    $validated['attachment'] =  $attachmentPath;
-                }else {
+                // Handle attachment upload
+                if ($request->hasFile('attachment')) {
+                    logger('Attachment: Im here ');
+                    // Save the relative path
+                    $validated['attachment'] = 'grant_attachments/' . $attachmentName;
+                } else {
                     // Keep the existing path
-                    $request->merge(['attachment' => $postGrant->attachment]);
+                    $validated['attachment'] = $postGrant->attachment;
                 }
 
                 // Handle tags

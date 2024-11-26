@@ -12,6 +12,7 @@ use App\Models\UniversityList;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use App\Models\FacultyList;
+use Illuminate\Validation\ValidationException;
 
 
 class RoleProfileController extends Controller
@@ -33,58 +34,85 @@ class RoleProfileController extends Controller
 
     public function update(RoleProfileUpdateRequest $request): RedirectResponse
     {
-        $user = Auth::user();
-        $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
-        $isAcademician = BouncerFacade::is($user)->an('academician');
+        try{
+            $user = Auth::user();
+            $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+            $isAcademician = BouncerFacade::is($user)->an('academician');
 
-        // Validate the request data
-        $validatedData = $request->validated();
-        logger()->info('Validated Data:', $validatedData);
+            // Validate the request data
+            $validatedData = $request->all();
+            logger()->info('Validated Data:', $validatedData);
 
-        if ($request->hasFile('profile_picture')) {
-            logger()->info('hasFile');
-            // Delete the old profile picture if it exists
-            if ($isPostgraduate && $user->postgraduate && $user->postgraduate->profile_picture) {
-                Storage::disk('public')->delete($user->postgraduate->profile_picture);
-            } elseif ($isAcademician && $user->academician && $user->academician->profile_picture) {
-                Storage::disk('public')->delete($user->academician->profile_picture);
+            if ($request->hasFile('profile_picture')) {
+                logger()->info('hasFile');
+            
+                // Determine the destination path for profile pictures
+                $destinationPath = public_path('storage/profile_pictures');
+            
+                // Ensure the directory exists
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+            
+                // Delete the old profile picture if it exists
+                if ($isPostgraduate && $user->postgraduate && $user->postgraduate->profile_picture) {
+                    $oldFilePath = public_path('storage/' . $user->postgraduate->profile_picture);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath); // Delete the old profile picture
+                    }
+                } elseif ($isAcademician && $user->academician && $user->academician->profile_picture) {
+                    $oldFilePath = public_path('storage/' . $user->academician->profile_picture);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath); // Delete the old profile picture
+                    }
+                }
+            
+                // Save the new profile picture
+                $file = $request->file('profile_picture');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->move($destinationPath, $fileName);
+            
+                // Save the relative path
+                $validatedData['profile_picture'] = 'profile_pictures/' . $fileName;
+            } else {
+                // Keep the existing path
+                $validatedData['profile_picture'] = $request->input('profile_picture');
+            }        
+
+            // Decode the JSON fields only if they are strings
+            if (isset($validatedData['field_of_study']) && is_string($validatedData['field_of_study'])) {
+                $validatedData['field_of_study'] = json_decode($validatedData['field_of_study'], true);
+            }
+            if (isset($validatedData['research_interests']) && is_string($validatedData['research_interests'])) {
+                $validatedData['research_interests'] = json_decode($validatedData['research_interests'], true);
+            }
+            if (isset($validatedData['ongoing_research']) && is_string($validatedData['ongoing_research'])) {
+                $validatedData['ongoing_research'] = json_decode($validatedData['ongoing_research'], true);
             }
 
-            // Store the new profile picture
-            $filePath = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $validatedData['profile_picture'] = $filePath; // Add file path to validated data
-        } else {
-            // Keep the existing path
-            $validatedData['profile_picture'] = $request->input('profile_picture');
-        }
+            logger()->info('Decoded Data:', $validatedData);
 
-        // Decode the JSON fields only if they are strings
-        if (isset($validatedData['field_of_study']) && is_string($validatedData['field_of_study'])) {
-            $validatedData['field_of_study'] = json_decode($validatedData['field_of_study'], true);
-        }
-        if (isset($validatedData['research_interests']) && is_string($validatedData['research_interests'])) {
-            $validatedData['research_interests'] = json_decode($validatedData['research_interests'], true);
-        }
-        if (isset($validatedData['ongoing_research']) && is_string($validatedData['ongoing_research'])) {
-            $validatedData['ongoing_research'] = json_decode($validatedData['ongoing_research'], true);
-        }
+            if ($isPostgraduate) {
+                // Match existing postgraduate by `postgraduate_id` or `user_id`
+                $user->postgraduate()->updateOrCreate(
+                    ['postgraduate_id' => $user->postgraduate->postgraduate_id ?? $user->id], // Ensure it matches the existing ID
+                    $validatedData
+                );
+            } elseif ($isAcademician) {
+                // Match existing academician by `academician_id` or `user_id`
+                $user->academician()->updateOrCreate(
+                    ['academician_id' => $user->academician->academician_id ?? $user->id], // Ensure it matches the existing ID
+                    $validatedData
+                );
+            }
 
-        logger()->info('Decoded Data:', $validatedData);
+            return Redirect::route('role.edit')->with('status', 'Role information updated successfully!');
+        }catch (ValidationException $e) {
+            // Log validation errors
+            logger('Validation Errors:', $e->errors());
 
-        if ($isPostgraduate) {
-            // Match existing postgraduate by `postgraduate_id` or `user_id`
-            $user->postgraduate()->updateOrCreate(
-                ['postgraduate_id' => $user->postgraduate->postgraduate_id ?? $user->id], // Ensure it matches the existing ID
-                $validatedData
-            );
-        } elseif ($isAcademician) {
-            // Match existing academician by `academician_id` or `user_id`
-            $user->academician()->updateOrCreate(
-                ['academician_id' => $user->academician->academician_id ?? $user->id], // Ensure it matches the existing ID
-                $validatedData
-            );
+            // Return back with validation errors
+            return redirect()->back()->withErrors($e->errors())->withInput();
         }
-
-        return Redirect::route('role.edit')->with('status', 'Role information updated successfully!');
     }
 }

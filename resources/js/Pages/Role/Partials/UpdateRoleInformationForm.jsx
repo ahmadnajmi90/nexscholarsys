@@ -17,7 +17,7 @@ export default function UpdateProfileInformation({
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
 
     // const variable =
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
+    const { data, setData, post, errors, processing, recentlySuccessful } =
         useForm({
             //data both have 
             phone_number: academician?.phone_number || postgraduate?.phone_number || '',
@@ -88,11 +88,17 @@ export default function UpdateProfileInformation({
                     formData.append(key, data[key]); // Add other fields
                 }
             });
-            console.log(formData);
+            console.log("Form Data Contents:");
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ": " + pair[1]);
+            }
             
-            patch(route('role.update'), {
+            post(route('role.update'), {
                 data: formData,
                 headers: { 'Content-Type': 'multipart/form-data' },
+                onSuccess: () => {
+                    alert("Profile updated successfully.");
+                },
                 onError: (errors) => {
                     console.error('Error updating profile:', errors);
                     alert("Failed to update the profile. Please try again.");
