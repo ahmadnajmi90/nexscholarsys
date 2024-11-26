@@ -252,6 +252,25 @@ export default function Create() {
             className="w-full rounded-lg border-gray-200 p-4 text-sm"
             placeholder="Enter email"
           />
+           {/* Use Personal Email Checkbox */}
+           <div className="mt-2 flex items-center">
+                  <input
+                      type="checkbox"
+                      id="usePersonalEmail"
+                      checked={data.email === auth.email}
+                      onChange={(e) => {
+                          if (e.target.checked) {
+                              setData("email", auth.email); // Set email to personal email
+                          } else {
+                              setData("email", ""); // Clear email field
+                          }
+                      }}
+                      className="form-checkbox h-5 w-5 text-blue-600"
+                  />
+                  <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
+                      Use personal email ({auth.email})
+                  </label>
+              </div>
         </div>
         <div>
           <label className="block text-gray-700 font-medium">
