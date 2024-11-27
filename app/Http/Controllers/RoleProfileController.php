@@ -100,6 +100,9 @@ class RoleProfileController extends Controller
                 );
             } elseif ($isAcademician) {
                 // Match existing academician by `academician_id` or `user_id`
+                $validatedData['university'] = $user->academician->university;
+                $validatedData['faculty'] = $user->academician->faculty;
+                logger()->info('Academician Data:', $validatedData);
                 $user->academician()->updateOrCreate(
                     ['academician_id' => $user->academician->academician_id ?? $user->id], // Ensure it matches the existing ID
                     $validatedData
