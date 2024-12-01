@@ -62,11 +62,11 @@ Route::middleware('auth')->group(function () {
 
 Route::resource('academicians', AcademicianController::class)
 ->only(['index'])
-->middleware(['auth', 'verified']); 
+->middleware(['auth', 'verified']);
 
 Route::resource('postgraduates', PostgraduateController::class)
 ->only(['index'])
-->middleware(['auth', 'verified']); 
+->middleware(['auth', 'verified']);
 
 Route::resource('project', ShowProjectController::class)
 ->only(['index'])
