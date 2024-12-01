@@ -13,6 +13,8 @@ import {
     FaPoll,
     FaUser,
     FaCog,
+    FaBookReader,
+    FaBookOpen,
 } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
@@ -20,11 +22,12 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
 
     const [menuOpen, setMenuOpen] = useState({
         networking: false,
-        research: false,
+        journal: false,
         grant: false,
-        researchManagement: false,
+        project: false,
         event: false,
         survey: false,
+        workspace: false,
         profile: false, // Added profile toggle state
     });
 
@@ -59,43 +62,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                             <FaTachometerAlt className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Dashboard</span>
                         </Link>
-                        <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
-                            <div className="flex items-center">
-                                <FaNewspaper className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Newsfeed</span>
-                            </div>
-                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
-                                Soon
-                            </span> */}
-                        </Link>
 
-                        <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
-                            <div className="flex items-center">
-                                <FaUsers className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Forums</span>
-                            </div>
-
-                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
-                                Soon
-                            </span> */}
-                        </Link>
-                        {!isPostgraduate && (
-                        <Link href={route('post-grants.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaUniversity className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post Grants</span>
-                        </Link>)}
-
-                        {!isPostgraduate && (
-                        <Link href={route('post-projects.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaUniversity className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post Projects</span>
-                        </Link>)}
-
-                        {!isPostgraduate && (
-                        <Link href={route('post-events.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaUniversity className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post Events</span>
-                        </Link>)}
 
                     </div>
 
@@ -119,23 +86,10 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         )}
                     </div>
 
-                    {/* Research Section */}
+                    {/*Researeh*/}
                     <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Research - In Development</h3>
-                        <button
-                            onClick={() => toggleMenu('research')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaBook className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Journal Database</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.research ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.research && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Discontinued Journal</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Predator Journal</Link>
-                            </div>
-                        )}
+                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>journal</h3>
+
                            <button
                             onClick={() => toggleMenu('grant')}
                             className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
@@ -146,22 +100,28 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         </button>
                         {menuOpen.grant && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">Grant</Link>
+                                <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">View Grant</Link>
+                                {!isPostgraduate && (
+                                <Link href={route('post-grants.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Grants
+                                </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Sponsorship</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Research Collaboration</Link> */}
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">journal Collaboration</Link> */}
                             </div>
                         )}
                          <button
-                            onClick={() => toggleMenu('researchManagement')}
+                            onClick={() => toggleMenu('project')}
                             className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
                         >
                             <FaChartBar className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Research Tool</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.researchManagement ? '-' : '+'}</span>}
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Project</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.project ? '-' : '+'}</span>}
                         </button>
-                        {menuOpen.researchManagement && (
+                        {menuOpen.project && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/project" className="block py-2 hover:bg-gray-100 rounded">Project</Link>
+                                <Link href="/project" className="block py-2 hover:bg-gray-100 rounded"> View Project</Link>
+                                {!isPostgraduate && (
+                                <Link href={route('post-projects.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Projects
+                                </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Paper</Link>
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Thesis</Link> */}
                             </div>
@@ -177,9 +137,47 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         </button>
                         {menuOpen.event && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">Event</Link>
+                                <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
+                                {!isPostgraduate && (
+                                <Link href={route('post-events.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Event
+                                </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
+                            </div>
+                        )}
+
+                    </div>
+
+                       {/* Features In Development */}
+                       <div>
+                        <h3 className={`text-blue-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features In Development </h3>
+                        <button
+                            onClick={() => toggleMenu('workspace')}
+                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                        >
+                            <FaBookOpen className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Workspace</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.workspace ? '-' : '+'}</span>}
+                        </button>
+                        {menuOpen.workspace && (
+                            <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">View Board</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Manage Board</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Members</Link>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => toggleMenu('journal')}
+                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                        >
+                            <FaBook className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Journal Database</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.journal ? '-' : '+'}</span>}
+                        </button>
+                        {menuOpen.journal && (
+                            <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Discontinued Journal</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Predator Journal</Link>
                             </div>
                         )}
                           <button
@@ -196,6 +194,26 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (With Token)</Link>
                             </div>
                         )}
+                                <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
+                            <div className="flex items-center">
+                                <FaNewspaper className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Newsfeed</span>
+                            </div>
+                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
+                                Soon
+                            </span> */}
+                        </Link>
+
+                        <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
+                            <div className="flex items-center">
+                                <FaUsers className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Forums</span>
+                            </div>
+
+                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
+                                Soon
+                            </span> */}
+                        </Link>
                     </div>
 
                     {/* Survey Section */}
