@@ -19,24 +19,24 @@ export default function UpdateProfileInformation({
     // const variable =
     const { data, setData, post, errors, processing, recentlySuccessful } =
         useForm({
-            //data both have 
+            //data both have
             phone_number: academician?.phone_number || postgraduate?.phone_number || '',
             full_name: academician?.full_name || postgraduate?.full_name || '',
             profile_picture: academician?.profile_picture || postgraduate?.profile_picture || '',
             field_of_study:
             typeof academician?.field_of_study === 'string'
                 ? JSON.parse(academician?.field_of_study)
-                : academician?.field_of_study || 
+                : academician?.field_of_study ||
                 (typeof postgraduate?.field_of_study === 'string'
                     ? JSON.parse(postgraduate?.field_of_study)
                     : postgraduate?.field_of_study || []),
 
             highest_degree: academician?.highest_degree || postgraduate?.highest_degree || '',
-            
+
             research_interests:
             typeof academician?.research_interests === 'string'
                 ? JSON.parse(academician?.research_interests)
-                : academician?.research_interests || 
+                : academician?.research_interests ||
                 (typeof postgraduate?.research_interests === 'string'
                     ? JSON.parse(postgraduate?.research_interests)
                     : postgraduate?.research_interests || []),
@@ -44,7 +44,7 @@ export default function UpdateProfileInformation({
             ongoing_research:
             typeof academician?.ongoing_research === 'string'
                 ? JSON.parse(academician?.ongoing_research)
-                : academician?.ongoing_research || 
+                : academician?.ongoing_research ||
                 (typeof postgraduate?.ongoing_research === 'string'
                     ? JSON.parse(postgraduate?.ongoing_research)
                     : postgraduate?.ongoing_research || []),
@@ -71,9 +71,9 @@ export default function UpdateProfileInformation({
         });
         const submit = (e) => {
             e.preventDefault();
-        
+
             const formData = new FormData();
-        
+
             // Add all form fields to FormData
             Object.keys(data).forEach((key) => {
                 if (key === 'profile_picture') {
@@ -92,7 +92,7 @@ export default function UpdateProfileInformation({
             for (let pair of formData.entries()) {
                 console.log(pair[0] + ": " + pair[1]);
             }
-            
+
             post(route('role.update'), {
                 data: formData,
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -155,7 +155,7 @@ export default function UpdateProfileInformation({
                 {/* Profile Picture */}
                 <div>
                     <InputLabel htmlFor="profile_picture" value="Profile Picture" />
-                    
+
                     {/* Display the current profile picture */}
                     {data.profile_picture && typeof data.profile_picture === "string" && (
                         <div className="relative w-24 h-24 rounded-full overflow-hidden shadow-lg my-2">
@@ -184,7 +184,7 @@ export default function UpdateProfileInformation({
                     />
                     <InputError message={errors.profile_picture} />
                 </div>
- 
+
 
                 {/* Highest Degree */}
                 <div>
@@ -209,7 +209,7 @@ export default function UpdateProfileInformation({
 
                 {/* Field of Study */}
                 <div>
-                    <InputLabel htmlFor="field_of_study" value="Field of Study" />
+                    <InputLabel htmlFor="field_of_study" value="Field of Research" />
                     <select
                         id="field_of_study"
                         className="mt-1 block w-full border rounded-md p-2"
@@ -235,7 +235,7 @@ export default function UpdateProfileInformation({
 
                 {/* Research Interests */}
                 <div>
-                    <InputLabel htmlFor="research_interests" value="Research Interests" />
+                    <InputLabel htmlFor="research_interests" value="Niche Domain" />
                     <select
                         id="research_interests"
                         className="mt-1 block w-full border rounded-md p-2"
@@ -261,7 +261,7 @@ export default function UpdateProfileInformation({
 
                 {/* Ongoing Research */}
                 <div>
-                    <InputLabel htmlFor="ongoing_research" value="Ongoing Research" />
+                    <InputLabel htmlFor="ongoing_research" value="Niche Domain" />
                     <select
                         id="ongoing_research"
                         className="mt-1 block w-full border rounded-md p-2"
@@ -400,7 +400,7 @@ export default function UpdateProfileInformation({
                             </select>
                             <InputError className="mt-2" message={errors.supervisorAvailability} />
                         </div>
-                        
+
                         <div>
                             <InputLabel htmlFor="grantAvailability" value="Grant Availability" required/>
                             <select
@@ -493,7 +493,7 @@ export default function UpdateProfileInformation({
                     />
                     <InputError className="mt-2" message={errors.bio} />
                 </div>
-                
+
                 {/* Save Button */}
                 <div className="flex items-center gap-4">
                     <PrimaryButton disabled={processing}>Save</PrimaryButton>
