@@ -33,21 +33,21 @@ export default function UpdateProfileInformation({
 
             highest_degree: academician?.highest_degree || postgraduate?.highest_degree || '',
 
-            research_interests:
-            typeof academician?.research_interests === 'string'
-                ? JSON.parse(academician?.research_interests)
-                : academician?.research_interests ||
-                (typeof postgraduate?.research_interests === 'string'
-                    ? JSON.parse(postgraduate?.research_interests)
-                    : postgraduate?.research_interests || []),
+            research_area:
+            typeof academician?.research_area === 'string'
+                ? JSON.parse(academician?.research_area)
+                : academician?.research_area ||
+                (typeof postgraduate?.research_area === 'string'
+                    ? JSON.parse(postgraduate?.research_area)
+                    : postgraduate?.research_area || []),
 
-            ongoing_research:
-            typeof academician?.ongoing_research === 'string'
-                ? JSON.parse(academician?.ongoing_research)
-                : academician?.ongoing_research ||
-                (typeof postgraduate?.ongoing_research === 'string'
-                    ? JSON.parse(postgraduate?.ongoing_research)
-                    : postgraduate?.ongoing_research || []),
+            niche_domain:
+            typeof academician?.niche_domain === 'string'
+                ? JSON.parse(academician?.niche_domain)
+                : academician?.niche_domain ||
+                (typeof postgraduate?.niche_domain === 'string'
+                    ? JSON.parse(postgraduate?.niche_domain)
+                    : postgraduate?.niche_domain || []),
 
             website: academician?.website || postgraduate?.website || '',
             linkedin: academician?.linkedin || postgraduate?.linkedin || '',
@@ -219,55 +219,90 @@ export default function UpdateProfileInformation({
                         }
                         multiple
                     >
-                        {/* Example Field of Study Options */}
-                        <option value="Generative AI">Artificial Intelligence (Generative AI)</option>
-                        <option value="Quantum Computing">Quantum Computing</option>
-                        <option value="Clean Energy Technologies">Clean Energy Technologies</option>
-                        <option value="Synthetic Biology">Synthetic Biology</option>
-                        <option value="Climate Change Mitigation">Climate Change Mitigation</option>
-                        <option value="Advanced Robotics">Advanced Robotics</option>
-                        <option value="Natural Language Processing">Natural Language Processing</option>
-                        <option value="Autonomous Vehicles">Autonomous Vehicles</option>
-                        <option value="Space Exploration Technologies">Space Exploration Technologies</option>
+                        {/* Updated Field of Research Options */}
+                        <option value="Agricultural Sciences">Agricultural Sciences</option>
+                        <option value="Astronomy and Astrophysics">Astronomy and Astrophysics</option>
+                        <option value="Biological Sciences">Biological Sciences</option>
+                        <option value="Business and Management">Business and Management</option>
+                        <option value="Chemical Sciences">Chemical Sciences</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Creative Arts and Writing">Creative Arts and Writing</option>
+                        <option value="Earth Sciences">Earth Sciences</option>
+                        <option value="Economics">Economics</option>
+                        <option value="Education">Education</option>
+                        <option value="Electrical and Electronic Engineering">Electrical and Electronic Engineering</option>
+                        <option value="Environmental Sciences">Environmental Sciences</option>
+                        <option value="Health Sciences">Health Sciences</option>
+                        <option value="History">History</option>
+                        <option value="Humanities and Social Sciences">Humanities and Social Sciences</option>
+                        <option value="Law and Legal Studies">Law and Legal Studies</option>
+                        <option value="Library and Information Science">Library and Information Science</option>
+                        <option value="Materials Engineering">Materials Engineering</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Medical and Health Sciences">Medical and Health Sciences</option>
+                        <option value="Philosophy and Religious Studies">Philosophy and Religious Studies</option>
+                        <option value="Physical Sciences">Physical Sciences</option>
+                        <option value="Political Science">Political Science</option>
+                        <option value="Psychology">Psychology</option>
+                        <option value="Sociology">Sociology</option>
+                        <option value="Space Sciences">Space Sciences</option>
+                        <option value="Statistics">Statistics</option>
+                        <option value="Veterinary Sciences">Veterinary Sciences</option>
                     </select>
                     <InputError className="mt-2" message={errors.field_of_study} />
                 </div>
 
+
                 {/* Research Interests */}
                 <div>
-                    <InputLabel htmlFor="research_interests" value="Niche Domain" />
-                    <select
-                        id="research_interests"
-                        className="mt-1 block w-full border rounded-md p-2"
-                        value={data.research_interests}
-                        onChange={(e) =>
-                            setData('research_interests', Array.from(e.target.selectedOptions, (option) => option.value))
-                        }
-                        multiple
-                    >
-                        {/* Example Research Interests Options */}
-                        <option value="Generative AI">Artificial Intelligence (Generative AI)</option>
-                        <option value="Quantum Computing">Quantum Computing</option>
-                        <option value="Clean Energy Technologies">Clean Energy Technologies</option>
-                        <option value="Synthetic Biology">Synthetic Biology</option>
-                        <option value="Climate Change Mitigation">Climate Change Mitigation</option>
-                        <option value="Advanced Robotics">Advanced Robotics</option>
-                        <option value="Natural Language Processing">Natural Language Processing</option>
-                        <option value="Autonomous Vehicles">Autonomous Vehicles</option>
-                        <option value="Space Exploration Technologies">Space Exploration Technologies</option>
-                    </select>
-                    <InputError className="mt-2" message={errors.research_interests} />
-                </div>
+                <InputLabel htmlFor="research_area" value="Research Area" />
+                <select
+                    id="research_area"
+                    className="mt-1 block w-full border rounded-md p-2"
+                    value={data.research_area}
+                    onChange={(e) =>
+                        setData('research_area', Array.from(e.target.selectedOptions, (option) => option.value))
+                    }
+                    multiple
+                >
+                    {/* Updated Research Area Options for Computer Science */}
+                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                    <option value="Machine Learning">Machine Learning</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Natural Language Processing">Natural Language Processing</option>
+                    <option value="Computer Vision">Computer Vision</option>
+                    <option value="Cybersecurity">Cybersecurity</option>
+                    <option value="Blockchain">Blockchain</option>
+                    <option value="Cloud Computing">Cloud Computing</option>
+                    <option value="Quantum Computing">Quantum Computing</option>
+                    <option value="Human-Computer Interaction">Human-Computer Interaction</option>
+                    <option value="Software Engineering">Software Engineering</option>
+                    <option value="Distributed Systems">Distributed Systems</option>
+                    <option value="Database Systems">Database Systems</option>
+                    <option value="Internet of Things">Internet of Things</option>
+                    <option value="Robotics">Robotics</option>
+                    <option value="Computational Biology">Computational Biology</option>
+                    <option value="Big Data Analytics">Big Data Analytics</option>
+                    <option value="Augmented and Virtual Reality">Augmented and Virtual Reality</option>
+                    <option value="Autonomous Systems">Autonomous Systems</option>
+                    <option value="Embedded Systems">Embedded Systems</option>
+                    <option value="Networking and Communications">Networking and Communications</option>
+                </select>
+                <InputError className="mt-2" message={errors.research_area} />
+            </div>
+
 
                 {/* Ongoing Research */}
                 <div>
-                    <InputLabel htmlFor="ongoing_research" value="Niche Domain" />
+                    <InputLabel htmlFor="niche_domain" value="Niche Domain" />
                     <select
-                        id="ongoing_research"
+                        id="niche_domain"
                         className="mt-1 block w-full border rounded-md p-2"
-                        value={data.ongoing_research}
+                        value={data.niche_domain}
                         onChange={(e) =>
-                            setData('ongoing_research', Array.from(e.target.selectedOptions, (option) => option.value))
+                            setData('niche_domain', Array.from(e.target.selectedOptions, (option) => option.value))
                         }
                         multiple
                     >
@@ -282,22 +317,31 @@ export default function UpdateProfileInformation({
                         <option value="Autonomous Vehicles">Autonomous Vehicles</option>
                         <option value="Space Exploration Technologies">Space Exploration Technologies</option>
                     </select>
-                    <InputError className="mt-2" message={errors.ongoing_research} />
+                    <InputError className="mt-2" message={errors.niche_domain} />
                 </div>
 
                 {/* Additional Fields for Academician */}
                 {academician && (
                     <>
-                        <div>
-                            <InputLabel htmlFor="current_position" value="Current Position" required/>
-                            <TextInput
-                                id="current_position"
-                                className="mt-1 block w-full"
-                                value={data.current_position}
-                                onChange={(e) => setData('current_position', e.target.value)}
-                            />
-                            <InputError className="mt-2" message={errors.current_position} />
-                        </div>
+                    <div>
+                        <InputLabel htmlFor="current_position" value="Current Position" required />
+                        <select
+                            id="current_position"
+                            className="mt-1 block w-full border rounded-md p-2"
+                            value={data.current_position}
+                            onChange={(e) => setData('current_position', e.target.value)}
+                        >
+                            <option value="">Select Position</option> {/* Placeholder */}
+                            <option value="Lecturer">Lecturer</option>
+                            <option value="Senior Lecturer">Senior Lecturer</option>
+                            <option value="Assoc. Prof.">Associate Professor</option>
+                            <option value="Professor">Professor</option>
+                            <option value="Postdoctoral Researcher">Postdoctoral Researcher</option>
+                            <option value="Researcher">Researcher</option>
+                        </select>
+                        <InputError className="mt-2" message={errors.current_position} />
+                    </div>
+
 
                         <div>
                             <InputLabel htmlFor="department" value="Department" required/>
