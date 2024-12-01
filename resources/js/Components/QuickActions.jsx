@@ -8,7 +8,7 @@ const QuickActions = () => {
         { label: "Find Academician", icon: "👩‍🏫", link: "/academicians" }, // Lecturer Icon
         { label: "Find Postgraduate", icon: "🎓", link: "/postgraduates" }, // Graduation Icon
         { label: "ChatGPT", icon: "🤖", link: "https://chatgpt.com/" }, // Robot Icon
-        { label: "Scispace", icon: "📊", link: "https://typeset.io/" }, // Data/Analytics Icon
+        { label: "Scispaces", icon: "📊", link: "https://typeset.io/" }, // Data/Analytics Icon
         { label: "Canva", icon: "🎨", link: "https://www.canva.com/" }, // Art Icon
         { label: "Mendeley", icon: "📚", link: "https://www.mendeley.com/" }, // Book Icon
         { label: "Zotero", icon: "🧩", link: "https://www.zotero.org/" }, // Puzzle Icon
