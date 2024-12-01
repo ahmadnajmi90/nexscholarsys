@@ -130,17 +130,29 @@ const ProfileGridWithDualFilter = ({
                         <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px]  font-semibold px-2.5 py-0.5  rounded-full">
                             {getUniversityNameById(profile.university)}
                         </div>
-                        {!isPostgraduateList && profile.verified === 1 &&(
-                        <div className="relative group">
-                            <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] text-purple-700 cursor-pointer">
-                                Verified
-                            </span>
-                            {/* Tooltip */}
-                            <div className="absolute top-8 right-0 hidden group-hover:flex items-center bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10">
-                                This account is verified by {getUniversityNameById(profile.university)}
+                        {!isPostgraduateList && (
+                            <div className="relative group">
+                                {/* Display "Verified" if verified */}
+                                {profile.verified === 1 && (
+                                <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] text-purple-700 cursor-pointer">
+                                    Verified
+                                </span>
+                                )}
+                                {/* Display "Not Verified" if not verified */}
+                                {profile.verified !== 1 && (
+                                <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] text-red-700 cursor-pointer">
+                                    Not Verified
+                                </span>
+                                )}
+
+                                {/* Tooltip for both states */}
+                                <div className="absolute top-8 right-0 hidden group-hover:flex items-center bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10">
+                                {profile.verified === 1
+                                    ? `This account is verified by ${getUniversityNameById(profile.university)}`
+                                    : "This account is not verified"}
+                                </div>
                             </div>
-                        </div>
-                        )}
+                            )}
 
                         {/* Banner */}
                         <div className="h-32">
