@@ -4,9 +4,9 @@ const QuickActions = () => {
   return (
     <div className="col-span-1 grid grid-cols-2 gap-4">
       {[
-        { label: "Give Feedback", icon: "📝", link: "https://forms.gle/CQnJJxd8tfSrL2RE7" }, // Feedback Icon
-        { label: "Find Academician", icon: "👩‍🏫", link: "/academicians" }, // Lecturer Icon
-        { label: "Find Postgraduate", icon: "🎓", link: "/postgraduates" }, // Graduation Icon
+        { label: "Give Feedback", icon: <img src="/images/feedback.png" alt="" style={{ width: "30px", height: "30px" }} />, link: "https://forms.gle/CQnJJxd8tfSrL2RE7" }, // Feedback Icon
+        { label: "Find Academician", icon: <img src="/images/academician.png" alt="" style={{ width: "30px", height: "30px" }} />, link: "/academicians" }, // Lecturer Icon
+        { label: "Find Postgraduate", icon:<img src="/images/postgraduate.png" alt="" style={{ width: "30px", height: "30px" }} />, link: "/postgraduates" }, // Graduation Icon
         { label: "ChatGPT", icon: <img src="/images/chatgpt.png" alt="" style={{ width: "30px", height: "30px" }} />, link: "https://chatgpt.com/" }, // Robot Icon
         { label: "Scispaces", icon: <img src="/images/scispaces.png" alt="" style={{ width: "30px", height: "30px" }} />, link: "https://typeset.io/" }, // Data/Analytics Icon
         { label: "Canva", icon: <img src="/images/canva.png" alt="" style={{ width: "30px", height: "30px" }} />, link: "https://www.canva.com/" }, // Art Icon

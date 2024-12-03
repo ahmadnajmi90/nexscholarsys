@@ -111,10 +111,14 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
             {/* Content Section */}
             <div className="p-8">
-              <h2 className="text-xl font-semibold text-gray-800 text-center">
+            <h2
+                className="text-xl font-semibold text-gray-800 text-center truncate"
+                style={{ maxWidth: "100%" }} // Optional to ensure it respects the card's width
+                title={item[title]} // Tooltip to display full text on hover
+            >
                 {item[title]}
-              </h2>
-              <p className="text-gray-600 mt-4 text-center">{item.description}</p>
+            </h2>
+              <p className="text-gray-600 mt-4 text-center truncate" style={{ maxWidth: "100%" }} >{item.description}</p>
             </div>
 
             {/* Button Section */}
@@ -153,13 +157,29 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
             {/* Modal Section */}
             {isModalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative">
+                <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-auto"
+                onClick={closeModal} // Close the modal when clicking on the background
+            >
+                <div
+                className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl relative overflow-y-auto max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()} // Prevent the click from propagating to the background
+                >
+
+                       {/* Modal Image */}
+    {selectedItem.image && (
+      <img
+        src={selectedItem.image !== null ? `/storage/${selectedItem.image}` : "/storage/default.jpg"}
+        alt={selectedItem[title]}
+        className="w-full h-48 object-cover rounded-t-lg mb-4"
+      />
+    )}
 
             {/* Modal Header */}
             <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
               {selectedItem[title]}
             </h3>
+
 
             {/* Modal Content */}
             <div className="space-y-4">
@@ -224,7 +244,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         )}
                         </p>
 
-                    
+
                     </>
                 )}
 
@@ -282,7 +302,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         <span className="font-semibold">Organized by:</span>{" "}
                         {selectedItem.organized_by || "Not provided"}
                     </p>
-                    
+
                     <p className="text-gray-600">
                         <span className="font-semibold">Registration Link:</span>{" "}
                         {selectedItem.registration_url || "Not provided"}
@@ -329,7 +349,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         )}
                     </p>
 
-                    
+
                     </>
                 )}
 
@@ -360,7 +380,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         <span className="font-semibold">Sponsored by:</span>{" "}
                         {selectedItem.sponsored_by || "Not provided"}
                     </p>
-                    
+
                     <p className="text-gray-600">
                         <span className="font-semibold">Application Link:</span>{" "}
                         {selectedItem.application_url || "Not provided"}
@@ -402,10 +422,10 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         )}
                         </p>
 
-                    
+
                     </>
                 )}
-                
+
             </div>
 
             {/* Modal Footer */}
