@@ -88,7 +88,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
 
                     {/*Researeh*/}
                     <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>journal</h3>
+                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features</h3>
 
                            <button
                             onClick={() => toggleMenu('grant')}

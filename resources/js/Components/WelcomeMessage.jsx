@@ -2,7 +2,7 @@ import React from "react";
 
 const SuccessAlert4 = () => {
   return (
-    <div className="py-10 bg-white dark:bg-dark">
+    <div className="py-1 bg-white dark:bg-dark">
       <div className="container">
         <div className="border-stroke dark:border-dark-3 mb-1 flex items-center rounded-md border border-l-[8px] border-l-[#00B078] bg-white dark:bg-dark-2 p-5 pl-8">
           <div className="mr-5 flex h-[36px] w-full max-w-[36px] items-center justify-center rounded-full bg-[#00B078]">
