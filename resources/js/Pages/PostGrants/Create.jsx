@@ -236,7 +236,9 @@ export default function Create() {
           )}
         </div>
       </div>
-
+      {/* Allow to select multiple purpose */}
+      {/* if purpose for student, show master or phd, student nationality, should have a section that dedicated for student.  */}
+      {/* if purpose for collaboration, put the purpose of collaboration, this is where researcher need to write the purpose */}
       {/* Add level Master or PhD */}
       {/* Student Nationality */}
       {/* Add appointment for RA, GRA */}
