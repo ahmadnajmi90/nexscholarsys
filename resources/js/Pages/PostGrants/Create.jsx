@@ -23,11 +23,11 @@ export default function Create() {
     end_date: "",
     budget: "",
     eligibility_criteria: "",
-    is_featured: false,
+    // is_featured: false,
     application_url: "",
     attachment: null
   });
-  
+
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
   const [customTag, setCustomTag] = useState(""); // State to manage custom tag input
 
@@ -158,6 +158,9 @@ export default function Create() {
           </div>
         </div>
 
+        {/*Application Deadline*/}
+        {/*Duration - Can it being calculated from the startd date and end date*/}
+
         {/* Sponsored By and Category */}
         <div className="grid grid-cols-2 gap-8">
           <div>
@@ -180,7 +183,7 @@ export default function Create() {
               value={data.category}
               onChange={(e) => setData("category", e.target.value)}
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >                                                                                   
+            >
               <option value="" disabled hidden>
                 Select a Category
               </option>
@@ -200,7 +203,12 @@ export default function Create() {
           </div>
         </div>
 
+        {/* Field of Research apploed when fundamental, applied, fundamental + applied is applied */}
+        {/* need to add in table SV name and university, will pull from another table */}
+        {/* if on behalf,  need to fill in manually for SV name, university and faculty*/}
+
         {/* Purpose and Location */}
+        {/* Location no need since will follow the location from SV */}
         <div className="grid grid-cols-2 gap-8">
           <div>
             <label className="block text-gray-700 font-medium">Purpose</label>
@@ -210,7 +218,8 @@ export default function Create() {
               className="w-full rounded-lg border-gray-200 p-4 text-sm"
             >
               <option value="find_pgstudent">Find Postgraduate Student</option>
-              <option value="find_collaboration">Find Collaboration</option>
+              <option value="find_academic_collaboration">Find Academic Collaboration</option>
+              <option value="find_industry_collaboration">Find Industry Collaboration - Matching Grant</option>
             </select>
           </div>
           <div>
@@ -227,6 +236,10 @@ export default function Create() {
           )}
         </div>
       </div>
+
+      {/* Add level Master or PhD */}
+      {/* Student Nationality */}
+      {/* Add appointment for RA, GRA */}
 
         {/* Email and Contact Number */}
         <div className="grid grid-cols-2 gap-8">
@@ -296,9 +309,13 @@ export default function Create() {
           </div>
         </div>
 
-        {/* Budget */}
+         {/*Monthly allowance*/}
+         {/*Extra info on monthly allowance?*/}
+
+
+        {/* Budget need to hide for postgraduate student, and need to change the name */}
         <div>
-          <label className="block text-gray-700 font-medium">Budget</label>
+          <label className="block text-gray-700 font-medium">Approved Grant Amount</label>
           <input
             type="number"
             value={data.budget}
@@ -321,7 +338,7 @@ export default function Create() {
           ></textarea>
         </div>
 
-        
+
           {/* Application URL */}
           <div>
               <label className="block text-gray-700 font-medium">
@@ -443,7 +460,7 @@ export default function Create() {
   </div>
 
   {/* Featured Grant */}
-  <div>
+  {/* <div>
     <label className="block text-gray-700 font-medium">Featured Grant</label>
     <div className="flex items-center space-x-4 mt-2">
       <label className="flex items-center">
@@ -470,7 +487,7 @@ export default function Create() {
       </label>
     </div>
     {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
-  </div>
+  </div> */}
 </div>
 
 
@@ -494,6 +511,9 @@ export default function Create() {
         </div>
       </form>
     </div>
+
+        {/* There will be the avaibility to send the email or chat or request to applied through nexscholar.  */}
   </MainLayout>
+
   );
 }
