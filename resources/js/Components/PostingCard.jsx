@@ -305,8 +305,19 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Registration Link:</span>{" "}
-                        {selectedItem.registration_url || "Not provided"}
-                    </p>
+                        {selectedItem.registration_url ? (
+                            <a
+                            href={selectedItem.registration_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 underline"
+                            >
+                            Click Here
+                            </a>
+                        ) : (
+                            "Not provided"
+                        )}
+                        </p>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Registration Deadline:</span>{" "}
