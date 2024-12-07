@@ -714,11 +714,24 @@ export default function PostgraduateForm({
                             }}
                         />
                         {data.CV_file && (
-                            <p className="text-sm text-gray-500 mt-2">
-                                {typeof data.CV_file === 'string'
-                                    ? `Currently Stored File: ${data.CV_file.split('/').pop()}` // Extract the filename from the stored path
-                                    : `File Selected: ${data.CV_file.name}`} {/* Display newly selected file */}
-                            </p>
+                            <div className="mt-2">
+                                {typeof data.CV_file === 'string' ? (
+                                    // If it's a stored file, render as a link
+                                    <a
+                                        href={`/storage/${data.CV_file}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-blue-500 hover:underline"
+                                    >
+                                        View Current File: {data.CV_file.split('/').pop()}
+                                    </a>
+                                ) : (
+                                    // If it's a newly selected file
+                                    <p className="text-sm text-gray-500">
+                                        File Selected: {data.CV_file.name}
+                                    </p>
+                                )}
+                            </div>
                         )}
                     </div>
 
