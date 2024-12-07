@@ -44,7 +44,7 @@ class RoleProfileUpdateRequest extends FormRequest
                 'matric_no' => ['nullable', 'string', 'max:50'], // Required if Registered
                 'suggested_research_title' => ['nullable', 'string', 'max:255'], // Only if user suggests
                 'suggested_research_description' => ['nullable', 'string'], // Only if user suggests
-                'CV_file' => ['nullable', 'file', 'max:5120', 'mimes:pdf,doc,docx'], // Max 5MB, CV file types
+                'CV_file' => ['nullable', 'max:5120'], // Max 5MB, CV file types
                 'website' => ['nullable', 'string', 'max:255', 'url'], // Ensure it's a valid URL
                 'linkedin' => ['nullable', 'string', 'max:255', 'url'], // Ensure it's a valid URL
                 'google_scholar' => ['nullable', 'string', 'max:255', 'url'], // Ensure it's a valid URL
