@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreign('faculty')->references('id')->on('faculty_list')->onDelete('cascade');
             $table->string('highest_degree')->nullable();
             $table->json('field_of_study')->nullable();
-            $table->json('research_interests')->nullable();
+            $table->json('field_of_research')->nullable();
             $table->json('ongoing_research')->nullable();
             $table->string('website')->nullable();
             $table->string('linkedin')->nullable();

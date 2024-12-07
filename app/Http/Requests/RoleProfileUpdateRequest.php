@@ -21,7 +21,7 @@ class RoleProfileUpdateRequest extends FormRequest
                 'department' => ['nullable', 'string', 'max:255'],
                 'highest_degree' => ['nullable', 'string', 'max:255'],
                 'field_of_study' => ['nullable'],
-                'research_interests' => ['nullable'],
+                'field_of_research' => ['nullable'],
                 'ongoing_research' => ['nullable'],
                 'website' => ['nullable', 'string', 'max:255'],
                 'linkedin' => ['nullable', 'string', 'max:255'],

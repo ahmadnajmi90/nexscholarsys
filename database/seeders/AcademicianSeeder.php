@@ -31,7 +31,7 @@ class AcademicianSeeder extends Seeder
         // List of research areas
         $researchAreas = [
             "Artificial Intelligence (Generative AI)", "Quantum Computing", "Clean Energy Technologies",
-            "Synthetic Biology", "Climate Change Mitigation", "Advanced Robotics", 
+            "Synthetic Biology", "Climate Change Mitigation", "Advanced Robotics",
             "Natural Language Processing", "Autonomous Vehicles", "Space Exploration Technologies",
             "Edge Computing",
         ];
@@ -62,7 +62,7 @@ class AcademicianSeeder extends Seeder
                 'department' => 'Computer Science Department', // Example static value
                 'highest_degree' => 'PhD',
                 'field_of_study' => $getRandomResearchAreas($researchAreas),
-                'research_interests' => $getRandomResearchAreas($researchAreas),
+                'field_of_research' => $getRandomResearchAreas($researchAreas),
                 'ongoing_research' => $getRandomResearchAreas($researchAreas),
                 'website' => 'https://example.com',
                 'linkedin' => 'https://linkedin.com/in/example',

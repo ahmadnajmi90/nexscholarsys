@@ -31,7 +31,7 @@ class PostgraduateSeeder extends Seeder
         // List of research areas (same as AcademicianSeeder)
         $researchAreas = [
             "Artificial Intelligence (Generative AI)", "Quantum Computing", "Clean Energy Technologies",
-            "Synthetic Biology", "Climate Change Mitigation", "Advanced Robotics", 
+            "Synthetic Biology", "Climate Change Mitigation", "Advanced Robotics",
             "Natural Language Processing", "Autonomous Vehicles", "Space Exploration Technologies",
             "Edge Computing",
         ];

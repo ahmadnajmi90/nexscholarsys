@@ -23,7 +23,7 @@ class Academician extends Model
         'faculty',
         'highest_degree',
         'field_of_study',
-        'research_interests',
+        'field_of_research',
         'ongoing_research',
         'website',
         'linkedin',
