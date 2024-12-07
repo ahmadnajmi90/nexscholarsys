@@ -24,14 +24,12 @@ return new class extends Migration
             $table->unsignedBigInteger('faculty')->nullable(); // Faculty foreign key
             $table->foreign('faculty')->references('id')->on('faculty_list')->onDelete('cascade');
             $table->string('highest_degree')->nullable();
-            $table->json('field_of_study')->nullable();
-            $table->json('field_of_research')->nullable();
-            $table->json('ongoing_research')->nullable();
+            $table->json('research_expertise')->nullable(); // JSON attribute to store expertise
+            $table->string('field_of_study')->nullable();
             $table->string('website')->nullable();
             $table->string('linkedin')->nullable();
             $table->string('google_scholar')->nullable();
             $table->string('researchgate')->nullable();
-            $table->string('orcid')->nullable();
             $table->text('bio')->nullable();
             $table->boolean('verified')->default(false); // this is for verification status by the faculty dean / admin
             $table->boolean('availability_for_collaboration')->default(false);

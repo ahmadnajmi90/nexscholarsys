@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\FacultyList;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
+use App\Models\FieldOfResearch;
+use App\Models\ResearchArea;
+use App\Models\NicheDomain;
 
 
 class RoleProfileController extends Controller
@@ -23,6 +26,24 @@ class RoleProfileController extends Controller
         $isPostgraduate = BouncerFacade::is(Auth::user())->an('postgraduate');
         $isAcademician = BouncerFacade::is(Auth::user())->an('academician');
 
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+
         return Inertia::render('Role/Edit', [
             'isPostgraduate' => $isPostgraduate,
             'isAcademician' => $isAcademician,
@@ -30,6 +51,7 @@ class RoleProfileController extends Controller
             'academician' => $isAcademician ? Auth::user()->academician : null,
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
+            'researchOptions' => $researchOptions,
         ]);
     }
 
@@ -122,15 +144,51 @@ class RoleProfileController extends Controller
                 $validatedData['profile_picture'] = $request->input('profile_picture');
             }
 
-            // Decode the JSON fields only if they are strings
-            // if (isset($validatedData['field_of_study']) && is_string($validatedData['field_of_study'])) {
-            //     $validatedData['field_of_study'] = json_decode($validatedData['field_of_study'], true);
-            // }
-            if (isset($validatedData['field_of_research']) && is_string($validatedData['field_of_research'])) {
-                $validatedData['field_of_research'] = json_decode($validatedData['field_of_research'], true);
+             // Handle CV_file
+            if ($isPostgraduate && $request->hasFile('CV_file')) {
+                logger()->info('CV file hasFile');
+
+                // Determine the destination path for CV files
+                $destinationPath = public_path('storage/CV_files');
+
+                // Ensure the directory exists
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                // Delete the old CV file if it exists
+                if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
+                    $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath); // Delete the old CV file
+                    }
+                }
+
+                // Save the new CV file
+                $file = $request->file('CV_file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->move($destinationPath, $fileName);
+
+                // Save the relative path
+                $validatedData['CV_file'] = 'CV_files/' . $fileName;
+            } else {
+                // Keep the existing path
+                $validatedData['CV_file'] = $request->input('CV_file');
             }
-            if (isset($validatedData['ongoing_research']) && is_string($validatedData['ongoing_research'])) {
-                $validatedData['ongoing_research'] = json_decode($validatedData['ongoing_research'], true);
+
+            if ($isAcademician && isset($validatedData['research_expertise']) && is_string($validatedData['research_expertise'])) {
+                $validatedData['research_expertise'] = json_decode($validatedData['research_expertise'], true);
+                logger()->info('Research Expertise:', $validatedData['research_expertise']);
+            }
+
+            if ($isPostgraduate && isset($validatedData['field_of_research']) && is_string($validatedData['field_of_research'])) {
+                $validatedData['field_of_research'] = json_decode($validatedData['field_of_research'], true);
+                logger()->info('Field of Research:', $validatedData['field_of_research']);
+            }
+
+            if ($isPostgraduate && isset($validatedData['previous_degree']) && is_string($validatedData['previous_degree'])) {
+                $validatedData['previous_degree'] = json_decode($validatedData['previous_degree'], true);
+                logger()->info('Previous Degree:', $validatedData['previous_degree']);
             }
 
             logger()->info('Decoded Data:', $validatedData);
@@ -145,6 +203,11 @@ class RoleProfileController extends Controller
                 // Match existing academician by `academician_id` or `user_id`
                 $validatedData['university'] = $user->academician->university;
                 $validatedData['faculty'] = $user->academician->faculty;
+                if($validatedData['availability_as_supervisor']==true){
+                    $validatedData['availability_as_supervisor'] = 1;
+                }else{
+                    $validatedData['availability_as_supervisor'] = 0;
+                }
                 logger()->info('Academician Data:', $validatedData);
                 $user->academician()->updateOrCreate(
                     ['academician_id' => $user->academician->academician_id ?? $user->id], // Ensure it matches the existing ID

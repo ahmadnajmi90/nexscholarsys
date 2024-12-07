@@ -18,13 +18,16 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         
         $this->call([
-            PostEventSeeder::class,
-            PostGrantSeeder::class,
+            // PostEventSeeder::class,
+            // PostGrantSeeder::class,
             RoleSeeder::class,
             UniversityListSeeder::class,
             FacultyListSeeder::class,
-            AcademicianSeeder::class,
-            PostgraduateSeeder::class,
+            // AcademicianSeeder::class,
+            // PostgraduateSeeder::class,
+            FieldOfResearchSeeder::class,
+            ResearchAreaSeeder::class,
+            NicheDomainSeeder::class,
         ]);
     }
 }

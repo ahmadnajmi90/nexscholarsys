@@ -4,7 +4,7 @@ import UpdateRoleInformationForm from './Partials/UpdateRoleInformationForm';
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Edit({ }) {
-    const { isPostgraduate, isAcademician, universities, postgraduate, academician, faculties } = usePage().props;
+    const { isPostgraduate, isAcademician, universities, postgraduate, academician, faculties, researchOptions } = usePage().props;
     return (
         <MainLayout
             header={
@@ -26,6 +26,7 @@ export default function Edit({ }) {
                             postgraduate={postgraduate}
                             academician={academician}
                             faculties={faculties}
+                            researchOptions={researchOptions}
                             className="max-w-xl"
                         />
                     </div>

@@ -16,25 +16,34 @@ class Postgraduate extends Model
         'postgraduate_id',
         'phone_number',
         'full_name',
+        'previous_degree',
+        'bachelor',
+        'CGPA_bachelor',
+        'master',
+        'master_type',
         'profile_picture',
-        'faculty',
+        'nationality',
         'university',
+        'faculty',
+        'english_proficiency_level',
+        'matric_no',
+        'suggested_research_title',
+        'suggested_research_description',
+        'field_of_research',
+        'CV_file',
         'supervisorAvailability',
         'grantAvailability',
-        'highest_degree',
-        'field_of_study',
-        'research_interests',
-        'ongoing_research',
         'website',
         'linkedin',
         'google_scholar',
         'researchgate',
-        'orcid',
         'bio',
+        'funding_requirement',
+        'current_postgraduate_status'
     ];
 
     protected $casts = [
-        'field_of_study' => 'array', // Cast field_of_study as an array
+        'field_of_research' => 'array', // Cast field_of_study as an array
     ];
 
     public function user()

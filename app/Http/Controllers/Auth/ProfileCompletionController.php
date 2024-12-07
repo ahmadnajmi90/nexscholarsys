@@ -96,8 +96,9 @@ class ProfileCompletionController extends Controller
 
         } elseif ($request->role === 'Postgraduate') {
             $request->validate([
-                'university' => 'required|exists:university_list,id',
-                'faculty' => 'required|exists:faculty_list,id',
+                'university' => 'nullable|exists:university_list,id',
+                'faculty' => 'nullable|exists:faculty_list,id',
+                'current_postgraduate_status' => 'required|string|in:Not registered yet,Registered',
             ]);
 
             $uniqueId = 'PG-' . Str::random(8);
@@ -114,6 +115,7 @@ class ProfileCompletionController extends Controller
                     'full_name' => strtoupper($request->full_name),
                     'university' => $request->university,
                     'faculty' => $request->faculty,
+                    'current_postgraduate_status' => $request->current_postgraduate_status,
                 ]
             );
         }

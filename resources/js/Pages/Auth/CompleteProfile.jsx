@@ -13,6 +13,7 @@ export default function CompleteProfile({ universities, faculties }) {
         role: '',
         industry: '',
         faculty: '', // Add faculty field to the form state
+        current_postgraduate_status: '',
     });
 
     // State to hold the filtered faculties
@@ -20,6 +21,16 @@ export default function CompleteProfile({ universities, faculties }) {
     const filteredFaculties = faculties.filter(
         (faculty) => faculty.university_id === parseInt(selectedUniversity)
     );
+
+    const handleStatusChange = (e) => {
+        const status = e.target.value;
+        setData((prevData) => ({
+            ...prevData,
+            current_postgraduate_status: status,
+            university: status === "Registered" ? prevData.university : "", // Clear university if "Not registered yet"
+            faculty: status === "Registered" ? prevData.faculty : "", // Clear faculty if "Not registered yet"
+        }));
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -69,49 +80,128 @@ export default function CompleteProfile({ universities, faculties }) {
 
                 {data.role !== 'Industry' ? (
                     <>
-                        {/* University */}
-                        <div className='mt-4'>
-                            <InputLabel htmlFor="university" value="University" required />
-                            <select
-                                id="university"
-                                className="mt-1 block w-full border rounded-md p-2"
-                                value={selectedUniversity || ''}
-                                onChange={(e) => {
-                                    const universityId = e.target.value;
-                                    setSelectedUniversity(universityId);
-                                    setData('university', universityId);
-                                }}
-                            >
-                                <option value="" hidden>Select your University</option>
-                                {universities.map((university) => (
-                                    <option key={university.id} value={university.id}>
-                                        {university.full_name}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError className="mt-2" message={errors.university} />
-                        </div>
-
-                        {/* Faculty */}
-                        {selectedUniversity && (
-                            <div className='mt-4'>
-                                <InputLabel htmlFor="faculty" value="Faculty" required />
-                                <select
-                                    id="faculty"
-                                    className="mt-1 block w-full border rounded-md p-2"
-                                    value={data.faculty || ''}
-                                    onChange={(e) => setData('faculty', e.target.value)}
+                        {data.role === 'Postgraduate' && (
+                            <>
+                            {/* Current Postgraduate Status */}
+                            <div className="mt-4">
+                                <label
+                                    htmlFor="current_postgraduate_status"
+                                    className="mt-1 block text-sm font-medium text-gray-700"
                                 >
-                                    <option value="" hidden>Select your Faculty</option>
-                                    {filteredFaculties.map((faculty) => (
-                                        <option key={faculty.id} value={faculty.id}>
-                                            {faculty.name}
+                                    Current Postgraduate Status
+                                </label>
+                                <select
+                                    id="current_postgraduate_status"
+                                    className="block w-full border-gray-300 rounded-md shadow-sm"
+                                    value={data.current_postgraduate_status}
+                                    onChange={handleStatusChange}
+                                >
+                                    <option value="" hidden>
+                                        Select your current postgraduate status
+                                    </option>
+                                    <option value="Not registered yet">Not registered yet</option>
+                                    <option value="Registered">Registered</option>
+                                </select>
+                            </div>
+                            </>
+                        )}
+
+                        {data.role === 'Postgraduate' && data.current_postgraduate_status === 'Registered' && (
+                            <>
+                            {/* University */}
+                            <div className='mt-4'>
+                                <InputLabel htmlFor="university" value="University" required />
+                                <select
+                                    id="university"
+                                    className="mt-1 block w-full border rounded-md p-2"
+                                    value={selectedUniversity || ''}
+                                    onChange={(e) => {
+                                        const universityId = e.target.value;
+                                        setSelectedUniversity(universityId);
+                                        setData('university', universityId);
+                                    }}
+                                >
+                                    <option value="" hidden>Select your University</option>
+                                    {universities.map((university) => (
+                                        <option key={university.id} value={university.id}>
+                                            {university.full_name}
                                         </option>
                                     ))}
                                 </select>
-                                {data.role === 'Academician' && <p className="mt-2 text-red-500 text-sm">*Select carefully as it is not allowed to change after this</p>}
-                                <InputError className="mt-2" message={errors.faculty} />
+                                <InputError className="mt-2" message={errors.university} />
                             </div>
+
+                            {/* Faculty */}
+                            {selectedUniversity && (
+                                <div className='mt-4'>
+                                    <InputLabel htmlFor="faculty" value="Faculty" required />
+                                    <select
+                                        id="faculty"
+                                        className="mt-1 block w-full border rounded-md p-2"
+                                        value={data.faculty || ''}
+                                        onChange={(e) => setData('faculty', e.target.value)}
+                                    >
+                                        <option value="" hidden>Select your Faculty</option>
+                                        {filteredFaculties.map((faculty) => (
+                                            <option key={faculty.id} value={faculty.id}>
+                                                {faculty.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {data.role === 'Academician' && <p className="mt-2 text-red-500 text-sm">*Select carefully as it is not allowed to change after this</p>}
+                                    <InputError className="mt-2" message={errors.faculty} />
+                                </div>
+                            )}
+                        </>
+                        )}
+
+                        {data.role === 'Academician' && (
+                            <>
+                            {/* University */}
+                            <div className='mt-4'>
+                                <InputLabel htmlFor="university" value="University" required />
+                                <select
+                                    id="university"
+                                    className="mt-1 block w-full border rounded-md p-2"
+                                    value={selectedUniversity || ''}
+                                    onChange={(e) => {
+                                        const universityId = e.target.value;
+                                        setSelectedUniversity(universityId);
+                                        setData('university', universityId);
+                                    }}
+                                >
+                                    <option value="" hidden>Select your University</option>
+                                    {universities.map((university) => (
+                                        <option key={university.id} value={university.id}>
+                                            {university.full_name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError className="mt-2" message={errors.university} />
+                            </div>
+
+                            {/* Faculty */}
+                            {selectedUniversity && (
+                                <div className='mt-4'>
+                                    <InputLabel htmlFor="faculty" value="Faculty" required />
+                                    <select
+                                        id="faculty"
+                                        className="mt-1 block w-full border rounded-md p-2"
+                                        value={data.faculty || ''}
+                                        onChange={(e) => setData('faculty', e.target.value)}
+                                    >
+                                        <option value="" hidden>Select your Faculty</option>
+                                        {filteredFaculties.map((faculty) => (
+                                            <option key={faculty.id} value={faculty.id}>
+                                                {faculty.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {data.role === 'Academician' && <p className="mt-2 text-red-500 text-sm">*Select carefully as it is not allowed to change after this</p>}
+                                    <InputError className="mt-2" message={errors.faculty} />
+                                </div>
+                            )}
+                        </>
                         )}
                     </>
                 ) : (

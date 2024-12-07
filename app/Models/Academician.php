@@ -23,13 +23,11 @@ class Academician extends Model
         'faculty',
         'highest_degree',
         'field_of_study',
-        'field_of_research',
-        'ongoing_research',
+        'research_expertise',
         'website',
         'linkedin',
         'google_scholar',
         'researchgate',
-        'orcid',
         'bio',
         'verified',
         'availability_for_collaboration',
@@ -37,7 +35,7 @@ class Academician extends Model
     ];
 
     protected $casts = [
-        'field_of_study' => 'array', // Cast field_of_study as an array
+        'research_expertise' => 'array', // Cast research_expertise as an array
     ];
 
     public function user()

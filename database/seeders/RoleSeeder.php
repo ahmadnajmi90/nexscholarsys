@@ -44,7 +44,8 @@ class RoleSeeder extends Seeder
         $academician = User::create([
             'name' => 'Academician',
             'email' => 'academician@example.com',
-                'password' => bcrypt('password'),
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
             ]);
         $academician->assign('academician');
 
