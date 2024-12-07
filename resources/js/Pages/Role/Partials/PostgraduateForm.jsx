@@ -715,7 +715,9 @@ export default function PostgraduateForm({
                         />
                         {data.CV_file && (
                             <p className="text-sm text-gray-500 mt-2">
-                                File Selected: {data.CV_file.name}
+                                {typeof data.CV_file === 'string'
+                                    ? `Currently Stored File: ${data.CV_file.split('/').pop()}` // Extract the filename from the stored path
+                                    : `File Selected: ${data.CV_file.name}`} {/* Display newly selected file */}
                             </p>
                         )}
                     </div>
