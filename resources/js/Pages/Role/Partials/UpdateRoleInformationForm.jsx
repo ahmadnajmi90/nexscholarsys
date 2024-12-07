@@ -23,13 +23,15 @@ export default function UpdateProfileInformation({
             phone_number: academician?.phone_number || postgraduate?.phone_number || '',
             full_name: academician?.full_name || postgraduate?.full_name || '',
             profile_picture: academician?.profile_picture || postgraduate?.profile_picture || '',
-            field_of_study:
-                typeof academician?.field_of_study === 'string'
-                    ? JSON.parse(academician?.field_of_study)
-                    : academician?.field_of_study ||
-                    (typeof postgraduate?.field_of_study === 'string'
-                        ? JSON.parse(postgraduate?.field_of_study)
-                        : postgraduate?.field_of_study || []),
+            // field_of_study:
+            //     typeof academician?.field_of_study === 'string'
+            //         ? JSON.parse(academician?.field_of_study)
+            //         : academician?.field_of_study ||
+            //         (typeof postgraduate?.field_of_study === 'string'
+            //             ? JSON.parse(postgraduate?.field_of_study)
+            //             : postgraduate?.field_of_study || []),
+
+            field_of_study: academician?.field_of_study || postgraduate?.field_of_study || '',
 
             highest_degree: academician?.highest_degree || postgraduate?.highest_degree || '',
 

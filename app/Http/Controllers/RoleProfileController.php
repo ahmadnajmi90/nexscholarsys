@@ -123,9 +123,9 @@ class RoleProfileController extends Controller
             }
 
             // Decode the JSON fields only if they are strings
-            if (isset($validatedData['field_of_study']) && is_string($validatedData['field_of_study'])) {
-                $validatedData['field_of_study'] = json_decode($validatedData['field_of_study'], true);
-            }
+            // if (isset($validatedData['field_of_study']) && is_string($validatedData['field_of_study'])) {
+            //     $validatedData['field_of_study'] = json_decode($validatedData['field_of_study'], true);
+            // }
             if (isset($validatedData['field_of_research']) && is_string($validatedData['field_of_research'])) {
                 $validatedData['field_of_research'] = json_decode($validatedData['field_of_research'], true);
             }
