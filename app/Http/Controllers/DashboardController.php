@@ -30,7 +30,7 @@ class DashboardController extends Controller
                     ->where('last_activity', '>=', now()->subMinutes(5))
                     ->count(),
                 'clicksByType' => $this->getClickDetails(), // Corrected method call
-                'events' => PostEvent::where('start_date_time', '>=', now())->orderBy('start_date_time')->get(),
+                'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
             ]);
         }
     }

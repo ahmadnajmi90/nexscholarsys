@@ -10,6 +10,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\DB;
+use App\Models\FieldOfResearch;
+use App\Models\UniversityList;
 
 class PostGrantController extends Controller
 {
@@ -40,6 +42,23 @@ class PostGrantController extends Controller
 
     public function create()
     {
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+
         if(Auth::user()->cannot('post-grants'))
         {
             abort(403, 'Unauthorized access.');
@@ -48,6 +67,8 @@ class PostGrantController extends Controller
             return Inertia::render('PostGrants/Create', [
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'researchOptions' => $researchOptions,
+                'universities' => UniversityList::all(),
             ]);
         }
     }
@@ -74,24 +95,28 @@ class PostGrantController extends Controller
                 $validated = $request->validate([
                     'title' => 'required|string|max:255',
                     'description' => 'required|string',
-                    'author_id' => 'required|string|max:255',
-                    'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048', // Image validation
-                    'post_status' => 'required|in:draft,published',
-                    'grant_status' => 'required|in:open,closed',
-                    'category' => 'nullable|string|max:255',
-                    'tags' => 'nullable|json',
+                    'start_date' => 'required|date',
+                    'end_date' => 'required|date',
+                    'application_deadline' => 'required|date',
+                    'duration' => 'nullable|string|max:255',
                     'sponsored_by' => 'nullable|string|max:255',
-                    'location' => 'nullable|string|max:255',
+                    'category' => 'nullable|string|max:255',
+                    'field_of_research' => 'nullable',
+                    'supervisor_category' => 'nullable|string|max:255',
+                    'supervisor_name' => 'nullable|string|max:255',
+                    'university' => 'nullable|exists:university_list,id',
                     'email' => 'nullable|email|max:255',
-                    'contact_number' => 'nullable|string|max:255',
-                    'purpose' => 'nullable|in:find_pgstudent,find_collaboration',
-                    'start_date' => 'nullable|date',
-                    'end_date' => 'nullable|date',
-                    'budget' => 'nullable|numeric|min:0',
-                    'eligibility_criteria' => 'nullable|string',
-                    'is_featured' => 'boolean',
+                    'origin_country' => 'nullable|string|max:255',
+                    'purpose' => 'nullable|string|max:255',
+                    'student_nationality' => 'nullable|string|max:255',
+                    'student_level' => 'nullable|string|max:255',
+                    'appointment_type' => 'nullable|string|max:255',
+                    'purpose_of_collaboration' => 'nullable|string|max:255',
+                    'image' => 'nullable|max:2048',
+                    'attachment' => 'nullable|max:10240',
+                    'amount' => 'nullable|numeric|min:0',
                     'application_url' => 'nullable|url|max:255',
-                    'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // Attachment validation
+                    'status' => 'nullable',
                 ]);
 
                 if ($request->hasFile('image')) {
@@ -136,9 +161,14 @@ class PostGrantController extends Controller
                     $validated['attachment'] = 'grant_attachments/' . $attachmentName;
                     logger('Attachment: Im here ', ['path' => $validated['attachment']]);
                 }
+
+                if (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
+                    $validated['field_of_research'] = json_decode($validated['field_of_research'], true);
+                    logger()->info('Field of Research:', $validated['field_of_research']);
+                }
         
                 // Log validated data
-                logger('Validated Data:', $validated);
+                logger('Decoded Data:', $validated);
         
                 // Save data
                 auth()->user()->postGrants()->create($validated);
@@ -156,6 +186,23 @@ class PostGrantController extends Controller
 
     public function edit($id)
     {
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+
         if(Auth::user()->cannot('post-grants'))
         {
             abort(403, 'Unauthorized access.');
@@ -166,6 +213,8 @@ class PostGrantController extends Controller
                 'postGrant' => $postGrant,
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'researchOptions' => $researchOptions,
+                'universities' => UniversityList::all(),
             ]);
         }
     }
@@ -249,23 +298,28 @@ class PostGrantController extends Controller
                 $validated = $request->validate([
                     'title' => 'required|string|max:255',
                     'description' => 'required|string',
-                    'image' => 'nullable',
-                    'post_status' => 'required|in:draft,published',
-                    'grant_status' => 'required|in:open,closed',
-                    'category' => 'nullable|string|max:255',
-                    'tags' => 'nullable',
+                    'start_date' => 'required|date',
+                    'end_date' => 'required|date',
+                    'application_deadline' => 'required|date',
+                    'duration' => 'nullable|string|max:255',
                     'sponsored_by' => 'nullable|string|max:255',
-                    'location' => 'nullable|string|max:255',
+                    'category' => 'nullable|string|max:255',
+                    'field_of_research' => 'nullable',
+                    'supervisor_category' => 'nullable|string|max:255',
+                    'supervisor_name' => 'nullable|string|max:255',
+                    'university' => 'nullable|exists:university_list,id',
                     'email' => 'nullable|email|max:255',
-                    'contact_number' => 'nullable|string|max:255',
-                    'purpose' => 'nullable|in:find_pgstudent,find_collaboration',
-                    'start_date' => 'nullable|date',
-                    'end_date' => 'nullable|date',
-                    'budget' => 'nullable|numeric|min:0',
-                    'eligibility_criteria' => 'nullable|string',
-                    'is_featured' => 'nullable|boolean',
+                    'origin_country' => 'nullable|string|max:255',
+                    'purpose' => 'nullable|string|max:255',
+                    'student_nationality' => 'nullable|string|max:255',
+                    'student_level' => 'nullable|string|max:255',
+                    'appointment_type' => 'nullable|string|max:255',
+                    'purpose_of_collaboration' => 'nullable|string|max:255',
+                    'image' => 'nullable|max:2048',
+                    'attachment' => 'nullable|max:10240',
+                    'amount' => 'nullable|numeric|min:0',
                     'application_url' => 'nullable|url|max:255',
-                    'attachment' => 'nullable',
+                    'status' => 'in:draft,published',
                 ]);
 
                 if ($request->hasFile('image')) {
@@ -287,9 +341,9 @@ class PostGrantController extends Controller
                     $validated['attachment'] = $postGrant->attachment;
                 }
 
-                // Handle tags
-                if ($request->has('tags') && is_array($request->tags)) {
-                    $validated['tags'] = json_encode($request->tags);
+                if (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
+                    $validated['field_of_research'] = json_decode($validated['field_of_research'], true);
+                    logger()->info('Field of Research:', $validated['field_of_research']);
                 }
 
                 // Update the post grant

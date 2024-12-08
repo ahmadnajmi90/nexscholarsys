@@ -16,7 +16,7 @@ class ShowGrantController extends Controller
     {
         return Inertia::render('Grant/Grant', [
             // Pass any data you want to the component here
-            'grants' => PostGrant::where('post_status', 'published')->where('grant_status', 'open')->orderBy('start_date')->get(),
+            'grants' => PostGrant::where('status', 'published')->orderBy('start_date')->get(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             // 'universities' => UniversityList::all(),
             'users' => User::all(),

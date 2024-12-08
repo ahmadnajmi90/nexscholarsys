@@ -197,7 +197,7 @@ const nationalities = [
     "Zimbabwean",
 ];
 
-export default function NationalityForm({ value, onChange }) {
+export default function NationalityForm({ value, onChange, title }) {
     const [search, setSearch] = useState("");
 
     const filteredNationalities = nationalities.filter((nat) =>
@@ -206,19 +206,19 @@ export default function NationalityForm({ value, onChange }) {
 
     return (
         <div >
-            <label htmlFor="nationality" className="block text-sm font-medium text-gray-700">
-                Nationality
+            <label htmlFor="nationality" className="block font-medium text-gray-700">
+                {title}
             </label>
 
             {/* Nationality Dropdown */}
             <select
                 id="nationality"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                className="mt-1 block w-full border-gray-200 rounded-lg p-4 text-sm"
                 value={value}
                 onChange={(e) => onChange(e.target.value)} // Pass the selected value
             >
                 <option value="" hidden>
-                    Select your nationality
+                    Select {title}
                 </option>
                 {filteredNationalities.map((nat) => (
                     <option key={nat} value={nat}>

@@ -16,18 +16,15 @@ return new class extends Migration
             $table->string('author_id');
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('image')->nullable();
             $table->string('project_type')->nullable();
             $table->string('purpose')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->json('tags')->nullable();
-            $table->string('email')->nullable();
-            $table->string('contact_number')->nullable();
-            $table->string('location')->nullable();
-            $table->decimal('budget', 10, 2)->nullable();
-            $table->boolean('is_featured')->default(false);
+            $table->string('image')->nullable();
             $table->string('attachment')->nullable();
+            $table->string('email')->nullable();
+            $table->string('location')->nullable();
+            $table->string('project_status')->nullable();
             $table->timestamps();
         });
     }

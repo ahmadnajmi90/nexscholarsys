@@ -56,11 +56,10 @@ const Index = () => {
                         <tr>
                             <th className="py-2 px-4 border-b">Event Name</th>
                             <th className="py-2 px-4 border-b">Event Type</th>
-                            <th className="py-2 px-4 border-b">Theme</th>
+                            <th className="py-2 px-4 border-b">Event Mode</th>
                             <th className="py-2 px-4 border-b">Location</th>
                             <th className="py-2 px-4 border-b">Start Date</th>
                             <th className="py-2 px-4 border-b">End Date</th>
-                            <th className="py-2 px-4 border-b">Organized By</th>
                             <th className="py-2 px-4 border-b">Actions</th>
                         </tr>
                     </thead>
@@ -68,31 +67,11 @@ const Index = () => {
                         {postEvents.data.map(event => (
                             <tr key={event.id} className="border-b">
                                 <td className="py-2 px-4 font-semibold text-center">{event.event_name}</td>
-                                <td className="py-2 px-4 text-center">
-                                    {(() => {
-                                        switch (event.event_type) {
-                                            case 'competition':
-                                                return 'Competition';
-                                            case 'conference':
-                                                return 'Conference';
-                                            case 'workshop':
-                                                return 'Workshop';
-                                            case 'seminar':
-                                                return 'Seminar';
-                                            case 'webinar':
-                                                return 'Webinar';
-                                            default:
-                                                return 'Other';
-                                        }
-                                    })()}
-                                </td>
-                                <td className="py-2 px-4 text-center">
-                                    {event.theme ? JSON.parse(event.theme).join(', ') : 'N/A'}
-                                </td>
+                                <td className="py-2 px-4 text-center">{event.event_type}</td>
+                                <td className="py-2 px-4 text-center">{event.event_mode}</td>
                                 <td className="py-2 px-4 text-center">{event.location}</td>
-                                <td className="py-2 px-4 text-center">{event.start_date_time}</td>
-                                <td className="py-2 px-4 text-center">{event.end_date_time}</td>
-                                <td className="py-2 px-4 text-center">{event.organized_by}</td>
+                                <td className="py-2 px-4 text-center">{event.start_date}</td>
+                                <td className="py-2 px-4 text-center">{event.end_date}</td>
                                 <td className="py-2 px-4 text-center">
                                     <Link
                                         href={route('post-events.edit', event.id)}

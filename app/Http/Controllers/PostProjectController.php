@@ -72,19 +72,16 @@ class PostProjectController extends Controller
 
                 $validated = $request->validate([
                     'title' => 'required|string|max:255',
-                    'description' => 'required|string',
-                    'image' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-                    'project_type' => 'required',
-                    'purpose' => 'required',
+                    'description' => 'nullable|string',
+                    'project_type' => 'nullable|string|max:255',
+                    'purpose' => 'nullable|string|max:255',
                     'start_date' => 'nullable|date',
                     'end_date' => 'nullable|date',
-                    'tags' => 'nullable|json',
+                    'image' => 'nullable|string|max:255',
+                    'attachment' => 'nullable|string|max:255',
                     'email' => 'nullable|email|max:255',
-                    'contact_number' => 'nullable|string|max:255',
                     'location' => 'nullable|string|max:255',
-                    'budget' => 'nullable|numeric|min:0',
-                    'is_featured' => 'boolean',
-                    'attachment' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+                    'project_status' => 'nullable|string|max:255',
                 ]);
 
                 if ($request->hasFile('image')) {
@@ -241,19 +238,16 @@ class PostProjectController extends Controller
 
                 $validated = $request->validate([
                     'title' => 'required|string|max:255',
-                    'description' => 'required|string',
-                    'image' => 'nullable',
-                    'project_type' => 'required',
-                    'purpose' => 'required',
+                    'description' => 'nullable|string',
+                    'project_type' => 'nullable|string|max:255',
+                    'purpose' => 'nullable|string|max:255',
                     'start_date' => 'nullable|date',
                     'end_date' => 'nullable|date',
-                    'tags' => 'nullable',
+                    'image' => 'nullable|string|max:255',
+                    'attachment' => 'nullable|string|max:255',
                     'email' => 'nullable|email|max:255',
-                    'contact_number' => 'nullable|string|max:255',
                     'location' => 'nullable|string|max:255',
-                    'budget' => 'nullable|numeric|min:0',
-                    'is_featured' => 'boolean',
-                    'attachment' => 'nullable',
+                    'project_status' => 'nullable|string|max:255',
                 ]);
 
                 if ($request->hasFile('image')) {

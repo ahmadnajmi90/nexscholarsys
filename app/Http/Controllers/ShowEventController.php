@@ -16,7 +16,7 @@ class ShowEventController extends Controller
     {
         return Inertia::render('Event/Event', [
             // Pass any data you want to the component here\
-            'events' => PostEvent::where('event_status', 'published')->orderBy('start_date_time')->get(),
+            'events' => PostEvent::where('event_status', 'published')->orderBy('start_date')->get(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             // 'universities' => UniversityList::all(),
             'users' => User::all(),

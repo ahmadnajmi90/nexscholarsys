@@ -1,31 +1,38 @@
 import React, { useState } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
+import NationalityForm from "../Role/Partials/NationalityForm";
 
 
-export default function Edit({ postGrant, auth, isPostgraduate }) {
+export default function Edit({ postGrant, auth, isPostgraduate, researchOptions, universities }) {
   const { data, setData, post, processing, errors } = useForm({
     title: postGrant.title || "",
     description: postGrant.description || "",
-    image: postGrant.image || null,
-    post_status: postGrant.post_status || "draft",
-    grant_status: postGrant.grant_status || "open",
-    category: postGrant.category || "",
-    tags: postGrant.tags ? JSON.parse(postGrant.tags) : [],
-    sponsored_by: postGrant.sponsored_by || "",
-    location: postGrant.location || "",
-    email: postGrant.email || "",
-    contact_number: postGrant.contact_number || "",
-    purpose: postGrant.purpose || "find_pgstudent",
     start_date: postGrant.start_date || "",
     end_date: postGrant.end_date || "",
-    budget: postGrant.budget || "",
-    eligibility_criteria: postGrant.eligibility_criteria || "",
-    is_featured: postGrant.is_featured || false,
+    application_deadline: postGrant.application_deadline || "",
+    duration: postGrant.duration || "",
+    sponsored_by: postGrant.sponsored_by || "",
+    category: postGrant.category || "",
+    field_of_research: postGrant.field_of_research || [],
+    supervisor_category: postGrant.supervisor_category || "",
+    supervisor_name: postGrant.supervisor_name || "",
+    university: postGrant.university || "",
+    email: postGrant.email || "",
+    origin_country: postGrant.origin_country || "",
+    purpose: postGrant.purpose || "",
+    student_nationality: postGrant.student_nationality || "",
+    student_level: postGrant.student_level || "",
+    appointment_type: postGrant.appointment_type || "",
+    purpose_of_collaboration: postGrant.purpose_of_collaboration || "",
+    image: postGrant.image || "",
+    attachment: postGrant.attachment || "",
+    amount: postGrant.amount || "",
     application_url: postGrant.application_url || "",
-    attachment: postGrant.attachment || null,
+    status: postGrant.status || "draft",
   });
 
+  const [selectedUniversity, setSelectedUniversity] = useState(data.university);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [customTag, setCustomTag] = useState("");
 
@@ -41,7 +48,7 @@ export default function Edit({ postGrant, auth, isPostgraduate }) {
   };
 
 const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     const formData = new FormData();
 
@@ -56,9 +63,12 @@ const handleSubmit = async (e) => {
           }
         } else if (Array.isArray(data[key])) {
             formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON
-        } else {
-            formData.append(key, data[key]);
-        }
+        } else if (Array.isArray(data[key])) {
+          formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON strings
+        }  
+          else {
+              formData.append(key, data[key]);
+          }
     });
 
     // Debug FormData
@@ -91,16 +101,16 @@ const handleSubmit = async (e) => {
           Edit Grant
         </h1>
 
-        {/* Title */}
-        <div>
+       {/* Grant Name */}
+       <div>
           <label className="block text-gray-700 font-medium">
-            Title <span className="text-red-500">*</span>
+            Grant Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={data.title}
             onChange={(e) => setData("title", e.target.value)}
-            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
             placeholder="Enter grant title"
           />
           {errors.title && (
@@ -108,46 +118,20 @@ const handleSubmit = async (e) => {
           )}
         </div>
 
-        {/* Description */}
+        {/* Grant Description */}
         <div>
           <label className="block text-gray-700 font-medium">
-            Description <span className="text-red-500">*</span>
+            Grant Description <span className="text-red-500">*</span>
           </label>
           <textarea
             value={data.description}
             onChange={(e) => setData("description", e.target.value)}
-            className="w-full rounded-lg border-gray-200 p-4 text-sm"
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
             placeholder="Enter description"
           ></textarea>
           {errors.description && (
             <p className="text-red-500 text-xs mt-1">{errors.description}</p>
           )}
-        </div>
-
-        {/* Post Status and Grant Status */}
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <label className="block text-gray-700 font-medium">Post Status</label>
-            <select
-              value={data.post_status}
-              onChange={(e) => setData("post_status", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium">Grant Status</label>
-            <select
-              value={data.grant_status}
-              onChange={(e) => setData("grant_status", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="open">Open</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
         </div>
 
         {/* Start and End Date */}
@@ -157,8 +141,10 @@ const handleSubmit = async (e) => {
             <input
               type="date"
               value={data.start_date}
-              onChange={(e) => setData("start_date", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              onChange={(e) => {
+                setData("start_date", e.target.value);
+              }}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
             />
           </div>
           <div>
@@ -166,9 +152,38 @@ const handleSubmit = async (e) => {
             <input
               type="date"
               value={data.end_date}
-              onChange={(e) => setData("end_date", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              min={data.start_date || ""} // Set the minimum date to start_date
+              onChange={(e) => {
+                setData("end_date", e.target.value);
+              }}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
             />
+          </div>
+        </div>
+
+        {/* Application Deadline and Duration */}
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <label className="mt-1 block text-gray-700 font-medium">Application Deadline</label>
+            <input
+              type="date"
+              value={data.application_deadline}
+              min={data.start_date || ""} // Set the minimum date to start_date
+              max={data.end_date || ""} // Set the maximum date to end_date
+              onChange={(e) => setData("application_deadline", e.target.value)}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="mt-1 block text-gray-700 font-medium">Duration (in months)</label>
+            <input
+            type="number"
+            value={data.duration}
+            onChange={(e) => setData("duration", e.target.value)}
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter grant duration"
+          />
           </div>
         </div>
 
@@ -180,7 +195,7 @@ const handleSubmit = async (e) => {
               type="text"
               value={data.sponsored_by}
               onChange={(e) => setData("sponsored_by", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
               placeholder="Enter sponsor"
             />
           </div>
@@ -193,7 +208,7 @@ const handleSubmit = async (e) => {
               name="category"
               value={data.category}
               onChange={(e) => setData("category", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
             >
               <option value="" disabled hidden>
                 Select a Category
@@ -214,33 +229,84 @@ const handleSubmit = async (e) => {
           </div>
         </div>
 
-        {/* Purpose and Location */}
+        {/* Field of Research and Grant Supervisor */}
         <div className="grid grid-cols-2 gap-8">
-          <div>
-            <label className="block text-gray-700 font-medium">Purpose</label>
+          {/* Research Expertise Dropdown */}
+          {(data.category === "Fundamental Research" || data.category === "Applied Research" || data.category === "Fundamental + Applied") && (
+            
+          <div className="w-full">
+            <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
+            Field of Research (Multiple Selection)
+            </label>
             <select
-              value={data.purpose}
-              onChange={(e) => setData("purpose", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+                id="field_of_research"
+                className="mt-1 block w-full border rounded-md p-2"
+                value={data.field_of_research || []} // Handle multiple selections
+                onChange={(e) => {
+                    const selectedOptions = Array.from(e.target.selectedOptions).map((option) => option.value);
+                    setData('field_of_research', selectedOptions); // Update with selected options
+                }}
+                multiple
             >
-              <option value="find_pgstudent">Find Postgraduate Student</option>
-              <option value="find_collaboration">Find Collaboration</option>
+                {researchOptions.map((option) => (
+                    <option
+                        key={`${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`}
+                        value={`${option.field_of_research_name}-${option.research_area_name}-${option.niche_domain_name}`}
+                    >
+                        {`${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`}
+                    </option>
+                ))}
             </select>
           </div>
-          <div>
-          <label className="block text-gray-700 font-medium">Location</label>
-          <input
-            type="text"
-            value={data.location}
-            onChange={(e) => setData("location", e.target.value)}
-            className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter location"
-          />
-          {errors.location && (
-            <p className="text-red-500 text-xs mt-1">{errors.location}</p>
           )}
+
+          <div>
+            <label className="block text-gray-700 font-medium">Grant Supervisor / Project Learder</label>
+            <select
+              value={data.supervisor_category}
+              onChange={(e) => setData("supervisor_category", e.target.value)}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="Own Name">Own Name</option>
+              <option value="On Behalf">On Behalf</option>
+            </select>
+          </div>
         </div>
-        </div>
+
+        {data.supervisor_category === "On Behalf" && (
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <label className="mt-1 block text-gray-700 font-medium">Grant Supervisor / Project Leader Name</label>
+                <input
+                  type="text"
+                  value={data.supervisor_name}
+                  onChange={(e) => setData("supervisor_name", e.target.value)}
+                  className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="mt-1 block text-gray-700 font-medium">University</label>
+                <select
+                    id="university"
+                    className="mt-1 block w-full border rounded-md p-2"
+                    value={selectedUniversity || ''}
+                    onChange={(e) => {
+                        const universityId = e.target.value;
+                        setSelectedUniversity(universityId);
+                        setData('university', universityId);
+                    }}
+                >
+                    <option value="" hidden>Select your University</option>
+                    {universities.map((university) => (
+                        <option key={university.id} value={university.id}>
+                            {university.full_name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+          </div>
+        )}
 
         {/* Email and Contact Number */}
         <div className="grid grid-cols-2 gap-8">
@@ -250,11 +316,11 @@ const handleSubmit = async (e) => {
               type="email"
               value={data.email}
               onChange={(e) => setData("email", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
               placeholder="Enter email"
             />
-            {/* Use Personal Email Checkbox */}
-           <div className="mt-2 flex items-center">
+             {/* Use Personal Email Checkbox */}
+             <div className="mt-2 flex items-center">
                   <input
                       type="checkbox"
                       id="usePersonalEmail"
@@ -273,19 +339,86 @@ const handleSubmit = async (e) => {
                   </label>
               </div>
           </div>
+          
           <div>
-            <label className="block text-gray-700 font-medium">
-              Contact Number
-            </label>
-            <input
-              type="text"
-              value={data.contact_number}
-              onChange={(e) => setData("contact_number", e.target.value)}
-              className="w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter contact number"
-            />
+            <NationalityForm title={"Grant Origin Country"} value={data.origin_country} onChange={(value) => setData('origin_country', value)} />
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <label className="block text-gray-700 font-medium">Grant Purpose</label>
+            <select
+              value={data.purpose}
+              onChange={(e) => setData("purpose", e.target.value)}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="" disabled hidden>Select Grant Purpose</option>
+              <option value="find_pgstudent">Find Postgraduate Student</option>
+              <option value="find_academic_collaboration">Find Academic Collaboration</option>
+              <option value="find_industry_collaboration">Find Industry Collaboration - Matching Grant</option>
+            </select>
+          </div>
+        </div>
+
+        {data.purpose === "find_pgstudent" ? (
+          <>
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <NationalityForm title={"Student Nationality"} value={data.student_nationality} onChange={(value) => setData('student_nationality', value)} />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium">Level of Study</label>
+                <select
+                  value={data.student_level}
+                  onChange={(e) => setData("student_level", e.target.value)}
+                  className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+                >
+                  <option value= "" disabled hidden>Select Level of Study</option>
+                  <option value="Master">Master</option>
+                  <option value="Ph.D.">Ph.D.</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium">Appointment Type</label>
+              <select
+                value={data.appointment_type}
+                onChange={(e) => setData("appointment_type", e.target.value)}
+                className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+              >
+                <option value="" disabled hidden>Select Appointment Type</option>
+                <option value="Research Assistant (RA)">Research Assistant (RA)</option>
+                <option value="Graduate Assistant (GA)">Graduate Assistant (GA)</option>
+                <option value="Teaching Assistant (TA)">Teaching Assistant (TA)</option>
+                <option value="Research Fellow (RF)">Research Fellow (RF)</option>
+                <option value="Project Assistant (PA)">Project Assistant (PA)</option>
+                <option value="Technical Assistant (TA)">Technical Assistant (TA)</option>
+                <option value="Graduate Research Assistant (GRA)">Graduate Research Assistant (GRA)</option>
+                <option value="Scholarship Recipient">Scholarship Recipient</option>
+                <option value="Intern">Intern</option>
+              </select>
+            </div>
+            </>
+          ):
+          (
+            <div>
+              <label className="block text-gray-700 font-medium">
+                Purpose of Collaboration
+              </label>
+              <textarea
+                value={data.purpose_of_collaboration}
+                onChange={(e) => setData("purpose_of_collaboration", e.target.value || "")}
+                className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+                placeholder="Enter Purpose of Collaboration"
+              ></textarea>
+              {errors.purpose_of_collaboration && (
+                <p className="text-red-500 text-xs mt-1">{errors.purpose_of_collaboration}</p>
+              )}
+            </div>
+          )}
 
         {/* Image and Attachment Upload */}
         <div className="grid grid-cols-2 gap-8">
@@ -297,8 +430,8 @@ const handleSubmit = async (e) => {
               onChange={(e) => setData("image", e.target.files[0])}
               className="w-full rounded-lg border-gray-200 p-2 text-sm"
             />
-            
-          {postGrant.image && (
+
+            {postGrant.image && (
               <p className="text-gray-600 text-sm mt-2">
                 Current Image:{" "}
                 <a
@@ -321,7 +454,7 @@ const handleSubmit = async (e) => {
               onChange={(e) => setData("attachment", e.target.files[0])}
               className="w-full rounded-lg border-gray-200 p-2 text-sm"
             />
-          {postGrant.attachment && (
+            {postGrant.attachment && (
               <p className="text-gray-600 text-sm mt-2">
                 Current Attachment:{" "}
                 <a
@@ -338,32 +471,22 @@ const handleSubmit = async (e) => {
         </div>
 
         {/* Budget */}
-        <div>
-          <label className="block text-gray-700 font-medium">Budget</label>
-          <input
-            type="number"
-            value={data.budget}
-            onChange={(e) => setData("budget", e.target.value)}
-            className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter budget (e.g., 5000.00)"
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-8">
+          {data.purpose !== "find_pgstudent" && (
+            <div>
+              <label className="block text-gray-700 font-medium">Approved Grant Amount</label>
+              <input
+                type="number"
+                value={data.amount}
+                onChange={(e) => setData("amount", e.target.value)}
+                className="w-full rounded-lg border-gray-200 p-4 text-sm"
+                placeholder="Enter amount (e.g., 5000.00)"
+              />
+            </div>
+          )}
 
-        {/* Eligibility Criteria */}
-        <div>
-          <label className="block text-gray-700 font-medium">
-            Eligibility Criteria
-          </label>
-          <textarea
-            value={data.eligibility_criteria}
-            onChange={(e) => setData("eligibility_criteria", e.target.value)}
-            className="w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter eligibility criteria"
-          ></textarea>
-        </div>
-
-        {/* Application URL */}
-        <div>
+          {/* Application URL */}
+          <div>
               <label className="block text-gray-700 font-medium">
                   Application URL
               </label>
@@ -378,156 +501,33 @@ const handleSubmit = async (e) => {
                   <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>
               )}
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-  {/* Tags */}
-  <div className="relative">
-    <label htmlFor="tags" className="block text-gray-700 font-medium">
-      Tags
-    </label>
-    <button
-      type="button"
-      className="w-full text-left border rounded-lg p-4 mt-2 text-sm bg-white"
-      onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
-    >
-      Select or Add Tags
-    </button>
-
-    {/* Dropdown Menu */}
-    {dropdownOpen && (
-      <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-        <div className="flex flex-col p-2 max-h-40 overflow-y-auto">
-          {/* Predefined Tags */}
-          <label className="inline-flex items-center py-1">
-            <input
-              type="checkbox"
-              name="tags"
-              value="Artificial Intelligence"
-              checked={data.tags?.includes("Artificial Intelligence")}
-              onChange={(e) => {
-                const tag = e.target.value;
-                setData(
-                  "tags",
-                  e.target.checked
-                    ? [...(data.tags || []), tag]
-                    : data.tags.filter((t) => t !== tag)
-                );
-              }}
-              className="form-checkbox rounded text-blue-500"
-            />
-            <span className="ml-2">Artificial Intelligence</span>
-          </label>
-
-          {/* Other tags */}
-          <label className="inline-flex items-center py-1">
-            <input
-              type="checkbox"
-              name="tags"
-              value="Quantum Computing"
-              checked={data.tags?.includes("Quantum Computing")}
-              onChange={(e) => {
-                const tag = e.target.value;
-                setData(
-                  "tags",
-                  e.target.checked
-                    ? [...(data.tags || []), tag]
-                    : data.tags.filter((t) => t !== tag)
-                );
-              }}
-              className="form-checkbox rounded text-blue-500"
-            />
-            <span className="ml-2">Quantum Computing</span>
-          </label>
-        </div>
-
-        {/* Input for Custom Tag */}
-        <div className="border-t border-gray-200 p-2 mt-2">
-          <input
-            type="text"
-            value={customTag}
-            onChange={(e) => setCustomTag(e.target.value)}
-            placeholder="Add custom tag"
-            className="w-full p-2 border rounded-md text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleAddCustomTag}
-            className="mt-2 w-full bg-blue-500 text-white p-2 rounded-md text-sm hover:bg-blue-600"
-          >
-            Add Tag
-          </button>
-        </div>
       </div>
-    )}
-
-    {/* Display Selected Tags */}
-    <div className="mt-3 flex flex-wrap gap-2">
-      {data.tags?.map((tag) => (
-        <div
-          key={tag}
-          className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-        >
-          {tag}
-          <button
-            type="button"
-            onClick={() => handleRemoveTag(tag)}
-            className="text-red-500 hover:text-red-700"
-          >
-            &times;
-          </button>
-        </div>
-      ))}
-    </div>
-
-    {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
-  </div>
-
-  {/* Featured Grant */}
-  <div>
-    <label className="block text-gray-700 font-medium">Featured Grant</label>
-    <div className="flex items-center space-x-4 mt-2">
-      <label className="flex items-center">
-        <input
-          type="radio"
-          name="is_featured"
-          value="true"
-          checked={data.is_featured === 1}
-          onChange={() => setData("is_featured", 1)}
-          className="form-radio h-5 w-5 text-blue-600"
-        />
-        <span className="ml-2 text-gray-700">Yes</span>
-      </label>
-      <label className="flex items-center">
-        <input
-          type="radio"
-          name="is_featured"
-          value="false"
-          checked={data.is_featured === 0}
-          onChange={() => setData("is_featured", 0)}
-          className="form-radio h-5 w-5 text-blue-600"
-        />
-        <span className="ml-2 text-gray-700">No</span>
-      </label>
-    </div>
-    {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
-  </div>
-</div>
 
         {/* Buttons */}
         <div className="flex space-x-4">
+          {/* Save as Draft Button */}
+          {/* <button
+            type="button"
+            onClick={(e) => {
+              setData("status", "draft"); // Set status as draft
+              handleSubmit(); // Submit the form
+            }}
+            disabled={processing}
+            className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-300"
+          >
+            Save as Draft
+          </button> */}
+
+          {/* Publish Button */}
           <button
             type="button"
-            onClick={() => window.history.back()}
-            className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-700"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
+            onClick={() => {
+              handleSubmit(); // Submit the form
+            }}
             disabled={processing}
             className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
           >
-            Save
+            Publish
           </button>
         </div>
       </form>

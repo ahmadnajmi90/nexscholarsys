@@ -60,7 +60,6 @@ const Index = () => {
                             <th className="py-2 px-4 border-b">Location</th>
                             <th className="py-2 px-4 border-b">Start Date</th>
                             <th className="py-2 px-4 border-b">End Date</th>
-                            <th className="py-2 px-4 border-b">Budget</th>
                             <th className="py-2 px-4 border-b">Actions</th>
                         </tr>
                     </thead>
@@ -73,11 +72,11 @@ const Index = () => {
                                     {project.purpose === "find_accollaboration" && "Find Academician Collaboration"}
                                     {project.purpose === "find_incollaboration" && "Find Industry Collaboration"}
                                     {project.purpose === "find_sponsorship" && "Find Sponsorship"}
+                                    {project.purpose === "showcase" && "Showcase"}
                                 </td>
                                 <td className="py-2 px-4 text-center">{project.location}</td>
                                 <td className="py-2 px-4 text-center">{project.start_date}</td>
                                 <td className="py-2 px-4 text-center">{project.end_date}</td>
-                                <td className="py-2 px-4 text-center">{project.budget}</td>
                                 <td className="py-2 px-4 text-center">
                                     <Link
                                         href={route('post-projects.edit', project.id)}

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('current_position')->nullable();
             $table->string('department')->nullable();
             $table->unsignedBigInteger('university');
-            $table->foreign('university')->references('id')->on('university_list')->onDelete('cascade')->nullable();
+            $table->foreign('university')->references('id')->on('university_list')->onDelete('cascade');
             $table->unsignedBigInteger('faculty')->nullable(); // Faculty foreign key
             $table->foreign('faculty')->references('id')->on('faculty_list')->onDelete('cascade');
             $table->string('highest_degree')->nullable();

@@ -13,18 +13,14 @@ class PostProject extends Model
         'author_id',
         'title',
         'description',
-        'image',
         'project_type',
         'purpose',
         'start_date',
         'end_date',
-        'tags',
-        'email',
-        'contact_number',
-        'location',
-        'budget',
-        'is_featured',
+        'image',
         'attachment',
+        'email',
+        'location'
     ];
 
     public function academician()

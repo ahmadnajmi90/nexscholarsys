@@ -206,16 +206,12 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         {selectedItem.purpose === "find_accollaboration" && "Find Academician Collaboration"}
                         {selectedItem.purpose === "find_incollaboration" && "Find Industry Collaboration"}
                         {selectedItem.purpose === "find_sponsorship" && "Find Sponsorship"}
+                        {selectedItem.purpose === "showcase" && "Showcase"}
                     </p>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Contact Email:</span>{" "}
                         {selectedItem.email || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Contact No.:</span>{" "}
-                        {selectedItem.contact_number || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
@@ -257,50 +253,12 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Event type:</span>{" "}
-                        {(() => {
-                                        switch (selectedItem.event_type) {
-                                            case 'competition':
-                                                return 'Competition';
-                                            case 'conference':
-                                                return 'Conference';
-                                            case 'workshop':
-                                                return 'Workshop';
-                                            case 'seminar':
-                                                return 'Seminar';
-                                            case 'webinar':
-                                                return 'Webinar';
-                                            default:
-                                                return 'Not provided';
-                                        }
-                                    })()}
+                        {selectedItem.event_type || "Not provided."}
                     </p>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Event Duration:</span>{" "}
                         {selectedItem.start_date_time ? `${selectedItem.start_date_time} - ${selectedItem.end_date_time}` : "Not provided"}
-                    </p>
-
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Target Audience:</span>{" "}
-                        {(() => {
-                            try {
-                                // Attempt to parse target_audience as JSON
-                                const parsedAudience = JSON.parse(selectedItem.target_audience);
-                                if (Array.isArray(parsedAudience)) {
-                                    return parsedAudience.join(", "); // Join array items into a comma-separated string
-                                }
-                                return "Invalid format"; // Handle cases where JSON is not an array
-                            } catch (e) {
-                                // Fallback if JSON parsing fails
-                                return selectedItem.target_audience || "Not provided";
-                            }
-                        })()}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Organized by:</span>{" "}
-                        {selectedItem.organized_by || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
@@ -330,18 +288,8 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                     </p>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Contact No.:</span>{" "}
-                        {selectedItem.contact_number || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
                         <span className="font-semibold">Location:</span>{" "}
                         {selectedItem.location || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Fees:</span>{" "}
-                        {selectedItem.fees || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
@@ -379,7 +327,8 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                     <p className="text-gray-600">
                         <span className="font-semibold">Purpose:</span>{" "}
                         {selectedItem.purpose === "find_pgstudent" && "Find Postgraduate Student"}
-                        {selectedItem.purpose === "find_collaboration" && "Find Collaboration"}
+                        {selectedItem.purpose === "find_academic_collaboration" && "Find Academician Collaboration"}
+                        {selectedItem.purpose === "find_industry_collaboration" && "Find Industry Collaboration - Matching Grant"}
                     </p>
 
                     <p className="text-gray-600">
@@ -403,18 +352,8 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                     </p>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Contact No.:</span>{" "}
-                        {selectedItem.contact_number || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Location:</span>{" "}
-                        {selectedItem.location || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Budget:</span>{" "}
-                        {selectedItem.budget || "Not provided"}
+                        <span className="font-semibold">Amount:</span>{" "}
+                        {selectedItem.amount || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">

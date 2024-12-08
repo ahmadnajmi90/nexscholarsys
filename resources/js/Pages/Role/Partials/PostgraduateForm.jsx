@@ -455,7 +455,7 @@ export default function PostgraduateForm({
 
                                 <div>
                                      {/* Nationality Form */}
-                                     <NationalityForm value={data.nationality} onChange={(value) => setData('nationality', value)} />
+                                     <NationalityForm title={"Nationality"} value={data.nationality} onChange={(value) => setData('nationality', value)} />
                                 </div>
                             </div>
 

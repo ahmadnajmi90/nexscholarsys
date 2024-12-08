@@ -16,23 +16,31 @@ return new class extends Migration
             $table->string('author_id');
             $table->string('title')->nullable();
             $table->text('description')->nullable(); // Changed to text for long content
-            $table->string('image')->nullable();
-            $table->enum('post_status', ['draft', 'published'])->default('draft'); // Restrict to valid values
-            $table->enum('grant_status', ['open', 'closed'])->default('open'); // Restrict to valid values
-            $table->string('category')->nullable();
-            $table->json('tags')->nullable(); // Changed to JSON for multiple tags
-            $table->string('sponsored_by')->nullable();
-            $table->string('location')->nullable();
-            $table->string('email')->nullable();
-            $table->string('contact_number')->nullable();
-            $table->enum('purpose', ['find_pgstudent', 'find_collaboration'])->nullable(); // Restrict to valid values
             $table->date('start_date')->nullable(); // Suggested
             $table->date('end_date')->nullable(); // Suggested
-            $table->decimal('budget', 10, 2)->nullable(); // Suggested
-            $table->text('eligibility_criteria')->nullable(); // Suggested
-            $table->boolean('is_featured')->default(false); // Suggested
-            $table->string('application_url')->nullable(); // Suggested
+            $table->date('application_deadline')->nullable(); // Suggested
+            $table->string('duration')->nullable();
+            $table->string('sponsored_by')->nullable();
+            $table->string('category')->nullable();
+            $table->json('field_of_research')->nullable(); // Changed to JSON for multiple tags
+            $table->string('supervisor_category')->nullable();
+            $table->string('supervisor_name')->nullable();
+
+            $table->unsignedBigInteger('university')->nullable(); 
+            $table->foreign('university')->references('id')->on('university_list')->onDelete('cascade');
+
+            $table->string('email')->nullable();
+            $table->string('origin_country')->nullable();
+            $table->string('purpose')->nullable();
+            $table->string('student_nationality')->nullable();
+            $table->string('student_level')->nullable();
+            $table->string('appointment_type')->nullable();
+            $table->string('purpose_of_collaboration')->nullable();
+            $table->string('image')->nullable();
             $table->string('attachment')->nullable(); // Suggested
+            $table->decimal('amount', 10, 2)->nullable(); // Suggested
+            $table->string('application_url')->nullable(); // Suggested
+            $table->enum('status', ['draft', 'published'])->default('draft'); // Restrict to valid values
             $table->timestamps();
         });
     }
