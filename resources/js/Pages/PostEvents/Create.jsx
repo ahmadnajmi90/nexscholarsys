@@ -272,7 +272,7 @@ export default function Create() {
       </div>
 
       {/* Fees and Contact Email */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 gap-6">
         <div>
           <label className="block text-gray-700 font-medium">Venue</label>
           <input
@@ -301,14 +301,15 @@ export default function Create() {
           )}
         </div>
 
-        <div>
-          <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
-        </div>
+
 
       </div>
 
       {/* Fees and Contact Email */}
       <div className="grid grid-cols-2 gap-8">
+      <div>
+          <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+        </div>
         <div>
           <label className="block text-gray-700 font-medium">Contact Email</label>
           <input
