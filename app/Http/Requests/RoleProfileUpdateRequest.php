@@ -16,7 +16,7 @@ class RoleProfileUpdateRequest extends FormRequest
             $rules = [
                 'phone_number' => ['nullable', 'string', 'max:15'],
                 'full_name' => ['nullable', 'string', 'max:255'],
-                'profile_picture' => ['nullable'], // Max file size is 2MB
+                'profile_picture' => ['nullable', 'max:2048'], // Max file size is 2MB
                 'current_position' => ['nullable', 'string', 'max:255'],
                 'department' => ['nullable', 'string', 'max:255'],
                 'highest_degree' => ['nullable', 'string', 'max:255'],
@@ -35,7 +35,7 @@ class RoleProfileUpdateRequest extends FormRequest
             $rules = [
                 'phone_number' => ['nullable', 'string', 'max:15'],
                 'full_name' => ['nullable', 'string', 'max:255'],
-                'profile_picture' => ['nullable', 'file', 'max:2048', 'mimes:jpeg,jpg,png'], // Max file size 2MB, image types
+                'profile_picture' => ['nullable', 'max:2048'], // Max file size 2MB, image types
                 'faculty' => ['nullable', 'exists:faculty_list,id'],
                 'university' => ['nullable', 'exists:university_list,id'], // Changed to nullable to handle "Not registered yet"
                 'field_of_research' => ['nullable', 'array'], // For multiple selections
