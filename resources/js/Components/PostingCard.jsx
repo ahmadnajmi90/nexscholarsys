@@ -118,7 +118,24 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
             >
                 {item[title]}
             </h2>
-              <p className="text-gray-600 mt-4 text-center truncate" style={{ maxWidth: "100%" }} >{item.description}</p>
+            <p
+                className="text-gray-600 mt-4 text-center"
+                style={{
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2, // Number of lines before truncating
+                    WebkitBoxOrient: "vertical",
+                }}
+                dangerouslySetInnerHTML={{
+                    __html: item.description || "No description available.",
+                }}
+                ></p>
+
+
+
+
             </div>
 
             {/* Button Section */}
@@ -185,10 +202,17 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
             <div className="space-y-4">
                 {isProject && (
                     <>
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Description:</span>{" "}
-                        {selectedItem.description || "No description available."}
-                    </p>
+                    <div className="text-gray-600">
+                                <span className="font-semibold">Description:</span>
+                                {selectedItem.description ? (
+                                    <div
+                                        className="mt-2 text-sm"
+                                        dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                    ></div>
+                                ) : (
+                                    <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                )}
+                            </div>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Category:</span>{" "}
@@ -246,10 +270,17 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                 {isEvent && (
                     <>
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Description:</span>{" "}
-                        {selectedItem.description || "No description available."}
-                    </p>
+                    <div className="text-gray-600">
+                                <span className="font-semibold">Description:</span>
+                                {selectedItem.description ? (
+                                    <div
+                                        className="mt-2 text-sm"
+                                        dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                    ></div>
+                                ) : (
+                                    <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                )}
+                            </div>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Event type:</span>{" "}
@@ -314,10 +345,17 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                 {isGrant && (
                     <>
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Description:</span>{" "}
-                        {selectedItem.description || "No description available."}
-                    </p>
+                   <div className="text-gray-600">
+                                <span className="font-semibold">Description:</span>
+                                {selectedItem.description ? (
+                                    <div
+                                        className="mt-2 text-sm"
+                                        dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                    ></div>
+                                ) : (
+                                    <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                )}
+                            </div>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Category:</span>{" "}

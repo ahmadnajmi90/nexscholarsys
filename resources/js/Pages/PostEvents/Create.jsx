@@ -2,6 +2,8 @@ import React from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
 import { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill styles
 
 export default function Create() {
   const { auth, isPostgraduate } = usePage().props;
@@ -38,7 +40,7 @@ export default function Create() {
         formData.append(key, data[key]);
       }
     });
-    
+
     // Debug FormData
     console.log("Form Data Contents:");
     for (let pair of formData.entries()) {
@@ -88,21 +90,36 @@ export default function Create() {
         )}
       </div>
 
+      <div>
       {/* Description */}
       <div>
         <label className="block text-gray-700 font-medium">
           Event Description <span className="text-red-500">*</span>
         </label>
-        <textarea
-          value={data.description}
-          onChange={(e) => setData("description", e.target.value)}
-          className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          placeholder="Enter description"
-        ></textarea>
+        <div
+          className="mt-1 w-full rounded-lg border border-gray-200"
+          style={{
+            height: "300px", // Set a default height
+            overflowY: "auto", // Add vertical scrollbar]
+
+          }}
+        >
+          <ReactQuill
+            theme="snow"
+            value={data.description}
+            onChange={(value) => setData("description", value)}
+            placeholder="Enter description"
+            style={{
+              height: "300px", // Set height for the editor content area
+              maxHeight: "300px", // Restrict content height
+            }}
+          />
+        </div>
         {errors.description && (
           <p className="text-red-500 text-xs mt-1">{errors.description}</p>
         )}
       </div>
+    </div>
 
       {/* Event Type and Location */}
       <div className="grid grid-cols-2 gap-8">
