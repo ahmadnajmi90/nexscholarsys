@@ -17,7 +17,9 @@ export default function Edit({ postEvent, auth, isPostgraduate }) {
     registration_url: postEvent.registration_url || "",
     registration_deadline: postEvent.registration_deadline || "",
     contact_email: postEvent.contact_email || "",
-    location: postEvent.location || "",
+    venue: postEvent.venue || "",
+    city: postEvent.city || "",
+    country: postEvent.country || "",
     event_status: postEvent.event_status || "published",
   });
 
@@ -265,12 +267,46 @@ export default function Edit({ postEvent, auth, isPostgraduate }) {
           <input
             type="date"
             value={data.registration_deadline}
-            min={data.start_date || ''}
-            max={data.end_date || ''}
             onChange={(e) => setData("registration_deadline", e.target.value)}
             className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
           />
         </div>
+      </div>
+
+      {/* Fees and Contact Email */}
+      <div className="grid grid-cols-3 gap-6">
+        <div>
+          <label className="block text-gray-700 font-medium">Venue</label>
+          <input
+            type="text"
+            value={data.venue}
+            onChange={(e) => setData("venue", e.target.value)}
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter venue"
+          />
+          {errors.venue && (
+            <p className="text-red-500 text-xs mt-1">{errors.venue}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium">City</label>
+          <input
+            type="text"
+            value={data.city}
+            onChange={(e) => setData("city", e.target.value)}
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter city"
+          />
+          {errors.city && (
+            <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+          )}
+        </div>
+
+        <div>
+          <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+        </div>
+
       </div>
 
       {/* Fees and Contact Email */}
@@ -305,19 +341,6 @@ export default function Edit({ postEvent, auth, isPostgraduate }) {
             </div>
         </div>
 
-        <div>
-          <label className="block text-gray-700 font-medium">Location</label>
-          <input
-            type="text"
-            value={data.location}
-            onChange={(e) => setData("location", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter location"
-          />
-          {errors.location && (
-            <p className="text-red-500 text-xs mt-1">{errors.location}</p>
-          )}
-        </div>
       </div>
 
       {/* Buttons */}

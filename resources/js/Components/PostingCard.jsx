@@ -258,7 +258,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Event Duration:</span>{" "}
-                        {selectedItem.start_date_time ? `${selectedItem.start_date_time} - ${selectedItem.end_date_time}` : "Not provided"}
+                        {selectedItem.start_date ? `${selectedItem.start_date} - ${selectedItem.end_date}` : "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
@@ -289,7 +289,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Location:</span>{" "}
-                        {selectedItem.location || "Not provided"}
+                        {`${selectedItem.venue}, ${selectedItem.city}, ${selectedItem.country}` || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">

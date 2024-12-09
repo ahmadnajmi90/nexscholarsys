@@ -169,8 +169,6 @@ const handleSubmit = async (e) => {
             <input
               type="date"
               value={data.application_deadline}
-              min={data.start_date || ""} // Set the minimum date to start_date
-              max={data.end_date || ""} // Set the maximum date to end_date
               onChange={(e) => setData("application_deadline", e.target.value)}
               className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
             />

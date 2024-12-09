@@ -69,7 +69,7 @@ const Index = () => {
                                 <td className="py-2 px-4 font-semibold text-center">{event.event_name}</td>
                                 <td className="py-2 px-4 text-center">{event.event_type}</td>
                                 <td className="py-2 px-4 text-center">{event.event_mode}</td>
-                                <td className="py-2 px-4 text-center">{event.location}</td>
+                                <td className="py-2 px-4 text-center">{event.venue}, {event.city}, {event.country}</td>
                                 <td className="py-2 px-4 text-center">{event.start_date}</td>
                                 <td className="py-2 px-4 text-center">{event.end_date}</td>
                                 <td className="py-2 px-4 text-center">
