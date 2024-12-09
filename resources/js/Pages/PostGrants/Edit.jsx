@@ -3,6 +3,8 @@ import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
 import NationalityForm from "../Role/Partials/NationalityForm";
 import Select from "react-select";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 
 export default function Edit({ postGrant, auth, isPostgraduate, researchOptions, universities }) {
@@ -119,21 +121,35 @@ const handleSubmit = async (e) => {
           )}
         </div>
 
-        {/* Grant Description */}
-        <div>
-          <label className="block text-gray-700 font-medium">
-            Grant Description <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={data.description}
-            onChange={(e) => setData("description", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter description"
-          ></textarea>
-          {errors.description && (
-            <p className="text-red-500 text-xs mt-1">{errors.description}</p>
-          )}
-        </div>
+ {/* Description */}
+ <div>
+  <label className="block text-gray-700 font-medium">
+    Grant  Description <span className="text-red-500">*</span>
+  </label>
+  <div
+    className="mt-1 w-full rounded-lg border border-gray-200 overflow-auto"
+    style={{
+        height: "300px", // Set a default height
+        overflowY: "auto", // Add vertical scrollbar]
+
+      }}
+  >
+    <ReactQuill
+      theme="snow"
+      value={data.description}
+      onChange={(value) => setData("description", value)}
+      style={{
+        height: "300px", // Set height for the editor content area
+        maxHeight: "300px", // Restrict content height
+      }}
+      className="text-sm"
+      placeholder="Enter description"
+    />
+  </div>
+  {errors.description && (
+    <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+  )}
+</div>
 
         {/* Start and End Date */}
         <div className="grid grid-cols-2 gap-8">

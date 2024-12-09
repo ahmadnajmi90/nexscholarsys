@@ -2,6 +2,8 @@ import React from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
 import { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function Create() {
   const { auth, isPostgraduate } = usePage().props;
@@ -19,7 +21,7 @@ export default function Create() {
     location: "",
     project_status: "published",
   });
-  
+
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
   const [customTag, setCustomTag] = useState(""); // State to manage custom tag input
 
@@ -51,7 +53,7 @@ export default function Create() {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
       console.log(`${key}: ${typeof value}`);
-    } 
+    }
 
     // Submit the form using Inertia.js
     post(route("post-projects.store"), {
@@ -96,21 +98,36 @@ export default function Create() {
         )}
       </div>
 
+      <div>
       {/* Description */}
       <div>
         <label className="block text-gray-700 font-medium">
           Project Description <span className="text-red-500">*</span>
         </label>
-        <textarea
-          value={data.description}
-          onChange={(e) => setData("description", e.target.value)}
-          className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          placeholder="Enter project description"
-        ></textarea>
+        <div
+          className="mt-1 w-full rounded-lg border border-gray-200"
+          style={{
+            height: "300px", // Set a default height
+            overflowY: "auto", // Add vertical scrollbar]
+
+          }}
+        >
+          <ReactQuill
+            theme="snow"
+            value={data.description}
+            onChange={(value) => setData("description", value)}
+            placeholder="Enter description"
+            style={{
+              height: "300px", // Set height for the editor content area
+              maxHeight: "300px", // Restrict content height
+            }}
+          />
+        </div>
         {errors.description && (
           <p className="text-red-500 text-xs mt-1">{errors.description}</p>
         )}
       </div>
+    </div>
 
       {/* Project Type and Purpose */}
       <div className="grid grid-cols-2 gap-8">
