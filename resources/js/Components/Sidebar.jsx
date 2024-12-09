@@ -50,7 +50,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
             <div className="p-4 h-full overflow-auto">
 
                 <div className="flex items-center mb-6">
-                    <h2 className={`ml-2 text-lg font-semibold ${!isOpen && 'hidden'}`}>Nexscholar</h2>
+                    <a href="/" className="flex items-center space-x-2">
+                        <h2 className={`ml-2 text-lg text-blue-600 font-semibold ${!isOpen && 'hidden'}`}>Nexscholar</h2>
+                    </a>
                 </div>
 
                 {/* Navigation Sections */}
