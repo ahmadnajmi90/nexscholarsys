@@ -171,7 +171,40 @@ class PostProjectController extends Controller
                 $request->merge([
                     'is_featured' => filter_var($request->input('is_featured'), FILTER_VALIDATE_BOOLEAN),
                 ]);
-                
+
+                $validated = $request->validate([
+                    'title' => 'required|string|max:255',
+                    'description' => 'nullable|string',
+                    'project_type' => 'nullable|string|max:255',
+                    'purpose' => 'nullable|string|max:255',
+                    'start_date' => 'nullable|date',
+                    'end_date' => 'nullable|date',
+                    'email' => 'nullable|email|max:255',
+                    'location' => 'nullable|string|max:255',
+                    'project_status' => 'nullable|string|max:255',
+
+                    'image' => [
+                        'nullable',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                                $fail('The ' . $attribute . ' field must be an existing file.');
+                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                                $fail('The ' . $attribute . ' field must be an image.');
+                            }
+                        },
+                    ],
+                    'attachment' => [
+                        'nullable',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                                $fail('The ' . $attribute . ' field must be an existing file.');
+                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                                $fail('The ' . $attribute . ' field must be a file.');
+                            }
+                        },
+                    ],
+                ]);
+
                 // Handle image upload
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
@@ -198,10 +231,10 @@ class PostProjectController extends Controller
                     $image->move($imageDestination, $imageName);
                     
                     // Save the relative path
-                    $request->merge(['image' => 'project_images/' . $imageName]);
+                    $validated['image'] = 'project_images/' . $imageName;
                 } else {
                     // Keep the existing path
-                    $request->merge(['image' => $postProject->image]);
+                    $validated['image'] = $postProject->image;
                 }
                 
                 // Handle attachment upload
@@ -230,48 +263,10 @@ class PostProjectController extends Controller
                     $attachment->move($attachmentDestination, $attachmentName);
                     
                     // Save the relative path
-                    $request->merge(['attachment' => 'project_attachments/' . $attachmentName]);
-                } else {
-                    // Keep the existing path
-                    $request->merge(['attachment' => $postProject->attachment]);
-                }
-
-                $validated = $request->validate([
-                    'title' => 'required|string|max:255',
-                    'description' => 'nullable|string',
-                    'project_type' => 'nullable|string|max:255',
-                    'purpose' => 'nullable|string|max:255',
-                    'start_date' => 'nullable|date',
-                    'end_date' => 'nullable|date',
-                    'image' => 'nullable|image|max:2048',
-                    'attachment' => 'nullable|file|max:5120',
-                    'email' => 'nullable|email|max:255',
-                    'location' => 'nullable|string|max:255',
-                    'project_status' => 'nullable|string|max:255',
-                ]);
-
-                if ($request->hasFile('image')) {
-                    logger('Image: Im here ');
-                    // Save the relative path
-                    $validated['image'] = 'project_images/' . $imageName;
-                } else {
-                    // Keep the existing path
-                    $validated['image'] = $postProject->image;
-                }
-                
-                // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('Attachment: Im here ');
-                    // Save the relative path
                     $validated['attachment'] = 'project_attachments/' . $attachmentName;
                 } else {
                     // Keep the existing path
                     $validated['attachment'] = $postProject->attachment;
-                }
-
-                // Handle tags
-                if ($request->has('tags') && is_array($request->tags)) {
-                    $validated['tags'] = json_encode($request->tags);
                 }
 
                 logger('Validated Data:', $validated);

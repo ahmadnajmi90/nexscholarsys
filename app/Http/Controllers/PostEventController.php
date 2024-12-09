@@ -186,6 +186,46 @@ class PostEventController extends Controller
                 $request->merge([
                     'is_featured' => filter_var($request->input('is_featured'), FILTER_VALIDATE_BOOLEAN),
                 ]);
+
+                $validated = $request->validate([
+                    'event_name' => 'required|string|max:255',
+                    'description' => 'nullable|string',
+                    'event_type' => 'nullable|string|max:255',
+                    'event_mode' => 'nullable|string|max:255',
+                    'start_date' => 'required|date',
+                    'end_date' => 'required|date|after_or_equal:start_date',
+                    'start_time' => 'required',
+                    'end_time' => 'required',
+                    'registration_url' => 'nullable|url|max:255',
+                    'registration_deadline' => 'nullable|date',
+                    'contact_email' => 'nullable|email|max:255',
+                    'venue' => 'nullable|string|max:255',
+                    'city' => 'nullable|string|max:255',
+                    'country' => 'nullable|string|max:255',
+                    'event_status' => 'nullable|string|in:draft,published',
+
+                    'image' => [
+                        'nullable',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                                $fail('The ' . $attribute . ' field must be an existing file.');
+                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                                $fail('The ' . $attribute . ' field must be an image.');
+                            }
+                        },
+                    ],
+                    'attachment' => [
+                        'nullable',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                                $fail('The ' . $attribute . ' field must be an existing file.');
+                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                                $fail('The ' . $attribute . ' field must be a file.');
+                            }
+                        },
+                    ],
+                ]);
+
                 // Handle image upload
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
@@ -212,10 +252,10 @@ class PostEventController extends Controller
                     $image->move($imageDestination, $imageName);
                     
                     // Save the relative path
-                    $request->merge(['image' => 'event_images/' . $imageName]);
+                    $validated['image'] = 'event_images/' . $imageName;
                 } else {
                     // Keep the existing path
-                    $request->merge(['image' => $postEvent->image]);
+                    $validated['image'] = $postEvent->image;
                 }
                 
                 // Handle attachment upload
@@ -243,45 +283,6 @@ class PostEventController extends Controller
                     $attachmentName = time() . '_' . $attachment->getClientOriginalName();
                     $attachment->move($attachmentDestination, $attachmentName);
                     
-                    // Save the relative path
-                    $request->merge(['attachment' => 'event_attachments/' . $attachmentName]);
-                } else {
-                    // Keep the existing path
-                    $request->merge(['attachment' => $postEvent->attachment]);
-                }
-
-                $validated = $request->validate([
-                    'event_name' => 'required|string|max:255',
-                    'description' => 'nullable|string',
-                    'event_type' => 'nullable|string|max:255',
-                    'event_mode' => 'nullable|string|max:255',
-                    'start_date' => 'required|date',
-                    'end_date' => 'required|date|after_or_equal:start_date',
-                    'start_time' => 'required',
-                    'end_time' => 'required',
-                    'image' => 'nullable|image|max:2048',
-                    'attachment' => 'nullable|file|max:5120',
-                    'registration_url' => 'nullable|url|max:255',
-                    'registration_deadline' => 'nullable|date',
-                    'contact_email' => 'nullable|email|max:255',
-                    'venue' => 'nullable|string|max:255',
-                    'city' => 'nullable|string|max:255',
-                    'country' => 'nullable|string|max:255',
-                    'event_status' => 'nullable|string|in:draft,published',
-                ]);
-
-                if ($request->hasFile('image')) {
-                    logger('Image: Im here ');
-                    // Save the relative path
-                    $validated['image'] = 'event_images/' . $imageName;
-                } else {
-                    // Keep the existing path
-                    $validated['image'] = $postEvent->image;
-                }
-                
-                // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('Attachment: Im here ');
                     // Save the relative path
                     $validated['attachment'] = 'event_attachments/' . $attachmentName;
                 } else {
