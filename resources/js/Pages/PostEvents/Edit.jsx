@@ -3,6 +3,8 @@ import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
+import NationalityForm from "../Role/Partials/NationalityForm";
+
 
 export default function Edit({ postEvent, auth, isPostgraduate }) {
   const { data, setData, post, processing, errors } = useForm({
