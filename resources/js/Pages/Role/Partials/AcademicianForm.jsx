@@ -113,41 +113,48 @@ export default function AcademicianForm({
 
     return (
         <div className="pb-8">
-            <div className="w-full h-66 bg-cover bg-center mt-4"
-                style={{
-                    backgroundImage: `url('https://picsum.photos/seed/${academician?.id}/500/150')`,
-                }}>
-                {/* Background Image */}
-                <div
-                ></div>
+            <div className="w-full bg-white py-12 shadow-md">
+    {/* Profile Image and Info */}
+    <div className="flex flex-col items-center relative">
+        {/* Profile Image */}
+        <div className="relative">
+            <img
+                src={`/storage/${data.profile_picture || "default-profile.jpg"}`}
+                alt="Profile"
+                className="w-32 h-32 rounded-full border-4 border-green-500 shadow-lg object-cover"
+            />
+            {/* Pencil Icon */}
+            <button
+                onClick={handleProfilePictureClick}
+                className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full shadow-lg text-white hover:bg-blue-600"
+                aria-label="Edit Profile Picture"
+            >
+                ✏️
+            </button>
+        </div>
 
-                {/* Profile Image and Info */}
-                <div className="flex flex-col items-center -mt-16 relative">
-                    {/* Profile Image */}
-                    <div className="relative">
-                        <img
-                            src={`/storage/${data.profile_picture || "default-profile.jpg"}`}
-                            alt="Profile"
-                            className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover"
-                        />
-                        {/* Pencil Icon */}
-                        <button
-                            onClick={handleProfilePictureClick}
-                            className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full shadow-lg text-white hover:bg-blue-600"
-                            aria-label="Edit Profile Picture"
-                        >
-                            ✏️
-                        </button>
-                    </div>
+        {/* Profile Details */}
+        <div className="text-center mt-4">
+            <h1 className="text-2xl font-semibold text-gray-800">{data.full_name}</h1>
+            <p className="text-gray-500">{data.highest_degree} in {data.field_of_study}</p>
+            <p className="text-gray-500">{data.current_position}</p>
+        </div>
 
-                    {/* Profile Details */}
-                    <div className="text-center mt-8">
-                        <h1 className="text-2xl font-semibold text-gray-800 uppercase">{data.full_name}</h1>
-                        <p className="text-gray-500">{data.highest_degree}</p>
-                        <p className="text-gray-500">{data.current_position}</p>
-                    </div>
-                </div>
-            </div>
+        {/* Additional Info */}
+        {/* <div className="flex justify-center space-x-4 mt-4 text-gray-500">
+            <p>
+                <span className="material-icons text-gray-400 align-middle">business</span> {data.company || 'KeenThemes'}
+            </p>
+            <p>
+                <span className="material-icons text-gray-400 align-middle">place</span> {data.location || 'SF, Bay Area'}
+            </p>
+            <p>
+                <span className="material-icons text-gray-400 align-middle">email</span> {data.email || 'jenny@kteam.com'}
+            </p>
+        </div> */}
+    </div>
+</div>
+
 
             {/* Modal */}
             {isModalOpen && (
