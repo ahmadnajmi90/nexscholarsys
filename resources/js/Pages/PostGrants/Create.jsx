@@ -3,6 +3,7 @@ import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
 import { useState } from "react";
 import NationalityForm from "../Role/Partials/NationalityForm";
+import Select from "react-select";
 
 export default function Create() {
   const { auth, isPostgraduate, researchOptions, universities } = usePage().props;
@@ -32,7 +33,7 @@ export default function Create() {
     amount: "",
     application_url: "",
     status: "published",
-  });  
+  });
 
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
 
@@ -70,7 +71,7 @@ export default function Create() {
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
       console.log(`${key}: ${typeof value}`);
-    } 
+    }
 
     // Submit the form using Inertia.js
     post(route("post-grants.store"), {
@@ -85,7 +86,7 @@ export default function Create() {
             alert("Failed to post the grant. Please try again.");
         },
     });
-  }  
+  }
 
   return (
     <MainLayout title="" isPostgraduate={isPostgraduate}>
@@ -110,7 +111,7 @@ export default function Create() {
           />
         </svg>
       </button>
-    
+
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6"
@@ -250,33 +251,45 @@ export default function Create() {
         {/* Field of Research and Grant Supervisor */}
         <div className="grid grid-cols-2 gap-8">
           {/* Research Expertise Dropdown */}
-          {(data.category === "Fundamental Research" || data.category === "Applied Research" || data.category === "Fundamental + Applied") && (
-            
-          <div className="w-full">
-            <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
-            Field of Research (Multiple Selection)
-            </label>
-            <select
-                id="field_of_research"
-                className="mt-1 block w-full border rounded-md p-2"
-                value={data.field_of_research || []} // Handle multiple selections
-                onChange={(e) => {
-                    const selectedOptions = Array.from(e.target.selectedOptions).map((option) => option.value);
-                    setData('field_of_research', selectedOptions); // Update with selected options
-                }}
-                multiple
-            >
-                {researchOptions.map((option) => (
-                    <option
-                        key={`${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`}
-                        value={`${option.field_of_research_name}-${option.research_area_name}-${option.niche_domain_name}`}
-                    >
-                        {`${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`}
-                    </option>
-                ))}
-            </select>
-          </div>
-          )}
+  {/* Research Expertise Searchable Dropdown */}
+{(data.category === "Fundamental Research" ||
+  data.category === "Applied Research" ||
+  data.category === "Fundamental + Applied") && (
+    <div className="w-full">
+      <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
+        Field of Research (Multiple Selection)
+      </label>
+      <Select
+        id="field_of_research"
+        isMulti
+        options={researchOptions.map((option) => ({
+          value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
+          label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
+        }))}
+        className="mt-1"
+        classNamePrefix="select"
+        value={data.field_of_research?.map((selectedValue) => {
+          const matchedOption = researchOptions.find(
+            (option) =>
+              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+              selectedValue
+          );
+          return {
+            value: selectedValue,
+            label: matchedOption
+              ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+              : selectedValue,
+          };
+        })}
+        onChange={(selectedOptions) => {
+          const selectedValues = selectedOptions.map((option) => option.value);
+          setData('field_of_research', selectedValues); // Update with selected values
+        }}
+        placeholder="Search and select fields of research..."
+      />
+    </div>
+)}
+
 
           <div>
             <label className="block text-gray-700 font-medium">Grant Supervisor / Project Learder</label>
@@ -326,12 +339,12 @@ export default function Create() {
           </div>
         )}
 
-        
+
 
         {/*Application Deadline*/}
         {/*Duration - Can it being calculated from the startd date and end date*/}
 
-        
+
 
         {/* Field of Research apploed when fundamental, applied, fundamental + applied is applied */}
         {/* need to add in table SV name and university, will pull from another table */}
@@ -374,7 +387,7 @@ export default function Create() {
                   </label>
               </div>
           </div>
-          
+
           <div>
             <NationalityForm title={"Grant Origin Country"} value={data.origin_country} onChange={(value) => setData('origin_country', value)} />
           </div>
@@ -517,7 +530,7 @@ export default function Create() {
 
 
 
-          
+
 
           {/* <div className="grid grid-cols-2 gap-8"> */}
   {/* Tags */}

@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import Select from 'react-select';
 
 export default function AcademicianForm({
     className = '',
@@ -69,9 +70,9 @@ export default function AcademicianForm({
 
     const submit = (e) => {
         e.preventDefault();
-    
+
         const formData = new FormData();
-    
+
         Object.keys(data).forEach((key) => {
             if (key !== "profile_picture") {
                 if (key === "research_expertise") {
@@ -86,12 +87,12 @@ export default function AcademicianForm({
                 }
             }
         });
-    
+
         for (let [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
             console.log(`${key}: ${typeof value}`);
-        }   
-    
+        }
+
         post(route("role.update"), {
             data: formData,
             onSuccess: () => {
@@ -277,7 +278,7 @@ export default function AcademicianForm({
                                     />
                                     <InputError className="mt-2" message={errors.field_of_study} />
                             </div>
-                            
+
                             </div>
 
 
@@ -297,31 +298,41 @@ export default function AcademicianForm({
                                 </div>
                                 </div>
 
-                                {/* Research Expertise Dropdown */}
-                                <div className="w-full">
-                                    <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
-                                        Field of Research (Multiple Selection)
-                                    </label>
-                                    <select
-                                        id="research_expertise"
-                                        className="mt-1 block w-full border rounded-md p-2"
-                                        value={data.research_expertise || []} // Handle multiple selections
-                                        onChange={(e) => {
-                                            const selectedOptions = Array.from(e.target.selectedOptions).map((option) => option.value);
-                                            setData('research_expertise', selectedOptions); // Update with selected options
-                                        }}
-                                        multiple
-                                    >
-                                        {researchOptions.map((option) => (
-                                            <option
-                                                key={`${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`}
-                                                value={`${option.field_of_research_name}-${option.research_area_name}-${option.niche_domain_name}`}
-                                            >
-                                                {`${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+{/* Research Expertise Searchable Dropdown */}
+<div className="w-full">
+    <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
+        Field of Research (Multiple Selection)
+    </label>
+    <Select
+        id="research_expertise"
+        isMulti
+        options={researchOptions.map((option) => ({
+            value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
+            label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
+        }))}
+        className="mt-1"
+        classNamePrefix="select"
+        value={data.research_expertise?.map((selectedValue) => {
+            const matchedOption = researchOptions.find(
+                (option) =>
+                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+                    selectedValue
+            );
+            return {
+                value: selectedValue,
+                label: matchedOption
+                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                    : selectedValue,
+            };
+        })}
+        onChange={(selectedOptions) => {
+            const selectedValues = selectedOptions.map((option) => option.value);
+            setData('research_expertise', selectedValues); // Update with selected values
+        }}
+        placeholder="Select field of research..."
+    />
+</div>
+
 
                             {/* Profile Picture */}
                             {/* <div>
