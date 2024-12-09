@@ -58,7 +58,7 @@ const UpcomingEvents = ({events=[]}) => {
 
               </div>
             </div>
-            <button 
+            <button
               onClick={() => handleQuickInfoClick(event)}
               className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700">
               &rarr;
@@ -97,116 +97,119 @@ const UpcomingEvents = ({events=[]}) => {
       </div>
 
       {/* Modal Section */}
-{isModalOpen && selectedItem && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative">
-
+      {isModalOpen && selectedItem && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    onClick={closeModal} // Close modal when clicking on the background
+  >
+    <div
+      className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-4xl relative overflow-y-auto max-h-[90vh]" // Expanded size and scrollable content
+      onClick={(e) => e.stopPropagation()} // Prevent background click from closing modal when interacting with the modal content
+    >
       {/* Modal Header */}
-      <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
+      <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">
         {selectedItem.event_name}
       </h3>
 
       {/* Modal Content */}
       <div className="space-y-4">
-        <>
-          <p className="text-gray-600">
-            <span className="font-semibold">Description:</span>{" "}
-            {selectedItem.description || "No description available."}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Description:</span>{" "}
+          {selectedItem.description || "No description available."}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Event type:</span>{" "}
-            {(() => {
-              switch (selectedItem.event_type) {
-                case 'competition':
-                  return 'Competition';
-                case 'conference':
-                  return 'Conference';
-                case 'workshop':
-                  return 'Workshop';
-                case 'seminar':
-                  return 'Seminar';
-                case 'webinar':
-                  return 'Webinar';
-                default:
-                  return 'Not provided';
+        <p className="text-gray-600">
+          <span className="font-semibold">Event type:</span>{" "}
+          {(() => {
+            switch (selectedItem.event_type) {
+              case "competition":
+                return "Competition";
+              case "conference":
+                return "Conference";
+              case "workshop":
+                return "Workshop";
+              case "seminar":
+                return "Seminar";
+              case "webinar":
+                return "Webinar";
+              default:
+                return "Not provided";
+            }
+          })()}
+        </p>
+
+        <p className="text-gray-600">
+          <span className="font-semibold">Event Duration:</span>{" "}
+          {selectedItem.start_date_time
+            ? `${selectedItem.start_date_time} - ${selectedItem.end_date_time}`
+            : "Not provided"}
+        </p>
+
+        <p className="text-gray-600">
+          <span className="font-semibold">Target Audience:</span>{" "}
+          {(() => {
+            try {
+              const parsedAudience = JSON.parse(selectedItem.target_audience);
+              if (Array.isArray(parsedAudience)) {
+                return parsedAudience.join(", ");
               }
-            })()}
-          </p>
+              return "Invalid format";
+            } catch (e) {
+              return selectedItem.target_audience || "Not provided";
+            }
+          })()}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Event Duration:</span>{" "}
-            {selectedItem.start_date_time
-              ? `${selectedItem.start_date_time} - ${selectedItem.end_date_time}`
-              : "Not provided"}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Organized by:</span>{" "}
+          {selectedItem.organized_by || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Target Audience:</span>{" "}
-            {(() => {
-              try {
-                const parsedAudience = JSON.parse(selectedItem.target_audience);
-                if (Array.isArray(parsedAudience)) {
-                  return parsedAudience.join(", ");
-                }
-                return "Invalid format";
-              } catch (e) {
-                return selectedItem.target_audience || "Not provided";
-              }
-            })()}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Registration Link:</span>{" "}
+          {selectedItem.registration_url || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Organized by:</span>{" "}
-            {selectedItem.organized_by || "Not provided"}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Registration Deadline:</span>{" "}
+          {selectedItem.registration_deadline || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Registration Link:</span>{" "}
-            {selectedItem.registration_url || "Not provided"}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Contact Email:</span>{" "}
+          {selectedItem.contact_email || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Registration Deadline:</span>{" "}
-            {selectedItem.registration_deadline || "Not provided"}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Contact No.:</span>{" "}
+          {selectedItem.contact_number || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Contact Email:</span>{" "}
-            {selectedItem.contact_email || "Not provided"}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Location:</span>{" "}
+          {selectedItem.location || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Contact No.:</span>{" "}
-            {selectedItem.contact_number || "Not provided"}
-          </p>
+        <p className="text-gray-600">
+          <span className="font-semibold">Fees:</span>{" "}
+          {selectedItem.fees || "Not provided"}
+        </p>
 
-          <p className="text-gray-600">
-            <span className="font-semibold">Location:</span>{" "}
-            {selectedItem.location || "Not provided"}
-          </p>
-
-          <p className="text-gray-600">
-            <span className="font-semibold">Fees:</span>{" "}
-            {selectedItem.fees || "Not provided"}
-          </p>
-
-          <p className="text-gray-600">
-            <span className="font-semibold">Attachment:</span>{" "}
-            {selectedItem.attachment ? (
-              <a
-                href={`/storage/${selectedItem.attachment}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 underline"
-              >
-                View Attachment
-              </a>
-            ) : (
-              "No attachment available."
-            )}
-          </p>
-        </>
+        <p className="text-gray-600">
+          <span className="font-semibold">Attachment:</span>{" "}
+          {selectedItem.attachment ? (
+            <a
+              href={`/storage/${selectedItem.attachment}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              View Attachment
+            </a>
+          ) : (
+            "No attachment available."
+          )}
+        </p>
       </div>
 
       {/* Modal Footer */}
@@ -221,6 +224,7 @@ const UpcomingEvents = ({events=[]}) => {
     </div>
   </div>
 )}
+
     </div>
   );
 }
