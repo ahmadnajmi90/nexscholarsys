@@ -252,11 +252,30 @@ class PostGrantController extends Controller
                     'student_level' => 'nullable|string|max:255',
                     'appointment_type' => 'nullable|string|max:255',
                     'purpose_of_collaboration' => 'nullable|string|max:255',
-                    'image' => 'nullable|image|max:2048',
-                    'attachment' => 'nullable|file|max:5120',
                     'amount' => 'nullable|numeric|min:0',
                     'application_url' => 'nullable|url|max:255',
                     'status' => 'in:draft,published',
+
+                    'image' => [
+                        'nullable',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                                $fail('The ' . $attribute . ' field must be an existing file.');
+                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                                $fail('The ' . $attribute . ' field must be an image.');
+                            }
+                        },
+                    ],
+                    'attachment' => [
+                        'nullable',
+                        function ($attribute, $value, $fail) use ($request) {
+                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                                $fail('The ' . $attribute . ' field must be an existing file.');
+                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                                $fail('The ' . $attribute . ' field must be a file.');
+                            }
+                        },
+                    ],
                 ]);
 
                 // Handle image upload
