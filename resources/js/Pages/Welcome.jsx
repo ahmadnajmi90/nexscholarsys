@@ -20,7 +20,7 @@ const HeroSection = ({ auth }) => {
               <>
                 <Link
                   href={route('dashboard')}
-                  className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-blue-500 dark:text-white dark:hover:text-white/80"
+                  className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-blue-500"
                 >
                   Dashboard
                 </Link>
@@ -29,7 +29,7 @@ const HeroSection = ({ auth }) => {
               <>
                 <Link
                   href={route('login')}
-                  className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-blue-500 dark:text-white dark:hover:text-white/80"
+                  className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-blue-500"
                 >
                   Log in
                 </Link>
