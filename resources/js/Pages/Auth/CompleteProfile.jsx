@@ -50,7 +50,7 @@ export default function CompleteProfile({ universities, faculties }) {
                     <select
                         id="role"
                         name="role"
-                        className="w-full border rounded-md p-2"
+                        className="mt-1 w-full border rounded-md p-2"
                         value={data.role}
                         onChange={(e) => setData('role', e.target.value)}
                         required
@@ -92,7 +92,7 @@ export default function CompleteProfile({ universities, faculties }) {
                                 </label>
                                 <select
                                     id="current_postgraduate_status"
-                                    className="block w-full border-gray-300 rounded-md shadow-sm"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                                     value={data.current_postgraduate_status}
                                     onChange={handleStatusChange}
                                 >

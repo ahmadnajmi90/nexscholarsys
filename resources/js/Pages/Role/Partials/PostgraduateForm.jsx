@@ -632,11 +632,11 @@ export default function PostgraduateForm({
                             )}
 {/* Research Expertise Searchable Dropdown */}
 <div className="w-full">
-    <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
+    <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
         Field of Research (Multiple Selection)
     </label>
     <Select
-        id="research_expertise"
+        id="field_of_research"
         isMulti
         options={researchOptions.map((option) => ({
             value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
@@ -644,7 +644,7 @@ export default function PostgraduateForm({
         }))}
         className="mt-1"
         classNamePrefix="select"
-        value={data.research_expertise?.map((selectedValue) => {
+        value={data.field_of_research?.map((selectedValue) => {
             const matchedOption = researchOptions.find(
                 (option) =>
                     `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
@@ -659,7 +659,7 @@ export default function PostgraduateForm({
         })}
         onChange={(selectedOptions) => {
             const selectedValues = selectedOptions.map((option) => option.value);
-            setData('research_expertise', selectedValues); // Update with selected values
+            setData('field_of_research', selectedValues); // Update with selected values
         }}
         placeholder="Select field of research..."
     />
