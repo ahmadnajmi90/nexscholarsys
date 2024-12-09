@@ -24,7 +24,9 @@ class PostEvent extends Model
         'registration_url',
         'registration_deadline',
         'contact_email',
-        'location',
+        'venue',
+        'city',
+        'country',
         'event_status'
     ];
 

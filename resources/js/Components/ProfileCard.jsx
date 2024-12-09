@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
+import Select from "react-select"; // Import react-select
 
 const ProfileGridWithDualFilter = ({
     profilesData,
     supervisorAvailabilityKey,
     universitiesList, // Pass the complete list of universities
     isPostgraduateList,
-    users
+    users,
+    researchOptions
 }) => {
-    const [selectedArea, setSelectedArea] = useState("");
+    const [selectedArea, setSelectedArea] = useState([]); // Initialize as an empty array
     const [selectedUniversity, setSelectedUniversity] = useState("");
     const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -24,22 +26,43 @@ const ProfileGridWithDualFilter = ({
     // Extract unique research areas dynamically from the array data
     const uniqueResearchAreas = [
         ...new Set(
-            profilesData.flatMap((profile) => profile.field_of_study || []) // Flatten arrays
+            profilesData.flatMap((profile) => profile.field_of_research || profile.research_expertise || []) // Flatten arrays
         ),
     ];
+
+    const researchAreaOptions = uniqueResearchAreas.map((area) => {
+        const matchedOption = researchOptions.find(
+          (option) =>
+            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+            area
+        );
+      
+        return {
+          value: area,
+          label: matchedOption
+            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+            : "Unknown Research Area",
+        };
+      });
 
     // Filter profiles based on selected research area, university, and supervisor availability
     const filteredProfiles = profilesData.filter((profile) => {
         const hasSelectedArea =
-            selectedArea === "" || (profile.field_of_study || []).includes(selectedArea);
+          selectedArea.length === 0 || // No filter applied
+          (profile.field_of_research || profile.research_expertise || []).some((area) =>
+            selectedArea.includes(area)
+          );
+      
         const hasSelectedUniversity =
-            selectedUniversity === "" || profile.university === parseInt(selectedUniversity);
+          selectedUniversity === "" || profile.university === parseInt(selectedUniversity);
+      
         const hasSelectedSupervisorAvailability =
-            selectedSupervisorAvailability === "" ||
-            profile[supervisorAvailabilityKey]?.toString() === selectedSupervisorAvailability;
-
+          selectedSupervisorAvailability === "" ||
+          profile[supervisorAvailabilityKey]?.toString() === selectedSupervisorAvailability;
+      
         return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability;
-    });
+      });
+      
 
     // Pagination logic
     const totalPages = Math.ceil(filteredProfiles.length / profilesPerPage);
@@ -64,21 +87,23 @@ const ProfileGridWithDualFilter = ({
         <div className="min-h-screen p-4 sm:p-6">
             {/* Filters */}
             <div className="flex flex-wrap justify-center gap-4 mb-6">
-                <select
-                    className="p-2 border border-gray-300 rounded w-full sm:w-auto"
-                    value={selectedArea}
-                    onChange={(e) => {
-                        setSelectedArea(e.target.value);
+                <Select
+                    id="research-area-filter"
+                    isMulti
+                    options={researchAreaOptions}
+                    className=""
+                    classNamePrefix="select"
+                    value={selectedArea.map((area) => {
+                        const matchedOption = researchAreaOptions.find((option) => option.value === area);
+                        return matchedOption || { value: area, label: area };
+                    })}
+                    onChange={(selectedOptions) => {
+                        const selectedValues = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+                        setSelectedArea(selectedValues); // Update selected areas
                         setCurrentPage(1); // Reset to the first page when the filter changes
                     }}
-                >
-                    <option value="">All Field of Study</option>
-                    {uniqueResearchAreas.map((area) => (
-                        <option key={area} value={area}>
-                            {area}
-                        </option>
-                    ))}
-                </select>
+                    placeholder="Search and select research areas..."
+                />
 
                 <select
                     className="p-2 border border-gray-300 rounded w-full sm:w-auto"
@@ -184,12 +209,32 @@ const ProfileGridWithDualFilter = ({
 
                             {/* Display only the first field of study */}
                             <p className="text-gray-500 text-sm">
-                                {Array.isArray(profile.field_of_study) && profile.field_of_study.length > 0
-                                    ? profile.field_of_study[0] // Display the first field of study
-                                    : profile.field_of_study && profile.field_of_study.length > 0
-                                    ? profile.field_of_study // Display the field_of_study directly if not an array but has content
-                                    : "No Field of Study"}
+                            {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
+                                ? (() => {
+                                    const id = profile.field_of_research[0]; // Get the first ID
+                                    const matchedOption = researchOptions.find(
+                                    (option) =>
+                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                    );
+                                    return matchedOption
+                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                    : "Unknown";
+                                })()
+                                : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
+                                ? (() => {
+                                    const id = profile.research_expertise[0]; // Get the first ID
+                                    const matchedOption = researchOptions.find(
+                                    (option) =>
+                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                    );
+                                    return matchedOption
+                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                    : "Unknown";
+                                })()
+                                : "No Field of Research or Expertise"}
                             </p>
+
+
                             <p className="text-gray-500 text-sm">{profile.current_position}</p>
                             {/* Quick Info Button */}
                                     <button
@@ -285,11 +330,44 @@ const ProfileGridWithDualFilter = ({
           {selectedProfile.bio || "No bio available."}
         </p>
         <p className="text-gray-600">
-          <span className="font-semibold">Fields of Study:</span>{" "}
-          {Array.isArray(selectedProfile.field_of_study)
-            ? selectedProfile.field_of_study.join(", ")
-            : selectedProfile.field_of_study || "No fields of study"}
-        </p>
+            <span className="font-semibold">Fields of Research:</span>{" "}
+            {(() => {
+                const fieldOfResearchNames =
+                Array.isArray(selectedProfile.field_of_research) && selectedProfile.field_of_research.length > 0
+                    ? selectedProfile.field_of_research
+                        .map((id) => {
+                        const matchedOption = researchOptions.find(
+                            (option) =>
+                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                        );
+                        return matchedOption
+                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                            : null; // Handle unmatched IDs gracefully
+                        })
+                        .filter(Boolean) // Remove null values
+                    : [];
+
+                const researchExpertiseNames =
+                Array.isArray(selectedProfile.research_expertise) && selectedProfile.research_expertise.length > 0
+                    ? selectedProfile.research_expertise
+                        .map((id) => {
+                        const matchedOption = researchOptions.find(
+                            (option) =>
+                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                        );
+                        return matchedOption
+                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                            : null; // Handle unmatched IDs gracefully
+                        })
+                        .filter(Boolean) // Remove null values
+                    : [];
+
+                const allNames = [...fieldOfResearchNames, ...researchExpertiseNames];
+
+                return allNames.length > 0 ? allNames.join(", ") : "No fields of study or expertise";
+            })()}
+            </p>
+
         <p className="text-gray-600">
             {supervisorAvailabilityKey == "availability_as_supervisor" ? (<span className="font-semibold">Available as supervisor:</span>) : (<span className="font-semibold">Looking for a supervisor:</span>)}
           {selectedProfile[supervisorAvailabilityKey] === 1

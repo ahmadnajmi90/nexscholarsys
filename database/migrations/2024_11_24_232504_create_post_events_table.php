@@ -27,7 +27,9 @@ return new class extends Migration
             $table->string('registration_url')->nullable();
             $table->date('registration_deadline')->nullable();
             $table->string('contact_email')->nullable();
-            $table->string('location')->nullable();
+            $table->string('venue')->nullable();
+            $table->string('city')->nullable();
+            $table->string('country')->nullable();
             $table->string('event_status')->nullable();
             $table->timestamps();
         });

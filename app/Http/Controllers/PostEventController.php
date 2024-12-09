@@ -90,9 +90,11 @@ class PostEventController extends Controller
                     'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                     'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:2048',
                     'registration_url' => 'nullable|url|max:255',
-                    'registration_deadline' => 'nullable|date|after_or_equal:today',
+                    'registration_deadline' => 'nullable|date',
                     'contact_email' => 'nullable|email|max:255',
-                    'location' => 'nullable|string|max:255',
+                    'venue' => 'nullable|string|max:255',
+                    'city' => 'nullable|string|max:255',
+                    'country' => 'nullable|string|max:255',
                     'event_status' => 'nullable|string|in:draft,published',
                 ]);
 
@@ -260,9 +262,11 @@ class PostEventController extends Controller
                     'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                     'attachment' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:2048',
                     'registration_url' => 'nullable|url|max:255',
-                    'registration_deadline' => 'nullable|date|after_or_equal:today',
+                    'registration_deadline' => 'nullable|date',
                     'contact_email' => 'nullable|email|max:255',
-                    'location' => 'nullable|string|max:255',
+                    'venue' => 'nullable|string|max:255',
+                    'city' => 'nullable|string|max:255',
+                    'country' => 'nullable|string|max:255',
                     'event_status' => 'nullable|string|in:draft,published',
                 ]);
 
