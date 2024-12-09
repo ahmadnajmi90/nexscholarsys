@@ -6,6 +6,7 @@ import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import NationalityForm from "./NationalityForm";
+import Select from 'react-select';
 
 export default function PostgraduateForm({
     universities,
@@ -21,7 +22,7 @@ export default function PostgraduateForm({
             //data both have
             phone_number: postgraduate?.phone_number || '',
             full_name: postgraduate?.full_name || '',
-            previous_degree: 
+            previous_degree:
             typeof postgraduate?.previous_degree === 'string'
             ? JSON.parse(postgraduate?.previous_degree)
             : postgraduate?.previous_degree,
@@ -114,7 +115,7 @@ export default function PostgraduateForm({
         for (let [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
             console.log(`${key}: ${typeof value}`);
-        }  
+        }
 
         post(route("role.update"), {
             data: formData,
@@ -362,7 +363,7 @@ export default function PostgraduateForm({
                             {bachelorSelected && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                                     <div>
-                                        <InputLabel htmlFor="bachelor" value="Bachelor Degree In" />
+                                        <InputLabel htmlFor="bachelor" value="Name of Bachelor Degree" />
                                         <TextInput
                                             id="bachelor"
                                             className="mt-1 block w-full"
@@ -400,7 +401,7 @@ export default function PostgraduateForm({
                             {masterSelected && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                                     <div>
-                                        <InputLabel htmlFor="master" value="Master Degree In" />
+                                        <InputLabel htmlFor="master" value="Name of Master Degree" />
                                         <TextInput
                                             id="master"
                                             className="mt-1 block w-full"
@@ -542,7 +543,7 @@ export default function PostgraduateForm({
                                 </div>
                                 )}
                             </div>
-                            
+
                             {data.current_postgraduate_status === "Registered" && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                                     {selectedUniversity && (
@@ -629,32 +630,40 @@ export default function PostgraduateForm({
                                     </div>
                                 </div>
                             )}
-
-                            {/* Research Expertise Dropdown */}
-                            <div className="w-full">
-                                <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
-                                Preferred Field of research (Multiple Selection)
-                                </label>
-                                <select
-                                    id="field_of_research"
-                                    className="mt-1 block w-full border rounded-md p-2"
-                                    value={data.field_of_research || []} // Handle multiple selections
-                                    onChange={(e) => {
-                                        const selectedOptions = Array.from(e.target.selectedOptions).map((option) => option.value);
-                                        setData('field_of_research', selectedOptions); // Update with selected options
-                                    }}
-                                    multiple
-                                >
-                                    {researchOptions.map((option) => (
-                                        <option
-                                            key={`${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`}
-                                            value={`${option.field_of_research_name}-${option.research_area_name}-${option.niche_domain_name}`}
-                                        >
-                                            {`${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+{/* Research Expertise Searchable Dropdown */}
+<div className="w-full">
+    <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
+        Field of Research (Multiple Selection)
+    </label>
+    <Select
+        id="research_expertise"
+        isMulti
+        options={researchOptions.map((option) => ({
+            value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
+            label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
+        }))}
+        className="mt-1"
+        classNamePrefix="select"
+        value={data.research_expertise?.map((selectedValue) => {
+            const matchedOption = researchOptions.find(
+                (option) =>
+                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+                    selectedValue
+            );
+            return {
+                value: selectedValue,
+                label: matchedOption
+                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                    : selectedValue,
+            };
+        })}
+        onChange={(selectedOptions) => {
+            const selectedValues = selectedOptions.map((option) => option.value);
+            setData('research_expertise', selectedValues); // Update with selected values
+        }}
+        placeholder="Select field of research..."
+    />
+</div>
                             {/* Profile Picture */}
                             {/* <div>
                        <InputLabel htmlFor="profile_picture" value="Profile Picture" /> */}
