@@ -308,7 +308,7 @@ export default function AcademicianForm({
 {/* Research Expertise Searchable Dropdown */}
 <div className="w-full">
     <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
-        Field of Research (Multiple Selection)
+        Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
     </label>
     <Select
         id="research_expertise"

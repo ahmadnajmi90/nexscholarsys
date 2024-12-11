@@ -252,7 +252,7 @@ const handleSubmit = async (e) => {
   data.category === "Fundamental + Applied") && (
     <div className="w-full">
       <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
-        Field of Research (Multiple Selection)
+        Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
       </label>
       <Select
         id="field_of_research"
