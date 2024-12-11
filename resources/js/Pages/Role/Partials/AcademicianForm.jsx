@@ -227,7 +227,7 @@ export default function AcademicianForm({
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                                 {/* Full Name */}
                                 <div className="w-full">
-                                    <InputLabel htmlFor="full_name" value="Full Name" required />
+                                    <InputLabel htmlFor="full_name" value="Full Name (Without Salutation)" required />
                                     <TextInput
                                         id="full_name"
                                         className="mt-1 block w-full"
