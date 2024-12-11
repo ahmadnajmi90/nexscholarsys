@@ -32,37 +32,37 @@ const ProfileGridWithDualFilter = ({
 
     const researchAreaOptions = uniqueResearchAreas.map((area) => {
         const matchedOption = researchOptions.find(
-          (option) =>
-            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
-            area
+            (option) =>
+                `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+                area
         );
-      
+
         return {
-          value: area,
-          label: matchedOption
-            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-            : "Unknown Research Area",
+            value: area,
+            label: matchedOption
+                ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                : "Unknown Research Area",
         };
-      });
+    });
 
     // Filter profiles based on selected research area, university, and supervisor availability
     const filteredProfiles = profilesData.filter((profile) => {
         const hasSelectedArea =
-          selectedArea.length === 0 || // No filter applied
-          (profile.field_of_research || profile.research_expertise || []).some((area) =>
-            selectedArea.includes(area)
-          );
-      
+            selectedArea.length === 0 || // No filter applied
+            (profile.field_of_research || profile.research_expertise || []).some((area) =>
+                selectedArea.includes(area)
+            );
+
         const hasSelectedUniversity =
-          selectedUniversity === "" || profile.university === parseInt(selectedUniversity);
-      
+            selectedUniversity === "" || profile.university === parseInt(selectedUniversity);
+
         const hasSelectedSupervisorAvailability =
-          selectedSupervisorAvailability === "" ||
-          profile[supervisorAvailabilityKey]?.toString() === selectedSupervisorAvailability;
-      
+            selectedSupervisorAvailability === "" ||
+            profile[supervisorAvailabilityKey]?.toString() === selectedSupervisorAvailability;
+
         return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability;
-      });
-      
+    });
+
 
     // Pagination logic
     const totalPages = Math.ceil(filteredProfiles.length / profilesPerPage);
@@ -159,25 +159,25 @@ const ProfileGridWithDualFilter = ({
                             <div className="relative group">
                                 {/* Display "Verified" if verified */}
                                 {profile.verified === 1 && (
-                                <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] text-purple-700 cursor-pointer">
-                                    Verified
-                                </span>
+                                    <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] text-purple-700 cursor-pointer">
+                                        Verified
+                                    </span>
                                 )}
                                 {/* Display "Not Verified" if not verified */}
                                 {profile.verified !== 1 && (
-                                <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] text-red-700 cursor-pointer">
-                                    Not Verified
-                                </span>
+                                    <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] text-red-700 cursor-pointer">
+                                        Not Verified
+                                    </span>
                                 )}
 
                                 {/* Tooltip for both states */}
                                 <div className="absolute top-8 right-0 hidden group-hover:flex items-center bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10">
-                                {profile.verified === 1
-                                    ? `This account is verified by ${getUniversityNameById(profile.university)}`
-                                    : "This account is not verified"}
+                                    {profile.verified === 1
+                                        ? `This account is verified by ${getUniversityNameById(profile.university)}`
+                                        : "This account is not verified"}
                                 </div>
                             </div>
-                            )}
+                        )}
 
                         {/* Banner */}
                         <div className="h-32">
@@ -209,40 +209,40 @@ const ProfileGridWithDualFilter = ({
 
                             {/* Display only the first field of study */}
                             <p className="text-gray-500 text-sm">
-                            {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
-                                ? (() => {
-                                    const id = profile.field_of_research[0]; // Get the first ID
-                                    const matchedOption = researchOptions.find(
-                                    (option) =>
-                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                    );
-                                    return matchedOption
-                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                    : "Unknown";
-                                })()
-                                : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
-                                ? (() => {
-                                    const id = profile.research_expertise[0]; // Get the first ID
-                                    const matchedOption = researchOptions.find(
-                                    (option) =>
-                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                    );
-                                    return matchedOption
-                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                    : "Unknown";
-                                })()
-                                : "No Field of Research or Expertise"}
+                                {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
+                                    ? (() => {
+                                        const id = profile.field_of_research[0]; // Get the first ID
+                                        const matchedOption = researchOptions.find(
+                                            (option) =>
+                                                `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                        );
+                                        return matchedOption
+                                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                            : "Unknown";
+                                    })()
+                                    : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
+                                        ? (() => {
+                                            const id = profile.research_expertise[0]; // Get the first ID
+                                            const matchedOption = researchOptions.find(
+                                                (option) =>
+                                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                            );
+                                            return matchedOption
+                                                ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                                : "Unknown";
+                                        })()
+                                        : "No Field of Research or Expertise"}
                             </p>
 
 
                             <p className="text-gray-500 text-sm">{profile.current_position}</p>
                             {/* Quick Info Button */}
-                                    <button
-                                        onClick={() => handleQuickInfoClick(profile)}
-                                        className="mt-2 bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
-                                    >
-                                        Quick Info
-                                    </button>
+                            <button
+                                onClick={() => handleQuickInfoClick(profile)}
+                                className="mt-2 bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
+                            >
+                                Quick Info
+                            </button>
 
                         </div>
 
@@ -290,108 +290,108 @@ const ProfileGridWithDualFilter = ({
 
                 {/* Modal for Quick Info */}
                 {isModalOpen && selectedProfile && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative">
-      {/* Close Button */}
-      <button
-        onClick={() => setIsModalOpen(false)}
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-        aria-label="Close"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative">
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                aria-label="Close"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    className="w-6 h-6"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                    />
+                                </svg>
+                            </button>
 
-      {/* Modal Header */}
-      <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
-        {selectedProfile.full_name}
-      </h3>
+                            {/* Modal Header */}
+                            <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
+                                {selectedProfile.full_name}
+                            </h3>
 
-      {/* Modal Content */}
-      <div className="space-y-4">
-        <p className="text-gray-600">
-          <span className="font-semibold">University:</span>{" "}
-          {getUniversityNameById(selectedProfile.university)}
-        </p>
-        <p className="text-gray-600">
-          <span className="font-semibold">Bio:</span>{" "}
-          {selectedProfile.bio || "No bio available."}
-        </p>
-        <p className="text-gray-600">
-            <span className="font-semibold">Fields of Research:</span>{" "}
-            {(() => {
-                const fieldOfResearchNames =
-                Array.isArray(selectedProfile.field_of_research) && selectedProfile.field_of_research.length > 0
-                    ? selectedProfile.field_of_research
-                        .map((id) => {
-                        const matchedOption = researchOptions.find(
-                            (option) =>
-                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                        );
-                        return matchedOption
-                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                            : null; // Handle unmatched IDs gracefully
-                        })
-                        .filter(Boolean) // Remove null values
-                    : [];
+                            {/* Modal Content */}
+                            <div className="space-y-4">
+                                <p className="text-gray-600">
+                                    <span className="font-semibold">University:</span>{" "}
+                                    {getUniversityNameById(selectedProfile.university)}
+                                </p>
+                                <p className="text-gray-600">
+                                    <span className="font-semibold">Bio:</span>{" "}
+                                    {selectedProfile.bio || "No bio available."}
+                                </p>
+                                <p className="text-gray-600">
+                                    <span className="font-semibold">Fields of Research:</span>{" "}
+                                    {(() => {
+                                        const fieldOfResearchNames =
+                                            Array.isArray(selectedProfile.field_of_research) && selectedProfile.field_of_research.length > 0
+                                                ? selectedProfile.field_of_research
+                                                    .map((id) => {
+                                                        const matchedOption = researchOptions.find(
+                                                            (option) =>
+                                                                `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                                        );
+                                                        return matchedOption
+                                                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                                            : null; // Handle unmatched IDs gracefully
+                                                    })
+                                                    .filter(Boolean) // Remove null values
+                                                : [];
 
-                const researchExpertiseNames =
-                Array.isArray(selectedProfile.research_expertise) && selectedProfile.research_expertise.length > 0
-                    ? selectedProfile.research_expertise
-                        .map((id) => {
-                        const matchedOption = researchOptions.find(
-                            (option) =>
-                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                        );
-                        return matchedOption
-                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                            : null; // Handle unmatched IDs gracefully
-                        })
-                        .filter(Boolean) // Remove null values
-                    : [];
+                                        const researchExpertiseNames =
+                                            Array.isArray(selectedProfile.research_expertise) && selectedProfile.research_expertise.length > 0
+                                                ? selectedProfile.research_expertise
+                                                    .map((id) => {
+                                                        const matchedOption = researchOptions.find(
+                                                            (option) =>
+                                                                `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                                        );
+                                                        return matchedOption
+                                                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                                            : null; // Handle unmatched IDs gracefully
+                                                    })
+                                                    .filter(Boolean) // Remove null values
+                                                : [];
 
-                const allNames = [...fieldOfResearchNames, ...researchExpertiseNames];
+                                        const allNames = [...fieldOfResearchNames, ...researchExpertiseNames];
 
-                return allNames.length > 0 ? allNames.join(", ") : "No fields of study or expertise";
-            })()}
-            </p>
+                                        return allNames.length > 0 ? allNames.join(", ") : "No fields of study or expertise";
+                                    })()}
+                                </p>
 
-        <p className="text-gray-600">
-            {supervisorAvailabilityKey == "availability_as_supervisor" ? (<span className="font-semibold">Available as supervisor:</span>) : (<span className="font-semibold">Looking for a supervisor:</span>)}
-          {selectedProfile[supervisorAvailabilityKey] === 1
-            ? " Yes"
-            : " No"}
-        </p>
-        <p className="text-gray-600">
-          <span className="font-semibold">Email:</span>{" "}
-          {users.find((user) => user.unique_id === (selectedProfile.academician_id || selectedProfile.postgraduate_id))?.email || "No email provided"}
-        </p>
-      </div>
+                                <p className="text-gray-600">
+                                    {supervisorAvailabilityKey == "availability_as_supervisor" ? (<span className="font-semibold">Available as supervisor:</span>) : (<span className="font-semibold">Looking for a supervisor:</span>)}
+                                    {selectedProfile[supervisorAvailabilityKey] === 1
+                                        ? " Yes"
+                                        : " No"}
+                                </p>
+                                <p className="text-gray-600">
+                                    <span className="font-semibold">Email:</span>{" "}
+                                    {users.find((user) => user.unique_id === (selectedProfile.academician_id || selectedProfile.postgraduate_id))?.email || "No email provided"}
+                                </p>
+                            </div>
 
-      {/* Footer Button */}
-      <div className="mt-6 text-center">
-        <button
-          onClick={() => setIsModalOpen(false)}
-          className="px-6 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition duration-200"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+                            {/* Footer Button */}
+                            <div className="mt-6 text-center">
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-6 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition duration-200"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
 
