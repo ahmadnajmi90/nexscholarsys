@@ -12,7 +12,7 @@ const DashboardInsight  = ( { totalUsers, onlineUsers, clicksByType, isAdmin, ev
   return (
     <div className="p-6 min-h-screen">
 
-<SuccessAlert4 />
+{/* <SuccessAlert4 /> */}
 
       {isAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

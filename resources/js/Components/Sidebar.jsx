@@ -47,6 +47,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
             >
                 {isOpen ? '<' : '>'}
             </button>
+
+
+
             <div className="p-4 h-full overflow-auto">
 
                 <div className="flex items-center mb-6">
@@ -234,10 +237,10 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                             {menuOpen.profile && (
                                 <div className={`${!isOpen && 'hidden'} ml-6`}>
                                     <Link href={route('profile.edit')} className="block py-2 hover:bg-gray-100 rounded">
-                                        General Account Setting
+                                        My Account
                                     </Link>
                                     <Link href={route('role.edit')} className="block py-2 hover:bg-gray-100 rounded">
-                                        Personal Information
+                                       Profile
                                     </Link>
                                 </div>
                             )}
