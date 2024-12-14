@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
@@ -47,14 +48,16 @@ const MainLayout = ({ children, title, isPostgraduate }) => {
             {/* Main Content Area */}
             {isDesktop ? (
                 // Desktop-specific content area
+
                 <div
                     className={`flex-1 p-6 transition-all duration-300 ${
                         isSidebarOpen ? 'ml-64' : 'ml-20'
                     }`}
                 >
+                     <TopMenu />
                     <Head title={title} />
                      {/* Top Menu */}
-                <TopMenu />
+
                     <div className="p-4 bg-white rounded-lg shadow">
                         <h1 className="text-2xl font-semibold mb-4">{title}</h1>
                         {children}

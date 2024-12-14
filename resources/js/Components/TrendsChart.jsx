@@ -65,23 +65,29 @@ const ResearchTrendsChart = () => {
 
   return (
     <div className="col-span-2 md:col-span-1 bg-white shadow-md rounded-lg p-6">
-      <h2 className="text-lg font-bold mb-4">Research Trends</h2>
-      <ReactECharts option={trendsOptions} style={{ height: "300px" }} />
-      <ul className="mt-6">
-        {trendsData.map((trend, index) => (
-          <li key={index} className="flex justify-between items-center mb-2">
-            <div>
-              <p
-                className="text-sm font-medium cursor-pointer text-blue-600 hover:underline"
-                onClick={() => handleTrendClick(trend)}
-              >
-                {trend.name}
-              </p>
-            </div>
-            <p className="text-sm font-bold text-gray-700">{trend.value}</p>
-          </li>
-        ))}
-      </ul>
+    <h2 className="text-lg font-bold mb-4">Research Trends</h2>
+    {/* Responsive Container for Graph */}
+    <div className="overflow-x-auto">
+      <ReactECharts
+        option={trendsOptions}
+        style={{ height: "300px", width: "100%" }}
+      />
+    </div>
+    <ul className="mt-6">
+      {trendsData.map((trend, index) => (
+        <li key={index} className="flex justify-between items-center mb-2">
+          <div>
+            <p
+              className="text-sm font-medium cursor-pointer text-blue-600 hover:underline"
+              onClick={() => handleTrendClick(trend)}
+            >
+              {trend.name}
+            </p>
+          </div>
+          <p className="text-sm font-bold text-gray-700">{trend.value}</p>
+        </li>
+      ))}
+    </ul>
 
       {/* Modal */}
       {isModalOpen && (
