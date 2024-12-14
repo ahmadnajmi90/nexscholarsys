@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/react';
 const TopMenu = ({ profilePicture }) => {
     return (
         <nav className="border-b border-gray-200 px-4 py-3 shadow-sm">
-            <div className="flex items-center justify-between mx-auto">
+            <div className="flex items-center justify-between">
                 {/* Left Side Links */}
                 <div className="flex items-center space-x-6">
                     <Link
