@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                     </div>
 
                        {/* Features In Development */}
-                       <div>
+                       {/* <div>
                         <h3 className={`text-blue-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features In Development </h3>
                         <button
                             onClick={() => toggleMenu('workspace')}
@@ -207,19 +207,19 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                             {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
                                 Soon
                             </span> */}
-                        </Link>
+                        {/* </Link>
 
                         <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
                             <div className="flex items-center">
                                 <FaUsers className="text-gray-600" />
                                 <span className={`ml-2 ${!isOpen && 'hidden'}`}>Forums</span>
-                            </div>
+                            </div> */}
 
                             {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
                                 Soon
                             </span> */}
-                        </Link>
-                    </div>
+                        {/* </Link>
+                    </div> */}
 
                     {/* Survey Section */}
                     <div>
