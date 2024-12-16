@@ -39,7 +39,8 @@ class Postgraduate extends Model
         'researchgate',
         'bio',
         'funding_requirement',
-        'current_postgraduate_status'
+        'current_postgraduate_status',
+        'background_image',
     ];
 
     protected $casts = [

@@ -53,6 +53,8 @@ class ProfileCompletionController extends Controller
             $request->validate([
                 'university' => 'required|exists:university_list,id',
                 'faculty' => 'required|exists:faculty_list,id',
+                'profile_picture' => 'nullable|string|max:255',
+                'background_image' => 'nullable|string|max:255',
             ]);
 
             // Generate a unique ID for the user if it does not already exist
@@ -70,12 +72,16 @@ class ProfileCompletionController extends Controller
                     'full_name' => strtoupper($request->full_name),
                     'university' => $request->university,
                     'faculty' => $request->faculty,
+                    'profile_picture' => "profile_pictures/default.jpg",
+                    'background_image' => "profile_background_images/default.jpg",
                 ]
             );
 
         } elseif ($request->role === 'Industry') {
             $request->validate([
                 'industry' => 'required|string|max:255',
+                'profile_picture' => 'nullable|string|max:255',
+                'background_image' => 'nullable|string|max:255',
             ]);
 
             $uniqueId = 'INDT-' . Str::random(8);
@@ -91,6 +97,8 @@ class ProfileCompletionController extends Controller
                 [
                     'full_name' => strtoupper($request->full_name),
                     'industry' => $request->industry,
+                    'profile_picture' => "profile_pictures/default.jpg",
+                    'background_image' => "profile_background_images/default.jpg",
                 ]
             );
 
@@ -99,6 +107,8 @@ class ProfileCompletionController extends Controller
                 'university' => 'nullable|exists:university_list,id',
                 'faculty' => 'nullable|exists:faculty_list,id',
                 'current_postgraduate_status' => 'required|string|in:Not registered yet,Registered',
+                'profile_picture' => 'nullable|string|max:255',
+                'background_image' => 'nullable|string|max:255',
             ]);
 
             $uniqueId = 'PG-' . Str::random(8);
@@ -116,6 +126,8 @@ class ProfileCompletionController extends Controller
                     'university' => $request->university,
                     'faculty' => $request->faculty,
                     'current_postgraduate_status' => $request->current_postgraduate_status,
+                    'profile_picture' => "profile_pictures/default.jpg",
+                    'background_image' => "profile_background_images/default.jpg",
                 ]
             );
         }

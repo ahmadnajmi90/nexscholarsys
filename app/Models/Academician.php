@@ -32,6 +32,7 @@ class Academician extends Model
         'verified',
         'availability_for_collaboration',
         'availability_as_supervisor',
+        'background_image',
     ];
 
     protected $casts = [

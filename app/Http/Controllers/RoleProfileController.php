@@ -56,46 +56,84 @@ class RoleProfileController extends Controller
     }
 
     public function updateProfilePicture(Request $request): RedirectResponse
-{
-    try {
-        $user = Auth::user();
-        $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
-        $isAcademician = BouncerFacade::is($user)->an('academician');
+    {
+        try {
+            $user = Auth::user();
+            $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+            $isAcademician = BouncerFacade::is($user)->an('academician');
 
-        // Validate the request data
-        $request->validate([
-            'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+            // Validate the request data
+            $request->validate([
+                'profile_picture' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
 
-        if ($request->hasFile('profile_picture')) {
-            $file = $request->file('profile_picture');
-            $destinationPath = public_path('storage/profile_pictures');
+            if ($request->hasFile('profile_picture')) {
+                $file = $request->file('profile_picture');
+                $destinationPath = public_path('storage/profile_pictures');
 
-            // Ensure the directory exists
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
+                // Ensure the directory exists
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->move($destinationPath, $fileName);
+
+                // Update the profile picture path in the respective table
+                if ($isPostgraduate) {
+                    $user->postgraduate->profile_picture = 'profile_pictures/' . $fileName;
+                    $user->postgraduate->save();
+                } elseif ($isAcademician) {
+                    $user->academician->profile_picture = 'profile_pictures/' . $fileName;
+                    $user->academician->save();
+                }
             }
 
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $file->move($destinationPath, $fileName);
-
-            // Update the profile picture path in the respective table
-            if ($isPostgraduate) {
-                $user->postgraduate->profile_picture = 'profile_pictures/' . $fileName;
-                $user->postgraduate->save();
-            } elseif ($isAcademician) {
-                $user->academician->profile_picture = 'profile_pictures/' . $fileName;
-                $user->academician->save();
-            }
+            return redirect()->route('role.edit')->with('status', 'Image profile updated successfully!');
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating profile picture: ' . $e->getMessage()], 500);
         }
-
-        return redirect()->route('role.edit')->with('status', 'Image profile updated successfully!');
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Error updating profile picture: ' . $e->getMessage()], 500);
     }
-}
 
+    public function updateBackgroundImage(Request $request): RedirectResponse
+    {
+        try {
+            $user = Auth::user();
+            $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+            $isAcademician = BouncerFacade::is($user)->an('academician');
 
+            // Validate the request
+            $request->validate([
+                'background_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            if ($request->hasFile('background_image')) {
+                $file = $request->file('background_image');
+                $destinationPath = public_path('storage/background_images');
+
+                // Ensure the directory exists
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->move($destinationPath, $fileName);
+
+                // Update the background image path in the respective table
+                if ($isPostgraduate) {
+                    $user->postgraduate->background_image = 'background_images/' . $fileName;
+                    $user->postgraduate->save();
+                } elseif ($isAcademician) {
+                    $user->academician->background_image = 'background_images/' . $fileName;
+                    $user->academician->save();
+                }
+            }
+
+            return redirect()->route('role.edit')->with('status', 'Background image updated successfully!');
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error updating background image: ' . $e->getMessage()], 500);
+        }
+    }
 
     public function update(RoleProfileUpdateRequest $request): RedirectResponse
     {

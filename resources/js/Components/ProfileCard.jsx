@@ -182,7 +182,11 @@ const ProfileGridWithDualFilter = ({
                         {/* Banner */}
                         <div className="h-32">
                             <img
-                                src={`https://picsum.photos/seed/${profile.id}/500/150`}
+                                src={
+                                    profile.background_image !== null
+                                        ? `/storage/${profile.background_image}`
+                                        : '/storage/profile_background_images/default.jpg'
+                                }
                                 alt="Banner"
                                 className="object-cover w-full h-full"
                             />

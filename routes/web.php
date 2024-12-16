@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/role', [RoleProfileController::class, 'edit'])->name('role.edit');
     Route::post('/role', [RoleProfileController::class, 'update'])->name('role.update');
     Route::post('/role/updateProfilePicture', [RoleProfileController::class, 'updateProfilePicture'])->name('role.updateProfilePicture');
+    Route::post('/role/updateBackgroundImage', [RoleProfileController::class, 'updateBackgroundImage'])->name('role.updateBackgroundImage');
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
 });
 

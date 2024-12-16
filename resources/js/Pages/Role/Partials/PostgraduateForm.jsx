@@ -57,6 +57,7 @@ export default function PostgraduateForm({
             // supervisorAvailability: postgraduate?.supervisorAvailability || false,
             university: postgraduate?.university || '',
             // grantAvailability: postgraduate?.grantAvailability || false,
+            background_image: postgraduate?.background_image || '',
         });
 
     const submitImage = (e) => {
@@ -76,6 +77,8 @@ export default function PostgraduateForm({
             onSuccess: () => {
                 alert("Profile picture updated successfully.");
                 closeModal();
+                // Refresh the page after alert
+                window.location.reload();
             },
             onError: (errors) => {
                 console.error("Error updating profile picture:", errors);
@@ -83,6 +86,33 @@ export default function PostgraduateForm({
             },
         });
     };
+
+    const submitBackgroundImage = (e) => {
+        e.preventDefault();
+    
+        if (!data.background_image) {
+            alert("Please select a background image.");
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append("background_image", data.background_image);
+    
+        post(route("role.updateBackgroundImage"), {
+            data: formData,
+            headers: { "Content-Type": "multipart/form-data" },
+            onSuccess: () => {
+                alert("Background image updated successfully.");
+                setIsBackgroundModalOpen(false);
+                // Refresh the page after alert
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error("Error updating background image:", errors);
+                alert("Failed to update the background image. Please try again.");
+            },
+        });
+    };    
 
     const handleStatusChange = (e) => {
         const status = e.target.value;
@@ -94,7 +124,6 @@ export default function PostgraduateForm({
             faculty: status === "Registered" ? prevData.faculty : "", // Clear faculty if "Not registered yet"
         }));
     };
-
 
     const submit = (e) => {
         e.preventDefault();
@@ -134,6 +163,8 @@ export default function PostgraduateForm({
     const [isModalOpen, setIsModalOpen] = useState(false);
     const handleProfilePictureClick = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
+
+    const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
 
     const [selectedUniversity, setSelectedUniversity] = useState(data.university);
     const filteredFaculties = faculties.filter(
@@ -175,26 +206,34 @@ export default function PostgraduateForm({
 
     return (
         <div className="pb-8">
-
-
-            <div className="w-full h-66 bg-cover bg-center mt-4"
-                style={{
-                    backgroundImage: `url('https://picsum.photos/seed/${postgraduate?.id}/500/150')`,
-                }}>
+            <div className="w-full bg-white pb-12 shadow-md relative mb-4">
                 {/* Background Image */}
-                <div
-                ></div>
+                <div className="relative w-full h-48 overflow-hidden">
+                    <img
+                        src={`/storage/${data.background_image || "default-background.jpg"}`}
+                        alt="Background"
+                        className="w-full h-full object-cover"
+                    />
+                    {/* Edit Button for Background */}
+                    <button
+                        onClick={() => setIsBackgroundModalOpen(true)}
+                        className="absolute top-4 right-4 bg-blue-500 p-2 rounded-full shadow-lg text-white hover:bg-blue-600"
+                        aria-label="Edit Background Image"
+                    >
+                        ✏️
+                    </button>
+                </div>
 
-                {/* Profile Image and Info */}
-                <div className="flex flex-col items-center -mt-16 relative">
+                {/* Profile Image Container */}
+                <div className="relative flex flex-col items-center -mt-16 z-10">
                     {/* Profile Image */}
                     <div className="relative">
                         <img
                             src={`/storage/${data.profile_picture || "default-profile.jpg"}`}
                             alt="Profile"
-                            className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover"
+                            className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
                         />
-                        {/* Pencil Icon */}
+                        {/* Edit Button for Profile */}
                         <button
                             onClick={handleProfilePictureClick}
                             className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full shadow-lg text-white hover:bg-blue-600"
@@ -205,13 +244,65 @@ export default function PostgraduateForm({
                     </div>
 
                     {/* Profile Details */}
-                    <div className="text-center mt-8">
-                        <h1 className="text-2xl font-semibold text-gray-800 uppercase">{data.full_name}</h1>
-                        <p className="text-gray-500">{data.highest_degree}</p>
-                        <p className="text-gray-500">{data.current_position}</p>
+                    <div className="text-center mt-4">
+                        <h1 className="text-2xl font-semibold text-gray-800">{data.full_name}</h1>
+                        <p className="text-gray-500">
+                            {data.previous_degree?.includes("Master") ? "Master" : "Bachelor Degree"} in{" "}
+                            {data.field_of_research?.map((field) => {
+                                // Split the field_of_study ID into parts (field_of_research_id, research_area_id, niche_domain_id)
+                                const [fieldId, researchId, nicheId] = field.split("-");
+
+                                // Match the corresponding names from researchOptions
+                                const matchedOption = researchOptions.find(
+                                    (option) =>
+                                        option.field_of_research_id === parseInt(fieldId) &&
+                                        option.research_area_id === parseInt(researchId) &&
+                                        option.niche_domain_id === parseInt(nicheId)
+                                );
+
+                                // Return the formatted name or a fallback if no match is found
+                                return matchedOption
+                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                    : "Unknown Field";
+                            })?.join(", ") || "No Field of Study"}
+                        </p>
+                        <p className="text-gray-500">{data.current_position}</p>    
                     </div>
                 </div>
             </div>
+
+            {/* Background Image Modal */}
+            {isBackgroundModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Update Background Image</h2>
+                        <form onSubmit={submitBackgroundImage}>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                onChange={(e) => setData("background_image", e.target.files[0])}
+                            />
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mr-2"
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsBackgroundModalOpen(false)}
+                                    className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
 
             {/* Modal */}
             {isModalOpen && (
@@ -244,8 +335,6 @@ export default function PostgraduateForm({
                     </div>
                 </div>
             )}
-
-
 
             {/* Tabs Section */}
             <div className="bg-white border-b border-gray-200">
