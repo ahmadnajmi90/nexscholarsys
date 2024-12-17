@@ -20,7 +20,7 @@ class PostEvent extends Model
         'start_time',
         'end_time',
         'image',
-        'attachment',
+        'event_theme',
         'registration_url',
         'registration_deadline',
         'contact_email',

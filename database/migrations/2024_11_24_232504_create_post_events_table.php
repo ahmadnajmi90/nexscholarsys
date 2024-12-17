@@ -23,7 +23,7 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->string('image')->nullable();
-            $table->string('attachment')->nullable();
+            $table->string('event_theme')->nullable();
             $table->string('registration_url')->nullable();
             $table->date('registration_deadline')->nullable();
             $table->string('contact_email')->nullable();
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('event_status')->nullable();
             $table->timestamps();
         });
-        
+
     }
 
     /**

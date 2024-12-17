@@ -77,7 +77,7 @@ class PostEventController extends Controller
                     ]);
                 }
                 logger('Store method reached', $request->all());
-                
+
                 $validated = $request->validate([
                     'event_name' => 'required|string|max:255',
                     'description' => 'nullable|string',
@@ -88,7 +88,7 @@ class PostEventController extends Controller
                     'start_time' => 'required',
                     'end_time' => 'required',
                     'image' => 'nullable|image|max:2048',
-                    'attachment' => 'nullable|file|max:5120',
+                    'event_theme' => 'nullable|string|max:255',
                     'registration_url' => 'nullable|url|max:255',
                     'registration_deadline' => 'nullable|date',
                     'contact_email' => 'nullable|email|max:255',
@@ -100,58 +100,58 @@ class PostEventController extends Controller
 
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
-                    
+
                     // Define the destination path directly in the public directory
                     $destinationPath = public_path('storage/event_images');
-                    
+
                     // Ensure the directory exists
                     if (!file_exists($destinationPath)) {
                         mkdir($destinationPath, 0755, true);
                     }
-                    
+
                     // Store the uploaded file in the public/storage/event_images folder
                     $image = $request->file('image');
                     $imageName = time() . '_' . $image->getClientOriginalName();
                     $image->move($destinationPath, $imageName);
-                    
+
                     // Save the path relative to public/storage
                     $validated['image'] = 'event_images/' . $imageName;
                     logger('Image: Im here ', ['path' => $validated['image']]);
                 }
-                
+
                 // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('Attachment: Im here ');
-                    
-                    // Define the destination path directly in the public directory
-                    $destinationPath = public_path('storage/event_attachments');
-                    
-                    // Ensure the directory exists
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0755, true);
-                    }
-                    
-                    // Store the uploaded file in the public/storage/event_images folder
-                    $attachment = $request->file('attachment');
-                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
-                    $attachment->move($destinationPath, $attachmentName);
-                    
-                    // Save the path relative to public/storage
-                    $validated['attachment'] = 'event_attachments/' . $attachmentName;
-                    logger('Attachment: Im here ', ['path' => $validated['attachment']]);
-                }
-        
+                // if ($request->hasFile('attachment')) {
+                //     logger('Attachment: Im here ');
+
+                //     // Define the destination path directly in the public directory
+                //     $destinationPath = public_path('storage/event_attachments');
+
+                //     // Ensure the directory exists
+                //     if (!file_exists($destinationPath)) {
+                //         mkdir($destinationPath, 0755, true);
+                //     }
+
+                //     // Store the uploaded file in the public/storage/event_images folder
+                //     $attachment = $request->file('attachment');
+                //     $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                //     $attachment->move($destinationPath, $attachmentName);
+
+                //     // Save the path relative to public/storage
+                //     $validated['attachment'] = 'event_attachments/' . $attachmentName;
+                //     logger('Attachment: Im here ', ['path' => $validated['attachment']]);
+                // }
+
                 // Log validated data
                 logger('Validated Data:', $validated);
-        
+
                 // Save data
                 auth()->user()->postEvents()->create($validated);
-        
+
                 return redirect()->route('post-events.index')->with('success', 'Post event created successfully.');
             } catch (ValidationException $e) {
                 // Log validation errors
                 logger('Validation Errors:', $e->errors());
-        
+
                 // Return back with validation errors
                 return redirect()->back()->withErrors($e->errors())->withInput();
             }
@@ -203,6 +203,7 @@ class PostEventController extends Controller
                     'city' => 'nullable|string|max:255',
                     'country' => 'nullable|string|max:255',
                     'event_status' => 'nullable|string|in:draft,published',
+                    'event_theme' => 'nullable|string|max:255',
 
                     'image' => [
                         'nullable',
@@ -214,22 +215,22 @@ class PostEventController extends Controller
                             }
                         },
                     ],
-                    'attachment' => [
-                        'nullable',
-                        function ($attribute, $value, $fail) use ($request) {
-                            if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
-                                $fail('The ' . $attribute . ' field must be an existing file.');
-                            } elseif (!is_string($value) && !$request->hasFile($attribute)) {
-                                $fail('The ' . $attribute . ' field must be a file.');
-                            }
-                        },
-                    ],
+                    // 'attachment' => [
+                    //     'nullable',
+                    //     function ($attribute, $value, $fail) use ($request) {
+                    //         if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
+                    //             $fail('The ' . $attribute . ' field must be an existing file.');
+                    //         } elseif (!is_string($value) && !$request->hasFile($attribute)) {
+                    //             $fail('The ' . $attribute . ' field must be a file.');
+                    //         }
+                    //     },
+                    // ],
                 ]);
 
                 // Handle image upload
                 if ($request->hasFile('image')) {
                     logger('Image: Im here ');
-                    
+
                     // Delete the old image if it exists
                     if ($postEvent->image) {
                         $oldImagePath = public_path('storage/' . $postEvent->image);
@@ -237,59 +238,59 @@ class PostEventController extends Controller
                             unlink($oldImagePath); // Delete the old image
                         }
                     }
-                
+
                     // Define the destination path
                     $imageDestination = public_path('storage/event_images');
-                    
+
                     // Ensure the directory exists
                     if (!file_exists($imageDestination)) {
                         mkdir($imageDestination, 0755, true);
                     }
-                    
+
                     // Save the new image
                     $image = $request->file('image');
                     $imageName = time() . '_' . $image->getClientOriginalName();
                     $image->move($imageDestination, $imageName);
-                    
+
                     // Save the relative path
                     $validated['image'] = 'event_images/' . $imageName;
                 } else {
                     // Keep the existing path
                     $validated['image'] = $postEvent->image;
                 }
-                
+
                 // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('Attachment: Im here ');
-                
-                    // Delete the old attachment if it exists
-                    if ($postEvent->attachment) {
-                        $oldAttachmentPath = public_path('storage/' . $postEvent->attachment);
-                        if (file_exists($oldAttachmentPath)) {
-                            unlink($oldAttachmentPath); // Delete the old attachment
-                        }
-                    }
-                
-                    // Define the destination path
-                    $attachmentDestination = public_path('storage/event_attachments');
-                    
-                    // Ensure the directory exists
-                    if (!file_exists($attachmentDestination)) {
-                        mkdir($attachmentDestination, 0755, true);
-                    }
-                    
-                    // Save the new attachment
-                    $attachment = $request->file('attachment');
-                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
-                    $attachment->move($attachmentDestination, $attachmentName);
-                    
-                    // Save the relative path
-                    $validated['attachment'] = 'event_attachments/' . $attachmentName;
-                } else {
-                    // Keep the existing path
-                    $validated['attachment'] = $postEvent->attachment;
-                }
-                
+                // if ($request->hasFile('attachment')) {
+                //     logger('Attachment: Im here ');
+
+
+                //     if ($postEvent->attachment) {
+                //         $oldAttachmentPath = public_path('storage/' . $postEvent->attachment);
+                //         if (file_exists($oldAttachmentPath)) {
+                //             unlink($oldAttachmentPath);
+                //         }
+                //     }
+
+
+                //     $attachmentDestination = public_path('storage/event_attachments');
+
+
+                //     if (!file_exists($attachmentDestination)) {
+                //         mkdir($attachmentDestination, 0755, true);
+                //     }
+
+
+                //     $attachment = $request->file('attachment');
+                //     $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                //     $attachment->move($attachmentDestination, $attachmentName);
+
+
+                //     $validated['attachment'] = 'event_attachments/' . $attachmentName;
+                // } else {
+
+                //     $validated['attachment'] = $postEvent->attachment;
+                // }
+
 
                 // Handle tags
                 if ($request->has('target_audience') && is_array($request->target_audience)) {
@@ -303,7 +304,7 @@ class PostEventController extends Controller
             }catch (ValidationException $e) {
             // Log validation errors
             logger('Validation Errors:', $e->errors());
-    
+
             // Return back with validation errors
             return redirect()->back()->withErrors($e->errors())->withInput();
             }

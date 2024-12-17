@@ -17,7 +17,7 @@ export default function Edit({ postEvent, auth, isPostgraduate }) {
     start_time: postEvent.start_time || "",
     end_time: postEvent.end_time || "",
     image: postEvent.image || null,
-    attachment: postEvent.attachment || null,
+    event_theme: postEvent.event_theme || "",
     registration_url: postEvent.registration_url || "",
     registration_deadline: postEvent.registration_deadline || "",
     contact_email: postEvent.contact_email || "",
@@ -241,26 +241,20 @@ export default function Edit({ postEvent, auth, isPostgraduate }) {
             )}
         </div>
         <div>
-          <label className="block text-gray-700 font-medium">
-            Upload Attachment
-          </label>
-          <input
-            type="file"
-            onChange={(e) => setData("attachment", e.target.files[0])}
-            className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
-          />
-          {postEvent.attachment && (
-            <p className="text-gray-600 text-sm mt-2">
-              Current Attachment:{" "}
-              <a
-                href={`/storage/${postEvent.attachment}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 underline"
-              >
-                View Attachment
-              </a>
-            </p>
+          <label className="block text-gray-700 font-medium">Event Theme</label>
+          <select
+            id="event_theme"
+            name="event_theme"
+            value={data.event_theme}
+            onChange={(e) => setData("event_theme", e.target.value)}
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+          >
+            <option value="" disabled hidden>Select Event Theme</option>
+            <option value="Science and Technology">Science and Technology</option>
+            <option value="Social Science">Social Science</option>
+          </select>
+          {errors.event_theme && (
+            <p className="text-red-500 text-xs mt-1">{errors.event_theme}</p>
           )}
         </div>
       </div>

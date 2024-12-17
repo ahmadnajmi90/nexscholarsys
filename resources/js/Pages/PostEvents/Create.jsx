@@ -19,7 +19,7 @@ export default function Create() {
     start_time: "",
     end_time: "",
     image: null,
-    attachment: null,
+    event_theme: "",
     registration_url: "",
     registration_deadline: "",
     contact_email: "",
@@ -233,14 +233,21 @@ export default function Create() {
           />
         </div>
         <div>
-          <label className="block text-gray-700 font-medium">
-            Upload Attachment
-          </label>
-          <input
-            type="file"
-            onChange={(e) => setData("attachment", e.target.files[0])}
-            className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
-          />
+          <label className="block text-gray-700 font-medium">Event Theme</label>
+          <select
+            id="event_theme"
+            name="event_theme"
+            value={data.event_theme}
+            onChange={(e) => setData("event_theme", e.target.value)}
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+          >
+            <option value="" disabled hidden>Select Event Theme</option>
+            <option value="Science and Technology">Science and Technology</option>
+            <option value="Social Science">Social Science</option>
+          </select>
+          {errors.event_theme && (
+            <p className="text-red-500 text-xs mt-1">{errors.event_theme}</p>
+          )}
         </div>
       </div>
 
