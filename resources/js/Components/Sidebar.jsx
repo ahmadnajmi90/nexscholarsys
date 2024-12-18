@@ -132,7 +132,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                             </div>
                         )}
 
-                        <button
+                        {/* <button
                             onClick={() => toggleMenu('event')}
                             className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
                         >
@@ -145,11 +145,11 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                                 <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
                                 {!isPostgraduate && (
                                 <Link href={route('post-events.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Event
-                                </Link>)}
+                                </Link>)} */}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
-                            </div>
-                        )}
+                            {/* </div>
+                        )} */}
 
                     </div>
 

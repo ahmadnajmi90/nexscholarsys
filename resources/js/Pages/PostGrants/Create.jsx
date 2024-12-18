@@ -8,7 +8,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 export default function Create() {
-  const { auth, isPostgraduate, researchOptions, universities } = usePage().props;
+  const { auth, isPostgraduate } = usePage().props;
 
   const { data, setData, post, processing, errors } = useForm({
     title: "",
@@ -16,24 +16,15 @@ export default function Create() {
     start_date: "",
     end_date: "",
     application_deadline: "",
-    duration: "",
+    grant_type: "",
+    grant_theme: [],
+    cycle: "",
     sponsored_by: "",
-    category: "",
-    field_of_research: [],
-    supervisor_category: "",
-    supervisor_name: "",
-    university: "",
     email: "",
-    origin_country: "",
-    purpose: "",
-    student_nationality: "",
-    student_level: "",
-    appointment_type: "",
-    purpose_of_collaboration: "",
+    website: "",
+    country: "",
     image: null,
     attachment: null,
-    amount: "",
-    application_url: "",
     status: "published",
   });
 
@@ -173,7 +164,7 @@ export default function Create() {
         {/* Start and End Date */}
         <div className="grid grid-cols-2 gap-8">
           <div>
-            <label className="block text-gray-700 font-medium">Start Date</label>
+            <label className="block text-gray-700 font-medium">Start Date (Grant)</label>
             <input
               type="date"
               value={data.start_date}
@@ -184,7 +175,7 @@ export default function Create() {
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium">End Date</label>
+            <label className="block text-gray-700 font-medium">End Date (Grant)</label>
             <input
               type="date"
               value={data.end_date}
@@ -210,16 +201,105 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="mt-1 block text-gray-700 font-medium">Duration (in months)</label>
-            <input
-            type="number"
-            value={data.duration}
-            onChange={(e) => setData("duration", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter grant duration"
-          />
+            <label htmlFor="grant_type" className="block text-gray-700 font-medium">
+              Grant Type
+            </label>
+            <select
+              id="grant_type"
+              name="grant_type"
+              value={data.grant_type}
+              onChange={(e) => setData("grant_type", e.target.value)}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="" disabled hidden>
+                Select a Grant Type
+              </option>
+              <option value="Matching Grant">Matching Grant</option>
+              <option value="Seed Grant">Seed Grant</option>
+              <option value="Research Grant">Research Grant</option>
+              <option value="Travel Grant">Travel Grant</option>
+              <option value="Innovation Grant">Innovation Grant</option>
+              <option value="Collaboration Grant">Collaboration Grant</option>
+              <option value="Training Grant">Training Grant</option>
+              <option value="Capacity-Building Grant">Capacity-Building Grant</option>
+              <option value="Community Grant">Community Grant</option>
+              <option value="Development Grant">Development Grant</option>
+              <option value="Pilot Grant">Pilot Grant</option>
+              <option value="Commercialization Grant">Commercialization Grant</option>
+              <option value="Technology Grant">Technology Grant</option>
+              <option value="Sponsorship Grant">Sponsorship Grant</option>
+              <option value="Social Impact Grant">Social Impact Grant</option>
+              <option value="Emergency or Relief Grant">Emergency or Relief Grant</option>
+              <option value="International Grant">International Grant</option>
+              <option value="Equipment Grant">Equipment Grant</option>
+              <option value="Small Business Grant">Small Business Grant</option>
+            </select>
+            {errors.grant_type && (
+              <p className="text-red-500 text-xs mt-1">{errors.grant_type}</p>
+            )}
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+              <label className="block text-gray-700 font-medium">Grant Theme (Multiselect)</label>
+              <select
+                multiple
+                value={data.grant_theme}
+                onChange={(e) => {
+                  const selectedValues = Array.from(e.target.selectedOptions).map(option => option.value);
+                  setData("grant_theme", selectedValues);
+                }}
+                className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+              >
+                <option value="" disabled hidden> Select Grant Themes</option>
+                <option value="Artificial Intelligence and Machine Learning">Artificial Intelligence and Machine Learning</option>
+                <option value="Sustainable Development and Renewable Energy">Sustainable Development and Renewable Energy</option>
+                <option value="Healthcare and Biotechnology">Healthcare and Biotechnology</option>
+                <option value="Cybersecurity and Data Privacy">Cybersecurity and Data Privacy</option>
+                <option value="Smart Cities and IoT (Internet of Things)">Smart Cities and IoT (Internet of Things)</option>
+                <option value="Climate Change and Environmental Protection">Climate Change and Environmental Protection</option>
+                <option value="Education Technology and E-Learning">Education Technology and E-Learning</option>
+                <option value="Big Data Analytics and Data Science">Big Data Analytics and Data Science</option>
+                <option value="Agricultural Innovation and Food Security">Agricultural Innovation and Food Security</option>
+                <option value="Financial Technology (FinTech) and Blockchain">Financial Technology (FinTech) and Blockchain</option>
+                <option value="Robotics and Automation">Robotics and Automation</option>
+                <option value="E-Commerce and Digital Marketing">E-Commerce and Digital Marketing</option>
+                <option value="Human-Computer Interaction (HCI)">Human-Computer Interaction (HCI)</option>
+                <option value="Space Exploration and Satellite Technologies">Space Exploration and Satellite Technologies</option>
+                <option value="Virtual Reality (VR) and Augmented Reality (AR)">Virtual Reality (VR) and Augmented Reality (AR)</option>
+                <option value="Water Resource Management">Water Resource Management</option>
+                <option value="Social Innovation and Community Development">Social Innovation and Community Development</option>
+                <option value="Transportation and Autonomous Vehicles">Transportation and Autonomous Vehicles</option>
+                <option value="Supply Chain Optimization and Logistics">Supply Chain Optimization and Logistics</option>
+                <option value="Renewable Construction and Smart Infrastructure">Renewable Construction and Smart Infrastructure</option>
+              </select>
+            </div>
+
+          <div>
+            <label htmlFor="cycle" className="block text-gray-700 font-medium">
+              Cycle
+            </label>
+            <select
+              id="cycle"
+              name="cycle"
+              value={data.cycle}
+              onChange={(e) => setData("cycle", e.target.value)}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="" disabled hidden>
+                Select Cycle
+              </option>
+              <option value="No Cycle">No Cycle</option>
+              <option value="Cycle 1">Cycle 1</option>
+              <option value="Cycle 2">Cycle 2</option>
+              <option value="Cycle 3">Cycle 3</option>
+            </select>
+            {errors.cycle && (
+              <p className="text-red-500 text-xs mt-1">{errors.cycle}</p>
+            )}
+          </div>
+        </div>    
 
         {/* Sponsored By and Category */}
         <div className="grid grid-cols-2 gap-8">
@@ -234,147 +314,7 @@ export default function Create() {
             />
           </div>
           <div>
-            <label htmlFor="category" className="block text-gray-700 font-medium">
-              Category
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={data.category}
-              onChange={(e) => setData("category", e.target.value)}
-              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select a Category
-              </option>
-              <option value="Fundamental Research">Fundamental Research</option>
-              <option value="Applied Research">Applied Research</option>
-              <option value="Fundamental + Applied">Fundamental + Applied</option>
-              <option value="Knowledge Transfer Program (KTP)">
-                Knowledge Transfer Program (KTP)
-              </option>
-              <option value="CSR (Corporate Social Responsibility)">
-                CSR (Corporate Social Responsibility)
-              </option>
-            </select>
-            {errors.category && (
-              <p className="text-red-500 text-xs mt-1">{errors.category}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Field of Research and Grant Supervisor */}
-        <div className="grid grid-cols-2 gap-8">
-          {/* Research Expertise Dropdown */}
-  {/* Research Expertise Searchable Dropdown */}
-{(data.category === "Fundamental Research" ||
-  data.category === "Applied Research" ||
-  data.category === "Fundamental + Applied") && (
-    <div className="w-full">
-      <label htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
-        Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
-      </label>
-      <Select
-        id="field_of_research"
-        isMulti
-        options={researchOptions.map((option) => ({
-          value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
-          label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
-        }))}
-        className="mt-1"
-        classNamePrefix="select"
-        value={data.field_of_research?.map((selectedValue) => {
-          const matchedOption = researchOptions.find(
-            (option) =>
-              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
-              selectedValue
-          );
-          return {
-            value: selectedValue,
-            label: matchedOption
-              ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-              : selectedValue,
-          };
-        })}
-        onChange={(selectedOptions) => {
-          const selectedValues = selectedOptions.map((option) => option.value);
-          setData('field_of_research', selectedValues); // Update with selected values
-        }}
-        placeholder="Search and select fields of research..."
-      />
-    </div>
-)}
-
-
-          <div>
-            <label className="block text-gray-700 font-medium">Grant Supervisor / Project Learder</label>
-            <select
-              value={data.supervisor_category}
-              onChange={(e) => setData("supervisor_category", e.target.value)}
-              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="Own Name">Own Name</option>
-              <option value="On Behalf">On Behalf</option>
-            </select>
-          </div>
-        </div>
-
-        {data.supervisor_category === "On Behalf" && (
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <label className="mt-1 block text-gray-700 font-medium">Grant Supervisor / Project Leader Name</label>
-                <input
-                  type="text"
-                  value={data.supervisor_name}
-                  onChange={(e) => setData("supervisor_name", e.target.value)}
-                  className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="mt-1 block text-gray-700 font-medium">University</label>
-                <select
-                    id="university"
-                    className="mt-1 block w-full border rounded-md p-2"
-                    value={selectedUniversity || ''}
-                    onChange={(e) => {
-                        const universityId = e.target.value;
-                        setSelectedUniversity(universityId);
-                        setData('university', universityId);
-                    }}
-                >
-                    <option value="" hidden>Select your University</option>
-                    {universities.map((university) => (
-                        <option key={university.id} value={university.id}>
-                            {university.full_name}
-                        </option>
-                    ))}
-                </select>
-            </div>
-          </div>
-        )}
-
-
-
-        {/*Application Deadline*/}
-        {/*Duration - Can it being calculated from the startd date and end date*/}
-
-
-
-        {/* Field of Research apploed when fundamental, applied, fundamental + applied is applied */}
-        {/* need to add in table SV name and university, will pull from another table */}
-        {/* if on behalf,  need to fill in manually for SV name, university and faculty*/}
-        {/* Allow to select multiple purpose */}
-        {/* if purpose for student, show master or phd, student nationality, should have a section that dedicated for student.  */}
-        {/* if purpose for collaboration, put the purpose of collaboration, this is where researcher need to write the purpose */}
-        {/* Add level Master or PhD */}
-        {/* Student Nationality */}
-        {/* Add appointment for RA, GRA */}
-
-        {/* Email and Contact Number */}
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <label className="block text-gray-700 font-medium">Email</label>
+            <label className="block text-gray-700 font-medium">Contact Email</label>
             <input
               type="email"
               value={data.email}
@@ -402,86 +342,31 @@ export default function Create() {
                   </label>
               </div>
           </div>
-
-          <div>
-            <NationalityForm title={"Grant Origin Country"} value={data.origin_country} onChange={(value) => setData('origin_country', value)} />
-          </div>
         </div>
 
+        {/* Website and Country */}
         <div className="grid grid-cols-2 gap-8">
           <div>
-            <label className="block text-gray-700 font-medium">Grant Purpose</label>
-            <select
-              value={data.purpose}
-              onChange={(e) => setData("purpose", e.target.value)}
-              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>Select Grant Purpose</option>
-              <option value="find_pgstudent">Find Postgraduate Student</option>
-              <option value="find_academic_collaboration">Find Academic Collaboration</option>
-              <option value="find_industry_collaboration">Find Industry Collaboration - Matching Grant</option>
-            </select>
-          </div>
-        </div>
-
-        {data.purpose === "find_pgstudent" ? (
-          <>
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <NationalityForm title={"Student Nationality"} value={data.student_nationality} onChange={(value) => setData('student_nationality', value)} />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium">Level of Study</label>
-                <select
-                  value={data.student_level}
-                  onChange={(e) => setData("student_level", e.target.value)}
-                  className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-                >
-                  <option value= "" disabled hidden>Select Level of Study</option>
-                  <option value="Master">Master</option>
-                  <option value="Ph.D.">Ph.D.</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium">Appointment Type</label>
-              <select
-                value={data.appointment_type}
-                onChange={(e) => setData("appointment_type", e.target.value)}
-                className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-              >
-                <option value="" disabled hidden>Select Appointment Type</option>
-                <option value="Research Assistant (RA)">Research Assistant (RA)</option>
-                <option value="Graduate Assistant (GA)">Graduate Assistant (GA)</option>
-                <option value="Teaching Assistant (TA)">Teaching Assistant (TA)</option>
-                <option value="Research Fellow (RF)">Research Fellow (RF)</option>
-                <option value="Project Assistant (PA)">Project Assistant (PA)</option>
-                <option value="Technical Assistant (TA)">Technical Assistant (TA)</option>
-                <option value="Graduate Research Assistant (GRA)">Graduate Research Assistant (GRA)</option>
-                <option value="Scholarship Recipient">Scholarship Recipient</option>
-                <option value="Intern">Intern</option>
-              </select>
-            </div>
-            </>
-          ):
-          (
-            <div>
               <label className="block text-gray-700 font-medium">
-                Purpose of Collaboration
+                  Website / Link
               </label>
-              <textarea
-                value={data.purpose_of_collaboration}
-                onChange={(e) => setData("purpose_of_collaboration", e.target.value || "")}
-                className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-                placeholder="Enter Purpose of Collaboration"
-              ></textarea>
-              {errors.purpose_of_collaboration && (
-                <p className="text-red-500 text-xs mt-1">{errors.purpose_of_collaboration}</p>
+              <input
+                  type="url"
+                  value={data.website}
+                  onChange={(e) => setData("website", e.target.value)}
+                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
+                  placeholder="Enter Website / Link"
+              />
+              {errors.website && (
+                  <p className="text-red-500 text-xs mt-1">{errors.website}</p>
               )}
-            </div>
-          )}
+          </div>
+
+          <div>
+            <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+          </div>
+
+        </div>
 
         {/* Image and Attachment Upload */}
         <div className="grid grid-cols-2 gap-8">
@@ -505,47 +390,6 @@ export default function Create() {
             />
           </div>
         </div>
-
-         {/*Monthly allowance*/}
-         {/*Extra info on monthly allowance?*/}
-
-
-        {/* Budget need to hide for postgraduate student, and need to change the name */}
-        <div className="grid grid-cols-2 gap-8">
-          {data.purpose !== "find_pgstudent" && (
-            <div>
-              <label className="block text-gray-700 font-medium">Approved Grant Amount</label>
-              <input
-                type="number"
-                value={data.amount}
-                onChange={(e) => setData("amount", e.target.value)}
-                className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                placeholder="Enter amount (e.g., 5000.00)"
-              />
-            </div>
-          )}
-
-          {/* Application URL */}
-          <div>
-              <label className="block text-gray-700 font-medium">
-                  Application URL
-              </label>
-              <input
-                  type="url"
-                  value={data.application_url}
-                  onChange={(e) => setData("application_url", e.target.value)}
-                  className="w-full rounded-lg border-gray-200 p-4 text-sm"
-                  placeholder="Enter application URL"
-              />
-              {errors.application_url && (
-                  <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>
-              )}
-          </div>
-        </div>
-
-
-
-
 
           {/* <div className="grid grid-cols-2 gap-8"> */}
   {/* Tags */}

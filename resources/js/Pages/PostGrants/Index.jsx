@@ -55,8 +55,8 @@ const Index = () => {
                     <thead>
                         <tr>
                             <th className="py-2 px-4 border-b">Title</th>
-                            <th className="py-2 px-4 border-b">Purpose</th>
-                            <th className="py-2 px-4 border-b">Category</th>
+                            <th className="py-2 px-4 border-b">Grant Type</th>
+                            <th className="py-2 px-4 border-b">Grant Theme</th>
                             <th className="py-2 px-4 border-b">Sponsored By</th>
                             <th className="py-2 px-4 border-b">Start Date</th>
                             <th className="py-2 px-4 border-b">End Date</th>
@@ -68,12 +68,10 @@ const Index = () => {
                         {postGrants.data.map(grant => (
                             <tr key={grant.id} className="border-b">
                                 <td className="py-2 px-4 font-semibold text-center">{grant.title}</td>
+                                <td className="py-2 px-4 text-center">{grant.grant_type}</td>
                                 <td className="py-2 px-4 text-center">
-                                    {grant.purpose === 'find_industry_collaboration' && 'Find Industry Collaboration - Matching Grant'}
-                                    {grant.purpose === 'find_pgstudent' && 'Find Postgraduate Student'}
-                                    {grant.purpose === 'find_academic_collaboration' && 'Find Academic Collaboration'}
+                                    {Array.isArray(grant.grant_theme) ? grant.grant_theme.join(", ") : "No Grant Theme Specified"}
                                 </td>
-                                <td className="py-2 px-4 text-center">{grant.category}</td>
                                 <td className="py-2 px-4 text-center">{grant.sponsored_by}</td>
                                 <td className="py-2 px-4 text-center">{grant.start_date}</td>
                                 <td className="py-2 px-4 text-center">{grant.end_date}</td>

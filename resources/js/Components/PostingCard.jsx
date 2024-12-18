@@ -215,8 +215,18 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                             </div>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Category:</span>{" "}
+                        <span className="font-semibold">Project Type:</span>{" "}
                         {selectedItem.project_type || "Not provided"}
+                    </p>
+
+                    <p className="text-gray-600">
+                        <span className="font-semibold">Project Theme:</span>{" "}
+                        {selectedItem.project_theme || "Not provided"}
+                    </p>
+
+                    <p className="text-gray-600">
+                        <span className="font-semibold">Purpose:</span>{" "}
+                        {Array.isArray(selectedItem.purpose) ? selectedItem.purpose.join(", ") : "No Purpose Specified"}
                     </p>
 
                     <p className="text-gray-600">
@@ -224,28 +234,14 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                         {selectedItem.start_date ? `${selectedItem.start_date} - ${selectedItem.end_date}` : "Not provided"}
                     </p>
 
-
                     <p className="text-gray-600">
-                        <span className="font-semibold">Purpose:</span>{" "}
-                        {selectedItem.purpose === "find_accollaboration" && "Find Academician Collaboration"}
-                        {selectedItem.purpose === "find_incollaboration" && "Find Industry Collaboration"}
-                        {selectedItem.purpose === "find_sponsorship" && "Find Sponsorship"}
-                        {selectedItem.purpose === "showcase" && "Showcase"}
+                        <span className="font-semibold">Application Deadline:</span>{" "}
+                        {selectedItem.application_deadline || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Contact Email:</span>{" "}
                         {selectedItem.email || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Location:</span>{" "}
-                        {selectedItem.location || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Budget:</span>{" "}
-                        {selectedItem.budget || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
@@ -358,15 +354,18 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                             </div>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Category:</span>{" "}
-                        {selectedItem.category || "Not provided"}
+                        <span className="font-semibold">Grant Type:</span>{" "}
+                        {selectedItem.grant_type || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Purpose:</span>{" "}
-                        {selectedItem.purpose === "find_pgstudent" && "Find Postgraduate Student"}
-                        {selectedItem.purpose === "find_academic_collaboration" && "Find Academician Collaboration"}
-                        {selectedItem.purpose === "find_industry_collaboration" && "Find Industry Collaboration - Matching Grant"}
+                        <span className="font-semibold">Grant Theme:</span>{" "}
+                        {Array.isArray(selectedItem.grant_theme) ? selectedItem.grant_theme.join(", ") : "No Grant Theme Specified"}
+                    </p>
+
+                    <p className="text-gray-600">
+                        <span className="font-semibold">Cycle:</span>{" "}
+                        {selectedItem.cycle || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
@@ -375,23 +374,23 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                     </p>
 
                     <p className="text-gray-600">
+                        <span className="font-semibold">Application Deadline:</span>{" "}
+                        {selectedItem.application_deadline || "Not provided"}
+                    </p>
+
+                    <p className="text-gray-600">
                         <span className="font-semibold">Sponsored by:</span>{" "}
                         {selectedItem.sponsored_by || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Application Link:</span>{" "}
-                        {selectedItem.application_url || "Not provided"}
+                        <span className="font-semibold">Website / Link:</span>{" "}
+                        {selectedItem.website || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">
                         <span className="font-semibold">Contact Email:</span>{" "}
                         {selectedItem.email || "Not provided"}
-                    </p>
-
-                    <p className="text-gray-600">
-                        <span className="font-semibold">Amount:</span>{" "}
-                        {selectedItem.amount || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">

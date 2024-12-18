@@ -16,29 +16,20 @@ class PostGrant extends Model
         'start_date',
         'end_date',
         'application_deadline',
-        'duration',
+        'grant_type',
+        'grant_theme',
+        'cycle',
         'sponsored_by',
-        'category',
-        'field_of_research',
-        'supervisor_category',
-        'supervisor_name',
-        'university',
         'email',
-        'origin_country',
-        'purpose',
-        'student_nationality',
-        'student_level',
-        'appointment_type',
-        'purpose_of_collaboration',
+        'website',
+        'country',
         'image',
         'attachment',
-        'amount',
-        'application_url',
-        'status'
+        'status',
     ];
 
     protected $casts = [
-        'field_of_research' => 'array', // Cast field_of_study as an array
+        'grant_theme' => 'array', // Cast field_of_study as an array
     ];
 
 

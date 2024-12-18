@@ -5,6 +5,7 @@ import MainLayout from '../../Layouts/MainLayout';
 const Index = () => {
     const { postProjects, isPostgraduate, search  } = usePage().props;
     const [searchTerm, setSearchTerm] = useState(search || ''); // Store the search term locally
+    console.log(postProjects);
 
     let debounceTimeout;
 
@@ -35,7 +36,7 @@ const Index = () => {
                     Add New Project
                 </Link>
             </div>
-
+            
             {/* Search bar */}
             <div className="mb-4">
                 <form id="search-form" method="GET" action={route('post-projects.index')}>
@@ -55,28 +56,27 @@ const Index = () => {
                     <thead>
                         <tr>
                             <th className="py-2 px-4 border-b">Title</th>
-                            <th className="py-2 px-4 border-b">Project Type</th>
                             <th className="py-2 px-4 border-b">Purpose</th>
-                            <th className="py-2 px-4 border-b">Location</th>
+                            <th className="py-2 px-4 border-b">Category</th>
+                            <th className="py-2 px-4 border-b">Sponsored By</th>
                             <th className="py-2 px-4 border-b">Start Date</th>
                             <th className="py-2 px-4 border-b">End Date</th>
+                            <th className="py-2 px-4 border-b">Status</th>
                             <th className="py-2 px-4 border-b">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {postProjects?.data.map(project => (
+                        {postProjects.data.map(project => (
                             <tr key={project.id} className="border-b">
                                 <td className="py-2 px-4 font-semibold text-center">{project.title}</td>
-                                <td className="py-2 px-4 text-center">{project.project_type}</td>
                                 <td className="py-2 px-4 text-center">
-                                    {project.purpose === "find_accollaboration" && "Find Academician Collaboration"}
-                                    {project.purpose === "find_incollaboration" && "Find Industry Collaboration"}
-                                    {project.purpose === "find_sponsorship" && "Find Sponsorship"}
-                                    {project.purpose === "showcase" && "Showcase"}
+                                    {Array.isArray(project.purpose) ? project.purpose.join(", ") : "No Purpose Specified"}
                                 </td>
-                                <td className="py-2 px-4 text-center">{project.location}</td>
+                                <td className="py-2 px-4 text-center">{project.category}</td>
+                                <td className="py-2 px-4 text-center">{project.sponsored_by}</td>
                                 <td className="py-2 px-4 text-center">{project.start_date}</td>
                                 <td className="py-2 px-4 text-center">{project.end_date}</td>
+                                <td className="py-2 px-4 text-center">{project.project_status}</td>
                                 <td className="py-2 px-4 text-center">
                                     <Link
                                         href={route('post-projects.edit', project.id)}
