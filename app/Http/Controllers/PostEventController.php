@@ -26,7 +26,8 @@ class PostEventController extends Controller
                 ->where('author_id', Auth::user()->unique_id) // Ensure only user's posts
                 ->when($search, function ($query, $search) {
                     $query->where('event_name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->where('author_id', Auth::user()->unique_id);
                 })
                 ->paginate(10); // Paginate results with 10 items per page
 

@@ -198,7 +198,7 @@ const nationalities  = [
 ];
 
 
-export default function NationalityForm({ value, onChange, title }) {
+export default function NationalityForm({ value, onChange, title, isNotSpecify }) {
     const [search, setSearch] = useState("");
 
     const filteredNationalities = nationalities.filter((nat) =>
@@ -221,6 +221,12 @@ export default function NationalityForm({ value, onChange, title }) {
                 <option value="" hidden>
                     Select {title}
                 </option>
+                {isNotSpecify && (
+                    <>
+                    <option value="Not Specified">Not Specified</option>
+                    <option value="All Country">All Country</option>
+                    </>
+                )}
                 {filteredNationalities.map((nat) => (
                     <option key={nat} value={nat}>
                         {nat}

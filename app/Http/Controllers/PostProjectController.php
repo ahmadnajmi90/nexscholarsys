@@ -95,7 +95,6 @@ class PostProjectController extends Controller
                 $validated = $request->validate([
                     'title' => 'required|string|max:255',
                     'description' => 'required|string',
-                    'project_type' => 'required|string|max:255',
                     'project_theme' => 'required|string|max:255',
                     'purpose' => 'nullable|max:255',
                     'start_date' => 'nullable|date',
@@ -242,7 +241,6 @@ class PostProjectController extends Controller
                 $validated = $request->validate([
                     'title' => 'required|string|max:255',
                     'description' => 'required|string',
-                    'project_type' => 'required|string|max:255',
                     'project_theme' => 'required|string|max:255',
                     'purpose' => 'required|max:255',
                     'start_date' => 'nullable|date',

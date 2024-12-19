@@ -31,6 +31,16 @@ export default function Create() {
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
 
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+  const handleCheckboxChange = (value) => {
+    if (data.grant_theme.includes(value)) {
+      // Remove the value if already selected
+      setData("grant_theme", data.grant_theme.filter((theme) => theme !== value));
+    } else {
+      // Add the value if not already selected
+      setData("grant_theme", [...data.grant_theme, value]);
+    }
+  };
+
   const [customTag, setCustomTag] = useState(""); // State to manage custom tag input
 
   const handleAddCustomTag = () => {
@@ -242,39 +252,44 @@ export default function Create() {
 
         <div className="grid grid-cols-2 gap-8">
           <div>
-              <label className="block text-gray-700 font-medium">Grant Theme (Multiselect)</label>
-              <select
-                multiple
-                value={data.grant_theme}
-                onChange={(e) => {
-                  const selectedValues = Array.from(e.target.selectedOptions).map(option => option.value);
-                  setData("grant_theme", selectedValues);
-                }}
-                className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-              >
-                <option value="" disabled hidden> Select Grant Themes</option>
-                <option value="Artificial Intelligence and Machine Learning">Artificial Intelligence and Machine Learning</option>
-                <option value="Sustainable Development and Renewable Energy">Sustainable Development and Renewable Energy</option>
-                <option value="Healthcare and Biotechnology">Healthcare and Biotechnology</option>
-                <option value="Cybersecurity and Data Privacy">Cybersecurity and Data Privacy</option>
-                <option value="Smart Cities and IoT (Internet of Things)">Smart Cities and IoT (Internet of Things)</option>
-                <option value="Climate Change and Environmental Protection">Climate Change and Environmental Protection</option>
-                <option value="Education Technology and E-Learning">Education Technology and E-Learning</option>
-                <option value="Big Data Analytics and Data Science">Big Data Analytics and Data Science</option>
-                <option value="Agricultural Innovation and Food Security">Agricultural Innovation and Food Security</option>
-                <option value="Financial Technology (FinTech) and Blockchain">Financial Technology (FinTech) and Blockchain</option>
-                <option value="Robotics and Automation">Robotics and Automation</option>
-                <option value="E-Commerce and Digital Marketing">E-Commerce and Digital Marketing</option>
-                <option value="Human-Computer Interaction (HCI)">Human-Computer Interaction (HCI)</option>
-                <option value="Space Exploration and Satellite Technologies">Space Exploration and Satellite Technologies</option>
-                <option value="Virtual Reality (VR) and Augmented Reality (AR)">Virtual Reality (VR) and Augmented Reality (AR)</option>
-                <option value="Water Resource Management">Water Resource Management</option>
-                <option value="Social Innovation and Community Development">Social Innovation and Community Development</option>
-                <option value="Transportation and Autonomous Vehicles">Transportation and Autonomous Vehicles</option>
-                <option value="Supply Chain Optimization and Logistics">Supply Chain Optimization and Logistics</option>
-                <option value="Renewable Construction and Smart Infrastructure">Renewable Construction and Smart Infrastructure</option>
-              </select>
+            <label className="block text-gray-700 font-medium">Grant Theme (Multiselect)</label>
+            <div
+              className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
+                dropdownOpen ? "shadow-lg" : ""
+              }`}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
+              {data.grant_theme && data.grant_theme.length > 0
+                ? data.grant_theme.join(", ")
+                : "Select Grant Themes"}
             </div>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow-lg">
+                <div className="p-2 space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      value="Science & Technology"
+                      checked={data.grant_theme.includes("Science & Technology")}
+                      onChange={(e) => handleCheckboxChange(e.target.value)}
+                      className="mr-2"
+                    />
+                    Science & Technology
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      value="Social Science"
+                      checked={data.grant_theme.includes("Social Science")}
+                      onChange={(e) => handleCheckboxChange(e.target.value)}
+                      className="mr-2"
+                    />
+                    Social Science
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div>
             <label htmlFor="cycle" className="block text-gray-700 font-medium">
@@ -363,7 +378,7 @@ export default function Create() {
           </div>
 
           <div>
-            <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+            <NationalityForm title={"Country"} value={data.country} isNotSpecify={true} onChange={(value) => setData('country', value)} />
           </div>
 
         </div>

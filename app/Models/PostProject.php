@@ -15,7 +15,6 @@ class PostProject extends Model
         'author_id',
         'title',
         'description',
-        'project_type',
         'project_theme',
         'purpose',
         'start_date',

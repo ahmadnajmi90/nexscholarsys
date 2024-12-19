@@ -39,6 +39,21 @@ export default function Edit({ postProject, auth, isPostgraduate, researchOption
 
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const handleCheckboxChange = (value) => {
+      if (value === "For Showcase") {
+          if (!data.purpose.includes("For Showcase")) {
+              setData("purpose", ["For Showcase"]);
+          } else {
+              setData("purpose", []);
+          }
+      } else {
+          const updatedValues = data.purpose.includes(value)
+              ? data.purpose.filter((item) => item !== value)
+              : [...data.purpose.filter((item) => item !== "For Showcase"), value];
+          setData("purpose", updatedValues);
+      }
+  };
+
   const [customTag, setCustomTag] = useState("");
 
   const handleAddCustomTag = () => {
@@ -176,36 +191,98 @@ return (
   </div>
 
   <div className="grid grid-cols-2 gap-8">
-      <div>
-        <label className="block text-gray-700 font-medium">
-          Project Type
-        </label>
-        <select
-          id="project_type"
-          name="project_type"
-          value={data.project_type}
-          onChange={(e) => setData("project_type", e.target.value)}
-          className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-        >
-          <option value="" disabled hidden>
-            Select a Project Type
-          </option>
-          <option value="Fundamental Research">Fundamental Research</option>
-          <option value="Applied Research">Applied Research</option>
-          <option value="Fundamental + Applied">
-            Fundamental + Applied
-          </option>
-          {/* <option value="Knowledge Transfer Program (KTP)">
-            Knowledge Transfer Program (KTP)
-          </option>
-          <option value="CSR (Corporate Social Responsibility)">
-            CSR (Corporate Social Responsibility)
-          </option> */}
-        </select>
-        {errors.project_type && (
-          <p className="text-red-500 text-xs mt-1">{errors.project_type}</p>
-        )}
+    <div>
+      <label className="block text-gray-700 font-medium">Purpose (Multiselect)</label>
+      <div
+        className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
+          dropdownOpen ? "shadow-lg" : ""
+        }`}
+        onClick={() => setDropdownOpen(!dropdownOpen)}
+      >
+        {data.purpose && data.purpose.length > 0
+          ? data.purpose.join(", ")
+          : "Select Purposes"}
       </div>
+      {dropdownOpen && (
+        <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow-lg">
+          <div className="p-2 space-y-2">
+            <label
+              className={`flex items-center ${
+                data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <input
+                type="checkbox"
+                value="Seek for Postgraduate"
+                checked={data.purpose.includes("Seek for Postgraduate")}
+                onChange={(e) => handleCheckboxChange(e.target.value)}
+                disabled={data.purpose.includes("For Showcase")}
+                className="mr-2"
+              />
+              Seek for Postgraduate
+            </label>
+            <label
+              className={`flex items-center ${
+                data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <input
+                type="checkbox"
+                value="Seek for Academician Collaboration"
+                checked={data.purpose.includes("Seek for Academician Collaboration")}
+                onChange={(e) => handleCheckboxChange(e.target.value)}
+                disabled={data.purpose.includes("For Showcase")}
+                className="mr-2"
+              />
+              Seek for Academician Collaboration
+            </label>
+            <label
+              className={`flex items-center ${
+                data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <input
+                type="checkbox"
+                value="Seek for Industrial Collaboration"
+                checked={data.purpose.includes("Seek for Industrial Collaboration")}
+                onChange={(e) => handleCheckboxChange(e.target.value)}
+                disabled={data.purpose.includes("For Showcase")}
+                className="mr-2"
+              />
+              Seek for Industrial Collaboration
+            </label>
+            <label
+              className={`flex items-center ${
+                data.purpose.some(
+                  (item) =>
+                    item === "Seek for Postgraduate" ||
+                    item === "Seek for Academician Collaboration" ||
+                    item === "Seek for Industrial Collaboration"
+                )
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            >
+              <input
+                type="checkbox"
+                value="For Showcase"
+                checked={data.purpose.includes("For Showcase")}
+                onChange={(e) => handleCheckboxChange(e.target.value)}
+                disabled={data.purpose.some(
+                  (item) =>
+                    item === "Seek for Postgraduate" ||
+                    item === "Seek for Academician Collaboration" ||
+                    item === "Seek for Industrial Collaboration"
+                )}
+                className="mr-2"
+              />
+              For Showcase
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+
 
       <div>
         <label className="block text-gray-700 font-medium">Project Theme</label>
@@ -215,50 +292,12 @@ return (
           className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
         >
           <option value="" disabled hidden> Select a Project Theme</option>
-          <option value="Artificial Intelligence and Machine Learning">Artificial Intelligence and Machine Learning</option>
-          <option value="Sustainable Development and Renewable Energy">Sustainable Development and Renewable Energy</option>
-          <option value="Healthcare and Biotechnology">Healthcare and Biotechnology</option>
-          <option value="Cybersecurity and Data Privacy">Cybersecurity and Data Privacy</option>
-          <option value="Smart Cities and IoT (Internet of Things)">Smart Cities and IoT (Internet of Things)</option>
-          <option value="Climate Change and Environmental Protection">Climate Change and Environmental Protection</option>
-          <option value="Education Technology and E-Learning">Education Technology and E-Learning</option>
-          <option value="Big Data Analytics and Data Science">Big Data Analytics and Data Science</option>
-          <option value="Agricultural Innovation and Food Security">Agricultural Innovation and Food Security</option>
-          <option value="Financial Technology (FinTech) and Blockchain">Financial Technology (FinTech) and Blockchain</option>
-          <option value="Robotics and Automation">Robotics and Automation</option>
-          <option value="E-Commerce and Digital Marketing">E-Commerce and Digital Marketing</option>
-          <option value="Human-Computer Interaction (HCI)">Human-Computer Interaction (HCI)</option>
-          <option value="Space Exploration and Satellite Technologies">Space Exploration and Satellite Technologies</option>
-          <option value="Virtual Reality (VR) and Augmented Reality (AR)">Virtual Reality (VR) and Augmented Reality (AR)</option>
-          <option value="Water Resource Management">Water Resource Management</option>
-          <option value="Social Innovation and Community Development">Social Innovation and Community Development</option>
-          <option value="Transportation and Autonomous Vehicles">Transportation and Autonomous Vehicles</option>
-          <option value="Supply Chain Optimization and Logistics">Supply Chain Optimization and Logistics</option>
-          <option value="Renewable Construction and Smart Infrastructure">Renewable Construction and Smart Infrastructure</option>
+          <option value="Science & Technology">Science & Technology</option>
+          <option value="Social Science">Social Science</option>
         </select>
       </div>
     </div>
 
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-            <label className="block text-gray-700 font-medium">Purpose</label>
-            <select
-              multiple
-              value={data.purpose}
-              onChange={(e) => {
-                const selectedValues = Array.from(e.target.selectedOptions).map(option => option.value);
-                setData("purpose", selectedValues);
-              }}
-              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden> Select a Purpose</option>
-              <option value="Seek for Postgraduate">Seek for Postgraduate</option>
-              <option value="Seek for Academician Collaboration">Seek for Academician Collaboration</option>
-              <option value="Seek for Industrial Collaboration">Seek for Industrial Collaboration</option>
-              <option value="For Showcase">For Showcase</option>
-            </select>
-          </div>
-      </div>
 
       {!data.purpose.includes("For Showcase") && (
         <>
@@ -344,12 +383,12 @@ return (
             <option value="Fundamental Research">Fundamental Research</option>
             <option value="Applied Research">Applied Research</option>
             <option value="Fundamental + Applied">Fundamental + Applied</option>
-            {/* <option value="Knowledge Transfer Program (KTP)">
+            <option value="Knowledge Transfer Program (KTP)">
               Knowledge Transfer Program (KTP)
             </option>
             <option value="CSR (Corporate Social Responsibility)">
               CSR (Corporate Social Responsibility)
-            </option> */}
+            </option>
           </select>
           {errors.category && (
             <p className="text-red-500 text-xs mt-1">{errors.category}</p>
@@ -429,7 +468,7 @@ data.category === "Fundamental + Applied") && (
               <label className="mt-1 block text-gray-700 font-medium">University</label>
               <select
                   id="university"
-                  className="mt-1 block w-full border rounded-md p-2"
+                  className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
                   value={selectedUniversity || ''}
                   onChange={(e) => {
                       const universityId = e.target.value;
@@ -502,11 +541,11 @@ data.category === "Fundamental + Applied") && (
         </div>
       </div>
 
-      {data.purpose === "Seek for Postgraduate" ? (
+      {data.purpose.includes("Seek for Postgraduate") && (
         <>
           <div className="grid grid-cols-2 gap-8">
             <div>
-              <NationalityForm title={"Student Nationality"} value={data.student_nationality} onChange={(value) => setData('student_nationality', value)} />
+              <NationalityForm title={"Student Nationality"} value={data.student_nationality} isNotSpecify={true} onChange={(value) => setData('student_nationality', value)} />
             </div>
 
             <div>
@@ -543,23 +582,23 @@ data.category === "Fundamental + Applied") && (
             </select>
           </div>
           </>
-        ):
-        (
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Purpose of Collaboration
-            </label>
-            <textarea
-              value={data.purpose_of_collaboration}
-              onChange={(e) => setData("purpose_of_collaboration", e.target.value || "")}
-              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-              placeholder="Enter Purpose of Collaboration"
-            ></textarea>
-            {errors.purpose_of_collaboration && (
-              <p className="text-red-500 text-xs mt-1">{errors.purpose_of_collaboration}</p>
-            )}
-          </div>
         )}
+      {(data.purpose.includes("Seek for Academician Collaboration") && data.purpose.includes("Seek for Industrial Collaboration")) && (
+        <div>
+          <label className="block text-gray-700 font-medium">
+            Purpose of Collaboration
+          </label>
+          <textarea
+            value={data.purpose_of_collaboration}
+            onChange={(e) => setData("purpose_of_collaboration", e.target.value || "")}
+            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            placeholder="Enter Purpose of Collaboration"
+          ></textarea>
+          {errors.purpose_of_collaboration && (
+            <p className="text-red-500 text-xs mt-1">{errors.purpose_of_collaboration}</p>
+          )}
+        </div>
+      )}
 
       {/* Image and Attachment Upload */}
       <div className="grid grid-cols-2 gap-8">
