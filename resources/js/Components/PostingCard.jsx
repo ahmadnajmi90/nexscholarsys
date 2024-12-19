@@ -37,11 +37,11 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
     ...new Set(
       data.map((item) =>
         isProject
-          ? item.project_type
+          ? item.category
           : isEvent
           ? item.event_type
           : isGrant
-          ? item.category
+          ? item.grant_type
           : null
       )
     ),
@@ -52,11 +52,11 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
     filter === ""
       ? true
       : isProject
-      ? item.project_type === filter
+      ? item.category === filter
       : isEvent
       ? item.event_type === filter
       : isGrant
-      ? item.category === filter
+      ? item.grant_type === filter
       : true
   );
 
@@ -73,103 +73,124 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
   };
 
   return (
-    <div className="container mx-auto px-4">
-       {/* Filter Section */}
-       <div className="mb-6 flex justify-center">
-        <select
-          className="p-2 border border-gray-300 rounded w-full sm:w-1/6"
-          value={filter}
-          onChange={(e) => {
-            setFilter(e.target.value);
-            setCurrentPage(1); // Reset to page 1 when filter changes
-          }}
-        >
-          <option value="">
-            {isProject ? "All Project Types" : isEvent ? "All Event Types" : "All Categories"}
-          </option>
-          {uniqueFilterOptions.map((option, index) => (
-            <option key={index} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {displayedDatas.map((item, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8"
-          >
-            {/* Image Section */}
-            <img
-              src={item.image !== null ? `/storage/${item.image}` : "/storage/default.jpg"}
-              alt={item[title]}
-              className="w-full h-48 object-cover"
-            />
-
-            {/* Content Section */}
-            <div className="p-8">
-            <h2
-                className="text-xl font-semibold text-gray-800 text-center truncate"
-                style={{ maxWidth: "100%" }} // Optional to ensure it respects the card's width
-                title={item[title]} // Tooltip to display full text on hover
-            >
-                {item[title]}
-            </h2>
-            <p
-                className="text-gray-600 mt-4 text-center"
-                style={{
-                    maxWidth: "100%",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2, // Number of lines before truncating
-                    WebkitBoxOrient: "vertical",
-                }}
-                dangerouslySetInnerHTML={{
-                    __html: item.description || "No description available.",
-                }}
-                ></p>
-
-
-
-
-            </div>
-
-            {/* Button Section */}
-            <button
-              onClick={() => {
-                handleQuickInfoClick(item);
-                trackClick(
-                  isProject ? "project" : isEvent ? "event" : "grant",
-                  item.id,
-                  "view_details"
-                );
+    <div className="min-h-screen flex">
+       {/* Sidebar for Filters */}
+      <div className="w-1/4 p-4 bg-gray-100 border-r">
+        <h2 className="text-lg font-semibold mb-4">Filters</h2>
+        <div className="space-y-4">
+          {/* Filter Section */}
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              {isProject
+                ? "Category"
+                : isEvent
+                ? "Event Type"
+                : isGrant
+                ? "Grant Type"
+                : "Filter"}
+            </label>
+            <select
+              className="p-2 border border-gray-300 rounded w-full"
+              value={filter}
+              onChange={(e) => {
+                setFilter(e.target.value);
+                setCurrentPage(1); // Reset to page 1 when filter changes
               }}
-              className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
             >
-              View Details
-            </button>
+              <option value="">
+                {isProject
+                  ? "All Categories"
+                  : isEvent
+                  ? "All Event Types"
+                  : "All Grant Types"}
+              </option>
+              {uniqueFilterOptions.map((option, index) => (
+                <option key={index} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center mt-6 space-x-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => handlePageChange(index + 1)}
-                        className={`px-4 py-2 border rounded ${currentPage === index + 1
-                            ? "bg-blue-500 text-white"
-                            : "bg-white text-gray-700"
-                            }`}
-                    >
-                        {index + 1}
-                    </button>
-                ))}
+      <div className="flex-1 px-8">
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayedDatas.map((item, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8"
+            >
+              {/* Image Section */}
+              <img
+                src={item.image !== null ? `/storage/${item.image}` : "/storage/default.jpg"}
+                alt={item[title]}
+                className="w-full h-48 object-cover"
+              />
+
+              {/* Content Section */}
+              <div className="p-8">
+              <h2
+                  className="text-xl font-semibold text-gray-800 text-center truncate"
+                  style={{ maxWidth: "100%" }} // Optional to ensure it respects the card's width
+                  title={item[title]} // Tooltip to display full text on hover
+              >
+                  {item[title]}
+              </h2>
+              <p
+                  className="text-gray-600 mt-4 text-center"
+                  style={{
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2, // Number of lines before truncating
+                      WebkitBoxOrient: "vertical",
+                  }}
+                  dangerouslySetInnerHTML={{
+                      __html: item.description || "No description available.",
+                  }}
+                  ></p>
+
+
+
+
+              </div>
+
+              {/* Button Section */}
+              <button
+                onClick={() => {
+                  handleQuickInfoClick(item);
+                  trackClick(
+                    isProject ? "project" : isEvent ? "event" : "grant",
+                    item.id,
+                    "view_details"
+                  );
+                }}
+                className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
+              >
+                View Details
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center mt-6 space-x-2">
+                  {Array.from({ length: totalPages }, (_, index) => (
+                      <button
+                          key={index}
+                          onClick={() => handlePageChange(index + 1)}
+                          className={`px-4 py-2 border rounded ${currentPage === index + 1
+                              ? "bg-blue-500 text-white"
+                              : "bg-white text-gray-700"
+                              }`}
+                      >
+                          {index + 1}
+                      </button>
+                  ))}
+              </div>
             </div>
 
             {/* Modal Section */}
@@ -215,8 +236,8 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                             </div>
 
                     <p className="text-gray-600">
-                        <span className="font-semibold">Project Type:</span>{" "}
-                        {selectedItem.project_type || "Not provided"}
+                        <span className="font-semibold">Category:</span>{" "}
+                        {selectedItem.category || "Not provided"}
                     </p>
 
                     <p className="text-gray-600">

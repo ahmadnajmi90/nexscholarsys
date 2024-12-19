@@ -82,70 +82,84 @@ const ProfileGridWithDualFilter = ({
     };
 
     return (
+        <div className="min-h-screen flex">
+            {/* Sidebar for Filters */}
+            <div className="w-1/4 p-4 bg-gray-100 border-r">
+                <h2 className="text-lg font-semibold mb-4">Filters</h2>
+                <div className="space-y-4">
+                    {/* Research Area Filter */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Research Area</label>
+                        <Select
+                            id="research-area-filter"
+                            isMulti
+                            options={researchAreaOptions}
+                            className="w-full"
+                            classNamePrefix="select"
+                            value={selectedArea.map((area) => {
+                                const matchedOption = researchAreaOptions.find((option) => option.value === area);
+                                return matchedOption || { value: area, label: area };
+                            })}
+                            onChange={(selectedOptions) => {
+                                const selectedValues = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+                                setSelectedArea(selectedValues);
+                                setCurrentPage(1);
+                            }}
+                            placeholder="Search and select..."
+                        />
+                    </div>
 
+                    {/* University Filter */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">University</label>
+                        <select
+                            className="p-2 border border-gray-300 rounded w-full"
+                            value={selectedUniversity}
+                            onChange={(e) => {
+                                setSelectedUniversity(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value="">All Universities</option>
+                            {universitiesList.map((university) => (
+                                <option key={university.id} value={university.id}>
+                                    {university.short_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-        <div className="min-h-screen p-4 sm:p-6">
-            {/* Filters */}
-            <div className="flex flex-wrap justify-center gap-4 mb-6">
-                <Select
-                    id="research-area-filter"
-                    isMulti
-                    options={researchAreaOptions}
-                    className=""
-                    classNamePrefix="select"
-                    value={selectedArea.map((area) => {
-                        const matchedOption = researchAreaOptions.find((option) => option.value === area);
-                        return matchedOption || { value: area, label: area };
-                    })}
-                    onChange={(selectedOptions) => {
-                        const selectedValues = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-                        setSelectedArea(selectedValues); // Update selected areas
-                        setCurrentPage(1); // Reset to the first page when the filter changes
-                    }}
-                    placeholder="Search and select research areas..."
-                />
-
-                <select
-                    className="p-2 border border-gray-300 rounded w-full sm:w-auto"
-                    value={selectedUniversity}
-                    onChange={(e) => {
-                        setSelectedUniversity(e.target.value);
-                        setCurrentPage(1); // Reset to the first page when the filter changes
-                    }}
-                >
-                    <option value="">All Universities</option>
-                    {universitiesList.map((university) => (
-                        <option key={university.id} value={university.id}>
-                            {university.short_name}
-                        </option>
-                    ))}
-                </select>
-
-                <select
-                    className="p-2 border border-gray-300 rounded w-full sm:w-auto"
-                    value={selectedSupervisorAvailability}
-                    onChange={(e) => {
-                        setSelectedSupervisorAvailability(e.target.value);
-                        setCurrentPage(1); // Reset to the first page when the filter changes
-                    }}
-                >
-                    <option value="">All Supervisor Availability</option>
-                    {supervisorAvailabilityKey === "availability_as_supervisor" ? (
-                        <>
-                            <option value="1">Available as Supervisor</option>
-                            <option value="0">Not Available as Supervisor</option>
-                        </>
-                    ) : (
-                        <>
-                            <option value="1">Looking for a Supervisor</option>
-                            <option value="0">Not Looking for a Supervisor</option>
-                        </>
-                    )}
-                </select>
+                    {/* Supervisor Availability Filter */}
+                    <div>
+                        <label className="block text-gray-700 font-medium mb-2">Supervisor Availability</label>
+                        <select
+                            className="p-2 border border-gray-300 rounded w-full"
+                            value={selectedSupervisorAvailability}
+                            onChange={(e) => {
+                                setSelectedSupervisorAvailability(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value="">All</option>
+                            {supervisorAvailabilityKey === "availability_as_supervisor" ? (
+                                <>
+                                    <option value="1">Available as Supervisor</option>
+                                    <option value="0">Not Available as Supervisor</option>
+                                </>
+                            ) : (
+                                <>
+                                    <option value="1">Looking for a Supervisor</option>
+                                    <option value="0">Not Looking for a Supervisor</option>
+                                </>
+                            )}
+                        </select>
+                    </div>
+                </div>
             </div>
 
+        <div className="flex-1 px-8">
             {/* Profile Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
                 {displayedProfiles.map((profile) => (
                     <div
                         key={profile.id}
@@ -414,7 +428,9 @@ const ProfileGridWithDualFilter = ({
                     </button>
                 ))}
             </div>
+            
         </div>
+    </div>
     );
 };
 
