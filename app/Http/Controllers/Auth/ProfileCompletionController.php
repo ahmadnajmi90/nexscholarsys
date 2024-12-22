@@ -16,6 +16,7 @@ use Inertia\Response;
 use App\Models\Academician;
 use App\Models\Industry;
 use App\Models\Postgraduate;
+use App\Models\Undergraduate;
 use App\Models\UniversityList;
 use App\Models\FacultyList;
 
@@ -126,6 +127,34 @@ class ProfileCompletionController extends Controller
                     'university' => $request->university,
                     'faculty' => $request->faculty,
                     'current_postgraduate_status' => $request->current_postgraduate_status,
+                    'profile_picture' => "profile_pictures/default.jpg",
+                    'background_image' => "profile_background_images/default.jpg",
+                ]
+            );
+        } elseif ($request->role === 'Undergraduate') {
+            $request->validate([
+                'university' => 'nullable|exists:university_list,id',
+                'faculty' => 'nullable|exists:faculty_list,id',
+                'current_undergraduate_status' => 'required|string|in:Not registered yet,Registered',
+                'profile_picture' => 'nullable|string|max:255',
+                'background_image' => 'nullable|string|max:255',
+            ]);
+
+            $uniqueId = 'UG-' . Str::random(8);
+            $user->update([
+                'unique_id' => $uniqueId,
+                'is_profile_complete' => true,
+            ]);
+            $user->assign(['undergraduate']);
+
+            // Create or update entry in the postgraduates table, linking with unique_id
+            Undergraduate::updateOrCreate(
+                ['undergraduate_id' => $uniqueId],
+                [
+                    'full_name' => strtoupper($request->full_name),
+                    'university' => $request->university,
+                    'faculty' => $request->faculty,
+                    'current_undergraduate_status' => $request->current_undergraduate_status,
                     'profile_picture' => "profile_pictures/default.jpg",
                     'background_image' => "profile_background_images/default.jpg",
                 ]

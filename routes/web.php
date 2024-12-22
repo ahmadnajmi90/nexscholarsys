@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\ProfileCompletionController;
 use App\Http\Controllers\PostgraduateController;
+use App\Http\Controllers\UndergraduateController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\PostGrantController;
@@ -67,6 +68,10 @@ Route::resource('academicians', AcademicianController::class)
 ->middleware(['auth', 'verified']);
 
 Route::resource('postgraduates', PostgraduateController::class)
+->only(['index'])
+->middleware(['auth', 'verified']);
+
+Route::resource('undergraduates', UndergraduateController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 

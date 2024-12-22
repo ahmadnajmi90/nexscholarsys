@@ -59,6 +59,31 @@ class RoleProfileUpdateRequest extends FormRequest
                 'previous_degree' => ['nullable'], // Should be an array
             ];
             
+        }elseif (BouncerFacade::is(Auth::user())->an('undergraduate')) {
+            $rules = [
+                'full_name' => ['nullable', 'string', 'max:255'],
+                'phone_number' => ['nullable', 'string', 'max:15'],
+                'bio' => ['nullable', 'string'],
+                'bachelor' => ['nullable', 'string', 'max:255'],
+                'CGPA_bachelor' => ['nullable', 'numeric', 'between:0,4.0'],
+                'nationality' => ['nullable', 'string', 'max:255'],
+                'english_proficiency_level' => ['nullable', 'string', 'in:Beginner,Elementary,Intermediate,Upper Intermediate,Advanced'],
+                'current_undergraduate_status' => ['nullable', 'string', 'in:Not registered yet,Registered'],
+                'university' => ['nullable', 'exists:university_list,id'],
+                'faculty' => ['nullable', 'exists:faculty_list,id'],
+                'matric_no' => ['nullable', 'string', 'max:50'],
+                'skill' => ['nullable', 'string'],
+                'interested_do_research' => [],
+                'expected_graduate' => ['nullable', 'string', 'max:255'],
+                'research_preference' => ['nullable', 'array'],
+                'CV_file' => ['nullable', 'max:5120'],
+                'profile_picture' => ['nullable', 'max:2048'],
+                'background_image' => ['nullable', 'max:2048'],
+                'website' => ['nullable', 'string', 'max:255', 'url'],
+                'linkedin' => ['nullable', 'string', 'max:255', 'url'],
+                'google_scholar' => ['nullable', 'string', 'max:255', 'url'],
+                'researchgate' => ['nullable', 'string', 'max:255', 'url'],
+            ];
         }
 
         return $rules;

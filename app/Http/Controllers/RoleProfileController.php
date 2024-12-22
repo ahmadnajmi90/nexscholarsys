@@ -24,6 +24,7 @@ class RoleProfileController extends Controller
     public function edit(): Response
     {
         $isPostgraduate = BouncerFacade::is(Auth::user())->an('postgraduate');
+        $isUndergraduate = BouncerFacade::is(Auth::user())->an('undergraduate');
         $isAcademician = BouncerFacade::is(Auth::user())->an('academician');
 
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
@@ -47,8 +48,10 @@ class RoleProfileController extends Controller
         return Inertia::render('Role/Edit', [
             'isPostgraduate' => $isPostgraduate,
             'isAcademician' => $isAcademician,
+            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
             'postgraduate' => $isPostgraduate ? Auth::user()->postgraduate : null,
             'academician' => $isAcademician ? Auth::user()->academician : null,
+            'undergraduate' => $isUndergraduate ? Auth::user()->undergraduate : null,
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
             'researchOptions' => $researchOptions,
@@ -61,6 +64,7 @@ class RoleProfileController extends Controller
             $user = Auth::user();
             $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
             $isAcademician = BouncerFacade::is($user)->an('academician');
+            $isUndergraduate = BouncerFacade::is(Auth::user())->an('undergraduate');
 
             // Validate the request data
             $request->validate([
@@ -86,6 +90,9 @@ class RoleProfileController extends Controller
                 } elseif ($isAcademician) {
                     $user->academician->profile_picture = 'profile_pictures/' . $fileName;
                     $user->academician->save();
+                } elseif ($isUndergraduate) {
+                    $user->undergraduate->profile_picture = 'profile_pictures/' . $fileName;
+                    $user->undergraduate->save();
                 }
             }
 
@@ -101,6 +108,7 @@ class RoleProfileController extends Controller
             $user = Auth::user();
             $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
             $isAcademician = BouncerFacade::is($user)->an('academician');
+            $isUndergraduate = BouncerFacade::is(Auth::user())->an('undergraduate');
 
             // Validate the request
             $request->validate([
@@ -126,7 +134,10 @@ class RoleProfileController extends Controller
                 } elseif ($isAcademician) {
                     $user->academician->background_image = 'background_images/' . $fileName;
                     $user->academician->save();
-                }
+                } else if ($isUndergraduate) {
+                    $user->undergraduate->background_image = 'background_images/' . $fileName;
+                    $user->undergraduate->save();
+                } 
             }
 
             return redirect()->route('role.edit')->with('status', 'Background image updated successfully!');
@@ -141,6 +152,7 @@ class RoleProfileController extends Controller
             $user = Auth::user();
             $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
             $isAcademician = BouncerFacade::is($user)->an('academician');
+            $isUndergraduate = BouncerFacade::is(Auth::user())->an('undergraduate');
 
             // Validate the request data
             $validatedData = $request->all();
@@ -168,7 +180,12 @@ class RoleProfileController extends Controller
                     if (file_exists($oldFilePath)) {
                         unlink($oldFilePath); // Delete the old profile picture
                     }
-                }
+                } else if ($isUndergraduate && $user->undergraduate && $user->undergraduate->profile_picture) {
+                    $oldFilePath = public_path('storage/' . $user->undergraduate->profile_picture);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath); // Delete the old profile picture
+                    }
+                } 
 
                 // Save the new profile picture
                 $file = $request->file('profile_picture');
@@ -183,7 +200,7 @@ class RoleProfileController extends Controller
             }
 
              // Handle CV_file
-            if ($isPostgraduate && $request->hasFile('CV_file')) {
+            if (($isPostgraduate || $isUndergraduate) && $request->hasFile('CV_file')) {
                 logger()->info('CV file hasFile');
 
                 // Determine the destination path for CV files
@@ -197,6 +214,11 @@ class RoleProfileController extends Controller
                 // Delete the old CV file if it exists
                 if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
                     $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath); // Delete the old CV file
+                    }
+                }else if ($isUndergraduate && $user->undergraduate && $user->undergraduate->CV_file) {
+                    $oldFilePath = public_path('storage/' . $user->undergraduate->CV_file);
                     if (file_exists($oldFilePath)) {
                         unlink($oldFilePath); // Delete the old CV file
                     }
@@ -229,12 +251,28 @@ class RoleProfileController extends Controller
                 logger()->info('Previous Degree:', $validatedData['previous_degree']);
             }
 
+            if ($isUndergraduate && isset($validatedData['research_preference']) && is_string($validatedData['research_preference'])) {
+                $validatedData['research_preference'] = json_decode($validatedData['research_preference'], true);
+                logger()->info('Research Preference:', $validatedData['research_preference']);
+            }
+
             logger()->info('Decoded Data:', $validatedData);
 
             if ($isPostgraduate) {
                 // Match existing postgraduate by `postgraduate_id` or `user_id`
                 $user->postgraduate()->updateOrCreate(
                     ['postgraduate_id' => $user->postgraduate->postgraduate_id ?? $user->id], // Ensure it matches the existing ID
+                    $validatedData
+                );
+            } else if ($isUndergraduate) {
+                // Match existing postgraduate by `postgraduate_id` or `user_id`
+                if($validatedData['interested_do_research']==true){
+                    $validatedData['interested_do_research'] = 1;
+                }else{
+                    $validatedData['interested_do_research'] = 0;
+                }
+                $user->undergraduate()->updateOrCreate(
+                    ['undergraduate_id' => $user->undergraduate->undergraduate_id ?? $user->id], // Ensure it matches the existing ID
                     $validatedData
                 );
             } elseif ($isAcademician) {

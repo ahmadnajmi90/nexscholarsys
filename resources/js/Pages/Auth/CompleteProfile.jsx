@@ -14,6 +14,7 @@ export default function CompleteProfile({ universities, faculties }) {
         industry: '',
         faculty: '', // Add faculty field to the form state
         current_postgraduate_status: '',
+        current_undergraduate_status: '',
     });
 
     // State to hold the filtered faculties
@@ -26,7 +27,8 @@ export default function CompleteProfile({ universities, faculties }) {
         const status = e.target.value;
         setData((prevData) => ({
             ...prevData,
-            current_postgraduate_status: status,
+            current_postgraduate_status: prevData.role === 'Postgraduate' ? status : prevData.current_postgraduate_status,
+            current_undergraduate_status: prevData.role === 'Undergraduate' ? status : prevData.current_undergraduate_status,
             university: status === "Registered" ? prevData.university : "", // Clear university if "Not registered yet"
             faculty: status === "Registered" ? prevData.faculty : "", // Clear faculty if "Not registered yet"
         }));
@@ -58,6 +60,7 @@ export default function CompleteProfile({ universities, faculties }) {
                         <option value="" disabled>Select your Role</option>
                         <option value="Academician">Academician</option>
                         <option value="Postgraduate">Postgraduate</option>
+                        <option value="Undergraduate">Undergraduate</option>
                         {/* <option value="Industry">Industry</option> */}
                     </select>
                     <InputError message={errors.role} className="mt-2" />
@@ -106,7 +109,33 @@ export default function CompleteProfile({ universities, faculties }) {
                             </>
                         )}
 
-                        {data.role === 'Postgraduate' && data.current_postgraduate_status === 'Registered' && (
+                        {data.role === 'Undergraduate' && (
+                            <>
+                            {/* Current Undergraduate Status */}
+                            <div className="mt-4">
+                                <label
+                                    htmlFor="current_undergraduate_status"
+                                    className="mt-1 block text-sm font-medium text-gray-700"
+                                >
+                                    Current Undergraduate Status
+                                </label>
+                                <select
+                                    id="current_undergraduate_status"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                    value={data.current_undergraduate_status}
+                                    onChange={handleStatusChange}
+                                >
+                                    <option value="" hidden>
+                                        Select your current undergraduate status
+                                    </option>
+                                    <option value="Not registered yet">Not registered yet</option>
+                                    <option value="Registered">Registered</option>
+                                </select>
+                            </div>
+                            </>
+                        )}
+
+                        {(data.role === 'Postgraduate'||data.role === 'Undergraduate') && (data.current_postgraduate_status === 'Registered'||data.current_undergraduate_status === 'Registered') && (
                             <>
                             {/* University */}
                             <div className='mt-4'>
@@ -148,7 +177,6 @@ export default function CompleteProfile({ universities, faculties }) {
                                             </option>
                                         ))}
                                     </select>
-                                    {data.role === 'Academician' && <p className="mt-2 text-red-500 text-sm">*Select carefully as it is not allowed to change after this</p>}
                                     <InputError className="mt-2" message={errors.faculty} />
                                 </div>
                             )}

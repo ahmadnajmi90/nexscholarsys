@@ -13,6 +13,7 @@ use App\Models\Postgraduate;
 use App\Models\PostGrant;
 use App\Models\PostProject;
 use App\Models\PostEvent;
+use App\Models\Undergraduate;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -71,6 +72,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function postgraduate()
     {
         return $this->hasOne(Postgraduate::class, 'postgraduate_id', 'unique_id');
+    }
+
+    public function undergraduate()
+    {
+        return $this->hasOne(Undergraduate::class, 'undergraduate_id', 'unique_id');
     }
 
     public function postGrants()

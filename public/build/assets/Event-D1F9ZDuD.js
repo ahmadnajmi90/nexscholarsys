@@ -1,0 +1,1 @@
+import{j as e}from"./app-Bu0hZnGC.js";import{M as s}from"./MainLayout-C4V7W5xP.js";import{P as o}from"./PostingCard-DeaxM6Eq.js";import"./index-CnfXvRUl.js";const f=({events:t,isPostgraduate:r,users:a})=>(console.log(t),e.jsx(s,{title:"Event",isPostgraduate:r,children:e.jsx(o,{data:t,title:"event_name",isProject:!1,isEvent:!0,isGrant:!1})}));export{f as default};

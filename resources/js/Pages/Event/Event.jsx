@@ -6,14 +6,12 @@ const Event = ( { events, isPostgraduate, users} ) => {
     console.log(events);
     return (
         <MainLayout title="Event" isPostgraduate={isPostgraduate}>
-            <div className="container mx-auto px-4">
-                <PostingCard 
-                data={events} 
-                title="event_name" 
-                isProject={false}
-                isEvent={true}
-                isGrant={false}/>
-            </div>
+            <PostingCard 
+            data={events} 
+            title="event_name" 
+            isProject={false}
+            isEvent={true}
+            isGrant={false}/>
         </MainLayout>
     );
 };

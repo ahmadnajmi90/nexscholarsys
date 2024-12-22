@@ -182,7 +182,8 @@ const ProfileGridWithDualFilter = ({
                     </div>
                 </div>
             </div>
-
+            
+            {/* Main Content */}
             <div className="flex-1 px-8">
                 {/* Profile Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
