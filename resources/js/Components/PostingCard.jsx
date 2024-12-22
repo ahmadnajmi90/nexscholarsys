@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -46,10 +47,14 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
 };
 
 const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [typeFilter, setTypeFilter] = useState([]);
   const [countryFilter, setCountryFilter] = useState([]);
   const [themeFilter, setThemeFilter] = useState([]);
   const [eventModeFilter, setEventModeFilter] = useState([]); // New filter for event mode
+  const [currentPage, setCurrentPage] = useState(1); // Track the current page
+  const itemsPerPage = 8; // Number of items per page
 
   // Extract unique options dynamically
   const uniqueTypeOptions = [
@@ -73,6 +78,31 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
       )
     ),
   ].filter(Boolean);
+
+  const handleQuickInfoClick = (item) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  function trackClick(entityType, entityId, action) {
+    axios
+      .post("/click-tracking", {
+        entity_type: entityType,
+        entity_id: entityId,
+        action: action,
+      })
+      .then((response) => {
+        console.log("Click tracked successfully:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error tracking click:", error);
+      });
+  }
 
   const uniqueThemeOptions = [
     ...new Set(
@@ -137,6 +167,17 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
     return matchesType && matchesCountry && matchesTheme && matchesEventMode;
   });
 
+   // Pagination logic
+   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+   const displayedData = filteredData.slice(
+     (currentPage - 1) * itemsPerPage,
+     currentPage * itemsPerPage
+   );
+ 
+   const handlePageChange = (page) => {
+     setCurrentPage(page);
+   };
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar for Filters */}
@@ -180,7 +221,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
       <div className="flex-1 px-8">
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredData.map((item, index) => (
+          {displayedData.map((item, index) => (
             <div
               key={index}
               className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8"
@@ -216,9 +257,297 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
                   }}
                 ></p>
               </div>
+
+              {/* Button Section */}
+              <button
+                  onClick={() => {
+                    handleQuickInfoClick(item);
+                    trackClick(
+                      isProject ? "project" : isEvent ? "event" : "grant",
+                      item.id,
+                      "view_details"
+                    );
+                  }}
+                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
+                >
+                  View Details
+                </button>
             </div>
           ))}
         </div>
+
+        {/* Modal Section */}
+        {isModalOpen && selectedItem && (
+                  <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-auto"
+                  onClick={closeModal} // Close the modal when clicking on the background
+              >
+                  <div
+                  className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl relative overflow-y-auto max-h-[90vh]"
+                  onClick={(e) => e.stopPropagation()} // Prevent the click from propagating to the background
+                  >
+  
+              {/* Modal Image */}
+              {selectedItem.image && (
+                <img
+                  src={selectedItem.image !== null ? `/storage/${selectedItem.image}` : "/storage/default.jpg"}
+                  alt={selectedItem[title]}
+                  className="w-full h-48 object-cover rounded-t-lg mb-4"
+                />
+              )}
+  
+              {/* Modal Header */}
+              <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
+                {selectedItem[title]}
+              </h3>
+  
+  
+              {/* Modal Content */}
+              <div className="space-y-4">
+                  {isProject && (
+                      <>
+                      <div className="text-gray-600">
+                                  <span className="font-semibold">Description:</span>
+                                  {selectedItem.description ? (
+                                      <div
+                                          className="mt-2 text-sm"
+                                          dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                      ></div>
+                                  ) : (
+                                      <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                  )}
+                              </div>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Category:</span>{" "}
+                          {selectedItem.category || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Project Theme:</span>{" "}
+                          {selectedItem.project_theme || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Purpose:</span>{" "}
+                          {Array.isArray(selectedItem.purpose) ? selectedItem.purpose.join(", ") : "No Purpose Specified"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Project Duration:</span>{" "}
+                          {selectedItem.start_date ? `${selectedItem.start_date} - ${selectedItem.end_date}` : "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Application Deadline:</span>{" "}
+                          {selectedItem.application_deadline || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Contact Email:</span>{" "}
+                          {selectedItem.email || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Attachment:</span>{" "}
+                          {selectedItem.attachment ? (
+                              <a
+                              href={`/storage/${selectedItem.attachment}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 underline"
+                              >
+                              View Attachment
+                              </a>
+                          ) : (
+                              "No attachment available."
+                          )}
+                          </p>
+  
+  
+                      </>
+                  )}
+  
+                  {isEvent && (
+                      <>
+                      <div className="text-gray-600">
+                                  <span className="font-semibold">Description:</span>
+                                  {selectedItem.description ? (
+                                      <div
+                                          className="mt-2 text-sm"
+                                          dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                      ></div>
+                                  ) : (
+                                      <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                  )}
+                              </div>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Event type:</span>{" "}
+                          {selectedItem.event_type || "Not provided."}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Event Duration:</span>{" "}
+                          {selectedItem.start_date ? `${selectedItem.start_date} - ${selectedItem.end_date}` : "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Registration Link:</span>{" "}
+                          {selectedItem.registration_url ? (
+                              <a
+                              href={selectedItem.registration_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 underline"
+                              >
+                              Click Here
+                              </a>
+                          ) : (
+                              "Not provided"
+                          )}
+                          </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Registration Deadline:</span>{" "}
+                          {selectedItem.registration_deadline || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Contact Email:</span>{" "}
+                          {selectedItem.contact_email || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Location:</span>{" "}
+                          {`${selectedItem.venue}, ${selectedItem.city}, ${selectedItem.country}` || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Attachment:</span>{" "}
+                          {selectedItem.attachment ? (
+                              <a
+                              href={`/storage/${selectedItem.attachment}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 underline"
+                              >
+                              View Attachment
+                              </a>
+                          ) : (
+                              "No attachment available."
+                          )}
+                      </p>
+  
+  
+                      </>
+                  )}
+  
+                  {isGrant && (
+                      <>
+                     <div className="text-gray-600">
+                                  <span className="font-semibold">Description:</span>
+                                  {selectedItem.description ? (
+                                      <div
+                                          className="mt-2 text-sm"
+                                          dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                      ></div>
+                                  ) : (
+                                      <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                  )}
+                              </div>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Grant Type:</span>{" "}
+                          {selectedItem.grant_type || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Grant Theme:</span>{" "}
+                          {Array.isArray(selectedItem.grant_theme) ? selectedItem.grant_theme.join(", ") : "No Grant Theme Specified"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Cycle:</span>{" "}
+                          {selectedItem.cycle || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Grant Duration:</span>{" "}
+                          {selectedItem.start_date ? `${selectedItem.start_date} - ${selectedItem.end_date}` : "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Application Deadline:</span>{" "}
+                          {selectedItem.application_deadline || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Sponsored by:</span>{" "}
+                          {selectedItem.sponsored_by || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Website / Link:</span>{" "}
+                          {selectedItem.website || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Contact Email:</span>{" "}
+                          {selectedItem.email || "Not provided"}
+                      </p>
+  
+                      <p className="text-gray-600">
+                          <span className="font-semibold">Attachment:</span>{" "}
+                          {selectedItem.attachment ? (
+                              <a
+                              href={`/storage/${selectedItem.attachment}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 underline"
+                              >
+                              View Attachment
+                              </a>
+                          ) : (
+                              "No attachment available."
+                          )}
+                          </p>
+  
+  
+                      </>
+                  )}
+  
+              </div>
+  
+              {/* Modal Footer */}
+              <div className="mt-6 text-center">
+                <button
+                  onClick={closeModal}
+                  className="px-6 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        <div className="flex justify-center mt-6 space-x-2">
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index}
+            onClick={() => handlePageChange(index + 1)}
+            className={`px-4 py-2 border rounded ${
+              currentPage === index + 1
+                ? "bg-blue-500 text-white"
+                : "bg-white text-gray-700"
+            }`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
       </div>
     </div>
   );
