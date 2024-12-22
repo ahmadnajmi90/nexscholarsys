@@ -54,7 +54,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
   const [themeFilter, setThemeFilter] = useState([]);
   const [eventModeFilter, setEventModeFilter] = useState([]); // New filter for event mode
   const [currentPage, setCurrentPage] = useState(1); // Track the current page
-  const itemsPerPage = 8; // Number of items per page
+  const itemsPerPage = 9; // Number of items per page
 
   // Extract unique options dynamically
   const uniqueTypeOptions = [
@@ -83,7 +83,7 @@ const PostingCard = ({ data, title, isProject, isEvent, isGrant }) => {
     setSelectedItem(item);
     setIsModalOpen(true);
   };
-  
+
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedItem(null);

@@ -61,7 +61,7 @@ const ProfileGridWithDualFilter = ({
     const [selectedUniversity, setSelectedUniversity] = useState([]);
     const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const profilesPerPage = 8;
+    const profilesPerPage = 9;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
 
