@@ -13,7 +13,7 @@ import {
     FaNewspaper,
 } from 'react-icons/fa';
 
-const MobileSidebar = ({ isPostgraduate }) => {
+const MobileSidebar = ({ isPostgraduate, isUndergraduate }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState({
         networking: false,
@@ -112,7 +112,7 @@ const MobileSidebar = ({ isPostgraduate }) => {
                                     <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">
                                         View Grant
                                     </Link>
-                                    {!isPostgraduate && (
+                                    {!(isPostgraduate || isUndergraduate) && (
                                         <Link
                                             href={route('post-grants.index')}
                                             className="block py-2 hover:bg-gray-100 rounded"
@@ -135,7 +135,7 @@ const MobileSidebar = ({ isPostgraduate }) => {
                                     <Link href="/project" className="block py-2 hover:bg-gray-100 rounded">
                                         View project
                                     </Link>
-                                    {!isPostgraduate && (
+                                    {!(isPostgraduate || isUndergraduate) && (
                                         <Link
                                             href={route('post-projects.index')}
                                             className="block py-2 hover:bg-gray-100 rounded"
@@ -159,7 +159,7 @@ const MobileSidebar = ({ isPostgraduate }) => {
                                     <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">
                                         View event
                                     </Link>
-                                    {!isPostgraduate && (
+                                    {!(isPostgraduate || isUndergraduate) && (
                                         <Link
                                             href={route('post-events.index')}
                                             className="block py-2 hover:bg-gray-100 rounded"

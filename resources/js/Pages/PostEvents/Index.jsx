@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 
 const Index = () => {
-    const { postEvents, isPostgraduate, search } = usePage().props;
+    const { postEvents, isPostgraduate, search, isUndergraduate } = usePage().props;
     const [searchTerm, setSearchTerm] = useState(search || ''); // Store the search term locally
 
     let debounceTimeout;
@@ -25,7 +25,7 @@ const Index = () => {
     };
 
     return (
-        <MainLayout title="" isPostgraduate={isPostgraduate}>
+        <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold">Your Events</h1>
                 <Link

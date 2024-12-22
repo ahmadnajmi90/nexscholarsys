@@ -35,6 +35,7 @@ class AcademicianController extends Controller
             // Pass any data you want to the component here
             'academicians' => Academician::all(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
             'universities' => UniversityList::all(),
             'users' => User::all(),
             'researchOptions' => $researchOptions,

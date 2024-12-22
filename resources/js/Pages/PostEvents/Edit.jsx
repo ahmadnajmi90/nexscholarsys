@@ -6,7 +6,7 @@ import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import NationalityForm from "../Role/Partials/NationalityForm";
 
 
-export default function Edit({ postEvent, auth, isPostgraduate }) {
+export default function Edit({ postEvent, auth, isPostgraduate, isUndergraduate }) {
   const { data, setData, post, processing, errors } = useForm({
     event_name: postEvent.event_name || "",
     description: postEvent.description || "",
@@ -61,7 +61,7 @@ export default function Edit({ postEvent, auth, isPostgraduate }) {
   };
 
   return (
-    <MainLayout title="" isPostgraduate={isPostgraduate}>
+    <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
   <div className="p-4">
     <form
       onSubmit={handleSubmit}

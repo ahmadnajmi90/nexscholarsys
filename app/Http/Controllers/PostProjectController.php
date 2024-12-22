@@ -36,6 +36,7 @@ class PostProjectController extends Controller
             return inertia('PostProjects/Index', [
                 'postProjects' => $postProjects,
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
                 'search' => $search,
             ]);
         }
@@ -68,6 +69,7 @@ class PostProjectController extends Controller
             return Inertia::render('PostProjects/Create', [
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
                 'researchOptions' => $researchOptions,
                 'universities' => UniversityList::all(),
             ]);
@@ -217,6 +219,7 @@ class PostProjectController extends Controller
                 'postProject' => $postProject,
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
                 'researchOptions' => $researchOptions,
                 'universities' => UniversityList::all(),
             ]);

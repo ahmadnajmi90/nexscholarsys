@@ -23,6 +23,7 @@ class ProfileController extends Controller
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
         ]);
     }
 

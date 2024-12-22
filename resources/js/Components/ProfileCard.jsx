@@ -54,6 +54,7 @@ const ProfileGridWithDualFilter = ({
     supervisorAvailabilityKey,
     universitiesList,
     isPostgraduateList,
+    isUndergraduateList,
     users,
     researchOptions,
 }) => {
@@ -77,7 +78,8 @@ const ProfileGridWithDualFilter = ({
                 // Ensure both fields are arrays or return an empty array
                 const fieldOfResearch = Array.isArray(profile.field_of_research) ? profile.field_of_research : [];
                 const researchExpertise = Array.isArray(profile.research_expertise) ? profile.research_expertise : [];
-                return [...fieldOfResearch, ...researchExpertise];
+                const research_preference = Array.isArray(profile.research_preference) ? profile.research_preference : [];
+                return [...fieldOfResearch, ...researchExpertise, ...research_preference];
             })
         ),
     ].map((area) => {
@@ -143,7 +145,7 @@ const ProfileGridWithDualFilter = ({
                 <div className="space-y-4">
                     {/* Research Area Filter */}
                     <FilterDropdown
-                        label="Research Area"
+                        label={isUndergraduateList ? "Preferred Research Area" : "Research Area"}
                         options={uniqueResearchAreas}
                         selectedValues={selectedArea}
                         setSelectedValues={setSelectedArea}
@@ -158,7 +160,8 @@ const ProfileGridWithDualFilter = ({
                     />
 
                     {/* Supervisor Availability Filter */}
-                    <div>
+                    {!isUndergraduateList && (
+                        <div>
                         {supervisorAvailabilityKey === "availability_as_supervisor" ? (
                             <label className="block text-gray-700 font-medium mb-2">Available As Supervisor</label>
                         ) 
@@ -180,6 +183,8 @@ const ProfileGridWithDualFilter = ({
                             <option value="0">No</option>
                         </select>
                     </div>
+                    )}
+                    
                 </div>
             </div>
             
@@ -270,6 +275,17 @@ const ProfileGridWithDualFilter = ({
                                         : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
                                             ? (() => {
                                                 const id = profile.research_expertise[0]; // Get the first ID
+                                                const matchedOption = researchOptions.find(
+                                                    (option) =>
+                                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                                );
+                                                return matchedOption
+                                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                                    : "Unknown";
+                                            })()
+                                        : Array.isArray(profile.research_preference) && profile.research_preference.length > 0
+                                            ? (() => {
+                                                const id = profile.research_preference[0]; // Get the first ID
                                                 const matchedOption = researchOptions.find(
                                                     (option) =>
                                                         `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
@@ -378,7 +394,7 @@ const ProfileGridWithDualFilter = ({
                                     {selectedProfile.bio || "No bio available."}
                                 </p>
                                 <p className="text-gray-600">
-                                    <span className="font-semibold">Fields of Research:</span>{" "}
+                                <span className="font-semibold">{isUndergraduateList ? "Preferred Research Area" : "Fields of Research"}:</span>{" "}
                                     {(() => {
                                         const fieldOfResearchNames =
                                             Array.isArray(selectedProfile.field_of_research) && selectedProfile.field_of_research.length > 0
@@ -410,21 +426,37 @@ const ProfileGridWithDualFilter = ({
                                                     .filter(Boolean) // Remove null values
                                                 : [];
 
-                                        const allNames = [...fieldOfResearchNames, ...researchExpertiseNames];
+                                        const researchPreferenceNames =
+                                                Array.isArray(selectedProfile.research_preference) && selectedProfile.research_preference.length > 0
+                                                    ? selectedProfile.research_preference
+                                                        .map((id) => {
+                                                            const matchedOption = researchOptions.find(
+                                                                (option) =>
+                                                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                                            );
+                                                            return matchedOption
+                                                                ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                                                : null; // Handle unmatched IDs gracefully
+                                                        })
+                                                        .filter(Boolean) // Remove null values
+                                                    : [];
+
+                                        const allNames = [...fieldOfResearchNames, ...researchExpertiseNames, ...researchPreferenceNames];
 
                                         return allNames.length > 0 ? allNames.join(", ") : "No fields of study or expertise";
                                     })()}
                                 </p>
 
+                                {!isUndergraduateList && (
                                 <p className="text-gray-600">
                                     {supervisorAvailabilityKey == "availability_as_supervisor" ? (<span className="font-semibold">Available as supervisor:</span>) : (<span className="font-semibold">Looking for a supervisor:</span>)}
                                     {selectedProfile[supervisorAvailabilityKey] === 1
                                         ? " Yes"
                                         : " No"}
-                                </p>
+                                </p>)}
                                 <p className="text-gray-600">
                                     <span className="font-semibold">Email:</span>{" "}
-                                    {users.find((user) => user.unique_id === (selectedProfile.academician_id || selectedProfile.postgraduate_id))?.email || "No email provided"}
+                                    {users.find((user) => user.unique_id === (selectedProfile.academician_id || selectedProfile.postgraduate_id || selectedProfile.undergraduate_id))?.email || "No email provided"}
                                 </p>
                             </div>
 

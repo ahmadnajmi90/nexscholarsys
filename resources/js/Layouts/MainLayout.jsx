@@ -5,7 +5,7 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 
-const MainLayout = ({ children, title, isPostgraduate }) => {
+const MainLayout = ({ children, title, isPostgraduate, isUndergraduate }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
 
@@ -37,12 +37,12 @@ const MainLayout = ({ children, title, isPostgraduate }) => {
         <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar for Desktop */}
             {isDesktop && (
-                <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate} />
+                <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} />
             )}
 
             {/* Mobile Sidebar */}
             {!isDesktop && (
-                <MobileSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate} />
+                <MobileSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate}isUndergraduate={isUndergraduate} />
             )}
 
             {/* Main Content Area */}

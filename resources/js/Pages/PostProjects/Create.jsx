@@ -8,7 +8,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 export default function Create() {
-  const { auth, isPostgraduate, researchOptions, universities } = usePage().props;
+  const { auth, isPostgraduate, researchOptions, universities, isUndergraduate } = usePage().props;
 
   const { data, setData, post, processing, errors } = useForm({
     title: "",
@@ -109,7 +109,7 @@ export default function Create() {
   }
 
   return (
-    <MainLayout title="" isPostgraduate={isPostgraduate}>
+    <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
     <div className="p-4">
       {/* Back Arrow */}
       <button

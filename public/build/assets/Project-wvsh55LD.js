@@ -1,1 +1,0 @@
-import{j as r}from"./app-Bu0hZnGC.js";import{M as s}from"./MainLayout-C4V7W5xP.js";import{P as e}from"./PostingCard-DeaxM6Eq.js";import"./index-CnfXvRUl.js";const f=({projects:t,isPostgraduate:o,users:i})=>(console.log(t),r.jsx(s,{title:"Project",isPostgraduate:o,children:r.jsx(e,{data:t,title:"title",isProject:!0,isEvent:!1,isGrant:!1})}));export{f as default};

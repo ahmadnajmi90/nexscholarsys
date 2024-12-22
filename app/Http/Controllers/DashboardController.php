@@ -24,6 +24,7 @@ class DashboardController extends Controller
             return Inertia::render('Dashboard', [
                 'postGrants' => $postGrants,
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
                 'isAdmin' => BouncerFacade::is(Auth::user())->an('admin'),
                 'totalUsers' => User::where('id', '!=', Auth::id())->count(), // Except admin itself
                 'onlineUsers' => User::where('id', '!=', Auth::id())

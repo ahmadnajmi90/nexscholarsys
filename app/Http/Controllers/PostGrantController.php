@@ -36,6 +36,7 @@ class PostGrantController extends Controller
             return inertia('PostGrants/Index', [
                 'postGrants' => $postGrants,
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
                 'search' => $search,
             ]);
         }
@@ -51,6 +52,7 @@ class PostGrantController extends Controller
             return Inertia::render('PostGrants/Create', [
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
             ]);
         }
     }
@@ -169,6 +171,7 @@ class PostGrantController extends Controller
                 'postGrant' => $postGrant,
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
             ]);
         }
     }

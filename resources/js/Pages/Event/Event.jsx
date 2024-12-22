@@ -2,10 +2,10 @@ import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import PostingCard from '@/Components/PostingCard';
 
-const Event = ( { events, isPostgraduate, users} ) => {
+const Event = ( { events, isPostgraduate, isUndergraduate, users} ) => {
     console.log(events);
     return (
-        <MainLayout title="Event" isPostgraduate={isPostgraduate}>
+        <MainLayout title="Event" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
             <PostingCard 
             data={events} 
             title="event_name" 

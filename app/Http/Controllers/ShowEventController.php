@@ -18,6 +18,7 @@ class ShowEventController extends Controller
             // Pass any data you want to the component here\
             'events' => PostEvent::where('event_status', 'published')->orderBy('start_date')->get(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
+            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
             // 'universities' => UniversityList::all(),
             'users' => User::all(),
         ]);

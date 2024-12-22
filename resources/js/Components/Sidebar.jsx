@@ -17,7 +17,7 @@ import {
     FaBookOpen,
 } from 'react-icons/fa';
 
-const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
+const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate }) => {
     const user = usePage().props.auth.user;
 
     const [menuOpen, setMenuOpen] = useState({
@@ -107,7 +107,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         {menuOpen.grant && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">View Grant</Link>
-                                {!isPostgraduate && (
+                                {!(isPostgraduate || isUndergraduate)&& (
                                 <Link href={route('post-grants.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Grants
                                 </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Sponsorship</Link>
@@ -125,7 +125,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         {menuOpen.project && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/project" className="block py-2 hover:bg-gray-100 rounded"> View Project</Link>
-                                {!isPostgraduate && (
+                                {!(isPostgraduate || isUndergraduate) && (
                                 <Link href={route('post-projects.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Projects
                                 </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Paper</Link>
@@ -144,7 +144,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate }) => {
                         {menuOpen.event && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
-                                {!isPostgraduate && (
+                                {!(isPostgraduate || isUndergraduate) && (
                                 <Link href={route('post-events.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Event
                                 </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>

@@ -7,7 +7,7 @@ import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import NationalityForm from "../Role/Partials/NationalityForm";
 
 export default function Create() {
-  const { auth, isPostgraduate } = usePage().props;
+  const { auth, isPostgraduate, isUndergraduate } = usePage().props;
 
   const { data, setData, post, processing, errors } = useForm({
     event_name: "",
@@ -66,7 +66,7 @@ export default function Create() {
   }
 
   return (
-    <MainLayout title="" isPostgraduate={isPostgraduate}>
+    <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
   <div className="p-4">
     <form
       onSubmit={handleSubmit}
