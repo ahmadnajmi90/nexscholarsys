@@ -6,7 +6,7 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Edit({ mustVerifyEmail, status }) {
-    const { isPostgraduate, isUndergraduate } = usePage().props;
+    const { isPostgraduate, isUndergraduate, isFacultyAdmin } = usePage().props;
 
     return (
         <MainLayout
@@ -17,6 +17,7 @@ export default function Edit({ mustVerifyEmail, status }) {
             }
             isPostgraduate={isPostgraduate}
             isUndergraduate={isUndergraduate}
+            isFacultyAdmin={isFacultyAdmin}
         >
             <Head title="Profile" />
 

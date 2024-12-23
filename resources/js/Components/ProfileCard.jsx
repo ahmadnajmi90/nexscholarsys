@@ -53,6 +53,7 @@ const ProfileGridWithDualFilter = ({
     profilesData,
     supervisorAvailabilityKey,
     universitiesList,
+    faculties,
     isPostgraduateList,
     isUndergraduateList,
     users,
@@ -134,7 +135,12 @@ const ProfileGridWithDualFilter = ({
 
     const getUniversityNameById = (id) => {
         const university = universitiesList.find((u) => u.id === id); // Find the university by ID
-        return university ? university.short_name : "Unknown University"; // Return the full_name or a default string
+        return university ? university.full_name : "Unknown University"; // Return the full_name or a default string
+    };
+
+    const getFacultyNameById = (id) => {
+        const faculty = faculties.find((u) => u.id === id); // Find the university by ID
+        return faculty ? faculty.name : "Unknown University"; // Return the full_name or a default string
     };
 
     return (
@@ -388,6 +394,10 @@ const ProfileGridWithDualFilter = ({
                                 <p className="text-gray-600">
                                     <span className="font-semibold">University:</span>{" "}
                                     {getUniversityNameById(selectedProfile.university)}
+                                </p>
+                                <p className="text-gray-600">
+                                    <span className="font-semibold">Faculty:</span>{" "}
+                                    {getFacultyNameById(selectedProfile.faculty)}
                                 </p>
                                 <p className="text-gray-600">
                                     <span className="font-semibold">Bio:</span>{" "}

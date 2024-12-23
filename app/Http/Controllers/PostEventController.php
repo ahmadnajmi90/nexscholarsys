@@ -35,6 +35,7 @@ class PostEventController extends Controller
                 'postEvents' => $postEvents,
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
                 'search' => $search, // Pass search query for retaining user input
             ]);
         }
@@ -51,6 +52,7 @@ class PostEventController extends Controller
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             ]);
         }
     }
@@ -174,6 +176,7 @@ class PostEventController extends Controller
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             ]);
         }
     }

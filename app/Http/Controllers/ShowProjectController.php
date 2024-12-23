@@ -19,6 +19,7 @@ class ShowProjectController extends Controller
             'projects' => PostProject::orderBy('start_date')->get(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             // 'universities' => UniversityList::all(),
             'users' => User::all(),
         ]);

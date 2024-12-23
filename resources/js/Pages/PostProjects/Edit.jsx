@@ -7,7 +7,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 
-export default function Edit({ postProject, auth, isPostgraduate, researchOptions, universities, isUndergraduate }) {
+export default function Edit({ postProject, auth, isPostgraduate, researchOptions, universities, isUndergraduate, isFacultyAdmin }) {
   const { data, setData, post, processing, errors } = useForm({
     title: postProject.title || "",
     description: postProject.description || "",
@@ -111,7 +111,7 @@ const handleSubmit = async (e) => {
 };
 
 return (
-  <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
+  <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
   <div className="p-4">
     {/* Back Arrow */}
     <button

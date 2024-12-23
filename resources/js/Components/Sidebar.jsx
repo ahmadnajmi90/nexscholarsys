@@ -17,7 +17,7 @@ import {
     FaBookOpen,
 } from 'react-icons/fa';
 
-const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate }) => {
+const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate, isFacultyAdmin }) => {
     const user = usePage().props.auth.user;
 
     const [menuOpen, setMenuOpen] = useState({
@@ -68,7 +68,12 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate }) => 
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Dashboard</span>
                         </Link>
 
-
+                        {isFacultyAdmin && (
+                            <Link href={route('faculty-admin.academicians')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                                <FaTachometerAlt className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Verify Academicians</span>
+                            </Link>
+                        )}
                     </div>
 
                     {/* Networking Section */}

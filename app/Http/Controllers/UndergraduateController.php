@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\UniversityList;
 use App\Models\User;
 use App\Models\FieldOfResearch;
+use App\Models\FacultyList;
 
 use Illuminate\Http\Request;
 
@@ -36,7 +37,9 @@ class UndergraduateController extends Controller
             'undergraduates' => Undergraduate::all(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             'universities' => UniversityList::all(),
+            'faculties' => FacultyList::all(),
             'users' => User::all(),
             'researchOptions' => $researchOptions,
         ]);

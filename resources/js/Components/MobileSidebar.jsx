@@ -13,7 +13,7 @@ import {
     FaNewspaper,
 } from 'react-icons/fa';
 
-const MobileSidebar = ({ isPostgraduate, isUndergraduate }) => {
+const MobileSidebar = ({ isPostgraduate, isUndergraduate, isFacultyAdmin }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState({
         networking: false,
@@ -71,6 +71,16 @@ const MobileSidebar = ({ isPostgraduate, isUndergraduate }) => {
                                 <FaTachometerAlt className="text-gray-600" />
                                 <span className="ml-2">Dashboard</span>
                             </Link>
+
+                            {isFacultyAdmin && (
+                                <Link
+                                    href={route('faculty-admin.academicians')}
+                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                                >
+                                    <FaTachometerAlt className="text-gray-600" />
+                                    <span className="ml-2">Verify Academicians</span>
+                                </Link>
+                            )}
                         </div>
 
                         {/* Networking Section */}

@@ -34,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'unique_id',
         'is_profile_complete',
         'last_activity',
+        'email_verified_at',
     ];
 
     /**
@@ -77,6 +78,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function undergraduate()
     {
         return $this->hasOne(Undergraduate::class, 'undergraduate_id', 'unique_id');
+    }
+
+    public function facultyAdmin()
+    {
+        return $this->hasOne(FacultyAdmin::class, 'faculty_admin_id', 'unique_id');
     }
 
     public function postGrants()

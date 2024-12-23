@@ -19,6 +19,7 @@ class ShowEventController extends Controller
             'events' => PostEvent::where('event_status', 'published')->orderBy('start_date')->get(),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             // 'universities' => UniversityList::all(),
             'users' => User::all(),
         ]);

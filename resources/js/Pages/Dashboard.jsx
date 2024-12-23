@@ -9,11 +9,29 @@ const Dashboard = ({
     isAdmin,
     isPostgraduate,
     isUndergraduate,
-    events
+    events,
+    isFacultyAdmin,
+    academicians,
+    universities,
+    faculties,
+    users,
+    researchOptions,
 }) => {
     return (
-            <MainLayout title="Dashboard" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
-                <DashboardInsights totalUsers={totalUsers} onlineUsers={onlineUsers} clicksByType={clicksByType} isAdmin={isAdmin} events={events}/>
+            <MainLayout title="Dashboard" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+                <DashboardInsights 
+                totalUsers={totalUsers} 
+                onlineUsers={onlineUsers} 
+                clicksByType={clicksByType} 
+                isAdmin={isAdmin} 
+                events={events} 
+                isFacultyAdmin={isFacultyAdmin}
+                academicians={academicians}
+                universities={universities}
+                faculties={faculties}
+                users={users}
+                researchOptions={researchOptions}
+                />
                 {/* <RadarChart />
                 <ProfileCard /> */}
             </MainLayout>

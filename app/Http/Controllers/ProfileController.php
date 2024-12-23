@@ -24,6 +24,7 @@ class ProfileController extends Controller
             'status' => session('status'),
             'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
             'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
         ]);
     }
 

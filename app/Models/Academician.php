@@ -44,6 +44,11 @@ class Academician extends Model
         return $this->belongsTo(User::class, 'academician_id', 'unique_id');
     }
 
+    public function facultyAdmin()
+    {
+        return $this->belongsTo(FacultyAdmin::class, 'faculty_id', 'faculty');
+    }
+
     public function universityDetails()
     {
         return $this->belongsTo(UniversityList::class, 'university', 'id');

@@ -4,7 +4,7 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 
-const MainLayout = ({ children, title, isPostgraduate, isUndergraduate }) => {
+const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacultyAdmin }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
 
@@ -53,6 +53,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate }) => {
                     toggleSidebar={toggleSidebar}
                     isPostgraduate={isPostgraduate}
                     isUndergraduate={isUndergraduate}
+                    isFacultyAdmin={isFacultyAdmin}
                 />
             )}
 
@@ -63,6 +64,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate }) => {
                     toggleSidebar={toggleSidebar}
                     isPostgraduate={isPostgraduate}
                     isUndergraduate={isUndergraduate}
+                    isFacultyAdmin={isFacultyAdmin}
                 />
             )}
 

@@ -3,7 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 
 const Index = () => {
-    const { postProjects, isPostgraduate, search, isUndergraduate  } = usePage().props;
+    const { postProjects, isPostgraduate, search, isUndergraduate, isFacultyAdmin  } = usePage().props;
     const [searchTerm, setSearchTerm] = useState(search || ''); // Store the search term locally
     console.log(postProjects);
 
@@ -26,7 +26,7 @@ const Index = () => {
     };
 
     return (
-        <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
+        <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold">Your Projects</h1>
                 <Link

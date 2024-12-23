@@ -22,6 +22,7 @@ use App\Http\Controllers\ShowGrantController;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ClickTrackingController;
+use App\Http\Controllers\FacultyAdminController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -31,7 +32,6 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
-
 
 Route::post('/click-tracking', [ClickTrackingController::class, 'store'])->name('click-tracking.store');
 
@@ -46,6 +46,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/dashboard/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/admin/faculty-admins', [FacultyAdminController::class, 'index'])->name('faculty-admins.index');
+    Route::post('/admin/faculty-admins', [FacultyAdminController::class, 'store'])->name('faculty-admins.store');
+});
+Route::get('/confirm-faculty-admin/{id}', [FacultyAdminController::class, 'confirm'])->name('faculty-admins.confirm');
+
+// routes/web.php
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/faculty-admin/academicians', [FacultyAdminController::class, 'listAcademicians'])->name('faculty-admin.academicians');
+    Route::post('/faculty-admin/verify-academician/{id}', [FacultyAdminController::class, 'verifyAcademician'])->name('faculty-admin.verify-academician');
 });
 
 

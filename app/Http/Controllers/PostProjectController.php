@@ -37,6 +37,7 @@ class PostProjectController extends Controller
                 'postProjects' => $postProjects,
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
                 'search' => $search,
             ]);
         }
@@ -70,6 +71,7 @@ class PostProjectController extends Controller
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
                 'researchOptions' => $researchOptions,
                 'universities' => UniversityList::all(),
             ]);
@@ -220,6 +222,7 @@ class PostProjectController extends Controller
                 'auth' => Auth::user(),
                 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
                 'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
+                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
                 'researchOptions' => $researchOptions,
                 'universities' => UniversityList::all(),
             ]);

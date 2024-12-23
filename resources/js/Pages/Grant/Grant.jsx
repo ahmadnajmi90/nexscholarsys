@@ -2,10 +2,10 @@ import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import PostingCard from '@/Components/PostingCard';
 
-const Grant = ( { grants, isPostgraduate, isUndergraduate, users} ) => {
+const Grant = ( { grants, isPostgraduate, isUndergraduate, users, isFacultyAdmin} ) => {
     console.log(grants);
     return (
-        <MainLayout title="Grant" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate}>
+        <MainLayout title="Grant" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
             <PostingCard 
             data={grants} 
             title="title" 

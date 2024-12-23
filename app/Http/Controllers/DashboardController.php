@@ -10,6 +10,10 @@ use App\Models\ClickTracking;
 use App\Models\PostGrant;
 use App\Models\PostProject;
 use App\Models\PostEvent;
+use App\Models\Academician;
+use App\Models\FieldOfResearch;
+use App\Models\UniversityList;
+use App\Models\FacultyList;
 
 class DashboardController extends Controller
 {
@@ -20,6 +24,30 @@ class DashboardController extends Controller
         }
         else{
             $postGrants = auth()->user()->postGrants;
+
+            $isFacultyAdmin = BouncerFacade::is(auth()->user())->an('faculty_admin'); // Assuming you have a method to check if the user is a faculty admin
+            $facultyAdmin = auth()->user(); // Assuming the faculty admin is logged in
+            $facultyId = $facultyAdmin->facultyAdmin->faculty; // Assuming `faculty_admin` relationship exists
+            $academicians = Academician::where('faculty', $facultyId)
+            ->with('user') // Assuming you want user details too
+            ->get();
+
+            $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+            $researchOptions = [];
+            foreach ($fieldOfResearches as $field) {
+                foreach ($field->researchAreas as $area) {
+                    foreach ($area->nicheDomains as $domain) {
+                        $researchOptions[] = [
+                            'field_of_research_id' => $field->id,
+                            'field_of_research_name' => $field->name,
+                            'research_area_id' => $area->id,
+                            'research_area_name' => $area->name,
+                            'niche_domain_id' => $domain->id,
+                            'niche_domain_name' => $domain->name,
+                        ];
+                    }
+                }
+            }
 
             return Inertia::render('Dashboard', [
                 'postGrants' => $postGrants,
@@ -32,6 +60,12 @@ class DashboardController extends Controller
                     ->count(),
                 'clicksByType' => $this->getClickDetails(), // Corrected method call
                 'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
+                'isFacultyAdmin' => $isFacultyAdmin,
+                'academicians' => $academicians ?? null,
+                'universities' => UniversityList::all(),
+                'faculties' => FacultyList::all(),
+                'users' => User::all(),
+                'researchOptions' => $researchOptions ?? null,
             ]);
         }
     }
