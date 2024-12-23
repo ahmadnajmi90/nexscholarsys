@@ -134,9 +134,10 @@ const UniversityList = ({ universities, isFacultyAdmin, isPostgraduate, isUnderg
                                 <div className="h-32">
                                     <img
                                         src={
-                                            profile.background_image !== null
-                                                ? `/storage/${profile.background_image}`
-                                                : '/storage/university_background_images/utm.jpg'
+                                            // profile.background_image !== null
+                                            //     ? `/storage/${profile.background_image}`
+                                            //     : '/storage/university_background_images/utm.jpg'
+                                            '/storage/university_background_images/utm.jpg'
                                         }
                                         alt="Banner"
                                         className="object-cover w-full h-full"
@@ -148,9 +149,10 @@ const UniversityList = ({ universities, isFacultyAdmin, isPostgraduate, isUnderg
                                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                                         <img
                                             src={
-                                                profile.profile_picture !== null
-                                                    ? `/storage/${profile.profile_picture}`
-                                                    : '/storage/university_profile_pictures/utm.png'
+                                                // profile.profile_picture !== null
+                                                //     ? `/storage/${profile.profile_picture}`
+                                                //     : '/storage/university_profile_pictures/utm.png'
+                                                '/storage/university_profile_pictures/utm.png'
                                             }
                                             alt="Profile"
                                             className="w-full h-full object-cover"
