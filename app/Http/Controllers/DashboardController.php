@@ -26,28 +26,33 @@ class DashboardController extends Controller
             $postGrants = auth()->user()->postGrants;
 
             $isFacultyAdmin = BouncerFacade::is(auth()->user())->an('faculty_admin'); // Assuming you have a method to check if the user is a faculty admin
-            $facultyAdmin = auth()->user(); // Assuming the faculty admin is logged in
-            $facultyId = $facultyAdmin->facultyAdmin->faculty; // Assuming `faculty_admin` relationship exists
-            $academicians = Academician::where('faculty', $facultyId)
-            ->with('user') // Assuming you want user details too
-            ->get();
 
-            $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
-            $researchOptions = [];
-            foreach ($fieldOfResearches as $field) {
-                foreach ($field->researchAreas as $area) {
-                    foreach ($area->nicheDomains as $domain) {
-                        $researchOptions[] = [
-                            'field_of_research_id' => $field->id,
-                            'field_of_research_name' => $field->name,
-                            'research_area_id' => $area->id,
-                            'research_area_name' => $area->name,
-                            'niche_domain_id' => $domain->id,
-                            'niche_domain_name' => $domain->name,
-                        ];
+            if($isFacultyAdmin)
+            {
+                $facultyAdmin = auth()->user(); // Assuming the faculty admin is logged in
+                $facultyId = $facultyAdmin->facultyAdmin->faculty; // Assuming `faculty_admin` relationship exists
+                $academicians = Academician::where('faculty', $facultyId)
+                ->with('user') // Assuming you want user details too
+                ->get();
+
+                $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+                $researchOptions = [];
+                foreach ($fieldOfResearches as $field) {
+                    foreach ($field->researchAreas as $area) {
+                        foreach ($area->nicheDomains as $domain) {
+                            $researchOptions[] = [
+                                'field_of_research_id' => $field->id,
+                                'field_of_research_name' => $field->name,
+                                'research_area_id' => $area->id,
+                                'research_area_name' => $area->name,
+                                'niche_domain_id' => $domain->id,
+                                'niche_domain_name' => $domain->name,
+                            ];
+                        }
                     }
                 }
             }
+
 
             return Inertia::render('Dashboard', [
                 'postGrants' => $postGrants,
