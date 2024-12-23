@@ -23,6 +23,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ClickTrackingController;
 use App\Http\Controllers\FacultyAdminController;
+use App\Http\Controllers\UniversityController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -32,6 +33,10 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
+
+Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
+Route::get('/universities/{university}/faculties', [UniversityController::class, 'faculties'])->name('universities.faculties'); // Faculty list
+Route::get('/faculties/{faculty}/academicians', [UniversityController::class, 'academicians'])->name('faculties.academicians'); // Academician list
 
 Route::post('/click-tracking', [ClickTrackingController::class, 'store'])->name('click-tracking.store');
 

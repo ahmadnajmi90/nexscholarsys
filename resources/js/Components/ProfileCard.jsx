@@ -56,6 +56,7 @@ const ProfileGridWithDualFilter = ({
     faculties,
     isPostgraduateList,
     isUndergraduateList,
+    isFacultyAdminDashboard,
     users,
     researchOptions,
 }) => {
@@ -158,12 +159,14 @@ const ProfileGridWithDualFilter = ({
                     />
 
                     {/* University Filter */}
-                    <FilterDropdown
-                        label="University"
-                        options={uniqueUniversities}
-                        selectedValues={selectedUniversity}
-                        setSelectedValues={setSelectedUniversity}
-                    />
+                    {!isFacultyAdminDashboard && (
+                        <FilterDropdown
+                            label="University"
+                            options={uniqueUniversities}
+                            selectedValues={selectedUniversity}
+                            setSelectedValues={setSelectedUniversity}
+                        />
+                    )}
 
                     {/* Supervisor Availability Filter */}
                     {!isUndergraduateList && (

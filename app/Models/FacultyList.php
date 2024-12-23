@@ -17,4 +17,9 @@ class FacultyList extends Model
     {
         return $this->belongsTo(UniversityList::class, 'university_id');
     }
+
+    public function academicians()
+    {
+        return $this->hasMany(Academician::class, 'faculty');
+    }
 }

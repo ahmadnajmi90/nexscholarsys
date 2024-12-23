@@ -46,6 +46,7 @@ const DashboardInsight  = ( { totalUsers, onlineUsers, clicksByType, isAdmin, ev
           universitiesList={universities}
           faculties={faculties}
           isPostgraduateList={false}
+          isFacultyAdminDashboard={true}
           users={users}
           researchOptions={researchOptions}/>
         </>
