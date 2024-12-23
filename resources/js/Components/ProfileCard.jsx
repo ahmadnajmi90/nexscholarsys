@@ -107,7 +107,7 @@ const ProfileGridWithDualFilter = ({
     const filteredProfiles = profilesData.filter((profile) => {
         const hasSelectedArea =
             selectedArea.length === 0 ||
-            (profile.field_of_research || profile.research_expertise || []).some((area) =>
+            (profile.field_of_research || profile.research_expertise || profile.research_preference || []).some((area) =>
                 selectedArea.includes(area)
             );
 

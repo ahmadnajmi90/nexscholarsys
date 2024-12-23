@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
@@ -11,7 +10,11 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate }) => {
 
     // Function to toggle sidebar
     const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
+        const newSidebarState = !isSidebarOpen;
+        setIsSidebarOpen(newSidebarState);
+
+        // Save the state to localStorage
+        localStorage.setItem('isSidebarOpen', newSidebarState);
     };
 
     // Effect to determine screen size for responsiveness
@@ -33,31 +36,46 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Effect to load the sidebar state from localStorage
+    useEffect(() => {
+        const savedSidebarState = localStorage.getItem('isSidebarOpen');
+        if (savedSidebarState !== null) {
+            setIsSidebarOpen(savedSidebarState === 'true');
+        }
+    }, []); // This runs only on the initial render
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar for Desktop */}
             {isDesktop && (
-                <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} />
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    isPostgraduate={isPostgraduate}
+                    isUndergraduate={isUndergraduate}
+                />
             )}
 
             {/* Mobile Sidebar */}
             {!isDesktop && (
-                <MobileSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} isPostgraduate={isPostgraduate}isUndergraduate={isUndergraduate} />
+                <MobileSidebar
+                    isOpen={isSidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    isPostgraduate={isPostgraduate}
+                    isUndergraduate={isUndergraduate}
+                />
             )}
 
             {/* Main Content Area */}
             {isDesktop ? (
                 // Desktop-specific content area
-
                 <div
                     className={`flex-1 p-6 transition-all duration-300 ${
                         isSidebarOpen ? 'ml-64' : 'ml-20'
                     }`}
                 >
-                     <TopMenu />
+                    <TopMenu />
                     <Head title={title} />
-                     {/* Top Menu */}
-
                     <div className="p-4 bg-white rounded-lg shadow">
                         <h1 className="text-2xl font-semibold mb-4">{title}</h1>
                         {children}
