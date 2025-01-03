@@ -59,7 +59,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
             )}
 
             {/* Mobile Sidebar */}
-            {/* {!isDesktop && (
+            {!isDesktop && (
                 <MobileSidebar
                     isOpen={isSidebarOpen}
                     toggleSidebar={toggleSidebar}
@@ -67,7 +67,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
                     isUndergraduate={isUndergraduate}
                     isFacultyAdmin={isFacultyAdmin}
                 />
-            )} */}
+            )}
 
             {/* Main Content Area */}
             {isDesktop ? (
