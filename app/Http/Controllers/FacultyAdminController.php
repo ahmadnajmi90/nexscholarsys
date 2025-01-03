@@ -14,14 +14,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Models\Academician;
 use Silber\Bouncer\BouncerFacade;
+use Illuminate\Support\Facades\Auth;
 
 class FacultyAdminController extends Controller
 {
     // Show the Faculty Admin creation page
     public function index()
     {
-        $isAdmin = BouncerFacade::is(auth()->user())->an('admin'); // Assuming you have a method to check if the user is an admin
-        if(!$isAdmin) {
+        if(Auth::user()->cannot('create-facultyAdmin')) {
             abort(403, 'You do not have permission to view this page.');
         }
         else{
@@ -30,7 +30,6 @@ class FacultyAdminController extends Controller
             return inertia('Admin/FacultyAdmins', [
                 'universities' => $universities,
                 'faculties' => $faculties,
-                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             ]);
         }
     }
@@ -105,10 +104,6 @@ class FacultyAdminController extends Controller
         else{
             $facultyAdmin = auth()->user(); // Assuming the faculty admin is logged in
             $facultyId = $facultyAdmin->facultyAdmin->faculty; // Assuming `faculty_admin` relationship exists
-
-            $isPostgraduate = BouncerFacade::is(auth()->user())->an('postgraduate'); // Assuming you have a method to check if the user is a postgraduate
-            $isUndergraduate = BouncerFacade::is(auth()->user())->an('undergraduate'); // Assuming you have a method to check if the user is an undergraduate
-            $isFacultyAdmin = BouncerFacade::is(auth()->user())->an('faculty_admin'); // Assuming you have a method to check if the user is a faculty admin
             $universities = UniversityList::all(); // Assuming a University model
             $faculties = FacultyList::all(); // Assuming a University model
 
@@ -120,9 +115,6 @@ class FacultyAdminController extends Controller
 
             return inertia('FacultyAdmin/AcademiciansList', [
                 'academicians' => $academicians,
-                'isPostgraduate' => $isPostgraduate,
-                'isUndergraduate' => $isUndergraduate,
-                'isFacultyAdmin' => $isFacultyAdmin,
                 'universities' => $universities,
                 'faculties' => $faculties,
             ]);

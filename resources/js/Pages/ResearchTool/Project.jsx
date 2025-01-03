@@ -1,11 +1,12 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import PostingCard from '@/Components/PostingCard';
+import useRoles from '@/Hooks/useRoles';
 
-const Project = ( { projects, isPostgraduate, isUndergraduate, users, isFacultyAdmin} ) => {
-    console.log(projects);
+const Project = ( { projects, users} ) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     return (
-        <MainLayout title="Project" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="Project">
             <PostingCard 
             data={projects} 
             title="title" 

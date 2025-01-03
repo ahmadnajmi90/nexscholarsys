@@ -5,9 +5,11 @@ import NationalityForm from "../Role/Partials/NationalityForm";
 import Select from "react-select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import useRoles from "../../Hooks/useRoles";
 
 
-export default function Edit({ postGrant, auth, isPostgraduate, isUndergraduate, isFacultyAdmin }) {
+export default function Edit({ postGrant, auth }) {
+  const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
   const { data, setData, post, processing, errors } = useForm({
     title: postGrant.title || "",
     description: postGrant.description || "",
@@ -94,7 +96,7 @@ const handleSubmit = async (e) => {
 };
 
 return (
-  <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+  <MainLayout title="">
   <div className="p-4">
     {/* Back Arrow */}
     <button

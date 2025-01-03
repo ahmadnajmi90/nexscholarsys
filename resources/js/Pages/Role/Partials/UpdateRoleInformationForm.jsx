@@ -8,10 +8,9 @@ import { useState } from 'react';
 import AcademicianForm from './AcademicianForm';
 import PostgraduateForm from './PostgraduateForm';
 import UndergraduateForm from './UndergraduateForm';
+import useRoles from '@/Hooks/useRoles';
 
 export default function UpdateProfileInformation({
-    isPostgraduate,
-    isAcademician,
     universities,
     faculties,
     className = '',
@@ -20,7 +19,7 @@ export default function UpdateProfileInformation({
     const academician = usePage().props.academician; // Related academician data
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
     const undergraduate = usePage().props.undergraduate; // Related undergraduate data
-    const isUndergraduate = usePage().props.isUndergraduate; // Related undergraduate data
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
     return (
         <>

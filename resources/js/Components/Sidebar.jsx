@@ -16,8 +16,10 @@ import {
     FaBookReader,
     FaBookOpen,
 } from 'react-icons/fa';
+import useRoles from '@/Hooks/useRoles';
 
-const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate, isFacultyAdmin }) => {
+const Sidebar = ({ isOpen, toggleSidebar }) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const user = usePage().props.auth.user;
 
     const [menuOpen, setMenuOpen] = useState({
@@ -76,6 +78,25 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate, isFac
                         )}
                     </div>
 
+                    {/* Admin Features Section */}
+                    {isAdmin && (
+                        <div>
+                            <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Admin Features</h3>
+                            {canCreateFacultyAdmin && (
+                            <Link href={route('faculty-admins.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                                <FaTachometerAlt className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Create Faculty Admin</span>
+                            </Link>)}
+
+                            {canAssignAbilities && (
+                            <Link href={route('roles.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                                <FaTachometerAlt className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Assign Abilities</span>
+                            </Link>
+                            )}
+                        </div>
+                    )}
+
                     {/* Networking Section */}
                     <div>
                         <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Networking</h3>
@@ -113,7 +134,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate, isFac
                         {menuOpen.grant && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">View Grant</Link>
-                                {!(isPostgraduate || isUndergraduate)&& (
+                                {canPostGrants && (
                                 <Link href={route('post-grants.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Grants
                                 </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Sponsorship</Link>
@@ -131,7 +152,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate, isFac
                         {menuOpen.project && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/project" className="block py-2 hover:bg-gray-100 rounded"> View Project</Link>
-                                {!(isPostgraduate || isUndergraduate) && (
+                                {canPostProjects && (
                                 <Link href={route('post-projects.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Projects
                                 </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Paper</Link>
@@ -150,7 +171,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isPostgraduate, isUndergraduate, isFac
                         {menuOpen.event && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
                                 <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
-                                {!(isPostgraduate || isUndergraduate) && (
+                                {canPostEvents && (
                                 <Link href={route('post-events.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Event
                                 </Link>)}
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>

@@ -1,10 +1,12 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import ProfileCard from '@/Components/ProfileCard';
+import useRoles from '@/Hooks/useRoles';
 
-const Undergraduate = ( { undergraduates, isPostgraduate, isUndergraduate, universities, faculties, users, researchOptions, isFacultyAdmin } ) => {
+const Undergraduate = ( { undergraduates, universities, faculties, users, researchOptions } ) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     return (
-        <MainLayout title="Undergraduate" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="Undergraduate">
             <ProfileCard 
             profilesData={undergraduates}
             universitiesList={universities} 

@@ -14,6 +14,7 @@ use App\Models\Academician;
 use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
 use App\Models\FacultyList;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -56,16 +57,12 @@ class DashboardController extends Controller
 
             return Inertia::render('Dashboard', [
                 'postGrants' => $postGrants,
-                'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-                'isAdmin' => BouncerFacade::is(Auth::user())->an('admin'),
                 'totalUsers' => User::where('id', '!=', Auth::id())->count(), // Except admin itself
                 'onlineUsers' => User::where('id', '!=', Auth::id())
                     ->where('last_activity', '>=', now()->subMinutes(5))
                     ->count(),
                 'clicksByType' => $this->getClickDetails(), // Corrected method call
                 'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
-                'isFacultyAdmin' => $isFacultyAdmin,
                 'academicians' => $academicians ?? null,
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),

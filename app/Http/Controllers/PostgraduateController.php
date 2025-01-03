@@ -35,9 +35,6 @@ class PostgraduateController extends Controller
         return Inertia::render('Networking/Postgraduate', [
             // Pass any data you want to the component here
             'postgraduates' => Postgraduate::all(),
-            'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
             'users' => User::all(),

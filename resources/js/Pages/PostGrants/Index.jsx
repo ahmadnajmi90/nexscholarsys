@@ -25,7 +25,7 @@ const Index = () => {
     };
 
     return (
-        <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold">Your Grants</h1>
                 <Link

@@ -2,30 +2,28 @@ import React from 'react';
 import MainLayout from '../Layouts/MainLayout';
 import DashboardInsights from '../Components/DashboardInsights';
 import SuccessAlert4 from '@/Components/WelcomeMessage';
+import useRoles from '@/Hooks/useRoles';
+
 const Dashboard = ({
     totalUsers,
     onlineUsers,
     clicksByType,
-    isAdmin,
-    isPostgraduate,
-    isUndergraduate,
     events,
-    isFacultyAdmin,
     academicians,
     universities,
     faculties,
     users,
     researchOptions,
 }) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
+
     return (
-            <MainLayout title="Dashboard" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+            <MainLayout title="Dashboard">
                 <DashboardInsights 
                 totalUsers={totalUsers} 
                 onlineUsers={onlineUsers} 
                 clicksByType={clicksByType} 
-                isAdmin={isAdmin} 
                 events={events} 
-                isFacultyAdmin={isFacultyAdmin}
                 academicians={academicians}
                 universities={universities}
                 faculties={faculties}

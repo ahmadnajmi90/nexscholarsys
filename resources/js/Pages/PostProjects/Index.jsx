@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
+import useRoles from '../../Hooks/useRoles';
 
 const Index = () => {
-    const { postProjects, isPostgraduate, search, isUndergraduate, isFacultyAdmin  } = usePage().props;
+    const { postProjects, search  } = usePage().props;
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const [searchTerm, setSearchTerm] = useState(search || ''); // Store the search term locally
     console.log(postProjects);
 
@@ -26,7 +28,7 @@ const Index = () => {
     };
 
     return (
-        <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="" >
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold">Your Projects</h1>
                 <Link

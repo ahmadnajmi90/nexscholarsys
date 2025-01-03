@@ -6,9 +6,11 @@ import NationalityForm from "../Role/Partials/NationalityForm";
 import Select from "react-select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import useRoles from "../../Hooks/useRoles";
 
 export default function Create() {
-  const { auth, isPostgraduate, researchOptions, universities, isUndergraduate, isFacultyAdmin } = usePage().props;
+  const { auth, researchOptions, universities } = usePage().props;
+  const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
   const { data, setData, post, processing, errors } = useForm({
     title: "",
@@ -109,7 +111,7 @@ export default function Create() {
   }
 
   return (
-    <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+    <MainLayout title="" >
     <div className="p-4">
       {/* Back Arrow */}
       <button

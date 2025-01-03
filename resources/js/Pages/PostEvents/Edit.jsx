@@ -4,9 +4,10 @@ import MainLayout from "../../Layouts/MainLayout";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import NationalityForm from "../Role/Partials/NationalityForm";
+import useRoles from "../../Hooks/useRoles";
 
-
-export default function Edit({ postEvent, auth, isPostgraduate, isUndergraduate, isFacultyAdmin }) {
+export default function Edit({ postEvent, auth }) {
+  const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
   const { data, setData, post, processing, errors } = useForm({
     event_name: postEvent.event_name || "",
     description: postEvent.description || "",
@@ -61,7 +62,7 @@ export default function Edit({ postEvent, auth, isPostgraduate, isUndergraduate,
   };
 
   return (
-    <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+    <MainLayout title="">
   <div className="p-4">
     <form
       onSubmit={handleSubmit}

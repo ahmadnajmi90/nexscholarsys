@@ -1,10 +1,11 @@
 import React from 'react';
 import { usePage, useForm } from '@inertiajs/react';
 import MainLayout from "../../Layouts/MainLayout";
+import useRoles from '@/Hooks/useRoles';
 
 const AcademiciansList = () => {
-    const { academicians, flash, isPostgraduate, isUndergraduate, isFacultyAdmin, universities, faculties } = usePage().props; // Get data passed from the backend
-    console.log(isFacultyAdmin);
+    const { academicians, flash, universities, faculties } = usePage().props; // Get data passed from the backend
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const { post } = useForm(); // For handling verification requests
 
     const handleVerify = (id) => {
@@ -29,7 +30,7 @@ const AcademiciansList = () => {
     };
 
     return (
-        <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="">
             <div className="px-4 pb-4">
                 <h1 className="text-2xl font-bold mb-4">Verify Academicians</h1>
                 {flash?.success && (

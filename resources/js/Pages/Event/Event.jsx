@@ -1,11 +1,12 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import PostingCard from '@/Components/PostingCard';
+import useRoles from '@/Hooks/useRoles';
 
-const Event = ( { events, isPostgraduate, isUndergraduate, users, isFacultyAdmin} ) => {
-    console.log(events);
+const Event = ( { events, users} ) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     return (
-        <MainLayout title="Event" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="Event">
             <PostingCard 
             data={events} 
             title="event_name" 

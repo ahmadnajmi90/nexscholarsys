@@ -52,7 +52,8 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
     );
 };
 
-const UniversityList = ({ universities, isFacultyAdmin, isPostgraduate, isUndergraduate }) => {
+const UniversityList = ({ universities }) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const [selectedCountries, setSelectedCountries] = useState([]);
     // const [selectedUniversity, setSelectedUniversity] = useState([]);
     // const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
@@ -107,7 +108,7 @@ const UniversityList = ({ universities, isFacultyAdmin, isPostgraduate, isUnderg
         // };
     
         return (
-            <MainLayout title={"List of Universities"} isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+            <MainLayout title={"List of Universities"} >
             <div className="min-h-screen flex">
                 {/* Sidebar for Filters */}
                 <div className="w-1/4 p-4 bg-gray-100 border-r">

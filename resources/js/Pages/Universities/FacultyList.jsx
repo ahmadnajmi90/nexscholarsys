@@ -3,8 +3,10 @@ import { Link } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout";
 import { useState } from "react";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
+import useRoles from "@/Hooks/useRoles";
 
-const FacultyList = ({ faculties, universityName, isFacultyAdmin, isPostgraduate, isUndergraduate }) => {
+const FacultyList = ({ faculties, universityName }) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     // const [selectedCountries, setSelectedCountries] = useState([]);
     // const [selectedUniversity, setSelectedUniversity] = useState([]);
     // const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
@@ -59,7 +61,7 @@ const FacultyList = ({ faculties, universityName, isFacultyAdmin, isPostgraduate
         // };
     
         return (
-            <MainLayout title={"List of Faculties"} isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+            <MainLayout title={"List of Faculties"}>
             <div className="min-h-screen flex">
                 {/* Sidebar for Filters */}
                 

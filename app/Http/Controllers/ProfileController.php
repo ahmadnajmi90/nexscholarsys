@@ -22,9 +22,6 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
         ]);
     }
 

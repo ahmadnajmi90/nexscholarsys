@@ -4,9 +4,10 @@ import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import MainLayout from '@/Layouts/MainLayout';
+import useRoles from '@/Hooks/useRoles';
 
 export default function Edit({ mustVerifyEmail, status }) {
-    const { isPostgraduate, isUndergraduate, isFacultyAdmin } = usePage().props;
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
     return (
         <MainLayout
@@ -15,9 +16,6 @@ export default function Edit({ mustVerifyEmail, status }) {
                     Profile
                 </h2>
             }
-            isPostgraduate={isPostgraduate}
-            isUndergraduate={isUndergraduate}
-            isFacultyAdmin={isFacultyAdmin}
         >
             <Head title="Profile" />
 

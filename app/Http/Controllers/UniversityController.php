@@ -16,20 +16,14 @@ class UniversityController extends Controller
     {
         $universities = UniversityList::all();
         return inertia('Universities/UniversityList', 
-        ['universities' => $universities,
-            'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),]);
+        ['universities' => $universities]);
     }
 
     public function faculties(UniversityList $university)
     {
         $faculties = $university->faculties; // Assuming a relationship
         return inertia('Universities/FacultyList', 
-        ['faculties' => $faculties, 'universityName' => $university->name
-                , 'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-                        'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-                        'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),]);
+        ['faculties' => $faculties, 'universityName' => $university->name]);
     }
 
     public function academicians(FacultyList $faculty)
@@ -57,9 +51,6 @@ class UniversityController extends Controller
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),
                 'researchOptions' => $researchOptions,
-                'isPostgraduate' => BouncerFacade::is(Auth::user())->an('postgraduate'),
-                'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-                'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             ]);
     }
 }

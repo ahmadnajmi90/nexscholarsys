@@ -5,9 +5,11 @@ import { useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill styles
 import NationalityForm from "../Role/Partials/NationalityForm";
+import useRoles from "../../Hooks/useRoles";
 
 export default function Create() {
-  const { auth, isPostgraduate, isUndergraduate, isFacultyAdmin } = usePage().props;
+  const { auth } = usePage().props;
+  const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
   const { data, setData, post, processing, errors } = useForm({
     event_name: "",
@@ -66,7 +68,7 @@ export default function Create() {
   }
 
   return (
-    <MainLayout title="" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+    <MainLayout title="">
   <div className="p-4">
     <form
       onSubmit={handleSubmit}

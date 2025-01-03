@@ -24,6 +24,16 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ClickTrackingController;
 use App\Http\Controllers\FacultyAdminController;
 use App\Http\Controllers\UniversityController;
+use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\AbilityController;
+
+Route::get('/admin/roles', [RolePermissionController::class, 'index'])->name('roles.index');
+Route::get('/admin/roles/{role}/abilities', [RolePermissionController::class, 'edit'])->name('roles.abilities.edit');
+Route::post('/admin/roles/{role}/abilities', [RolePermissionController::class, 'update'])->name('roles.abilities.update');
+
+Route::post('/abilities', [AbilityController::class, 'store'])->name('abilities.store');
+Route::delete('/abilities/{id}', [AbilityController::class, 'destroy'])->name('abilities.destroy');
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [

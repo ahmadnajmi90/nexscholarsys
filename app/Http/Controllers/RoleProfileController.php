@@ -46,10 +46,6 @@ class RoleProfileController extends Controller
         }
 
         return Inertia::render('Role/Edit', [
-            'isPostgraduate' => $isPostgraduate,
-            'isAcademician' => $isAcademician,
-            'isUndergraduate' => BouncerFacade::is(Auth::user())->an('undergraduate'),
-            'isFacultyAdmin' => BouncerFacade::is(Auth::user())->an('faculty_admin'),
             'postgraduate' => $isPostgraduate ? Auth::user()->postgraduate : null,
             'academician' => $isAcademician ? Auth::user()->academician : null,
             'undergraduate' => $isUndergraduate ? Auth::user()->undergraduate : null,

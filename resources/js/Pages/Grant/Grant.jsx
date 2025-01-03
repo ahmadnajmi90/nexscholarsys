@@ -1,11 +1,12 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import PostingCard from '@/Components/PostingCard';
+import useRoles from '@/Hooks/useRoles';
 
-const Grant = ( { grants, isPostgraduate, isUndergraduate, users, isFacultyAdmin} ) => {
-    console.log(grants);
+const Grant = ( { grants, users } ) => {
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     return (
-        <MainLayout title="Grant" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+        <MainLayout title="Grant">
             <PostingCard 
             data={grants} 
             title="title" 
