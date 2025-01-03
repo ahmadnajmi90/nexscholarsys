@@ -1,191 +1,238 @@
-import React, { useState, useEffect } from "react";
-import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
+import React, { useState } from "react";
 
-const Dashboard_M = () => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [fade, setFade] = useState(true); // State for controlling fade effect
-  const images = [
-    {
-      url: "https://images.unsplash.com/photo-1484876065684-b683cf17d276?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
-      title: "Tasnim Lacey New Album Out Now",
-      author: "Gwen Thomson",
-      likes: 18,
-    },
-    {
-      url: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1649&q=80",
-      title: "Top 5 Cocktail Bars in NYC",
-      author: "Kayden Buckley",
-      likes: 7,
-    },
-    {
-      url: "https://images.unsplash.com/photo-1526661934280-676cef25bc9b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-      title: "Best Travel Destinations",
-      author: "Rowena Wheeler",
-      likes: 12,
-    },
-    {
-      url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-      title: "Latest Fashion Trends",
-      author: "Jack Ryan",
-      likes: 15,
-    },
-    {
-      url: "https://images.unsplash.com/photo-1558365849-6ebd8b0454b2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
-      title: "Amazing Nature Spots",
-      author: "Kevin Jackson",
-      likes: 20,
-    },
-  ];
+const UpcomingEvents = ({ events = [] }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const handleQuickInfoClick = (item) => {
+        setSelectedItem(item);
+        setIsModalOpen(true);
+    };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false); // Start fade-out
-      setTimeout(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-        setFade(true); // Start fade-in
-      }, 300); // Wait for fade-out duration
-    }, 3000); // Auto-slide every 3 seconds
-    return () => clearInterval(interval);
-  }, [images.length]);
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedItem(null);
+    };
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
-  const handleDotClick = (index) => {
-    setFade(false);
-    setTimeout(() => {
-      setCurrentIndex(index);
-      setFade(true);
-    }, 300);
-  };
+    // Calculate paginated data
+    const totalPages = Math.ceil(events.length / itemsPerPage);
+    const currentData = events.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
+    // Pagination Handlers
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
 
-  return (
-    <div className="w-screen h-screen bg-gray-200 flex items-center justify-center">
-      <div
-        className="bg-white text-gray-800 rounded-xl shadow-lg overflow-hidden relative flex flex-col"
-        style={{ width: "414px", height: "736px", maxWidth: "100%", maxHeight: "100%" }}
-      >
-        <div className="bg-white w-full px-5 pt-6 pb-20 overflow-y-auto h-full">
-          {/* Today Section */}
-          <div className="mb-3">
-            <h1 className="text-3xl font-bold">Today</h1>
-            <p className="text-sm text-gray-500 uppercase font-bold">THURSDAY 6 AUGUST</p>
-          </div>
-         {/* Carousel Section */}
-         <div className="mb-5 relative">
-            <a
-              href="#"
-              className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${
-                fade ? "opacity-100" : "opacity-0"
-              }`}
-              style={{
-                backgroundImage: `url(${images[currentIndex].url})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              <div className="h-48"></div>
-              <h2 className="text-white text-2xl font-bold leading-tight mb-3 pr-5">
-                {images[currentIndex].title}
-              </h2>
-              <div className="flex w-full items-center text-sm text-gray-300 font-medium">
-                <div className="flex-1 flex items-center">
-                  <div
-                    className="rounded-full w-8 h-8 mr-3"
-                    style={{
-                      backgroundImage: `url(https://randomuser.me/api/portraits/men/32.jpg)`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  ></div>
-                  <div>{images[currentIndex].author}</div>
-                </div>
-                <div>{images[currentIndex].likes}</div>
-              </div>
-            </a>
-            {/* Pagination Dots */}
-            <div className="absolute bottom-2 right-2 flex space-x-2">
-              {images.map((_, index) => (
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    return (
+        <div className="col-span-2 md:col-span-1 bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-bold mb-4">Upcoming Events</h2>
+            <ul className="space-y-4">
+                {currentData.map((event, index) => (
+                    <li
+                        key={index}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-50 shadow hover:shadow-md transition-all"
+                    >
+                        <div className="flex items-start space-x-4">
+                            <img
+                                src="https://flagcdn.com/w40/my.png"
+                                alt="Malaysia Flag"
+                                className="w-8 h-5"
+                            />
+                            <div>
+                                <p
+                                    className="font-medium text-gray-800 truncate w-40 md:w-48"
+                                    title={event.event_name}
+                                >
+                                    {event.event_name}
+                                </p>
+                                <p className="text-sm text-gray-600">{event.start_date_time} &nbsp; {event.location}</p>
+
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleQuickInfoClick(event)}
+                            className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-700">
+                            &rarr;
+                        </button>
+                    </li>
+                ))}
+            </ul>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center mt-4">
                 <button
-                  key={index}
-                  onClick={() => handleDotClick(index)}
-                  className={`w-2 h-2 rounded-full ${
-                    index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
-                  }`}
-                ></button>
-              ))}
+                    onClick={handlePrev}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg ${currentPage === 1
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                >
+                    Prev
+                </button>
+                <p className="text-sm">
+                    Page {currentPage} of {totalPages}
+                </p>
+                <button
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg ${currentPage === totalPages
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                >
+                    Next
+                </button>
             </div>
-          </div>
-          {/* Other cards */}
-          <div className="mb-5">
-            <a
-              href="#"
-              className="block rounded-lg relative p-5 transform transition-all duration-300 scale-100 hover:scale-95"
-              style={{
-                background: "url(https://images.unsplash.com/photo-1470337458703-46ad1756a187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1649&q=80) center",
-                backgroundSize: "cover",
-              }}
-            >
-              <div className="h-48"></div>
-              <h2 className="text-white text-2xl font-bold leading-tight mb-3 pr-5">
-                Top 5 Cocktail Bars in NYC
-              </h2>
-              <div className="flex w-full items-center text-sm text-gray-300 font-medium">
-                <div className="flex-1 flex items-center">
-                  <div
-                    className="rounded-full w-8 h-8 mr-3"
-                    style={{
-                      background: "url(https://randomuser.me/api/portraits/women/55.jpg) center",
-                      backgroundSize: "cover",
-                    }}
-                  ></div>
-                  <div>Kayden Buckley</div>
-                </div>
-                <div>7</div>
-              </div>
-            </a>
-          </div>
-        </div>
-        {/* Bottom Navigation Bar */}
-        <div className="bg-white fixed bottom-0 w-full border-t border-gray-200 flex">
-          <a
-            href="#"
-            className="flex flex-grow items-center justify-center p-2 text-indigo-500 hover:text-indigo-500"
-          >
-            <div className="text-center">
-              <FaNewspaper className="text-3xl" />
-              <span className="block text-xs leading-none">Today</span>
-            </div>
-          </a>
-          <a
-            href="#"
-            className="flex flex-grow items-center justify-center p-2 text-gray-500 hover:text-indigo-500"
-          >
-            <div className="text-center">
-              <FaTh className="text-3xl" />
-              <span className="block text-xs leading-none">Categories</span>
-            </div>
-          </a>
-          <a
-            href="#"
-            className="flex flex-grow items-center justify-center p-2 text-gray-500 hover:text-indigo-500"
-          >
-            <div className="text-center">
-              <FaStar className="text-3xl" />
-              <span className="block text-xs leading-none">Favorites</span>
-            </div>
-          </a>
-          <a
-            href="#"
-            className="flex flex-grow items-center justify-center p-2 text-gray-500 hover:text-indigo-500"
-          >
-            <div className="text-center">
-              <FaSearch className="text-3xl" />
-              <span className="block text-xs leading-none">Search</span>
-            </div>
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-export default Dashboard_M;
+            {/* Modal Section */}
+            {isModalOpen && selectedItem && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    onClick={closeModal} // Close modal when clicking on the background
+                >
+                    <div
+                        className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-4xl relative overflow-y-auto max-h-[90vh]" // Expanded size and scrollable content
+                        onClick={(e) => e.stopPropagation()} // Prevent background click from closing modal when interacting with the modal content
+                    >
+                        {/* Modal Header */}
+                        <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">
+                            {selectedItem.event_name}
+                        </h3>
+
+                        {/* Modal Content */}
+                        <div className="space-y-4">
+                            <div className="text-gray-600">
+                                <span className="font-semibold">Description:</span>
+                                {selectedItem.description ? (
+                                    <div
+                                        className="mt-2 text-sm"
+                                        dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+                                    ></div>
+                                ) : (
+                                    <p className="mt-2 text-sm text-gray-500">No description available.</p>
+                                )}
+                            </div>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Event type:</span>{" "}
+                                {(() => {
+                                    switch (selectedItem.event_type) {
+                                        case "competition":
+                                            return "Competition";
+                                        case "conference":
+                                            return "Conference";
+                                        case "workshop":
+                                            return "Workshop";
+                                        case "seminar":
+                                            return "Seminar";
+                                        case "webinar":
+                                            return "Webinar";
+                                        default:
+                                            return "Not provided";
+                                    }
+                                })()}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Event Duration:</span>{" "}
+                                {selectedItem.start_date_time
+                                    ? `${selectedItem.start_date_time} - ${selectedItem.end_date_time}`
+                                    : "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Target Audience:</span>{" "}
+                                {(() => {
+                                    try {
+                                        const parsedAudience = JSON.parse(selectedItem.target_audience);
+                                        if (Array.isArray(parsedAudience)) {
+                                            return parsedAudience.join(", ");
+                                        }
+                                        return "Invalid format";
+                                    } catch (e) {
+                                        return selectedItem.target_audience || "Not provided";
+                                    }
+                                })()}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Organized by:</span>{" "}
+                                {selectedItem.organized_by || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Registration Link:</span>{" "}
+                                {selectedItem.registration_url || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Registration Deadline:</span>{" "}
+                                {selectedItem.registration_deadline || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Contact Email:</span>{" "}
+                                {selectedItem.contact_email || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Contact No.:</span>{" "}
+                                {selectedItem.contact_number || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Location:</span>{" "}
+                                {selectedItem.location || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Fees:</span>{" "}
+                                {selectedItem.fees || "Not provided"}
+                            </p>
+
+                            <p className="text-gray-600">
+                                <span className="font-semibold">Attachment:</span>{" "}
+                                {selectedItem.attachment ? (
+                                    <a
+                                        href={`/storage/${selectedItem.attachment}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-500 underline"
+                                    >
+                                        View Attachment
+                                    </a>
+                                ) : (
+                                    "No attachment available."
+                                )}
+                            </p>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={closeModal}
+                                className="px-6 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition duration-200"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+}
+
+
+export default UpcomingEvents;

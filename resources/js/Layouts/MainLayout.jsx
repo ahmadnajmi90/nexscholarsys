@@ -5,7 +5,7 @@ import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import Dashboard_m from "../Components/Dashboard_m"; // Import the mobile view component
 
-const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacultyAdmin }) => {
+const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacultyAdmin, events }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
 
@@ -92,7 +92,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
                     // }`}
                 >
                     <Head title={title} />
-                    <Dashboard_m /> {/* Render the mobile dashboard */}
+                    <Dashboard_m events={events}/> {/* Render the mobile dashboard */}
                 </div>
             )}
         </div>
