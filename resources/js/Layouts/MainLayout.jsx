@@ -5,7 +5,7 @@ import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import Dashboard_m from "../Components/Dashboard_m"; // Import the mobile view component
 
-const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacultyAdmin, events }) => {
+const MainLayout = ({ children, title }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
 
@@ -52,9 +52,6 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
                 <Sidebar
                     isOpen={isSidebarOpen}
                     toggleSidebar={toggleSidebar}
-                    isPostgraduate={isPostgraduate}
-                    isUndergraduate={isUndergraduate}
-                    isFacultyAdmin={isFacultyAdmin}
                 />
             )}
 
@@ -63,9 +60,6 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
                 <MobileSidebar
                     isOpen={isSidebarOpen}
                     toggleSidebar={toggleSidebar}
-                    isPostgraduate={isPostgraduate}
-                    isUndergraduate={isUndergraduate}
-                    isFacultyAdmin={isFacultyAdmin}
                 />
             )}
 
@@ -80,7 +74,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
                     <TopMenu />
                     <Head title={title} />
                     <div className="p-4 bg-white rounded-lg shadow">
-                        <h1 className="text-2xl font-semibold mb-4">{title}</h1>
+                        <h1 className="text-2xl font-semibold mb-4 pt-2 pl-2">{title}</h1>
                         {children}
                     </div>
                 </div>
