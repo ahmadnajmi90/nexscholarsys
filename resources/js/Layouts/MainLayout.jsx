@@ -3,6 +3,7 @@ import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
+import Dashboard_m from "../Components/Dashboard_m"; // Import the mobile view component
 
 const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacultyAdmin }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -58,7 +59,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
             )}
 
             {/* Mobile Sidebar */}
-            {!isDesktop && (
+            {/* {!isDesktop && (
                 <MobileSidebar
                     isOpen={isSidebarOpen}
                     toggleSidebar={toggleSidebar}
@@ -66,7 +67,7 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
                     isUndergraduate={isUndergraduate}
                     isFacultyAdmin={isFacultyAdmin}
                 />
-            )}
+            )} */}
 
             {/* Main Content Area */}
             {isDesktop ? (
@@ -86,15 +87,12 @@ const MainLayout = ({ children, title, isPostgraduate, isUndergraduate, isFacult
             ) : (
                 // Mobile-specific content area
                 <div
-                    className={`flex-1 p-6 transition-all duration-300 ${
-                        isSidebarOpen ? 'ml-64' : 'ml-0'
-                    }`}
+                    // className={`flex-1 p-6 transition-all duration-300 ${
+                    //     isSidebarOpen ? 'ml-64' : 'ml-0'
+                    // }`}
                 >
                     <Head title={title} />
-                    <div className="p-4 bg-white rounded-lg shadow">
-                        <h1 className="text-2xl font-semibold mb-4">{title}</h1>
-                        {children}
-                    </div>
+                    <Dashboard_m /> {/* Render the mobile dashboard */}
                 </div>
             )}
         </div>
