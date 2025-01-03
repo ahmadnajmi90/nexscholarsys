@@ -1,7 +1,62 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 
 const Dashboard_M = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [fade, setFade] = useState(true); // State for controlling fade effect
+  const images = [
+    {
+      url: "https://images.unsplash.com/photo-1484876065684-b683cf17d276?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
+      title: "Tasnim Lacey New Album Out Now",
+      author: "Gwen Thomson",
+      likes: 18,
+    },
+    {
+      url: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1649&q=80",
+      title: "Top 5 Cocktail Bars in NYC",
+      author: "Kayden Buckley",
+      likes: 7,
+    },
+    {
+      url: "https://images.unsplash.com/photo-1526661934280-676cef25bc9b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
+      title: "Best Travel Destinations",
+      author: "Rowena Wheeler",
+      likes: 12,
+    },
+    {
+      url: "https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
+      title: "Latest Fashion Trends",
+      author: "Jack Ryan",
+      likes: 15,
+    },
+    {
+      url: "https://images.unsplash.com/photo-1558365849-6ebd8b0454b2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
+      title: "Amazing Nature Spots",
+      author: "Kevin Jackson",
+      likes: 20,
+    },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false); // Start fade-out
+      setTimeout(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+        setFade(true); // Start fade-in
+      }, 300); // Wait for fade-out duration
+    }, 3000); // Auto-slide every 3 seconds
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  const handleDotClick = (index) => {
+    setFade(false);
+    setTimeout(() => {
+      setCurrentIndex(index);
+      setFade(true);
+    }, 300);
+  };
+
+
   return (
     <div className="w-screen h-screen bg-gray-200 flex items-center justify-center">
       <div
@@ -14,41 +69,52 @@ const Dashboard_M = () => {
             <h1 className="text-3xl font-bold">Today</h1>
             <p className="text-sm text-gray-500 uppercase font-bold">THURSDAY 6 AUGUST</p>
           </div>
-          {/* First Card */}
-          <div className="mb-5">
+         {/* Carousel Section */}
+         <div className="mb-5 relative">
             <a
               href="#"
-              className="block rounded-lg relative p-5 transform transition-all duration-300 scale-100 hover:scale-95"
+              className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${
+                fade ? "opacity-100" : "opacity-0"
+              }`}
               style={{
-                background: "url(https://images.unsplash.com/photo-1484876065684-b683cf17d276?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80) center",
+                backgroundImage: `url(${images[currentIndex].url})`,
                 backgroundSize: "cover",
+                backgroundPosition: "center",
               }}
             >
-              <div className="absolute top-0 right-0 -mt-3 mr-3">
-                <div className="rounded-full bg-indigo-500 text-white text-xs py-1 pl-2 pr-3 leading-none">
-                  <span className="align-middle">FRESH</span>
-                </div>
-              </div>
               <div className="h-48"></div>
               <h2 className="text-white text-2xl font-bold leading-tight mb-3 pr-5">
-                Tasnim Lacey New Album Out Now
+                {images[currentIndex].title}
               </h2>
               <div className="flex w-full items-center text-sm text-gray-300 font-medium">
                 <div className="flex-1 flex items-center">
                   <div
                     className="rounded-full w-8 h-8 mr-3"
                     style={{
-                      background: "url(https://randomuser.me/api/portraits/women/74.jpg) center",
+                      backgroundImage: `url(https://randomuser.me/api/portraits/men/32.jpg)`,
                       backgroundSize: "cover",
+                      backgroundPosition: "center",
                     }}
                   ></div>
-                  <div>Gwen Thomson</div>
+                  <div>{images[currentIndex].author}</div>
                 </div>
-                <div>18</div>
+                <div>{images[currentIndex].likes}</div>
               </div>
             </a>
+            {/* Pagination Dots */}
+            <div className="absolute bottom-2 right-2 flex space-x-2">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleDotClick(index)}
+                  className={`w-2 h-2 rounded-full ${
+                    index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
+                  }`}
+                ></button>
+              ))}
+            </div>
           </div>
-          {/* Other cards (repeat similar structure) */}
+          {/* Other cards */}
           <div className="mb-5">
             <a
               href="#"
