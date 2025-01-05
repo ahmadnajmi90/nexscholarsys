@@ -45,6 +45,7 @@ const MainLayout = ({ children, title }) => {
         }
     }, []); // This runs only on the initial render
 
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar for Desktop */}
@@ -81,12 +82,13 @@ const MainLayout = ({ children, title }) => {
             ) : (
                 // Mobile-specific content area
                 <div
-                    // className={`flex-1 p-6 transition-all duration-300 ${
-                    //     isSidebarOpen ? 'ml-64' : 'ml-0'
-                    // }`}
+                    className={`flex-1 p-6 transition-all duration-300 ${
+                        isSidebarOpen ? 'ml-64' : 'ml-0'
+                    }`}
                 >
                     <Head title={title} />
-                    <Dashboard_m events={events}/> {/* Render the mobile dashboard */}
+                    {children}
+                    {/* <Dashboard_m events={events}/> */}
                 </div>
             )}
         </div>
