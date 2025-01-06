@@ -10,34 +10,33 @@ class PostEventSeeder extends Seeder
 {
     public function run()
     {
-        // Define options for event type and location
+        // Define options for event type, mode, and status
         $eventTypes = ['competition', 'conference', 'workshop', 'seminar', 'webinar'];
-        $locations = ['On-Campus', 'Remote', 'Hybrid'];
+        $eventModes = ['On-Campus', 'Remote', 'Hybrid'];
+        $eventStatuses = ['draft', 'published'];
+        $countries = ['Malaysia', 'USA', 'UK', 'India', 'Australia'];
+        $cities = ['Kuala Lumpur', 'New York', 'London', 'Mumbai', 'Sydney'];
 
         for ($i = 0; $i < 30; $i++) {
             DB::table('post_events')->insert([
                 'author_id' => 'admin',
                 'event_name' => 'Event ' . ($i + 1),
                 'description' => 'This is a description for Event ' . ($i + 1),
-                'image' => 'event_images/dlKGDH9yRxYybZNhJV9DEBzShrqnXJqI4etLomxx.png',
                 'event_type' => $eventTypes[array_rand($eventTypes)],
-                'theme' => json_encode(['Theme ' . rand(1, 5), 'Theme ' . rand(6, 10)]), // Example themes
-                'location' => $locations[array_rand($locations)],
-                'start_date_time' => now()->addDays(rand(1, 30))->toDateTimeString(),
-                'end_date_time' => now()->addDays(rand(31, 60))->toDateTimeString(),
-                'organized_by' => 'Organizer ' . Str::random(5),
-                'target_audience' => json_encode(['Students', 'Academicians', 'Industry Professionals']),
+                'event_mode' => $eventModes[array_rand($eventModes)],
+                'start_date' => now()->addDays(rand(1, 30))->toDateString(),
+                'end_date' => now()->addDays(rand(31, 60))->toDateString(),
+                'start_time' => now()->addHours(rand(8, 18))->format('H:i:s'),
+                'end_time' => now()->addHours(rand(19, 23))->format('H:i:s'),
+                'image' => 'https://picsum.photos/seed/picsum/200/300',
+                'event_theme' => 'Theme ' . rand(1, 10),
                 'registration_url' => 'https://example.com/event-' . ($i + 1),
                 'registration_deadline' => now()->addDays(rand(1, 15))->toDateString(),
-                'fees' => rand(0, 500) * 1.00, // Random fees between 0 and 500
                 'contact_email' => 'contact' . ($i + 1) . '@example.com',
-                'contact_number' => '+601234567' . rand(0, 9),
-                'agenda' => 'Agenda details for Event ' . ($i + 1),
-                'speakers' => 'Speaker details for Event ' . ($i + 1),
-                'sponsors' => 'Sponsor details for Event ' . ($i + 1),
-                'attachment' => 'attachments/event' . ($i + 1) . '.pdf',
-                'event_status' => 'published',
-                'is_featured' => rand(0, 1) == 1, // Randomly featured or not
+                'venue' => 'Venue ' . ($i + 1),
+                'city' => $cities[array_rand($cities)],
+                'country' => $countries[array_rand($countries)],
+                'event_status' => $eventStatuses[array_rand($eventStatuses)],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

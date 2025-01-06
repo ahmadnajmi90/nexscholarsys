@@ -3,16 +3,17 @@ import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 
 const Dashboard_M = ({ events, users }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [fade, setFade] = useState(true); // State for controlling fade effect
-    const touchStartRef = useRef(null); // Reference to store the start of a touch event
+    const [fade, setFade] = useState(true); // State for controlling fade effectconst touchStartRef = useRef(null); // Reference to store the start of a touch event
     const touchEndRef = useRef(null); // Reference to store the end of a touch event
 
     // Process the events data to generate carousel and card content
     const eventData = events.map((event) => {
+        // Use a unique combination of event and author
         const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
         return {
+            id: event.id, // Ensure unique identifier for each event
             url: event.image
-                ? `/storage/${event.image}` // Adjust based on your storage path
+                ? `/storage/${event.image}` // Adjust based on your storage path https://picsum.photos/seed/picsum/200/300
                 : "https://via.placeholder.com/800x600", // Fallback image
             title: event.event_name || "Untitled Event",
             author: author,
@@ -20,16 +21,24 @@ const Dashboard_M = ({ events, users }) => {
         };
     });
 
+    // Use Set to filter duplicates based on unique id and title
+    const uniqueEventData = Array.from(
+        new Map(eventData.map((item) => [item.id + item.title, item])).values()
+    );
+
+    // Limit the carousel data to 7 slides
+    const limitedEventData = uniqueEventData.slice(0, 7);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setFade(false); // Start fade-out
             setTimeout(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % eventData.length);
+                setCurrentIndex((prevIndex) => (prevIndex + 1) % limitedEventData.length);
                 setFade(true); // Start fade-in
             }, 300); // Wait for fade-out duration
         }, 7000); // Auto-slide every 7 seconds
         return () => clearInterval(interval);
-    }, [eventData.length]);
+    }, [limitedEventData.length]);
 
     const handleDotClick = (index) => {
         setFade(false);
@@ -59,7 +68,7 @@ const Dashboard_M = ({ events, users }) => {
             // Swipe left - move to the next slide
             setFade(false);
             setTimeout(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % eventData.length);
+                setCurrentIndex((prevIndex) => (prevIndex + 1) % limitedEventData.length);
                 setFade(true);
             }, 300);
         } else if (swipeDistance < -50) {
@@ -67,7 +76,7 @@ const Dashboard_M = ({ events, users }) => {
             setFade(false);
             setTimeout(() => {
                 setCurrentIndex((prevIndex) =>
-                    prevIndex === 0 ? eventData.length - 1 : prevIndex - 1
+                    prevIndex === 0 ? limitedEventData.length - 1 : prevIndex - 1
                 );
                 setFade(true);
             }, 300);
@@ -93,21 +102,21 @@ const Dashboard_M = ({ events, users }) => {
 
                     {/* Carousel Section */}
                     <div className="mb-5 relative">
-                        {eventData.length > 0 && (
+                        {limitedEventData.length > 0 && (
                             <a
                                 href="#"
                                 className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${
                                     fade ? "opacity-100" : "opacity-0"
                                 }`}
                                 style={{
-                                    backgroundImage: `url(${eventData[currentIndex].url})`,
+                                    backgroundImage: `url(${limitedEventData[currentIndex].url})`,
                                     backgroundSize: "cover",
                                     backgroundPosition: "center",
                                 }}
                             >
                                 <div className="h-48"></div>
                                 <h2 className="text-white text-2xl font-bold leading-tight mb-3 pr-5">
-                                    {eventData[currentIndex].title}
+                                    {limitedEventData[currentIndex].title}
                                 </h2>
                                 <div className="flex w-full items-center text-sm text-gray-300 font-medium">
                                     <div className="flex-1 flex items-center">
@@ -119,15 +128,15 @@ const Dashboard_M = ({ events, users }) => {
                                                 backgroundPosition: "center",
                                             }}
                                         ></div>
-                                        <div>{eventData[currentIndex].author}</div>
+                                        <div>{limitedEventData[currentIndex].author}</div>
                                     </div>
-                                    <div>{eventData[currentIndex].theme}</div>
+                                    <div>{limitedEventData[currentIndex].theme}</div>
                                 </div>
                             </a>
                         )}
                         {/* Pagination Dots */}
                         <div className="absolute bottom-2 right-2 flex space-x-2">
-                            {eventData.map((_, index) => (
+                            {limitedEventData.map((_, index) => (
                                 <button
                                     key={index}
                                     onClick={() => handleDotClick(index)}
