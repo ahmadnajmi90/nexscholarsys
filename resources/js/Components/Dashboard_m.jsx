@@ -3,7 +3,8 @@ import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 
 const Dashboard_M = ({ events, users }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [fade, setFade] = useState(true); // State for controlling fade effectconst touchStartRef = useRef(null); // Reference to store the start of a touch event
+    const [fade, setFade] = useState(true); // State for controlling fade effect
+    const touchStartRef = useRef(null); // Reference to store the start of a touch event
     const touchEndRef = useRef(null); // Reference to store the end of a touch event
 
     // Process the events data to generate carousel and card content
@@ -13,7 +14,7 @@ const Dashboard_M = ({ events, users }) => {
         return {
             id: event.id, // Ensure unique identifier for each event
             url: event.image
-                ? `/storage/${event.image}` // Adjust based on your storage path https://picsum.photos/seed/picsum/200/300
+                ? `/storage/${event.image}` // Adjust based on your storage path
                 : "https://via.placeholder.com/800x600", // Fallback image
             title: event.event_name || "Untitled Event",
             author: author,

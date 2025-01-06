@@ -1,1 +1,0 @@
-import{j as t}from"./app-ShVm9Cha.js";import{M as s}from"./MainLayout-JQZNHxtV.js";import{P as a}from"./PostingCard-D-nFg5gD.js";import{u as e}from"./useRoles-DyacMrNt.js";import"./index-c-ksJXLf.js";const f=({grants:r,users:o})=>(e(),t.jsx(s,{title:"Grant",children:t.jsx(a,{data:r,title:"title",isProject:!1,isEvent:!1,isGrant:!0})}));export{f as default};
