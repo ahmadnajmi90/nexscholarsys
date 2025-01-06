@@ -5,17 +5,17 @@ const Dashboard_M = ({ events, users }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [fade, setFade] = useState(true); // State for controlling fade effect
 
-    // Use events for the carousel and other sections
+    // Process the events data to generate carousel and card content
     const eventData = events.map((event) => {
-      const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
-      return {
-        url: event.image
-          ? `/storage/${event.image}` // Adjust based on your storage path
-          : "https://via.placeholder.com/800x600", // Fallback image
-        title: event.event_name || "Untitled Event",
-        author: author,
-        likes: event.event_theme || "No Theme", // Replace 'likes' with any relevant field
-      };
+        const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
+        return {
+            url: event.image
+                ? `/storage/${event.image}` // Adjust based on your storage path
+                : "https://via.placeholder.com/800x600", // Fallback image
+            title: event.event_name || "Untitled Event",
+            author: author,
+            theme: event.event_theme || "No Theme", // Replace 'likes' with any relevant field
+        };
     });
 
     useEffect(() => {
@@ -80,7 +80,7 @@ const Dashboard_M = ({ events, users }) => {
                                         ></div>
                                         <div>{eventData[currentIndex].author}</div>
                                     </div>
-                                    <div>{eventData[currentIndex].likes}</div>
+                                    <div>{eventData[currentIndex].theme}</div>
                                 </div>
                             </a>
                         )}
@@ -99,23 +99,19 @@ const Dashboard_M = ({ events, users }) => {
                     </div>
 
                     {/* Other cards */}
-                    {events.map((event, index) => (
+                    {eventData.map((event, index) => (
                         <div key={index} className="mb-5">
                             <a
                                 href="#"
                                 className="block rounded-lg relative p-5 transform transition-all duration-300 scale-100 hover:scale-95"
                                 style={{
-                                    background: `url(${
-                                        event.image
-                                            ? `/storage/${event.image}`
-                                            : "https://via.placeholder.com/800x600"
-                                    }) center`,
+                                    background: `url(${event.url}) center`,
                                     backgroundSize: "cover",
                                 }}
                             >
                                 <div className="h-48"></div>
                                 <h2 className="text-white text-2xl font-bold leading-tight mb-3 pr-5">
-                                    {event.event_name || "Untitled Event"}
+                                    {event.title}
                                 </h2>
                                 <div className="flex w-full items-center text-sm text-gray-300 font-medium">
                                     <div className="flex-1 flex items-center">
@@ -126,9 +122,9 @@ const Dashboard_M = ({ events, users }) => {
                                                 backgroundSize: "cover",
                                             }}
                                         ></div>
-                                        <div>{  users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author"}</div>
+                                        <div>{event.author}</div>
                                     </div>
-                                    <div>{event.event_theme || "No Theme"}</div>
+                                    <div>{event.theme}</div>
                                 </div>
                             </a>
                         </div>
