@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout";
 import { useState } from "react";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
+import useRoles from '@/Hooks/useRoles';
 
 const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -16,7 +17,7 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
 
     return (
         <div>
-            <label className="block text-gray-700 font-medium">{label}</label>
+            <label className="block text-gray-700 font-medium mt-4">{label}</label>
             <div
                 className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
                     dropdownOpen ? "shadow-lg" : ""
@@ -55,12 +56,13 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
 const UniversityList = ({ universities }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const [selectedCountries, setSelectedCountries] = useState([]);
-    // const [selectedUniversity, setSelectedUniversity] = useState([]);
-    // const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
+    const [selectedTypes, setSelectedTypes] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const profilesPerPage = 9;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProfile, setSelectedProfile] = useState(null);
+    console.log(universities);
 
     // const handleQuickInfoClick = (profile) => {
     //     setSelectedProfile(profile);
@@ -68,12 +70,26 @@ const UniversityList = ({ universities }) => {
     // };
 
     // Extract unique research areas dynamically from the array data
-       const uniqueCountries = [
-        ...new Set(universities.map((uni) => uni.country))
-        ].map((country) => ({
-            value: country,
-            label: country,
-        }));
+    const uniqueCountries = [
+    ...new Set(universities.map((uni) => uni.country))
+    ].map((country) => ({
+        value: country,
+        label: country,
+    }));
+
+    const uniqueTypes = [
+        ...new Set(universities.map((uni) => uni.university_type))
+    ].map((university_type) => ({
+        value: university_type,
+        label: university_type,
+    }));
+
+    const uniqueCategories = [...new Set(universities.map((uni) => uni.university_category))].map(
+        (university_category) => ({
+            value: university_category,
+            label: university_category,
+        })
+    );
     
     //     // Extract unique universities dynamically
     //     const uniqueUniversities = universitiesList.map((university) => ({
@@ -82,8 +98,11 @@ const UniversityList = ({ universities }) => {
     //     }));
     
         // Filter profiles based on selected research area, university, and supervisor availability
-        const filteredUniversities = universities.filter((uni) =>
-            selectedCountries.length === 0 || selectedCountries.includes(uni.country)
+        const filteredUniversities = universities.filter(
+            (uni) =>
+                (selectedCountries.length === 0 || selectedCountries.includes(uni.country)) &&
+                (selectedTypes.length === 0 || selectedTypes.includes(uni.university_type)) &&
+                (selectedCategories.length === 0 || selectedCategories.includes(uni.university_category))
         );
     
         // Pagination logic
@@ -119,6 +138,18 @@ const UniversityList = ({ universities }) => {
                         selectedValues={selectedCountries}
                         setSelectedValues={setSelectedCountries}
                     />
+                    <FilterDropdown
+                        label="University Type"
+                        options={uniqueTypes}
+                        selectedValues={selectedTypes}
+                        setSelectedValues={setSelectedTypes}
+                    />
+                    <FilterDropdown
+                        label="University Category"
+                        options={uniqueCategories}
+                        selectedValues={selectedCategories}
+                        setSelectedValues={setSelectedCategories}
+                    />
                 </div>
                 
                 {/* Main Content */}
@@ -135,10 +166,9 @@ const UniversityList = ({ universities }) => {
                                 <div className="h-32">
                                     <img
                                         src={
-                                            // profile.background_image !== null
-                                            //     ? `/storage/${profile.background_image}`
-                                            //     : '/storage/university_background_images/utm.jpg'
-                                            '/storage/university_background_images/utm.jpg'
+                                            profile.background_image !== null
+                                                && `/storage/${profile.background_image}`
+                                                // : '/storage/university_background_images/utm.jpg'
                                         }
                                         alt="Banner"
                                         className="object-cover w-full h-full"
@@ -150,10 +180,9 @@ const UniversityList = ({ universities }) => {
                                     <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                                         <img
                                             src={
-                                                // profile.profile_picture !== null
-                                                //     ? `/storage/${profile.profile_picture}`
-                                                //     : '/storage/university_profile_pictures/utm.png'
-                                                '/storage/university_profile_pictures/utm.png'
+                                                profile.profile_picture !== null
+                                                    && `/storage/${profile.profile_picture}`
+                                                    // : '/storage/university_profile_pictures/utm.png'
                                             }
                                             alt="Profile"
                                             className="w-full h-full object-cover"
@@ -163,7 +192,7 @@ const UniversityList = ({ universities }) => {
     
                                 {/* Profile Info */}
                                 <div className="text-center mt-4">
-                                    <h2 className="text-lg font-semibold">{profile.full_name}</h2>
+                                    <h2 className="text-lg font-semibold px-4">{profile.full_name}</h2>
     
                                     <p className="text-gray-500 text-sm">{profile.country}</p>
     

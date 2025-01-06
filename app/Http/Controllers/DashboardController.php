@@ -62,8 +62,8 @@ class DashboardController extends Controller
                     ->where('last_activity', '>=', now()->subMinutes(5))
                     ->count(),
                 'clicksByType' => $this->getClickDetails(), // Corrected method call
-                // 'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
-                'events' => PostEvent::all(),
+                'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
+                // 'events' => PostEvent::all(),
                 'academicians' => $academicians ?? null,
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),

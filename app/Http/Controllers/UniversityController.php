@@ -23,7 +23,7 @@ class UniversityController extends Controller
     {
         $faculties = $university->faculties; // Assuming a relationship
         return inertia('Universities/FacultyList', 
-        ['faculties' => $faculties, 'universityName' => $university->name]);
+        ['faculties' => $faculties, 'university' => $university]);
     }
 
     public function academicians(FacultyList $faculty)
@@ -50,6 +50,8 @@ class UniversityController extends Controller
         ['academicians' => $academicians,
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),
+                'faculty' => $faculty,
+                'university' => $faculty->university,
                 'researchOptions' => $researchOptions,
             ]);
     }
