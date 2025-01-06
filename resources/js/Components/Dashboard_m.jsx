@@ -99,7 +99,7 @@ const Dashboard_M = ({ events, users }) => {
                     </div>
 
                     {/* Other cards */}
-                    {eventData.map((event, index) => (
+                    {/* {eventData.map((event, index) => (
                         <div key={index} className="mb-5">
                             <a
                                 href="#"
@@ -128,7 +128,7 @@ const Dashboard_M = ({ events, users }) => {
                                 </div>
                             </a>
                         </div>
-                    ))}
+                    ))} */}
                 </div>
 
                 {/* Bottom Navigation Bar */}
