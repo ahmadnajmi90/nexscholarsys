@@ -82,18 +82,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     {isAdmin && (
                         <div>
                             <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Admin Features</h3>
-                            {canCreateFacultyAdmin && (
+                            {/* {canCreateFacultyAdmin && ( */}
                             <Link href={route('faculty-admins.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                                 <FaTachometerAlt className="text-gray-600" />
                                 <span className={`ml-2 ${!isOpen && 'hidden'}`}>Create Faculty Admin</span>
-                            </Link>)}
+                            </Link>
+                            {/* )} */}
 
-                            {canAssignAbilities && (
+                            {/* {canAssignAbilities && ( */}
                             <Link href={route('roles.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                                 <FaTachometerAlt className="text-gray-600" />
                                 <span className={`ml-2 ${!isOpen && 'hidden'}`}>Assign Abilities</span>
                             </Link>
-                            )}
+                            {/* )} */}
                         </div>
                     )}
 

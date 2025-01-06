@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\FieldOfResearch;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class UniversityController extends Controller
 {
@@ -53,6 +54,7 @@ class UniversityController extends Controller
                 'faculty' => $faculty,
                 'university' => $faculty->university,
                 'researchOptions' => $researchOptions,
+                'users' => User::where('id', '!=', Auth::id())->count() // Except admin itself
             ]);
     }
 }

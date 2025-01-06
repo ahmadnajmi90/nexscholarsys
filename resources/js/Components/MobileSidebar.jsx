@@ -89,16 +89,17 @@ const MobileSidebar = ({  }) => {
                         {isAdmin && (
                             <div>
                                  <h3 className="text-gray-500 uppercase text-xs font-bold">Admin Features</h3>
-                                    {canCreateFacultyAdmin && (
+                                    {/* {canCreateFacultyAdmin && ( */}
                                     <Link
                                         href={route('faculty-admins.index')}
                                         className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
                                     >
                                         <FaTachometerAlt className="text-gray-600" />
                                         <span className="ml-2">Create Faculty Admin</span>
-                                    </Link>)}
+                                    </Link>
+                                    {/* )} */}
 
-                                    {canAssignAbilities && (
+                                    {/* {canAssignAbilities && ( */}
                                     <Link
                                         href={route('roles.index')}
                                         className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
@@ -106,7 +107,7 @@ const MobileSidebar = ({  }) => {
                                         <FaTachometerAlt className="text-gray-600" />
                                         <span className="ml-2">Assign Abilities</span>
                                     </Link>
-                                    )}
+                                    {/* )} */}
                             </div>
                         )}
 
