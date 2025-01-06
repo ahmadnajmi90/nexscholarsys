@@ -128,7 +128,7 @@ const MobileSidebar = ({  }) => {
                                         Postgraduate
                                     </Link>
                                     <Link href="/undergraduates" className="block py-2 hover:bg-gray-100 rounded">
-                                        Postgraduate
+                                        Undergraduate
                                     </Link>
                                     <Link href="/academicians" className="block py-2 hover:bg-gray-100 rounded">
                                         Academician
