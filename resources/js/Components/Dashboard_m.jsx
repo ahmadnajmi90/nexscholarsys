@@ -15,7 +15,7 @@ const eventData = events.map((event) => {
             ? `/storage/${event.image}` // Adjust based on your storage path
             : "https://via.placeholder.com/800x600", // Fallback image
         title: event.event_name || "Untitled Event",
-        author: users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author", // Fetch author name
+
         theme: event.event_theme || "No Theme", // Replace 'likes' with any relevant field
     };
 });
