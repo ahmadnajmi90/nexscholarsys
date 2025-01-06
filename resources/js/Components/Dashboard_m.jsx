@@ -7,20 +7,18 @@ const Dashboard_M = ({ events, users }) => {
     const touchStartRef = useRef(null); // Reference to store the start of a touch event
     const touchEndRef = useRef(null); // Reference to store the end of a touch event
 
-    // Process the events data to generate carousel and card content
-    const eventData = events.map((event) => {
-        // Use a unique combination of event and author
-        const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
-        return {
-            id: event.id, // Ensure unique identifier for each event
-            url: event.image
-                ? `/storage/${event.image}` // Adjust based on your storage path
-                : "https://via.placeholder.com/800x600", // Fallback image
-            title: event.event_name || "Untitled Event",
-            author: author,
-            theme: event.event_theme || "No Theme", // Replace 'likes' with any relevant field
-        };
-    });
+  // Process the events data to generate carousel and card content
+const eventData = events.map((event) => {
+    return {
+        id: event.id, // Ensure unique identifier for each event
+        url: event.image
+            ? `/storage/${event.image}` // Adjust based on your storage path
+            : "https://via.placeholder.com/800x600", // Fallback image
+        title: event.event_name || "Untitled Event",
+        author: users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author", // Fetch author name
+        theme: event.event_theme || "No Theme", // Replace 'likes' with any relevant field
+    };
+});
 
     // Use Set to filter duplicates based on unique id and title
     const uniqueEventData = Array.from(
