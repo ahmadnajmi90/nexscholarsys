@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
+import { Link } from '@inertiajs/react';
 
 const Dashboard_M = ({ events, users }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -106,9 +107,8 @@ const Dashboard_M = ({ events, users }) => {
                         {limitedEventData.length > 0 && (
                             <a
                                 href="#"
-                                className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${
-                                    fade ? "opacity-100" : "opacity-0"
-                                }`}
+                                className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"
+                                    }`}
                                 style={{
                                     backgroundImage: `url(${limitedEventData[currentIndex].url})`,
                                     backgroundSize: "cover",
@@ -141,9 +141,8 @@ const Dashboard_M = ({ events, users }) => {
                                 <button
                                     key={index}
                                     onClick={() => handleDotClick(index)}
-                                    className={`w-2 h-2 rounded-full ${
-                                        index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
-                                    }`}
+                                    className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
+                                        }`}
                                 ></button>
                             ))}
                         </div>
@@ -179,16 +178,17 @@ const Dashboard_M = ({ events, users }) => {
                             <span className="block text-xs leading-none">Inbox</span>
                         </div>
                     </a>
-                    <a
-                        href="#"
+                    <Link
+                        href={route('profile.edit')}
                         className="flex flex-grow items-center justify-center p-2 text-gray-500 hover:text-indigo-500"
                     >
                         <div className="text-center">
                             <FaSearch className="text-3xl" />
                             <span className="block text-xs leading-none">Profile</span>
                         </div>
-                    </a>
+                    </Link>
                 </div>
+
             </div>
         </div>
     );
