@@ -21,17 +21,17 @@ class FacultyAdminController extends Controller
     // Show the Faculty Admin creation page
     public function index()
     {
-        if(Auth::user()->cannot('create-facultyAdmin')) {
-            abort(403, 'You do not have permission to view this page.');
-        }
-        else{
+        // if(Auth::user()->cannot('create-facultyAdmin')) {
+        //     abort(403, 'You do not have permission to view this page.');
+        // }
+        // else{
             $universities = UniversityList::all(); // Assuming a University model
             $faculties = FacultyList::all(); // Assuming a University model
             return inertia('Admin/FacultyAdmins', [
                 'universities' => $universities,
                 'faculties' => $faculties,
             ]);
-        }
+        // }
     }
 
     // Store a new Faculty Admin

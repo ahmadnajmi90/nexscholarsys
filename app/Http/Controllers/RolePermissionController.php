@@ -13,24 +13,24 @@ class RolePermissionController extends Controller
 {
     public function index()
     {
-        if(Auth::user()->cannot('assign-abilities')) {
-            abort(403, 'You do not have permission to view this page.');
-        }
-        else{
+        // if(Auth::user()->cannot('assign-abilities')) {
+        //     abort(403, 'You do not have permission to view this page.');
+        // }
+        // else{
             // List all roles
             $roles = Role::all();
 
             return inertia('Admin/RolesList', ['roles' => $roles,
             'abilities' => Ability::all()]);
-        }
+        // }
     }
 
     public function edit($roleId)
     {
-        if(Auth::user()->cannot('assign-abilities')) {
-            abort(403, 'You do not have permission to view this page.');
-        }
-        else{
+        // if(Auth::user()->cannot('assign-abilities')) {
+        //     abort(403, 'You do not have permission to view this page.');
+        // }
+        // else{
             $role = Role::findOrFail($roleId);
 
             // Fetch all abilities
@@ -48,15 +48,15 @@ class RolePermissionController extends Controller
                 'abilities' => $abilities,
                 'assignedAbilities' => $assignedAbilities,
             ]);
-        }
+        // }
     }
 
     public function update(Request $request, $roleId)
     {
-        if(Auth::user()->cannot('assign-abilities')) {
-            abort(403, 'You do not have permission to view this page.');
-        }
-        else{
+        // if(Auth::user()->cannot('assign-abilities')) {
+        //     abort(403, 'You do not have permission to view this page.');
+        // }
+        // else{
             $role = Role::findOrFail($roleId);
 
             // Validate input
@@ -89,6 +89,6 @@ class RolePermissionController extends Controller
                 ->delete();
 
             return redirect()->back()->with('success', 'Abilities updated successfully.');
-        }
+        // }
     }
 }

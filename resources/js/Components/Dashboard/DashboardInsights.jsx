@@ -6,9 +6,9 @@ import UpcomingEvents from "./UpcomingEvents";
 import RegisteredUser from "./RegsiteredUser";
 import OnlineUser from "./OnlineUser";
 import ClicksByType from "./ClicksByType";
-import SuccessAlert4 from "./WelcomeMessage";
-import ProfileCard from "./ProfileCard";
-import useRoles from "../Hooks/useRoles";
+import SuccessAlert4 from "../WelcomeMessage";
+import ProfileCard from "../ProfileCard";
+import useRoles from "../../Hooks/useRoles";
 
 const DashboardInsight  = ( { totalUsers, onlineUsers, clicksByType, events, academicians, universities, faculties, users, researchOptions } ) => {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();

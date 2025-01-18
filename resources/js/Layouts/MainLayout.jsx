@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { Link, usePage } from '@inertiajs/react';
 import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
-import Dashboard_m from "../Components/Dashboard_m"; // Import the mobile view component
+import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 
 const MainLayout = ({ children, title }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
+    const { url } = usePage(); // Get current URL from Inertia
 
     // Function to toggle sidebar
     const toggleSidebar = () => {
@@ -21,11 +23,10 @@ const MainLayout = ({ children, title }) => {
     // Effect to determine screen size for responsiveness
     useEffect(() => {
         const handleResize = () => {
+            setIsDesktop(window.innerWidth >= 1024);
             if (window.innerWidth >= 1024) {
-                setIsDesktop(true); // lg breakpoint (desktop)
                 setIsSidebarOpen(true); // Sidebar always open on desktop
             } else {
-                setIsDesktop(false); // Mobile view
                 setIsSidebarOpen(false); // Sidebar hidden by default on mobile
             }
         };
@@ -45,23 +46,18 @@ const MainLayout = ({ children, title }) => {
         }
     }, []); // This runs only on the initial render
 
+    const isActive = (route) => url.startsWith(route); // Check if the current route matches
 
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar for Desktop */}
             {isDesktop && (
-                <Sidebar
-                    isOpen={isSidebarOpen}
-                    toggleSidebar={toggleSidebar}
-                />
+                <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
             )}
 
             {/* Mobile Sidebar */}
             {!isDesktop && (
-                <MobileSidebar
-                    isOpen={isSidebarOpen}
-                    toggleSidebar={toggleSidebar}
-                />
+                <MobileSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
             )}
 
             {/* Main Content Area */}
@@ -81,14 +77,57 @@ const MainLayout = ({ children, title }) => {
                 </div>
             ) : (
                 // Mobile-specific content area
-                <div
-                    // className={`flex-1 p-6 transition-all duration-300 ${
-                    //     isSidebarOpen ? 'ml-64' : 'ml-0'
-                    // }`}
-                >
+                <div>
                     <Head title={title} />
                     {children}
-                    {/* <Dashboard_m events={events}/> */}
+
+                    {/* Bottom Navigation Bar */}
+                    <div className="bg-white fixed bottom-0 w-full border-t border-gray-200 flex">
+                        <Link
+                            href="/dashboard"
+                            className={`flex flex-grow items-center justify-center p-2 ${
+                                isActive('/dashboard') ? 'text-indigo-500' : 'text-gray-500'
+                            }`}
+                        >
+                            <div className="text-center">
+                                <FaNewspaper className="text-3xl" />
+                                <span className="block text-xs leading-none">Home</span>
+                            </div>
+                        </Link>
+                        <Link
+                            href="/event"
+                            className={`flex flex-grow items-center justify-center p-2 ${
+                                isActive('/event') ? 'text-indigo-500' : 'text-gray-500'
+                            }`}
+                        >
+                            <div className="text-center">
+                                <FaTh className="text-3xl" />
+                                <span className="block text-xs leading-none">Event</span>
+                            </div>
+                        </Link>
+                        <Link
+                            href="#"
+                            className={`flex flex-grow items-center justify-center p-2 ${
+                                isActive('#') ? 'text-indigo-500' : 'text-gray-500'
+                            }`}
+                        >
+                            <div className="text-center">
+                                <FaStar className="text-3xl" />
+                                <span className="block text-xs leading-none">Inbox</span>
+                            </div>
+                        </Link>
+                        <Link
+                            href={route('role.edit')}
+                            className={`flex flex-grow items-center justify-center p-2 ${
+                                isActive(route('role.edit')) ? 'text-indigo-500' : 'text-gray-500'
+                            }`}
+                        >
+                            <div className="text-center">
+                                <FaSearch className="text-3xl" />
+                                <span className="block text-xs leading-none">Profile</span>
+                            </div>
+                        </Link>
+                    </div>
                 </div>
             )}
         </div>

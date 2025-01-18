@@ -11,10 +11,10 @@ class AbilityController extends Controller
 {
     public function store(Request $request)
     {
-        if(Auth::user()->cannot('assign-abilities')) {
-            abort(403, 'You do not have permission to view this page.');
-        }
-        else{
+        // if(Auth::user()->cannot('assign-abilities')) {
+        //     abort(403, 'You do not have permission to view this page.');
+        // }
+        // else{
             log::info($request->all());
             $request->validate([
                 'name' => 'required|string|max:255|unique:abilities',
@@ -27,20 +27,20 @@ class AbilityController extends Controller
             ]);
 
             return redirect()->back()->with(['message' => 'Ability created successfully!', 'ability' => $ability]);
-        }
+        // }
     }
 
     public function destroy($id)
     {
-        if(Auth::user()->cannot('assign-abilities')) {
-            abort(403, 'You do not have permission to view this page.');
-        }
-        else{
+        // if(Auth::user()->cannot('assign-abilities')) {
+        //     abort(403, 'You do not have permission to view this page.');
+        // }
+        // else{
             $ability = Ability::findOrFail($id);
             $ability->delete();
 
             return redirect()->back()->with('success', 'Abilities deleted successfully.');
-        }
+        // }
     }
 }
 
