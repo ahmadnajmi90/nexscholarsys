@@ -281,7 +281,7 @@ export default function Create() {
       </div>
 
       {/* Fees and Contact Email */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-3 gap-6">
         <div>
           <label className="block text-gray-700 font-medium">Venue</label>
           <input
