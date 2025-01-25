@@ -9,8 +9,6 @@ const Dashboard_M = ({ events, users }) => {
     const eventData = events.map((event) => {
         const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
         const url = event.image && `/storage/${event.image}`;
-
-        console.log("Event Image URL:", url); // Debug image URL
         return {
             id: event.id,
             url,
@@ -112,41 +110,6 @@ const Dashboard_M = ({ events, users }) => {
                             ))}
                         </div>
                     </div>
-
-                    {/* Other cards */}
-                    {events.map((event, index) => (
-                            <div key={index} className="mb-5">
-                                <a
-                                    href="#"
-                                    className="block rounded-lg relative p-5 transform transition-all duration-300 scale-100 hover:scale-95"
-                                    style={{
-                                        backgroundImage: `url(${encodeURI(`/storage/${event.image}`)})`,
-                                        backgroundSize: "cover",
-                                        backgroundPosition: "center",
-                                    }}
-                                >
-                                    {/* Overlay */}
-                                    <div className="absolute inset-0 bg-black opacity-40"></div>
-
-                                    {/* Content */}
-                                    <div className="relative z-10">
-                                        <div className="h-48"></div>
-                                        <h2
-                                            className="text-white text-2xl font-bold leading-tight mb-3 pr-5"
-                                            style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}
-                                        >
-                                            {event.event_name || "Untitled Event"}
-                                        </h2>
-                                        <div className="flex w-full items-center text-sm text-gray-300 font-medium">
-                                            <div className="flex-1 flex items-center">
-                                                <div>{users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author"}</div>
-                                            </div>
-                                            <div>{event.event_theme || "No Theme"}</div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        ))}
                 </div>
             </div>
         </div>
