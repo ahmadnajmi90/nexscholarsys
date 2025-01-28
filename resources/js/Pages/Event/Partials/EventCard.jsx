@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import FilterDropdown from "@/Components/FilterDropdown";
+import { FaFilter } from "react-icons/fa"; // Import filter icon
 
 const EventCard = ({ events }) => {
+    const [showFilters, setShowFilters] = useState(false); // Toggle for mobile filters
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [eventModeFilter, setEventModeFilter] = useState([]);
@@ -58,54 +60,45 @@ const EventCard = ({ events }) => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar for Filters */}
-      <div className="w-1/4 p-4 bg-gray-100 border-r">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
-        <FilterDropdown
-          label="Event Mode"
-          options={uniqueEventModes}
-          selectedValues={eventModeFilter}
-          setSelectedValues={setEventModeFilter}
-        />
-        <FilterDropdown
-          label="Event Type"
-          options={uniqueEventTypes}
-          selectedValues={eventTypeFilter}
-          setSelectedValues={setEventTypeFilter}
-        />
-        <FilterDropdown
-          label="Event Theme"
-          options={uniqueEventThemes}
-          selectedValues={eventThemeFilter}
-          setSelectedValues={setEventThemeFilter}
-        />
-        <FilterDropdown
-          label="Country"
-          options={uniqueCountries}
-          selectedValues={countryFilter}
-          setSelectedValues={setCountryFilter}
-        />
+    {/* Filter Button for Mobile */}
+    <button
+      onClick={() => setShowFilters(!showFilters)}
+      className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
+    >
+      <FaFilter className="text-xl" />
+    </button>
 
-        {/* Date Range Filter */}
-        <div className="mt-4">
-          <label className="block text-gray-700 font-medium">Start Date</label>
-          <input
-            type="date"
-            value={startDateFilter}
-            onChange={(e) => setStartDateFilter(e.target.value)}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
-          />
-        </div>
-        <div className="mt-4">
-          <label className="block text-gray-700 font-medium">End Date</label>
-          <input
-            type="date"
-            value={endDateFilter}
-            onChange={(e) => setEndDateFilter(e.target.value)}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
-          />
-        </div>
+    {/* Sidebar for Filters - Fixed on Desktop, Toggle on Mobile */}
+    <div
+      className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r p-4 transition-transform duration-300 ${
+        showFilters ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0`}
+    >
+      <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+        Filters
+        {/* Close button for mobile */}
+        <button
+          onClick={() => setShowFilters(false)}
+          className="text-gray-600 lg:hidden"
+        >
+          ✕
+        </button>
+      </h2>
+      <FilterDropdown label="Event Mode" options={uniqueEventModes} selectedValues={eventModeFilter} setSelectedValues={setEventModeFilter} />
+      <FilterDropdown label="Event Type" options={uniqueEventTypes} selectedValues={eventTypeFilter} setSelectedValues={setEventTypeFilter} />
+      <FilterDropdown label="Event Theme" options={uniqueEventThemes} selectedValues={eventThemeFilter} setSelectedValues={setEventThemeFilter} />
+      <FilterDropdown label="Country" options={uniqueCountries} selectedValues={countryFilter} setSelectedValues={setCountryFilter} />
+
+      {/* Date Range Filter */}
+      <div className="mt-4">
+        <label className="block text-gray-700 font-medium">Start Date</label>
+        <input type="date" value={startDateFilter} onChange={(e) => setStartDateFilter(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200" />
       </div>
+      <div className="mt-4">
+        <label className="block text-gray-700 font-medium">End Date</label>
+        <input type="date" value={endDateFilter} onChange={(e) => setEndDateFilter(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200" />
+      </div>
+    </div>
 
       {/* Main Content */}
       <div className="flex-1 px-8">

@@ -41,7 +41,7 @@ const MobileSidebar = ({  }) => {
         <>
             {/* Toggle Button */}
             <button
-                className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-2 rounded-md shadow-md md:hidden"
+                className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-md shadow-md md:hidden"
                 onClick={toggleSidebar}
             >
                 {isSidebarOpen ? '✕' : '☰'}
