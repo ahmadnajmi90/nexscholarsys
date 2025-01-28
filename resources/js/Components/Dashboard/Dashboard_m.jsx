@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { FaFire } from "react-icons/fa"; // Import fire icon
 
 const Dashboard_M = ({ events, users }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -15,6 +16,7 @@ const Dashboard_M = ({ events, users }) => {
             title: event.event_name || "Untitled Event",
             author: author,
             theme: event.event_theme || "No Theme",
+            isFresh: true, // Modify condition if needed (e.g., recent events)
         };
     });
 
@@ -95,22 +97,29 @@ const Dashboard_M = ({ events, users }) => {
                         <p className="text-sm text-gray-500 uppercase font-bold">{new Date().toDateString()}</p>
                     </div>
 
-                    {/* Carousel Section */}
+                      {/* Carousel Section */}
                     <div className="mb-5 relative">
                         {limitedEventData.length > 0 && (
-                            <a
-                                href="#"
-                                className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${
-                                    fade ? "opacity-100" : "opacity-0"
-                                }`}
-                                style={{
-                                    backgroundImage: `url(${encodeURI(limitedEventData[currentIndex].url)})`,
-                                    backgroundSize: "cover",
-                                    backgroundPosition: "center",
-                                }}
-                            >
+                           <a
+                           href="#"
+                           className={`block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden ${
+                               fade ? "opacity-100" : "opacity-0"
+                           }`}
+                           style={{
+                               backgroundImage: `url(${encodeURI(limitedEventData[currentIndex].url)})`,
+                               backgroundSize: "cover",
+                               backgroundPosition: "center",
+                           }}
+                       >
                                 {/* Overlay */}
                                 <div className="absolute inset-0 bg-black opacity-40"></div>
+
+                                {/* "Fresh" Label */}
+                                {limitedEventData[currentIndex].isFresh && (
+                                    <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
+                                        <FaFire className="mr-1 text-sm" /> Event
+                                    </div>
+                                )}
 
                                 {/* Content */}
                                 <div className="relative z-10">
@@ -123,9 +132,9 @@ const Dashboard_M = ({ events, users }) => {
                                     </h2>
                                     <div className="flex w-full items-center text-sm text-gray-300 font-medium">
                                         <div className="flex-1 flex items-center">
-                                            <div>{limitedEventData[currentIndex].author}</div>
+                                            {/* <div>{limitedEventData[currentIndex].author}</div> */}
                                         </div>
-                                        <div>{limitedEventData[currentIndex].theme}</div>
+                                        {/* <div>{limitedEventData[currentIndex].theme}</div> */}
                                     </div>
                                 </div>
                             </a>

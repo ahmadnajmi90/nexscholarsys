@@ -5,6 +5,7 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
+import { Home, Calendar1, User, FileBadge, Briefcase } from 'lucide-react'; // Modern icons
 
 const MainLayout = ({ children, title }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -64,9 +65,8 @@ const MainLayout = ({ children, title }) => {
             {isDesktop ? (
                 // Desktop-specific content area
                 <div
-                    className={`flex-1 p-6 transition-all duration-300 ${
-                        isSidebarOpen ? 'ml-64' : 'ml-20'
-                    }`}
+                    className={`flex-1 p-6 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'
+                        }`}
                 >
                     <TopMenu />
                     <Head title={title} />
@@ -82,53 +82,43 @@ const MainLayout = ({ children, title }) => {
                     {children}
 
                     {/* Bottom Navigation Bar */}
-                    <div className="bg-white fixed bottom-0 w-full border-t border-gray-200 flex">
-                        <Link
-                            href="/dashboard"
-                            className={`flex flex-grow items-center justify-center p-2 ${
-                                isActive('/dashboard') ? 'text-indigo-500' : 'text-gray-500'
-                            }`}
-                        >
-                            <div className="text-center">
-                                <FaNewspaper className="text-3xl" />
-                                <span className="block text-xs leading-none">Home</span>
+                    <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 rounded-t-3xl shadow-lg">
+                        <div className="flex justify-around items-center relative py-3">
+                            {/* Event */}
+                            <Link href="/event" className={`flex flex-col items-center ${isActive('/event') ? 'text-blue-500' : 'text-gray-500'}`}>
+                                <Calendar1 className="w-6 h-6 stroke-current" />
+                                <span className="text-xs font-medium">Event</span>
+                            </Link>
+
+                            {/* Project */}
+                            <Link href="/project" className={`flex flex-col items-center ${isActive('/project') ? 'text-blue-500' : 'text-gray-500'}`}>
+                                <Briefcase className="w-6 h-6 stroke-current" />
+                                <span className="text-xs font-medium">Project</span>
+                            </Link>
+
+                            {/* Home (Floating Center Button) */}
+                            <div className="absolute -top-6 w-14 h-14 flex items-center justify-center bg-blue-500 rounded-full shadow-lg border-4 border-white">
+                                <Link href="/dashboard">
+                                    <Home className="w-7 h-7 stroke-white stroke-[1.5]" />
+                                </Link>
                             </div>
-                        </Link>
-                        <Link
-                            href="/event"
-                            className={`flex flex-grow items-center justify-center p-2 ${
-                                isActive('/event') ? 'text-indigo-500' : 'text-gray-500'
-                            }`}
-                        >
-                            <div className="text-center">
-                                <FaTh className="text-3xl" />
-                                <span className="block text-xs leading-none">Event</span>
-                            </div>
-                        </Link>
-                        <Link
-                            href="#"
-                            className={`flex flex-grow items-center justify-center p-2 ${
-                                isActive('#') ? 'text-indigo-500' : 'text-gray-500'
-                            }`}
-                        >
-                            <div className="text-center">
-                                <FaStar className="text-3xl" />
-                                <span className="block text-xs leading-none">Inbox</span>
-                            </div>
-                        </Link>
-                        <Link
-                            href={route('role.edit')}
-                            className={`flex flex-grow items-center justify-center p-2 ${
-                                isActive(route('role.edit')) ? 'text-indigo-500' : 'text-gray-500'
-                            }`}
-                        >
-                            <div className="text-center">
-                                <FaSearch className="text-3xl" />
-                                <span className="block text-xs leading-none">Profile</span>
-                            </div>
-                        </Link>
+
+                            {/* Grant */}
+                            <Link href="/grant" className={`flex flex-col items-center ${isActive('/grant') ? 'text-blue-500' : 'text-gray-500'}`}>
+                                <FileBadge className="w-6 h-6 stroke-current" />
+                                <span className="text-xs font-medium">Grant</span>
+                            </Link>
+
+                            {/* Profile */}
+                            <Link href="/profile" className={`flex flex-col items-center ${isActive('/profile') ? 'text-blue-500' : 'text-gray-500'}`}>
+                                <User className="w-6 h-6 stroke-current" />
+                                <span className="text-xs font-medium">Profile</span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
+
+
             )}
         </div>
     );
