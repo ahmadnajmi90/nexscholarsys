@@ -6,12 +6,12 @@ const Dashboard_M = ({ events, users }) => {
     const touchStartRef = useRef(null); // Reference to store the start of a touch event
     const touchEndRef = useRef(null); // Reference to store the end of a touch event
 
+    // Process event data
     const eventData = events.map((event) => {
         const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
-        const url = event.image && `/storage/${event.image}`;
         return {
             id: event.id,
-            url,
+            url: event.image ? `/storage/${event.image}` : "https://via.placeholder.com/800x600",
             title: event.event_name || "Untitled Event",
             author: author,
             theme: event.event_theme || "No Theme",
@@ -43,13 +43,52 @@ const Dashboard_M = ({ events, users }) => {
         }, 300);
     };
 
+    // Function to handle touch start
+    const handleTouchStart = (e) => {
+        touchStartRef.current = e.touches[0].clientX;
+    };
+
+    // Function to handle touch end
+    const handleTouchEnd = (e) => {
+        touchEndRef.current = e.changedTouches[0].clientX;
+        handleSwipeGesture();
+    };
+
+    // Function to handle swipe gestures
+    const handleSwipeGesture = () => {
+        const swipeDistance = touchStartRef.current - touchEndRef.current;
+
+        // Threshold to detect a valid swipe (e.g., 50px)
+        if (swipeDistance > 50) {
+            // Swipe left - move to the next slide
+            setFade(false);
+            setTimeout(() => {
+                setCurrentIndex((prevIndex) => (prevIndex + 1) % limitedEventData.length);
+                setFade(true);
+            }, 300);
+        } else if (swipeDistance < -50) {
+            // Swipe right - move to the previous slide
+            setFade(false);
+            setTimeout(() => {
+                setCurrentIndex((prevIndex) =>
+                    prevIndex === 0 ? limitedEventData.length - 1 : prevIndex - 1
+                );
+                setFade(true);
+            }, 300);
+        }
+    };
+
     return (
         <div className="w-screen h-screen bg-gray-200 flex items-center justify-center">
             <div
                 className="bg-white text-gray-800 rounded-xl shadow-lg overflow-hidden relative flex flex-col"
                 style={{ width: "414px", height: "736px", maxWidth: "100%", maxHeight: "100%" }}
             >
-                <div className="bg-white w-full px-5 pt-6 pb-20 overflow-y-auto h-full">
+                <div
+                    className="bg-white w-full px-5 pt-6 pb-20 overflow-y-auto h-full"
+                    onTouchStart={handleTouchStart} // Attach touch start event
+                    onTouchEnd={handleTouchEnd} // Attach touch end event
+                >
                     {/* Today Section */}
                     <div className="mb-3">
                         <h1 className="text-3xl font-bold">Today</h1>
@@ -61,8 +100,9 @@ const Dashboard_M = ({ events, users }) => {
                         {limitedEventData.length > 0 && (
                             <a
                                 href="#"
-                                className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"
-                                    }`}
+                                className={`block rounded-lg relative p-5 transform transition-opacity duration-500 ${
+                                    fade ? "opacity-100" : "opacity-0"
+                                }`}
                                 style={{
                                     backgroundImage: `url(${encodeURI(limitedEventData[currentIndex].url)})`,
                                     backgroundSize: "cover",
@@ -83,14 +123,6 @@ const Dashboard_M = ({ events, users }) => {
                                     </h2>
                                     <div className="flex w-full items-center text-sm text-gray-300 font-medium">
                                         <div className="flex-1 flex items-center">
-                                            {/* <div
-                                            className="rounded-full w-8 h-8 mr-3"
-                                            style={{
-                                                backgroundImage: `url(https://via.placeholder.com/32)`,
-                                                backgroundSize: "cover",
-                                                backgroundPosition: "center",
-                                            }}
-                                            ></div> */}
                                             <div>{limitedEventData[currentIndex].author}</div>
                                         </div>
                                         <div>{limitedEventData[currentIndex].theme}</div>
@@ -104,8 +136,9 @@ const Dashboard_M = ({ events, users }) => {
                                 <button
                                     key={index}
                                     onClick={() => handleDotClick(index)}
-                                    className={`w-2 h-2 rounded-full ${index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
-                                        }`}
+                                    className={`w-2 h-2 rounded-full ${
+                                        index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
+                                    }`}
                                 ></button>
                             ))}
                         </div>
