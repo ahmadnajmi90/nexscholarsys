@@ -101,7 +101,7 @@ const EventCard = ({ events }) => {
     </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-2">
+      <div className="flex-1 py-4 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedEvents.map((event, index) => (
             <div
