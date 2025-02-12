@@ -45,7 +45,7 @@ Route::delete('/abilities/{id}', [AbilityController::class, 'destroy'])->name('a
 Route::get('/', function () {
     $posts = CreatePost::where('status', 'published')
         ->orderBy('created_at', 'desc')
-        ->take(5)
+        ->take(6)
         ->get();
 
     return Inertia::render('Welcome', [
