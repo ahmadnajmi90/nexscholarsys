@@ -1,1 +1,0 @@
-import{j as t}from"./app-DJ9s8MLZ.js";import{M as o}from"./MainLayout-DETdi-Di.js";import{u as s}from"./useRoles-B7XX5FYG.js";import e from"./EventCard-B-ybaLdu.js";import"./index-CpRu6ZXN.js";import"./FilterDropdown-GYuQMrMk.js";const x=({events:r,users:m})=>(s(),t.jsx(o,{title:"Event",children:t.jsx(e,{events:r})}));export{x as default};

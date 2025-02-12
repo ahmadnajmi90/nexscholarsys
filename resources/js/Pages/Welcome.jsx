@@ -1,10 +1,11 @@
 import React from "react";
 import { Head, Link } from '@inertiajs/react';
 import { FaSearch, FaUsers, FaProjectDiagram, FaChartLine, FaUniversity, FaComments } from 'react-icons/fa';
-import WelcomePosts from '../Components/WelcomePosts';
+import WelcomePosts from '../Components/Welcome/WelcomePosts';
+import WelcomeItems from "@/Components/Welcome/WelcomeItems";
 
 
-const HeroSection = ({ auth, posts }) => {
+const HeroSection = ({ auth, posts, events, projects, grants }) => {
 
     const currentYear = new Date().getFullYear(); // Get the current year dynamically
   return (
@@ -224,6 +225,15 @@ const HeroSection = ({ auth, posts }) => {
 
       {/* Posts Preview Section */}
       <WelcomePosts posts={posts} />
+
+      {/* Events Preview Section */}
+      <WelcomeItems items={events} auth={auth} title="Events" type="event" />
+
+      {/* Projects Preview Section */}
+      <WelcomeItems items={projects} auth={auth} title="Projects" type="project" />
+
+      {/* Grants Preview Section */}
+      <WelcomeItems items={grants} auth={auth} title="Grants" type="grant" />
 
 
          {/* Footer */}

@@ -29,6 +29,10 @@ use App\Http\Controllers\AbilityController;
 use App\Http\Controllers\CreatePostController;
 use App\Http\Controllers\ShowPostController;
 use App\Models\CreatePost;
+use App\Models\PostEvent;
+use App\Models\PostProject;
+use App\Models\PostGrant;
+use Carbon\Carbon;
 
 Route::bind('post', function ($value) {
     return CreatePost::where('url', $value)->firstOrFail();
@@ -45,7 +49,27 @@ Route::delete('/abilities/{id}', [AbilityController::class, 'destroy'])->name('a
 Route::get('/', function () {
     $posts = CreatePost::where('status', 'published')
         ->orderBy('created_at', 'desc')
-        ->take(6)
+        ->take(5)
+        ->get();
+
+    $today = Carbon::today();
+
+    $events = PostEvent::where('event_status', 'published')
+        ->where('start_date', '>=', $today)
+        ->orderBy('start_date', 'asc')
+        ->take(5)
+        ->get();
+    
+    $projects = PostProject::where('project_status', 'published')
+        ->where('start_date', '>=', $today)
+        ->orderBy('start_date', 'asc')
+        ->take(5)
+        ->get();
+    
+    $grants = PostGrant::where('status', 'published')
+        ->where('start_date', '>=', $today)
+        ->orderBy('start_date', 'asc')
+        ->take(5)
         ->get();
 
     return Inertia::render('Welcome', [
@@ -54,6 +78,9 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
         'posts' => $posts,
+        'events' => $events,
+        'projects' => $projects,
+        'grants' => $grants,
     ]);
 });
 

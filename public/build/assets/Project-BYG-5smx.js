@@ -1,1 +1,0 @@
-import{j as r}from"./app-DJ9s8MLZ.js";import{M as t}from"./MainLayout-DETdi-Di.js";import{u as s}from"./useRoles-B7XX5FYG.js";import e from"./ProjectCard-tl0jPPND.js";import"./index-CpRu6ZXN.js";import"./FilterDropdown-GYuQMrMk.js";const f=({projects:o,users:m})=>(s(),r.jsx(t,{title:"Project",children:r.jsx(e,{projects:o})}));export{f as default};
