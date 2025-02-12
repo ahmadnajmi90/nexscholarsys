@@ -180,6 +180,24 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             </div>
                         )}
 
+                        <button
+                            onClick={() => toggleMenu('post')}
+                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                        >
+                            <FaNewspaper className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.post ? '-' : '+'}</span>}
+                        </button>
+                        {menuOpen.post && (
+                            <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href="/posts" className="block py-2 hover:bg-gray-100 rounded">View Post</Link>
+                                <Link href={route('create-posts.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Post
+                                </Link>
+                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
+                            </div>
+                        )}
+
                     </div>
 
                        {/* Features In Development */}

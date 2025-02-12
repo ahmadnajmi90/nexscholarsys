@@ -190,7 +190,7 @@ const MobileSidebar = ({  }) => {
                                 </div>
                             )}
 
-<button
+                            <button
                                 onClick={() => toggleMenu('event')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
                             >
@@ -211,6 +211,28 @@ const MobileSidebar = ({  }) => {
                                             Manage event
                                         </Link>
                                     )}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => toggleMenu('post')}
+                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaNewspaper className="text-gray-600" />
+                                <span className="ml-2">Post</span>
+                                <span className="ml-auto">{menuOpen.post ? '-' : '+'}</span>
+                            </button>
+                            {menuOpen.post && (
+                                <div className="ml-6">
+                                    <Link href="/posts" className="block py-2 hover:bg-gray-100 rounded">
+                                        View post
+                                    </Link>
+                                        <Link
+                                            href={route('create-posts.index')}
+                                            className="block py-2 hover:bg-gray-100 rounded"
+                                        >
+                                            Manage post
+                                        </Link>
                                 </div>
                             )}
 

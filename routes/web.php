@@ -26,6 +26,13 @@ use App\Http\Controllers\FacultyAdminController;
 use App\Http\Controllers\UniversityController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\AbilityController;
+use App\Http\Controllers\CreatePostController;
+use App\Http\Controllers\ShowPostController;
+use App\Models\CreatePost;
+
+Route::bind('post', function ($value) {
+    return CreatePost::where('url', $value)->firstOrFail();
+});
 
 Route::get('/admin/roles', [RolePermissionController::class, 'index'])->name('roles.index');
 Route::get('/admin/roles/{role}/abilities', [RolePermissionController::class, 'edit'])->name('roles.abilities.edit');
@@ -36,13 +43,25 @@ Route::delete('/abilities/{id}', [AbilityController::class, 'destroy'])->name('a
 
 
 Route::get('/', function () {
+    $posts = CreatePost::where('status', 'published')
+        ->orderBy('created_at', 'desc')
+        ->take(5)
+        ->get();
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'posts' => $posts,
     ]);
 });
+
+Route::get('/welcome/posts/{post}', function (CreatePost $post) {
+    return Inertia::render('Post/WelcomePostShow', [
+        'post' => $post,
+    ]);
+})->name('welcome.posts.show');
 
 Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
 Route::get('/universities/{university}/faculties', [UniversityController::class, 'faculties'])->name('universities.faculties'); // Faculty list
@@ -110,6 +129,12 @@ Route::resource('event', ShowEventController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
+Route::resource('posts', ShowPostController::class)
+    ->only(['index'])
+    ->middleware(['auth', 'verified']);
+
+Route::get('posts/{post}', [ShowPostController::class, 'show'])->name('posts.show');
+
 Route::resource('grant', ShowGrantController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
@@ -130,6 +155,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-events/{id}/edit', [PostEventController::class, 'edit'])->name('post-events.edit');
     Route::post('/post-events/{id}', [PostEventController::class, 'update'])->name('post-events.update');
     Route::delete('/post-events/{id}', [PostEventController::class, 'destroy'])->name('post-events.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/create-posts', [CreatePostController::class, 'index'])->name('create-posts.index');
+    Route::get('/create-posts/create', [CreatePostController::class, 'create'])->name('create-posts.create');
+    Route::post('/create-posts', [CreatePostController::class, 'store'])->name('create-posts.store');
+    Route::get('/create-posts/{id}/edit', [CreatePostController::class, 'edit'])->name('create-posts.edit');
+    Route::post('/create-posts/{id}', [CreatePostController::class, 'update'])->name('create-posts.update');
+    Route::delete('/create-posts/{id}', [CreatePostController::class, 'destroy'])->name('create-posts.destroy');
 });
 
 

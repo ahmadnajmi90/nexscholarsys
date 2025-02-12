@@ -1,9 +1,10 @@
 import React from "react";
 import { Head, Link } from '@inertiajs/react';
 import { FaSearch, FaUsers, FaProjectDiagram, FaChartLine, FaUniversity, FaComments } from 'react-icons/fa';
+import WelcomePosts from '../Components/WelcomePosts';
 
 
-const HeroSection = ({ auth }) => {
+const HeroSection = ({ auth, posts }) => {
 
     const currentYear = new Date().getFullYear(); // Get the current year dynamically
   return (
@@ -220,6 +221,9 @@ const HeroSection = ({ auth }) => {
           </div>
         </div>
       </section>
+
+      {/* Posts Preview Section */}
+      <WelcomePosts posts={posts} />
 
 
          {/* Footer */}
