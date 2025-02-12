@@ -33,6 +33,11 @@ use App\Models\PostEvent;
 use App\Models\PostProject;
 use App\Models\PostGrant;
 use Carbon\Carbon;
+use App\Http\Controllers\Auth\GoogleController;
+
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+
 
 Route::bind('post', function ($value) {
     return CreatePost::where('url', $value)->firstOrFail();
