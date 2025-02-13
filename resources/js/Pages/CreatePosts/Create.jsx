@@ -207,6 +207,9 @@ export default function Create() {
                   }
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
+                {errors.image && (
+                  <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+                )}
               </div>
 
               {/* Upload Featured Image */}
@@ -222,6 +225,9 @@ export default function Create() {
                   }
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
+                {errors.featured_image && (
+                  <p className="text-red-500 text-xs mt-1">{errors.featured_image}</p>
+                )}
               </div>
 
               {/* Upload Attachment */}
@@ -236,6 +242,9 @@ export default function Create() {
                   }
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
+                {errors.attachment && (
+                  <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
+                )}
               </div>
             </div>
           </div>

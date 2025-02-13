@@ -55,13 +55,13 @@ class CreatePostController extends Controller
 
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
-                'url' => 'nullable|url|max:255',
+                'url' => 'nullable|max:255',
                 'content' => 'nullable|string',
                 'category' => 'nullable|string|max:255',
                 'tags' => 'nullable|array',
                 'image' => 'nullable|image|max:2048',
-                'featured_image' => 'nullable|image|max:255',
-                'attachment' => 'nullable|file|max:2048',
+                'featured_image' => 'nullable|image|max:2048',
+                'attachment' => 'nullable|file|max:5120',
                 'status' => 'nullable|string|in:draft,published',
             ]);
 
@@ -174,7 +174,7 @@ class CreatePostController extends Controller
 
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
-                'url' => 'nullable|url|max:255',
+                'url' => 'nullable|max:255',
                 'content' => 'nullable|string',
                 'category' => 'nullable|string|max:255',
                 'tags' => 'nullable|array',

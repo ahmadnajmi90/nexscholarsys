@@ -169,8 +169,8 @@ export default function Edit() {
           </div>
 
           {/* Third Row: Content (8 columns) and File Uploads (4 columns) */}
-          <div className="grid grid-cols-12 gap-8">
-            <div className="col-span-8">
+          <div className="grid grid-cols-10 gap-8">
+            <div className="col-span-7">
               <label className="block text-gray-700 font-medium">
                 Content <span className="text-red-500">*</span>
               </label>
@@ -188,7 +188,7 @@ export default function Edit() {
               </div>
               {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
             </div>
-            <div className="col-span-4 flex flex-col space-y-6">
+            <div className="col-span-3 flex flex-col space-y-6">
               {/* Upload Image */}
               <div>
                 <label className="block text-gray-700 font-medium">Upload Image</label>
@@ -211,6 +211,7 @@ export default function Edit() {
                     </a>
                   </div>
                 )}
+                {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
               </div>
               {/* Upload Featured Image */}
               <div>
@@ -234,6 +235,7 @@ export default function Edit() {
                     </a>
                   </div>
                 )}
+                {errors.featured_image && <p className="text-red-500 text-xs mt-1">{errors.featured_image}</p>}
               </div>
               {/* Upload Attachment */}
               <div>
@@ -256,6 +258,7 @@ export default function Edit() {
                     </a>
                   </div>
                 )}
+                {errors.attachment && <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>}
               </div>
             </div>
           </div>
