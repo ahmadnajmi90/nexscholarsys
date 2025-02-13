@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
 import NationalityForm from "../Role/Partials/NationalityForm";
@@ -30,6 +30,21 @@ export default function Edit({ postGrant, auth }) {
 
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const grantThemeRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (grantThemeRef.current && !grantThemeRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
   const handleCheckboxChange = (value) => {
     if (data.grant_theme.includes(value)) {
       // Remove the value if already selected
@@ -255,7 +270,7 @@ return (
       </div>
 
       <div className="grid grid-cols-2 gap-8">
-      <div>
+          <div ref={grantThemeRef}>
             <label className="block text-gray-700 font-medium">Grant Theme (Multiselect)</label>
             <div
               className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
@@ -268,7 +283,7 @@ return (
                 : "Select Grant Themes"}
             </div>
             {dropdownOpen && (
-              <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow-lg">
+              <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg">
                 <div className="p-2 space-y-2">
                   <label className="flex items-center">
                     <input
@@ -295,30 +310,28 @@ return (
             )}
           </div>
 
-        <div>
-          <label htmlFor="cycle" className="block text-gray-700 font-medium">
-            Cycle
-          </label>
-          <select
-            id="cycle"
-            name="cycle"
-            value={data.cycle}
-            onChange={(e) => setData("cycle", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          >
-            <option value="" disabled hidden>
-              Select Cycle
-            </option>
-            <option value="No Cycle">No Cycle</option>
-            <option value="Cycle 1">Cycle 1</option>
-            <option value="Cycle 2">Cycle 2</option>
-            <option value="Cycle 3">Cycle 3</option>
-          </select>
-          {errors.cycle && (
-            <p className="text-red-500 text-xs mt-1">{errors.cycle}</p>
-          )}
+          <div>
+            <label className="block text-gray-700 font-medium">Cycle</label>
+            <select
+              id="cycle"
+              name="cycle"
+              value={data.cycle}
+              onChange={(e) => setData("cycle", e.target.value)}
+              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+            >
+              <option value="" disabled hidden>
+                Select Cycle
+              </option>
+              <option value="No Cycle">No Cycle</option>
+              <option value="Cycle 1">Cycle 1</option>
+              <option value="Cycle 2">Cycle 2</option>
+              <option value="Cycle 3">Cycle 3</option>
+            </select>
+            {errors.cycle && (
+              <p className="text-red-500 text-xs mt-1">{errors.cycle}</p>
+            )}
+          </div>
         </div>
-      </div>    
 
       {/* Sponsored By and Category */}
       <div className="grid grid-cols-2 gap-8">

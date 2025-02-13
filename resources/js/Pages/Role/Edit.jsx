@@ -29,6 +29,7 @@ export default function Edit() {
                     Role Profile
                 </h2>
             }
+            TopMenuOpen={true}
         >
             <Head title="Profile" />
 

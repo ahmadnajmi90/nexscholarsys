@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const containerRef = useRef(null);
 
   const handleCheckboxChange = (value) => {
     const updatedValues = selectedValues.includes(value)
@@ -10,11 +11,28 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
     setSelectedValues(updatedValues);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
   return (
-    <div>
+    <div ref={containerRef} className="relative">
       <label className="block text-gray-700 font-medium">{label}</label>
       <div
-        className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white mb-4${
+        className={`mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white mb-4 ${
           dropdownOpen ? "shadow-lg" : ""
         }`}
         onClick={() => setDropdownOpen(!dropdownOpen)}

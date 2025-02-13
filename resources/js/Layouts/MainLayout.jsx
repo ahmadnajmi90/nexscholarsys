@@ -7,7 +7,7 @@ import TopMenu from '../Components/TopMenu';
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 import { Home, Calendar1, User, FileBadge, Briefcase } from 'lucide-react'; // Modern icons
 
-const MainLayout = ({ children, title }) => {
+const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
     const { url } = usePage(); // Get current URL from Inertia
@@ -68,7 +68,7 @@ const MainLayout = ({ children, title }) => {
                     className={`flex-1 p-6 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'
                         }`}
                 >
-                    <TopMenu />
+                    {TopMenuOpen && <TopMenu />}
                     <Head title={title} />
                     <div className="p-4 bg-white rounded-lg shadow">
                         <h1 className="text-2xl font-semibold mb-4 pt-2 pl-2">{title}</h1>

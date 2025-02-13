@@ -16,6 +16,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     Profile
                 </h2>
             }
+            TopMenuOpen={true}
         >
             <Head title="Profile" />
 

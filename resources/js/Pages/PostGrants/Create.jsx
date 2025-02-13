@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import NationalityForm from "../Role/Partials/NationalityForm";
 import Select from "react-select";
 import ReactQuill from "react-quill";
@@ -33,6 +33,20 @@ export default function Create() {
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
 
   const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+  const grantThemeRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (grantThemeRef.current && !grantThemeRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
   const handleCheckboxChange = (value) => {
     if (data.grant_theme.includes(value)) {
       // Remove the value if already selected
@@ -253,7 +267,7 @@ export default function Create() {
         </div>
 
         <div className="grid grid-cols-2 gap-8">
-          <div>
+          <div ref={grantThemeRef}>
             <label className="block text-gray-700 font-medium">Grant Theme (Multiselect)</label>
             <div
               className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
@@ -266,7 +280,7 @@ export default function Create() {
                 : "Select Grant Themes"}
             </div>
             {dropdownOpen && (
-              <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded shadow-lg">
+              <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg">
                 <div className="p-2 space-y-2">
                   <label className="flex items-center">
                     <input
@@ -294,9 +308,7 @@ export default function Create() {
           </div>
 
           <div>
-            <label htmlFor="cycle" className="block text-gray-700 font-medium">
-              Cycle
-            </label>
+            <label className="block text-gray-700 font-medium">Cycle</label>
             <select
               id="cycle"
               name="cycle"
@@ -316,7 +328,7 @@ export default function Create() {
               <p className="text-red-500 text-xs mt-1">{errors.cycle}</p>
             )}
           </div>
-        </div>    
+        </div>
 
         {/* Sponsored By and Category */}
         <div className="grid grid-cols-2 gap-8">
