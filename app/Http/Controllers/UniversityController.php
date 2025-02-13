@@ -54,7 +54,7 @@ class UniversityController extends Controller
                 'faculty' => $faculty,
                 'university' => $faculty->university,
                 'researchOptions' => $researchOptions,
-                'users' => User::where('id', '!=', Auth::id())->count() // Except admin itself
+                'users' => User::all(),
             ]);
     }
 }

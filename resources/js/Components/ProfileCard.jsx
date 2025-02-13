@@ -269,44 +269,53 @@ const ProfileGridWithDualFilter = ({
                                 <h2 className="text-lg font-semibold">{profile.full_name}</h2>
 
                                 {/* Display only the first field of study */}
-                                <p className="text-gray-500 text-sm">
-                                    {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
+                                <p
+                                className="text-gray-500 text-sm"
+                                style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    minHeight: '2.5rem'  // Adjust this value as needed to match two lines
+                                }}
+                                >
+                                {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
+                                    ? (() => {
+                                        const id = profile.field_of_research[0];
+                                        const matchedOption = researchOptions.find(
+                                        (option) =>
+                                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                        );
+                                        return matchedOption
+                                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                        : "Unknown";
+                                    })()
+                                    : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
+                                    ? (() => {
+                                        const id = profile.research_expertise[0];
+                                        const matchedOption = researchOptions.find(
+                                            (option) =>
+                                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                        );
+                                        return matchedOption
+                                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                            : "Unknown";
+                                        })()
+                                    : Array.isArray(profile.research_preference) && profile.research_preference.length > 0
                                         ? (() => {
-                                            const id = profile.field_of_research[0]; // Get the first ID
+                                            const id = profile.research_preference[0];
                                             const matchedOption = researchOptions.find(
-                                                (option) =>
-                                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                            (option) =>
+                                                `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
                                             );
                                             return matchedOption
-                                                ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                                : "Unknown";
+                                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                                            : "Unknown";
                                         })()
-                                        : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
-                                            ? (() => {
-                                                const id = profile.research_expertise[0]; // Get the first ID
-                                                const matchedOption = researchOptions.find(
-                                                    (option) =>
-                                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                                );
-                                                return matchedOption
-                                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                                    : "Unknown";
-                                            })()
-                                        : Array.isArray(profile.research_preference) && profile.research_preference.length > 0
-                                            ? (() => {
-                                                const id = profile.research_preference[0]; // Get the first ID
-                                                const matchedOption = researchOptions.find(
-                                                    (option) =>
-                                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                                );
-                                                return matchedOption
-                                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                                    : "Unknown";
-                                            })()
-                                            : "No Field of Research or Expertise"}
+                                        : "No Field of Research or Expertise"}
                                 </p>
 
-                                <p className="text-gray-500 text-sm">{profile.current_position}</p>
+                                <p className="text-gray-500 text-sm">{profile.current_position ? profile.current_position : "No Position"}</p>
 
                                 {/* Quick Info Button */}
                                 <button
@@ -456,7 +465,7 @@ const ProfileGridWithDualFilter = ({
 
                                         const allNames = [...fieldOfResearchNames, ...researchExpertiseNames, ...researchPreferenceNames];
 
-                                        return allNames.length > 0 ? allNames.join(", ") : "No fields of study or expertise";
+                                        return allNames.length > 0 ? allNames.join(", ") : "    ";
                                     })()}
                                 </p>
 

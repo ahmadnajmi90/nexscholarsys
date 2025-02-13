@@ -192,7 +192,7 @@ const UniversityList = ({ universities }) => {
     
                                 {/* Profile Info */}
                                 <div className="text-center mt-4">
-                                    <h2 className="text-lg font-semibold px-4">{profile.full_name}</h2>
+                                    <h2 className="text-lg font-semibold px-4 h-16 overflow-hidden">{profile.full_name}</h2>
     
                                     <p className="text-gray-500 text-sm">{profile.country}</p>
     

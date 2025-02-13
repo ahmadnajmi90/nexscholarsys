@@ -106,7 +106,10 @@ const FacultyList = ({ faculties, university }) => {
 
                             {/* Faculty Info */}
                             <div className="text-center mt-4">
-                                <h2 className="text-lg font-semibold px-4">{faculty.name}</h2>
+                                <h2 className="text-lg font-semibold px-4 h-16 overflow-hidden">
+                                    {faculty.name}
+                                </h2>
+
                                 <p className="text-gray-500 text-sm">{university.full_name}</p>
 
                                 {/* View Button */}
