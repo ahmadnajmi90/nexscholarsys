@@ -1,1 +1,0 @@
-import{j as r}from"./app-DojDL_Hq.js";import{M as o}from"./MainLayout-DTfvf2Wu.js";import{u as s}from"./useRoles-o0OrLp9m.js";import a from"./GrantCard-DPxTuX35.js";import"./index-DwHeSfEp.js";import"./FilterDropdown-vRPg1xQU.js";const x=({grants:t,users:m})=>(s(),r.jsx(o,{title:"Grant",children:r.jsx(a,{grants:t})}));export{x as default};

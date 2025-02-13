@@ -29,7 +29,7 @@ const FacultyList = ({ faculties, university }) => {
                     <div className="inline-block w-32 h-32 rounded-full overflow-hidden border-4 border-white">
                         <img
                             src={
-                                university.profile_image
+                                university.profile_picture
                                     ? `/storage/${university.profile_picture}`
                                     : '/storage/university_profile_pictures/default.png'
                             }
