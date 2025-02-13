@@ -1,0 +1,1 @@
+import{j as o}from"./app-DojDL_Hq.js";import{M as r}from"./MainLayout-DTfvf2Wu.js";import{u as s}from"./useRoles-o0OrLp9m.js";import m from"./PostCard-B_1LAgJz.js";import"./index-DwHeSfEp.js";import"./FilterDropdown-vRPg1xQU.js";const n=({posts:t})=>(s(),o.jsx(r,{title:"Posts",children:o.jsx(m,{posts:t})}));export{n as default};

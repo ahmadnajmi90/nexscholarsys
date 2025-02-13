@@ -1,12 +1,13 @@
 import React from "react";
 import { Link } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
 import useRoles from '@/Hooks/useRoles';
 
 const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const containerRef = useRef(null);
 
     const handleCheckboxChange = (value) => {
         const updatedValues = selectedValues.includes(value)
@@ -15,8 +16,25 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
         setSelectedValues(updatedValues);
     };
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (containerRef.current && !containerRef.current.contains(event.target)) {
+            setDropdownOpen(false);
+          }
+        };
+    
+        if (dropdownOpen) {
+          document.addEventListener("mousedown", handleClickOutside);
+        } else {
+          document.removeEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }, [dropdownOpen]);
+
     return (
-        <div>
+        <div ref={containerRef} className="relative">
             <label className="block text-gray-700 font-medium mt-4">{label}</label>
             <div
                 className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${

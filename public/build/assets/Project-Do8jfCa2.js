@@ -1,0 +1,1 @@
+import{j as r}from"./app-DojDL_Hq.js";import{M as t}from"./MainLayout-DTfvf2Wu.js";import{u as s}from"./useRoles-o0OrLp9m.js";import e from"./ProjectCard-YQylEzfJ.js";import"./index-DwHeSfEp.js";import"./FilterDropdown-vRPg1xQU.js";const f=({projects:o,users:m})=>(s(),r.jsx(t,{title:"Project",children:r.jsx(e,{projects:o})}));export{f as default};

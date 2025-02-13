@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef  } from "react";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
 
 const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const containerRef = useRef(null);
 
     const handleCheckboxChange = (value) => {
         const updatedValues = selectedValues.includes(value)
@@ -11,8 +12,25 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues }) =
         setSelectedValues(updatedValues);
     };
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (containerRef.current && !containerRef.current.contains(event.target)) {
+            setDropdownOpen(false);
+          }
+        };
+    
+        if (dropdownOpen) {
+          document.addEventListener("mousedown", handleClickOutside);
+        } else {
+          document.removeEventListener("mousedown", handleClickOutside);
+        }
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside);
+        };
+      }, [dropdownOpen]);
+
     return (
-        <div>
+        <div ref={containerRef} className="relative">
             <label className="block text-gray-700 font-medium">{label}</label>
             <div
                 className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
@@ -105,23 +123,34 @@ const ProfileGridWithDualFilter = ({
         label: university.short_name,
     }));
 
-    // Filter profiles based on selected research area, university, and supervisor availability
+    const normalizeAvailability = (val) => {
+        if (val === null) return "0"; // Treat null as "No"
+        if (val === true || val === "1" || val === 1) return "1";
+        if (val === false || val === "0" || val === 0) return "0";
+        return "";
+      };
+      
     const filteredProfiles = profilesData.filter((profile) => {
+        const profileUniversity = profile.university ? profile.university.toString() : "";
+        
         const hasSelectedArea =
             selectedArea.length === 0 ||
             (profile.field_of_research || profile.research_expertise || profile.research_preference || []).some((area) =>
-                selectedArea.includes(area)
+            selectedArea.includes(area)
             );
-
+        
         const hasSelectedUniversity =
-            selectedUniversity.length === 0 || selectedUniversity.includes(profile.university.toString());
-
+            selectedUniversity.length === 0 || selectedUniversity.includes(profileUniversity);
+        
+        const normalizedAvailability = normalizeAvailability(profile[supervisorAvailabilityKey]);
         const hasSelectedSupervisorAvailability =
             selectedSupervisorAvailability === "" ||
-            profile[supervisorAvailabilityKey]?.toString() === selectedSupervisorAvailability;
-
+            normalizedAvailability === selectedSupervisorAvailability;
+        
         return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability;
     });
+      
+      
 
     // Pagination logic
     const totalPages = Math.ceil(filteredProfiles.length / profilesPerPage);
@@ -143,6 +172,9 @@ const ProfileGridWithDualFilter = ({
         const faculty = faculties.find((u) => u.id === id); // Find the university by ID
         return faculty ? faculty.name : "Unknown University"; // Return the full_name or a default string
     };
+
+    console.log(supervisorAvailabilityKey);
+    console.log(selectedSupervisorAvailability);
 
     return (
         <div className="min-h-screen flex">
