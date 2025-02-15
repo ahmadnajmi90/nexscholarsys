@@ -66,8 +66,8 @@ Route::get('/', function () {
         ->get();
     
     $projects = PostProject::where('project_status', 'published')
-        ->where('start_date', '>=', $today)
-        ->orderBy('start_date', 'asc')
+        ->where('application_deadline', '>=', $today)
+        ->orderBy('application_deadline', 'asc')
         ->take(5)
         ->get();
     
