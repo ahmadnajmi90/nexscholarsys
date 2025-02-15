@@ -66,7 +66,7 @@ export default function Create() {
     content: "",
     category: "",
     tags: [],
-    image: null,
+    images: [],
     featured_image: null,
     attachment: null,
     status: "published",
@@ -194,21 +194,20 @@ export default function Create() {
                 )}
               </div>
 
-              {/* Upload Image */}
+              {/* Upload Images */}
               <div>
                 <label className="block text-gray-700 font-medium">
-                  Upload Image
+                  Upload Images (Multiple Allowed)
                 </label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setData("image", e.target.files[0])
-                  }
+                  multiple
+                  onChange={(e) => setData("images", e.target.files)}
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
-                {errors.image && (
-                  <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+                {errors.images && (
+                  <p className="text-red-500 text-xs mt-1">{errors.images}</p>
                 )}
               </div>
 

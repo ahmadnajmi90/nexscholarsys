@@ -7,6 +7,9 @@ use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UniversityList;
 use App\Models\User;
+use App\Models\Academician;
+use App\Models\Postgraduate;
+use App\Models\Undergraduate;
 
 use Illuminate\Http\Request;
 
@@ -43,6 +46,10 @@ class ShowPostController extends Controller
             'post'     => $post,
             'previous' => $previous,
             'next'     => $next,
+            'users'     => User::all(),
+            'academicians' => Academician::all(),
+            'postgraduates' => Postgraduate::all(),
+            'undergraduates' => Undergraduate::all(),
         ]);
     }
 }

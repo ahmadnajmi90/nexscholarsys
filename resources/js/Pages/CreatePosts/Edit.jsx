@@ -8,7 +8,6 @@ import useRoles from "../../Hooks/useRoles";
 // A simple tag input component that lets users type and add tags.
 function TagInput({ tags, setTags }) {
   const [input, setInput] = useState("");
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
@@ -21,11 +20,9 @@ function TagInput({ tags, setTags }) {
       setTags(tags.slice(0, tags.length - 1));
     }
   };
-
   const removeTag = (indexToRemove) => {
     setTags(tags.filter((_, index) => index !== indexToRemove));
   };
-
   return (
     <div className="flex flex-wrap items-center border rounded-lg p-2">
       {tags.map((tag, index) => (
@@ -49,39 +46,46 @@ function TagInput({ tags, setTags }) {
 }
 
 export default function Edit() {
-  // 'post' here is the existing post data passed from backend via Inertia
   const { auth, post: currentPost } = usePage().props;
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
-  // Initialize the form with current post values.
   const { data, setData, post, processing, errors } = useForm({
     title: currentPost.title || "",
     url: currentPost.url || "",
     content: currentPost.content || "",
     category: currentPost.category || "",
     tags: currentPost.tags || [],
-    image: null,
+    // New multiple images field. (We do not prefill this with existing images.)
+    images: null,
     featured_image: null,
     attachment: null,
     status: currentPost.status || "published",
   });
 
-  // Helper to update tags.
+  // For handling tags.
   const setTags = (newTags) => {
     setData("tags", newTags);
   };
 
+  // State for images to delete
+  const [deleteImages, setDeleteImages] = useState([]);
+
+  const toggleDeleteImage = (imgPath) => {
+    setDeleteImages((prev) => {
+      const newState = prev.includes(imgPath)
+        ? prev.filter((img) => img !== imgPath)
+        : [...prev, imgPath];
+      console.log("deleteImages state:", newState);
+      return newState;
+    });
+  };
+  
   function handleSubmit(e) {
     e.preventDefault();
-
     const formData = new FormData();
+  
     Object.keys(data).forEach((key) => {
-      // For file fields, only append if a new file has been provided.
-      if ((key === "image" || key === "featured_image" || key === "attachment") && !data[key]) {
-        return; // Skip appending this key
-      }
       if (key === "tags") {
-        // Convert tags array to JSON string.
         formData.append(key, JSON.stringify(data[key]));
       } else if (data[key] instanceof File) {
         formData.append(key, data[key]);
@@ -89,8 +93,12 @@ export default function Edit() {
         formData.append(key, data[key]);
       }
     });
-
-    // Use post() to submit the update.
+  
+    // Append each deletion value using the "delete_images[]" key
+    deleteImages.forEach((img) => {
+      formData.append("delete_images[]", img);
+    });
+    
     post(route("create-posts.update", currentPost.id), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
@@ -110,7 +118,7 @@ export default function Edit() {
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Edit Post</h1>
 
-          {/* First Row: Title and Category (7:3 ratio) */}
+          {/* First Row: Title and Category */}
           <div className="grid grid-cols-10 gap-8">
             <div className="col-span-7">
               <label className="block text-gray-700 font-medium">
@@ -148,7 +156,7 @@ export default function Edit() {
             </div>
           </div>
 
-          {/* Second Row: URL (disabled) and Tags (7:3 ratio) */}
+          {/* Second Row: URL (disabled) and Tags */}
           <div className="grid grid-cols-10 gap-8">
             <div className="col-span-7">
               <label className="block text-gray-700 font-medium">Post URL</label>
@@ -168,16 +176,13 @@ export default function Edit() {
             </div>
           </div>
 
-          {/* Third Row: Content (8 columns) and File Uploads (4 columns) */}
+          {/* Third Row: Content and File Uploads */}
           <div className="grid grid-cols-10 gap-8">
             <div className="col-span-7">
               <label className="block text-gray-700 font-medium">
                 Content <span className="text-red-500">*</span>
               </label>
-              <div
-                className="mt-1 w-full rounded-lg border border-gray-200"
-                style={{ height: "300px", overflowY: "auto" }}
-              >
+              <div className="mt-1 w-full rounded-lg border border-gray-200" style={{ height: "300px", overflowY: "auto" }}>
                 <ReactQuill
                   theme="snow"
                   value={data.content}
@@ -188,31 +193,47 @@ export default function Edit() {
               </div>
               {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
             </div>
+
+            {/* Right Column: File Uploads */}
             <div className="col-span-3 flex flex-col space-y-6">
-              {/* Upload Image */}
+              {/* Upload Images (multiple) */}
+              {/* Upload Images */}
               <div>
-                <label className="block text-gray-700 font-medium">Upload Image</label>
+                <label className="block text-gray-700 font-medium">Upload Images (Multiple Allowed)</label>
+                <p className="text-sm text-gray-500">(Upload new images will delete all existed images)</p>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setData("image", e.target.files[0])}
+                  multiple
+                  onChange={(e) => {
+                    // Convert FileList to an array if needed
+                    setData("images", Array.from(e.target.files));
+                  }}
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
-                {currentPost.image && (
+                {currentPost.images && (
                   <div className="mt-2">
-                    <p className="text-sm font-medium">Current Image:</p>
-                    <a
-                      href={`/storage/${currentPost.image}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 underline"
-                    >
-                      View Image
-                    </a>
+                    <p className="text-sm font-medium">Current Images:</p> 
+                    <div className="flex flex-wrap gap-2">
+                      {JSON.parse(currentPost.images).map((img, index) => (
+                        <a
+                          key={index}
+                          href={`/storage/${img}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 underline"
+                        >
+                          Image {index + 1}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
+                {errors.images && (
+                  <p className="text-red-500 text-xs mt-1">{errors.images}</p>
+                )}
               </div>
+
               {/* Upload Featured Image */}
               <div>
                 <label className="block text-gray-700 font-medium">Upload Featured Image</label>
@@ -237,6 +258,7 @@ export default function Edit() {
                 )}
                 {errors.featured_image && <p className="text-red-500 text-xs mt-1">{errors.featured_image}</p>}
               </div>
+
               {/* Upload Attachment */}
               <div>
                 <label className="block text-gray-700 font-medium">Upload Attachment</label>
@@ -263,7 +285,7 @@ export default function Edit() {
             </div>
           </div>
 
-          {/* Buttons: Update and Cancel */}
+          {/* Buttons */}
           <div className="flex space-x-4">
             <button
               type="submit"

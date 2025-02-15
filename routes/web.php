@@ -34,6 +34,9 @@ use App\Models\PostProject;
 use App\Models\PostGrant;
 use Carbon\Carbon;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Models\Academician;
+use App\Models\Postgraduate;
+use App\Models\Undergraduate;
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
@@ -92,6 +95,9 @@ Route::get('/', function () {
 Route::get('/welcome/posts/{post}', function (CreatePost $post) {
     return Inertia::render('Post/WelcomePostShow', [
         'post' => $post,
+        'academicians' => Academician::all(),
+        'postgraduates' => Postgraduate::all(),
+        'undergraduates' => Undergraduate::all(),
     ]);
 })->name('welcome.posts.show');
 

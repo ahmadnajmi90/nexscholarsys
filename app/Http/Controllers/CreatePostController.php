@@ -45,102 +45,78 @@ class CreatePostController extends Controller
             logger('Store method reached');
             $author = Auth::user();
             $request->merge(['author_id' => $author->unique_id]);
+
             if ($request->has('tags') && is_string($request->tags)) {
                 $decodedTags = json_decode($request->tags, true);
                 if (is_array($decodedTags)) {
                     $request->merge(['tags' => $decodedTags]);
                 }
             }
-            logger('Store method reached', $request->all());
 
+            // Validate including images.* rules
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'url' => 'nullable|max:255',
                 'content' => 'nullable|string',
                 'category' => 'nullable|string|max:255',
                 'tags' => 'nullable|array',
-                'image' => 'nullable|image|max:2048',
+                // Remove 'image' rule and add 'images'
+                'images' => 'nullable',
+                'images.*' => 'image|max:2048',
                 'featured_image' => 'nullable|image|max:2048',
                 'attachment' => 'nullable|file|max:5120',
                 'status' => 'nullable|string|in:draft,published',
             ]);
 
-            if ($request->hasFile('image')) {
-                logger('Image: Im here ');
-
-                // Define the destination path directly in the public directory
-                $destinationPath = public_path('storage/post_images');
-
-                // Ensure the directory exists
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
+            // Process multiple images
+            if ($request->hasFile('images')) {
+                $imagesPaths = [];
+                foreach ($request->file('images') as $image) {
+                    logger('Processing image file');
+                    $destinationPath = public_path('storage/post_images');
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($destinationPath, $imageName);
+                    $imagesPaths[] = 'post_images/' . $imageName;
                 }
-
-                // Store the uploaded file in the public/storage/event_images folder
-                $image = $request->file('image');
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->move($destinationPath, $imageName);
-
-                // Save the path relative to public/storage
-                $validated['image'] = 'post_images/' . $imageName;
-                logger('Image: Im here ', ['path' => $validated['image']]);
+                // Store as JSON array (or simply assign $imagesPaths and later json_encode if needed)
+                $validated['images'] = json_encode($imagesPaths);
             }
 
             if ($request->hasFile('featured_image')) {
                 logger('Featured Image: Im here ');
-
-                // Define the destination path directly in the public directory
                 $destinationPath = public_path('storage/post_featured_images');
-
-                // Ensure the directory exists
                 if (!file_exists($destinationPath)) {
                     mkdir($destinationPath, 0755, true);
                 }
-
-                // Store the uploaded file in the public/storage/event_images folder
                 $featured_image = $request->file('featured_image');
                 $featured_imageName = time() . '_' . $featured_image->getClientOriginalName();
                 $featured_image->move($destinationPath, $featured_imageName);
-
-                // Save the path relative to public/storage
                 $validated['featured_image'] = 'post_featured_images/' . $featured_imageName;
                 logger('Featured Image: Im here ', ['path' => $validated['featured_image']]);
             }
 
-            // Handle attachment upload
             if ($request->hasFile('attachment')) {
                 logger('Attachment: Im here ');
-
-                // Define the destination path directly in the public directory
                 $destinationPath = public_path('storage/post_attachments');
-
-                // Ensure the directory exists
                 if (!file_exists($destinationPath)) {
                     mkdir($destinationPath, 0755, true);
                 }
-
-                // Store the uploaded file in the public/storage/event_images folder
                 $attachment = $request->file('attachment');
                 $attachmentName = time() . '_' . $attachment->getClientOriginalName();
                 $attachment->move($destinationPath, $attachmentName);
-
-                // Save the path relative to public/storage
                 $validated['attachment'] = 'post_attachments/' . $attachmentName;
                 logger('Attachment: Im here ', ['path' => $validated['attachment']]);
             }
 
-            // Log validated data
             logger('Validated Data:', $validated);
-
-            // Save data
             auth()->user()->createPosts()->create($validated);
 
             return redirect()->route('create-posts.index')->with('success', 'Post created successfully.');
         } catch (ValidationException $e) {
-            // Log validation errors
             logger('Validation Errors:', $e->errors());
-
-            // Return back with validation errors
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
     }
@@ -163,7 +139,7 @@ class CreatePostController extends Controller
             $author = Auth::user();
             $request->merge(['author_id' => $author->unique_id]);
 
-            // Decode tags if they are sent as a JSON string.
+            // Decode tags if necessary.
             if ($request->has('tags') && is_string($request->tags)) {
                 $decodedTags = json_decode($request->tags, true);
                 if (is_array($decodedTags)) {
@@ -178,16 +154,9 @@ class CreatePostController extends Controller
                 'content' => 'nullable|string',
                 'category' => 'nullable|string|max:255',
                 'tags' => 'nullable|array',
-                'image' => [
-                    'nullable',
-                    function ($attribute, $value, $fail) use ($request) {
-                        if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
-                            $fail('The ' . $attribute . ' field must be an existing file.');
-                        } elseif (!is_string($value) && !$request->hasFile($attribute)) {
-                            $fail('The ' . $attribute . ' field must be an image.');
-                        }
-                    },
-                ],
+                // We’re no longer validating a single "image" field.
+                'images' => 'nullable|array',
+                'images.*' => 'image|max:2048',  // Each uploaded file must be an image
                 'featured_image' => [
                     'nullable',
                     function ($attribute, $value, $fail) use ($request) {
@@ -211,30 +180,34 @@ class CreatePostController extends Controller
                 'status' => 'nullable|string|in:draft,published',
             ]);
 
-            // Handle Image Upload
-            if ($request->hasFile('image')) {
-                logger('Image: Im here');
-                // Delete the old image if it exists
-                if ($post->image) {
-                    $oldImagePath = public_path('storage/' . $post->image);
+            // Handle Images Upload: If new images are uploaded, delete all old images.
+            if ($request->hasFile('images')) {
+                // Delete all old images
+                $existingImages = $post->images ? json_decode($post->images, true) : [];
+                foreach ($existingImages as $oldImage) {
+                    $oldImagePath = public_path('storage/' . $oldImage);
                     if (file_exists($oldImagePath)) {
                         unlink($oldImagePath);
                     }
                 }
-                $imageDestination = public_path('storage/event_images');
-                if (!file_exists($imageDestination)) {
-                    mkdir($imageDestination, 0755, true);
+                // Upload new images
+                $newImages = [];
+                foreach ($request->file('images') as $image) {
+                    $destinationPath = public_path('storage/post_images');
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($destinationPath, $imageName);
+                    $newImages[] = 'post_images/' . $imageName;
                 }
-                $image = $request->file('image');
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->move($imageDestination, $imageName);
-                $validated['image'] = 'event_images/' . $imageName;
+                $validated['images'] = json_encode($newImages);
             } else {
-                // Keep the existing path
-                $validated['image'] = $post->image;
+                // No new images uploaded, so keep existing images
+                $validated['images'] = $post->images;
             }
 
-            // Handle Featured Image Upload
+            // Handle Featured Image Upload (unchanged)
             if ($request->hasFile('featured_image')) {
                 logger('Featured Image: Im here');
                 if ($post->featured_image) {
@@ -255,7 +228,7 @@ class CreatePostController extends Controller
                 $validated['featured_image'] = $post->featured_image;
             }
 
-            // Handle Attachment Upload
+            // Handle Attachment Upload (unchanged)
             if ($request->hasFile('attachment')) {
                 logger('Attachment: Im here');
                 if ($post->attachment) {

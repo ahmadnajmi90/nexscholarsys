@@ -24,7 +24,7 @@ const WelcomePosts = ({ posts }) => {
               className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col text-center pb-6"
             >
               <img
-                src={post.image ? `/storage/${post.image}` : "/storage/default.jpg"}
+                src={post.featured_image ? `/storage/${post.featured_image}` : "/storage/default.jpg"}
                 alt={post.title}
                 className="w-full h-48 object-cover"
               />

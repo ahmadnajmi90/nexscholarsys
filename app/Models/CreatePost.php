@@ -20,7 +20,7 @@ class CreatePost extends Model
         'content',
         'category',
         'tags',
-        'image',
+        'images',
         'featured_image',
         'attachment',
         'status',
@@ -28,6 +28,7 @@ class CreatePost extends Model
 
     protected $casts = [
         'tags' => 'array',
+        'images' => 'array',
     ];
 
     protected static function booted()
