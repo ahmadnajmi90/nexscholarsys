@@ -2,15 +2,17 @@ import React, { useState } from "react";
 import FilterDropdown from "@/Components/FilterDropdown";
 
 const PostCard = ({ posts }) => {
-  // State for filtering by category (allow multiple selection if needed)
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
-  // Extract unique categories from posts (filter out empty values)
-  const uniqueCategories = [...new Set(posts.map(post => post.category))].filter(Boolean);
+  // Convert unique categories into objects for the new FilterDropdown
+  const uniqueCategories = [...new Set(posts.map(post => post.category))]
+    .filter(Boolean)
+    .map(cat => ({ value: cat, label: cat }));
 
   // Filter posts based on selected category values
+  // selectedValues is an array of strings corresponding to the category value
   const filteredPosts = posts.filter(post => {
     return categoryFilter.length === 0 || categoryFilter.includes(post.category);
   });
@@ -62,9 +64,11 @@ const PostCard = ({ posts }) => {
                 ></p>
               </div>
               <div className="px-4">
-                <a href={route('posts.show', post.url)} 
-                    className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
-                    >View Details
+                <a 
+                  href={route('posts.show', post.url)}
+                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
+                >
+                  View Details
                 </a>
               </div>
             </div>

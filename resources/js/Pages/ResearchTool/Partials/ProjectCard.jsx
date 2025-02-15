@@ -10,18 +10,30 @@ const ProjectCard = ({ projects }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 9;
 
-  const uniqueTypeOptions = [...new Set(projects.map((project) => project.category))].filter(Boolean);
-  const uniqueCountryOptions = [...new Set(projects.map((project) => project.origin_country))].filter(Boolean);
-  const uniqueThemeOptions = [...new Set(projects.flatMap((project) => project.project_theme || []))].filter(Boolean);
+  // Convert unique filter options to objects for the new FilterDropdown
+  const uniqueTypeOptions = [...new Set(projects.map((project) => project.category))]
+    .filter(Boolean)
+    .map((type) => ({ value: type, label: type }));
+    
+  const uniqueCountryOptions = [...new Set(projects.map((project) => project.origin_country))]
+    .filter(Boolean)
+    .map((country) => ({ value: country, label: country }));
+    
+  const uniqueThemeOptions = [...new Set(projects.flatMap((project) => project.project_theme || []))]
+    .filter(Boolean)
+    .map((theme) => ({ value: theme, label: theme }));
 
+  // Filter projects based on selected filters
+  // Here, typeFilter, countryFilter, and themeFilter are arrays of strings (the raw values).
   const filteredProjects = projects.filter((project) => {
     const matchesType =
       typeFilter.length === 0 || typeFilter.includes(project.category);
     const matchesCountry =
       countryFilter.length === 0 || countryFilter.includes(project.origin_country);
     const matchesTheme =
-      themeFilter.length === 0 || project.project_theme?.some((theme) => themeFilter.includes(theme));
-
+      themeFilter.length === 0 ||
+      (project.project_theme &&
+        project.project_theme.some((theme) => themeFilter.includes(theme)));
     return matchesType && matchesCountry && matchesTheme;
   });
 
@@ -84,10 +96,11 @@ const ProjectCard = ({ projects }) => {
                 className="w-full h-48 object-cover"
               />
               <div className="p-8">
-                <h2 className="text-xl font-semibold text-gray-800 text-center truncate" 
-                    style={{ maxWidth: "100%" }}
-                    title={project.title}>
-                  
+                <h2
+                  className="text-xl font-semibold text-gray-800 text-center truncate"
+                  style={{ maxWidth: "100%" }}
+                  title={project.title}
+                >
                   {project.title}
                 </h2>
                 <p
@@ -104,13 +117,12 @@ const ProjectCard = ({ projects }) => {
                 ></p>
               </div>
 
-              
               <button
-                  onClick={() => handleViewMore(project)}
-                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
-                >
-                  View Details
-                </button>
+                onClick={() => handleViewMore(project)}
+                className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
+              >
+                View Details
+              </button>
             </div>
           ))}
         </div>
@@ -126,7 +138,10 @@ const ProjectCard = ({ projects }) => {
           </button>
 
           {Array.from({ length: totalPages }, (_, index) => index + 1)
-            .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+            .filter(
+              (page) =>
+                page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1
+            )
             .map((page, index, arr) => (
               <React.Fragment key={page}>
                 {index > 0 && page - arr[index - 1] > 1 && (
@@ -161,7 +176,7 @@ const ProjectCard = ({ projects }) => {
         >
           <div
             className="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full overflow-y-auto max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()} // Prevent click from closing modal
+            onClick={(e) => e.stopPropagation()}
           >
             <img
               src={selectedProject.image ? `/storage/${selectedProject.image}` : "/storage/default.jpg"}
@@ -176,50 +191,46 @@ const ProjectCard = ({ projects }) => {
               dangerouslySetInnerHTML={{ __html: selectedProject.description }}
             ></p>
             <p className="text-gray-600 mb-2">
-                <span className="font-semibold">Purpose:</span>{" "}
-                {selectedProject.category || "Not provided"}
+              <span className="font-semibold">Purpose:</span>{" "}
+              {selectedProject.category || "Not provided"}
             </p>
-
             <p className="text-gray-600 mb-2">
-                <span className="font-semibold">Project Theme:</span>{" "}
-                {selectedProject.project_theme || "Not provided"}
+              <span className="font-semibold">Project Theme:</span>{" "}
+              {selectedProject.project_theme || "Not provided"}
             </p>
-
             <p className="text-gray-600 mb-2">
-                <span className="font-semibold">Purpose:</span>{" "}
-                {Array.isArray(selectedProject.purpose) ? selectedProject.purpose.join(", ") : "No Purpose Specified"}
+              <span className="font-semibold">Purpose:</span>{" "}
+              {Array.isArray(selectedProject.purpose)
+                ? selectedProject.purpose.join(", ")
+                : "No Purpose Specified"}
             </p>
-
             <p className="text-gray-600 mb-2">
-                <span className="font-semibold">Project Duration:</span>{" "}
-                {selectedProject.start_date ? `${selectedProject.start_date} - ${selectedProject.end_date}` : "Not provided"}
+              <span className="font-semibold">Project Duration:</span>{" "}
+              {selectedProject.start_date ? `${selectedProject.start_date} - ${selectedProject.end_date}` : "Not provided"}
             </p>
-
             <p className="text-gray-600 mb-2">
-                <span className="font-semibold">Application Deadline:</span>{" "}
-                {selectedProject.application_deadline || "Not provided"}
+              <span className="font-semibold">Application Deadline:</span>{" "}
+              {selectedProject.application_deadline || "Not provided"}
             </p>
-
             <p className="text-gray-600 mb-2">
-                <span className="font-semibold">Contact Email:</span>{" "}
-                {selectedProject.email || "Not provided"}
+              <span className="font-semibold">Contact Email:</span>{" "}
+              {selectedProject.email || "Not provided"}
             </p>
-
             <p className="text-gray-600">
-                <span className="font-semibold">Attachment:</span>{" "}
-                {selectedProject.attachment ? (
-                    <a
-                    href={`/storage/${selectedProject.attachment}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 underline"
-                    >
-                    View Attachment
-                    </a>
-                ) : (
-                    "No attachment available."
-                )}
-                </p>
+              <span className="font-semibold">Attachment:</span>{" "}
+              {selectedProject.attachment ? (
+                <a
+                  href={`/storage/${selectedProject.attachment}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  View Attachment
+                </a>
+              ) : (
+                "No attachment available."
+              )}
+            </p>
             <div className="mt-6 text-center">
               <button
                 onClick={closeModal}

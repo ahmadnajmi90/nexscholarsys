@@ -15,26 +15,37 @@ const EventCard = ({ events }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
-  // Extract unique options for filters
-  const uniqueEventModes = [...new Set(events.map((event) => event.event_mode))].filter(Boolean);
-  const uniqueEventTypes = [...new Set(events.map((event) => event.event_type))].filter(Boolean);
+  // Convert unique options to objects for the new FilterDropdown
+  const uniqueEventModes = [...new Set(events.map((event) => event.event_mode))]
+    .filter(Boolean)
+    .map((mode) => ({ value: mode, label: mode }));
+    
+  const uniqueEventTypes = [...new Set(events.map((event) => event.event_type))]
+    .filter(Boolean)
+    .map((type) => ({ value: type, label: type }));
+    
   const uniqueEventThemes = [
     ...new Set(events.flatMap((event) => event.event_theme || [])),
-  ].filter(Boolean);
-  const uniqueCountries = [...new Set(events.map((event) => event.country))].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .map((theme) => ({ value: theme, label: theme }));
+    
+  const uniqueCountries = [...new Set(events.map((event) => event.country))]
+    .filter(Boolean)
+    .map((country) => ({ value: country, label: country }));
 
-  // Filter events based on selected filters
+  // Filter events based on selected filters.
+  // Note: the selectedValues arrays here are arrays of strings.
   const filteredEvents = events.filter((event) => {
     const matchesMode =
       eventModeFilter.length === 0 || eventModeFilter.includes(event.event_mode);
     const matchesType =
       eventTypeFilter.length === 0 || eventTypeFilter.includes(event.event_type);
     const matchesTheme =
-      eventThemeFilter.length === 0 || event.event_theme?.some((theme) => eventThemeFilter.includes(theme));
+      eventThemeFilter.length === 0 ||
+      (event.event_theme && event.event_theme.some((theme) => eventThemeFilter.includes(theme)));
     const matchesCountry =
       countryFilter.length === 0 || countryFilter.includes(event.country);
-
-    // Compare event.start_date with selected startDateFilter and endDateFilter
     const matchesDate =
       (!startDateFilter || new Date(event.start_date) >= new Date(startDateFilter)) &&
       (!endDateFilter || new Date(event.start_date) <= new Date(endDateFilter));
@@ -84,19 +95,49 @@ const EventCard = ({ events }) => {
             ✕
           </button>
         </h2>
-        <FilterDropdown label="Event Mode" options={uniqueEventModes} selectedValues={eventModeFilter} setSelectedValues={setEventModeFilter} />
-        <FilterDropdown label="Event Type" options={uniqueEventTypes} selectedValues={eventTypeFilter} setSelectedValues={setEventTypeFilter} />
-        <FilterDropdown label="Event Theme" options={uniqueEventThemes} selectedValues={eventThemeFilter} setSelectedValues={setEventThemeFilter} />
-        <FilterDropdown label="Country" options={uniqueCountries} selectedValues={countryFilter} setSelectedValues={setCountryFilter} />
+        <FilterDropdown
+          label="Event Mode"
+          options={uniqueEventModes}
+          selectedValues={eventModeFilter}
+          setSelectedValues={setEventModeFilter}
+        />
+        <FilterDropdown
+          label="Event Type"
+          options={uniqueEventTypes}
+          selectedValues={eventTypeFilter}
+          setSelectedValues={setEventTypeFilter}
+        />
+        <FilterDropdown
+          label="Event Theme"
+          options={uniqueEventThemes}
+          selectedValues={eventThemeFilter}
+          setSelectedValues={setEventThemeFilter}
+        />
+        <FilterDropdown
+          label="Country"
+          options={uniqueCountries}
+          selectedValues={countryFilter}
+          setSelectedValues={setCountryFilter}
+        />
 
         {/* Date Range Filter */}
         <div className="mt-4">
           <label className="block text-gray-700 font-medium">Start Date</label>
-          <input type="date" value={startDateFilter} onChange={(e) => setStartDateFilter(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200" />
+          <input
+            type="date"
+            value={startDateFilter}
+            onChange={(e) => setStartDateFilter(e.target.value)}
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+          />
         </div>
         <div className="mt-4">
           <label className="block text-gray-700 font-medium">End Date</label>
-          <input type="date" value={endDateFilter} onChange={(e) => setEndDateFilter(e.target.value)} className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200" />
+          <input
+            type="date"
+            value={endDateFilter}
+            onChange={(e) => setEndDateFilter(e.target.value)}
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+          />
         </div>
       </div>
 
@@ -194,11 +235,11 @@ const EventCard = ({ events }) => {
       {isModalOpen && selectedEvent && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={closeModal}
+          onClick={() => setIsModalOpen(false)}
         >
           <div
             className="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full overflow-y-auto max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()} // Prevent click from closing modal
+            onClick={(e) => e.stopPropagation()}
           >
             <img
               src={selectedEvent.image ? `/storage/${selectedEvent.image}` : "/storage/default.jpg"}
@@ -265,7 +306,7 @@ const EventCard = ({ events }) => {
             </p>
             <div className="mt-6 text-center">
               <button
-                onClick={closeModal}
+                onClick={() => setIsModalOpen(false)}
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
               >
                 Close
