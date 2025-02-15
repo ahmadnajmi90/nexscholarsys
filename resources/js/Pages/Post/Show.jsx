@@ -47,7 +47,17 @@ export default function Show() {
                   </div>
               </div>
           ) : (
-              <p className="text-left text-gray-500 mb-4">Author not found</p>
+            <div className="flex items-center gap-2 mb-4">
+              <img 
+                src={`/storage/Admin.jpg`} 
+                alt='Admin'
+                className="w-12 h-12 rounded-full object-cover shadow-md border-2 border-white"
+              />
+              <div>
+                <div className="text-lg font-semibold">Admin</div>
+                <div className="text-gray-500">{new Date(post.created_at).toLocaleDateString()}</div>
+              </div>
+            </div>
           )}
 
           {/* Banner */}
