@@ -520,7 +520,7 @@ export default function UndergraduateForm({ universities, faculties, className =
                   type="file"
                   id="CV_file"
                   accept=".pdf,.doc,.docx"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  className="mt-1 block w-full border-gray-300 rounded-md py-2"
                   onChange={e => {
                     const file = e.target.files[0];
                     if (file) {

@@ -732,7 +732,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                     type="file"
                                     id="CV_file"
                                     name="CV_file"
-                                    className="block w-full border-gray-300 rounded-md shadow-sm"
+                                    className="block w-full border-gray-300 rounded-md py-2"
                                     accept=".pdf,.doc,.docx"
                                     onChange={(e) => {
                                         const file = e.target.files[0];
