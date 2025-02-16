@@ -94,7 +94,7 @@ class PostProjectController extends Controller
                     'title' => 'required|string|max:255',
                     'description' => 'required|string',
                     'project_theme' => 'required|string|max:255',
-                    'purpose' => 'nullable|max:255',
+                    'purpose' => 'required|max:255',
                     'start_date' => 'nullable|date',
                     'end_date' => 'nullable|date',
                     'application_deadline' => 'required|date',
@@ -351,9 +351,18 @@ class PostProjectController extends Controller
                     logger()->info('Purpose:', $validated['purpose']);
                 }
 
-                if (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
-                    $validated['field_of_research'] = json_decode($validated['field_of_research'], true);
-                    logger()->info('Field of Research:', $validated['field_of_research']);
+                if (!array_key_exists('field_of_research', $validated)) {
+                    $validated['field_of_research'] = null;
+                    logger()->info('Field of Research not provided; setting to null.');
+                } elseif (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
+                    $decoded = json_decode($validated['field_of_research'], true);
+                    if (empty($decoded)) {
+                        $validated['field_of_research'] = null;
+                        logger()->info('Field of Research is empty; setting to null.');
+                    } else {
+                        $validated['field_of_research'] = $decoded;
+                        logger()->info('Field of Research:', $validated['field_of_research']);
+                    }
                 }
 
                 logger('Validated Data:', $validated);

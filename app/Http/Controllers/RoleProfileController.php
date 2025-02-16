@@ -145,11 +145,11 @@ class RoleProfileController extends Controller
 
     public function update(RoleProfileUpdateRequest $request): RedirectResponse
     {
-        try{
+        try {
             $user = Auth::user();
             $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
             $isAcademician = BouncerFacade::is($user)->an('academician');
-            $isUndergraduate = BouncerFacade::is(Auth::user())->an('undergraduate');
+            $isUndergraduate = BouncerFacade::is($user)->an('undergraduate');
 
             // Validate the request data
             $validatedData = $request->all();
@@ -160,140 +160,180 @@ class RoleProfileController extends Controller
 
                 // Determine the destination path for profile pictures
                 $destinationPath = public_path('storage/profile_pictures');
-
-                // Ensure the directory exists
                 if (!file_exists($destinationPath)) {
                     mkdir($destinationPath, 0755, true);
                 }
-
                 // Delete the old profile picture if it exists
                 if ($isPostgraduate && $user->postgraduate && $user->postgraduate->profile_picture) {
                     $oldFilePath = public_path('storage/' . $user->postgraduate->profile_picture);
                     if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath); // Delete the old profile picture
+                        unlink($oldFilePath);
                     }
                 } elseif ($isAcademician && $user->academician && $user->academician->profile_picture) {
                     $oldFilePath = public_path('storage/' . $user->academician->profile_picture);
                     if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath); // Delete the old profile picture
+                        unlink($oldFilePath);
                     }
-                } else if ($isUndergraduate && $user->undergraduate && $user->undergraduate->profile_picture) {
+                } elseif ($isUndergraduate && $user->undergraduate && $user->undergraduate->profile_picture) {
                     $oldFilePath = public_path('storage/' . $user->undergraduate->profile_picture);
                     if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath); // Delete the old profile picture
+                        unlink($oldFilePath);
                     }
-                } 
-
-                // Save the new profile picture
+                }
                 $file = $request->file('profile_picture');
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $file->move($destinationPath, $fileName);
-
-                // Save the relative path
                 $validatedData['profile_picture'] = 'profile_pictures/' . $fileName;
             } else {
-                // Keep the existing path
                 $validatedData['profile_picture'] = $request->input('profile_picture');
             }
 
-             // Handle CV_file
+            // Handle CV_file (for students)
             if (($isPostgraduate || $isUndergraduate) && $request->hasFile('CV_file')) {
                 logger()->info('CV file hasFile');
-
-                // Determine the destination path for CV files
                 $destinationPath = public_path('storage/CV_files');
-
-                // Ensure the directory exists
                 if (!file_exists($destinationPath)) {
                     mkdir($destinationPath, 0755, true);
                 }
-
-                // Delete the old CV file if it exists
                 if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
                     $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
                     if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath); // Delete the old CV file
+                        unlink($oldFilePath);
                     }
-                }else if ($isUndergraduate && $user->undergraduate && $user->undergraduate->CV_file) {
+                } elseif ($isUndergraduate && $user->undergraduate && $user->undergraduate->CV_file) {
                     $oldFilePath = public_path('storage/' . $user->undergraduate->CV_file);
                     if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath); // Delete the old CV file
+                        unlink($oldFilePath);
                     }
                 }
-
-                // Save the new CV file
                 $file = $request->file('CV_file');
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $file->move($destinationPath, $fileName);
-
-                // Save the relative path
                 $validatedData['CV_file'] = 'CV_files/' . $fileName;
             } else {
-                // Keep the existing path
                 $validatedData['CV_file'] = $request->input('CV_file');
             }
 
-            if ($isAcademician && isset($validatedData['research_expertise']) && is_string($validatedData['research_expertise'])) {
-                $validatedData['research_expertise'] = json_decode($validatedData['research_expertise'], true);
-                logger()->info('Research Expertise:', $validatedData['research_expertise']);
+            if ($isAcademician) {
+                // Handle research_expertise for academicians.
+                if (!array_key_exists('research_expertise', $validatedData)) {
+                    $validatedData['research_expertise'] = null;
+                    logger()->info('No research_expertise provided; setting to null.');
+                } elseif (is_string($validatedData['research_expertise'])) {
+                    $decoded = json_decode($validatedData['research_expertise'], true);
+                    if (empty($decoded)) {
+                        $validatedData['research_expertise'] = null;
+                        logger()->info('Research Expertise is empty; deleting field.');
+                    } else {
+                        $validatedData['research_expertise'] = $decoded;
+                        logger()->info('Research Expertise:', $validatedData['research_expertise']);
+                    }
+                }
             }
 
-            if ($isPostgraduate && isset($validatedData['field_of_research']) && is_string($validatedData['field_of_research'])) {
-                $validatedData['field_of_research'] = json_decode($validatedData['field_of_research'], true);
-                logger()->info('Field of Research:', $validatedData['field_of_research']);
+            if ($isPostgraduate) {
+                // Handle field_of_research for postgraduates.
+                if (!array_key_exists('field_of_research', $validatedData)) {
+                    $validatedData['field_of_research'] = null;
+                    logger()->info('No field_of_research provided; setting to null.');
+                } elseif (is_string($validatedData['field_of_research'])) {
+                    $decoded = json_decode($validatedData['field_of_research'], true);
+                    if (empty($decoded)) {
+                        $validatedData['field_of_research'] = null;
+                        logger()->info('Field of Research is empty; deleting field.');
+                    } else {
+                        $validatedData['field_of_research'] = $decoded;
+                        logger()->info('Field of Research:', $validatedData['field_of_research']);
+                    }
+                }
+            
+                // Handle previous_degree for postgraduates.
+                if (!array_key_exists('previous_degree', $validatedData)) {
+                    $validatedData['previous_degree'] = null;
+                    logger()->info('No previous_degree provided; setting to null.');
+                } elseif (is_string($validatedData['previous_degree'])) {
+                    $decoded = json_decode($validatedData['previous_degree'], true);
+                    if (empty($decoded)) {
+                        $validatedData['previous_degree'] = null;
+                        logger()->info('Previous Degree is empty; deleting field.');
+                    } else {
+                        $validatedData['previous_degree'] = $decoded;
+                        logger()->info('Previous Degree:', $validatedData['previous_degree']);
+                    }
+                }
             }
 
-            if ($isPostgraduate && isset($validatedData['previous_degree']) && is_string($validatedData['previous_degree'])) {
-                $validatedData['previous_degree'] = json_decode($validatedData['previous_degree'], true);
-                logger()->info('Previous Degree:', $validatedData['previous_degree']);
+            if ($isUndergraduate) {
+                // If the research_preference key isn't set, then force it to null
+                if (!array_key_exists('research_preference', $validatedData) || $validatedData['interested_do_research'] === "false") {
+                    $validatedData['research_preference'] = null;
+                    logger()->info('No research_preference provided; setting to null.');
+                } elseif (is_string($validatedData['research_preference'])) {
+                    $decoded = json_decode($validatedData['research_preference'], true);
+                    if (empty($decoded)) {
+                        $validatedData['research_preference'] = null;
+                        logger()->info('Research Preference is empty; deleting field.');
+                    } else {
+                        $validatedData['research_preference'] = $decoded;
+                        logger()->info('Research Preference:', $validatedData['research_preference']);
+                    }
+                }
             }
 
-            if ($isUndergraduate && isset($validatedData['research_preference']) && is_string($validatedData['research_preference'])) {
-                $validatedData['research_preference'] = json_decode($validatedData['research_preference'], true);
-                logger()->info('Research Preference:', $validatedData['research_preference']);
+            // *** NEW: Handle skills update for students ***
+            if ($isPostgraduate || $isUndergraduate) {
+                // Handle skills for students.
+                if (!array_key_exists('skills', $validatedData)) {
+                    $validatedData['skills'] = null;
+                    logger()->info('No skills provided; setting to null.');
+                } elseif (is_string($validatedData['skills'])) {
+                    $decoded = json_decode($validatedData['skills'], true);
+                    if (empty($decoded)) {
+                        $validatedData['skills'] = null;
+                        logger()->info('Skills are empty; deleting field.');
+                    } else {
+                        $validatedData['skills'] = $decoded;
+                        logger()->info('Skills:', $validatedData['skills']);
+                    }
+                }
             }
 
             logger()->info('Decoded Data:', $validatedData);
 
             if ($isPostgraduate) {
-                // Match existing postgraduate by `postgraduate_id` or `user_id`
                 $user->postgraduate()->updateOrCreate(
-                    ['postgraduate_id' => $user->postgraduate->postgraduate_id ?? $user->id], // Ensure it matches the existing ID
+                    ['postgraduate_id' => $user->postgraduate->postgraduate_id ?? $user->id],
                     $validatedData
                 );
             } else if ($isUndergraduate) {
-                // Match existing postgraduate by `postgraduate_id` or `user_id`
-                if($validatedData['interested_do_research']==true){
+                if ($validatedData['interested_do_research'] == "true") {
                     $validatedData['interested_do_research'] = 1;
-                }else{
+                } else if ($validatedData['interested_do_research'] == "false"){
                     $validatedData['interested_do_research'] = 0;
                 }
+                logger()->info('Undergraduate Data:', $validatedData);
                 $user->undergraduate()->updateOrCreate(
-                    ['undergraduate_id' => $user->undergraduate->undergraduate_id ?? $user->id], // Ensure it matches the existing ID
+                    ['undergraduate_id' => $user->undergraduate->undergraduate_id ?? $user->id],
                     $validatedData
                 );
             } elseif ($isAcademician) {
-                // Match existing academician by `academician_id` or `user_id`
                 $validatedData['university'] = $user->academician->university;
                 $validatedData['faculty'] = $user->academician->faculty;
-                if($validatedData['availability_as_supervisor']==true){
+                if ($validatedData['availability_as_supervisor'] == true) {
                     $validatedData['availability_as_supervisor'] = 1;
-                }else{
+                } else {
                     $validatedData['availability_as_supervisor'] = 0;
                 }
                 logger()->info('Academician Data:', $validatedData);
                 $user->academician()->updateOrCreate(
-                    ['academician_id' => $user->academician->academician_id ?? $user->id], // Ensure it matches the existing ID
+                    ['academician_id' => $user->academician->academician_id ?? $user->id],
                     $validatedData
                 );
             }
 
             return Redirect::route('role.edit')->with('status', 'Role information updated successfully!');
-        }catch (ValidationException $e) {
-            // Log validation errors
+        } catch (ValidationException $e) {
             logger('Validation Errors:', $e->errors());
-
-            // Return back with validation errors
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
     }

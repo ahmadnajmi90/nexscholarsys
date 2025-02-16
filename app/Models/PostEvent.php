@@ -27,7 +27,12 @@ class PostEvent extends Model
         'venue',
         'city',
         'country',
-        'event_status'
+        'event_status',
+        'field_of_research',
+    ];
+
+    protected $casts = [
+        'field_of_research' => 'array', // Cast field_of_study as an array
     ];
 
     /**

@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\DB;
+use App\Models\FieldOfResearch;
 
 class PostEventController extends Controller
 {
@@ -45,8 +46,26 @@ class PostEventController extends Controller
             abort(403, 'Unauthorized access.');
         }
         else{
+            $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+            $researchOptions = [];
+            foreach ($fieldOfResearches as $field) {
+                foreach ($field->researchAreas as $area) {
+                    foreach ($area->nicheDomains as $domain) {
+                        $researchOptions[] = [
+                            'field_of_research_id' => $field->id,
+                            'field_of_research_name' => $field->name,
+                            'research_area_id' => $area->id,
+                            'research_area_name' => $area->name,
+                            'niche_domain_id' => $domain->id,
+                            'niche_domain_name' => $domain->name,
+                        ];
+                    }
+                }
+            }
+
             return Inertia::render('PostEvents/Create', [
                 'auth' => Auth::user(),
+                'researchOptions' => $researchOptions,
             ]);
         }
     }
@@ -95,6 +114,7 @@ class PostEventController extends Controller
                     'city' => 'nullable|string|max:255',
                     'country' => 'nullable|string|max:255',
                     'event_status' => 'nullable|string|in:draft,published',
+                    'field_of_research' => 'nullable',
                 ]);
 
                 if ($request->hasFile('image')) {
@@ -116,6 +136,11 @@ class PostEventController extends Controller
                     // Save the path relative to public/storage
                     $validated['image'] = 'event_images/' . $imageName;
                     logger('Image: Im here ', ['path' => $validated['image']]);
+                }
+
+                if (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
+                    $validated['field_of_research'] = json_decode($validated['field_of_research'], true);
+                    logger()->info('Field of Research:', $validated['field_of_research']);
                 }
 
                 // Handle attachment upload
@@ -159,6 +184,23 @@ class PostEventController extends Controller
 
     public function edit($id)
     {
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+
         if(Auth::user()->cannot('post-events'))
         {
             abort(403, 'Unauthorized access.');
@@ -168,6 +210,7 @@ class PostEventController extends Controller
             return Inertia::render('PostEvents/Edit', [
                 'postEvent' => $postEvent,
                 'auth' => Auth::user(),
+                'researchOptions' => $researchOptions,
             ]);
         }
     }
@@ -202,6 +245,7 @@ class PostEventController extends Controller
                     'country' => 'nullable|string|max:255',
                     'event_status' => 'nullable|string|in:draft,published',
                     'event_theme' => 'nullable|string|max:255',
+                    'field_of_research' => 'nullable',
 
                     'image' => [
                         'nullable',
@@ -255,6 +299,20 @@ class PostEventController extends Controller
                 } else {
                     // Keep the existing path
                     $validated['image'] = $postEvent->image;
+                }
+
+                if (!array_key_exists('field_of_research', $validated)) {
+                    $validated['field_of_research'] = null;
+                    logger()->info('Field of Research not provided; setting to null.');
+                } elseif (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
+                    $decoded = json_decode($validated['field_of_research'], true);
+                    if (empty($decoded)) {
+                        $validated['field_of_research'] = null;
+                        logger()->info('Field of Research is empty; setting to null.');
+                    } else {
+                        $validated['field_of_research'] = $decoded;
+                        logger()->info('Field of Research:', $validated['field_of_research']);
+                    }
                 }
 
                 // Handle attachment upload

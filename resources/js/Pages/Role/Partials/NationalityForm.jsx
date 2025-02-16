@@ -1,7 +1,8 @@
 import { useState } from "react";
+import InputLabel from '@/Components/InputLabel';
+import Select from 'react-select';
 
-// List of nationalities (example; use a comprehensive list for production)
-const nationalities  = [
+const nationalities = [
     "Afghanistan",
     "Albania",
     "Algeria",
@@ -197,42 +198,35 @@ const nationalities  = [
     "Zimbabwe",
 ];
 
-
 export default function NationalityForm({ value, onChange, title, isNotSpecify }) {
-    const [search, setSearch] = useState("");
-
-    const filteredNationalities = nationalities.filter((nat) =>
-        nat.toLowerCase().includes(search.toLowerCase())
-    );
+    // Transform array to options
+    let options = nationalities.map(nat => ({ value: nat, label: nat }));
+    // If needed, add extra options at the beginning
+    if (isNotSpecify) {
+        options = [
+            { value: "Not Specified", label: "Not Specified" },
+            { value: "All Country", label: "All Country" },
+            ...options,
+        ];
+    }
+    // Find the selected option based on value
+    const selectedOption = options.find(option => option.value === value) || null;
 
     return (
-        <div >
-            <label htmlFor="nationality" className="block font-medium text-gray-700">
+        <div>
+            <InputLabel htmlFor="nationality" className="block font-medium text-gray-700">
                 {title}
-            </label>
-
-            {/* Nationality Dropdown */}
-            <select
+            </InputLabel>
+            <Select
                 id="nationality"
-                className="mt-1 block w-full border-gray-200 rounded-lg p-4 text-sm"
-                value={value}
-                onChange={(e) => onChange(e.target.value)} // Pass the selected value
-            >
-                <option value="" hidden>
-                    Select {title}
-                </option>
-                {isNotSpecify && (
-                    <>
-                    <option value="Not Specified">Not Specified</option>
-                    <option value="All Country">All Country</option>
-                    </>
-                )}
-                {filteredNationalities.map((nat) => (
-                    <option key={nat} value={nat}>
-                        {nat}
-                    </option>
-                ))}
-            </select>
+                options={options}
+                value={selectedOption}
+                onChange={(option) => onChange(option.value)}
+                placeholder={`Select ${title}...`}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                classNamePrefix="react-select"
+                isSearchable
+            />
         </div>
     );
 }

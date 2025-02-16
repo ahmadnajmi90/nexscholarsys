@@ -6,7 +6,7 @@ import Select from "react-select";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useRoles from "../../Hooks/useRoles";
-
+import InputLabel from '@/Components/InputLabel';
 
 export default function Edit({ postGrant, auth }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -47,13 +47,12 @@ export default function Edit({ postGrant, auth }) {
 
   const handleCheckboxChange = (value) => {
     if (data.grant_theme.includes(value)) {
-      // Remove the value if already selected
       setData("grant_theme", data.grant_theme.filter((theme) => theme !== value));
     } else {
-      // Add the value if not already selected
       setData("grant_theme", [...data.grant_theme, value]);
     }
   };
+
   const [customTag, setCustomTag] = useState("");
 
   const handleAddCustomTag = () => {
@@ -67,557 +66,387 @@ export default function Edit({ postGrant, auth }) {
     setData("tags", data.tags?.filter((tag) => tag !== tagToRemove));
   };
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
     const formData = new FormData();
 
     // Add all data to FormData
     Object.keys(data).forEach((key) => {
-        if (key === 'image' || key === 'attachment') {
-          // Check if the field contains a file or existing path
-          if (data[key] instanceof File) {
-              formData.append(key, data[key]); // Append file
-          } else if (typeof data[key] === 'string') {
-              formData.append(key, data[key]); // Append existing path
-          }
-        } else if (Array.isArray(data[key])) {
-            formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON
-        } else if (Array.isArray(data[key])) {
-          formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON strings
+      if (key === "image" || key === "attachment") {
+        // Check if the field contains a file or existing path
+        if (data[key] instanceof File) {
+          formData.append(key, data[key]);
+        } else if (typeof data[key] === "string") {
+          formData.append(key, data[key]);
         }
-          else {
-              formData.append(key, data[key]);
-          }
+      } else if (Array.isArray(data[key])) {
+        formData.append(key, JSON.stringify(data[key]));
+      } else {
+        formData.append(key, data[key]);
+      }
     });
 
     // Debug FormData
     console.log("Form Data Contents:");
     for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
+      console.log(pair[0] + ": " + pair[1]);
+      console.log(pair[0] + ": " + typeof pair[1]);
     }
 
-    post(route('post-grants.update', postGrant.id), {
+    post(route("post-grants.update", postGrant.id), {
       data: formData,
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
       onSuccess: () => {
         alert("Grant updated successfully!");
       },
       onError: (errors) => {
-          console.error('Error updating grant:', errors);
-          alert("Failed to update the grant. Please try again.");
+        console.error("Error updating grant:", errors);
+        alert("Failed to update the grant. Please try again.");
       },
     });
-};
+  };
 
-return (
-  <MainLayout title="">
-  <div className="p-4">
-    {/* Back Arrow */}
-    <button
-      onClick={() => window.history.back()}
-      className="absolute top-4 left-4 text-gray-700 hover:text-gray-900"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth="2"
-        stroke="currentColor"
-        className="w-6 h-6"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M15 19l-7-7 7-7"
-        />
-      </svg>
-    </button>
-
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6"
-    >
-      <h1 className="text-xl font-bold text-gray-700 text-center">
-        Add New Grant
-      </h1>
-
-      {/* Grant Name */}
-      <div>
-        <label className="block text-gray-700 font-medium">
-          Grant Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={data.title}
-          onChange={(e) => setData("title", e.target.value)}
-          className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          placeholder="Enter grant title"
-        />
-        {errors.title && (
-          <p className="text-red-500 text-xs mt-1">{errors.title}</p>
-        )}
-      </div>
-
-      <div>
-    {/* Description */}
-    <div>
-      <label className="block text-gray-700 font-medium">
-        Grant Description <span className="text-red-500">*</span>
-      </label>
-      <div
-        className="mt-1 w-full rounded-lg border border-gray-200"
-        style={{
-          height: "300px", // Set a default height
-          overflowY: "auto", // Add vertical scrollbar]
-
-        }}
-      >
-        <ReactQuill
-          theme="snow"
-          value={data.description}
-          onChange={(value) => setData("description", value)}
-          placeholder="Enter description"
-          style={{
-            height: "300px", // Set height for the editor content area
-            maxHeight: "300px", // Restrict content height
-          }}
-        />
-      </div>
-      {errors.description && (
-        <p className="text-red-500 text-xs mt-1">{errors.description}</p>
-      )}
-    </div>
-  </div>
-
-      {/* Start and End Date */}
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <label className="block text-gray-700 font-medium">Start Date (Grant)</label>
-          <input
-            type="date"
-            value={data.start_date}
-            onChange={(e) => {
-              setData("start_date", e.target.value);
-            }}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 font-medium">End Date (Grant)</label>
-          <input
-            type="date"
-            value={data.end_date}
-            min={data.start_date || ""} // Set the minimum date to start_date
-            onChange={(e) => {
-              setData("end_date", e.target.value);
-            }}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Application Deadline and Duration */}
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <label className="mt-1 block text-gray-700 font-medium">Application Deadline</label>
-          <input
-            type="date"
-            value={data.application_deadline}
-            onChange={(e) => setData("application_deadline", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="grant_type" className="block text-gray-700 font-medium">
-            Grant Type
-          </label>
-          <select
-            id="grant_type"
-            name="grant_type"
-            value={data.grant_type}
-            onChange={(e) => setData("grant_type", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
+  return (
+    <MainLayout title="">
+      <div className="p-4">
+        {/* Back Arrow */}
+        <button
+          onClick={() => window.history.back()}
+          className="absolute top-4 left-4 text-gray-700 hover:text-gray-900"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+            className="w-6 h-6"
           >
-            <option value="" disabled hidden>
-              Select a Grant Type
-            </option>
-            <option value="Matching Grant">Matching Grant</option>
-            <option value="Seed Grant">Seed Grant</option>
-            <option value="Research Grant">Research Grant</option>
-            <option value="Travel Grant">Travel Grant</option>
-            <option value="Innovation Grant">Innovation Grant</option>
-            <option value="Collaboration Grant">Collaboration Grant</option>
-            <option value="Training Grant">Training Grant</option>
-            <option value="Capacity-Building Grant">Capacity-Building Grant</option>
-            <option value="Community Grant">Community Grant</option>
-            <option value="Development Grant">Development Grant</option>
-            <option value="Pilot Grant">Pilot Grant</option>
-            <option value="Commercialization Grant">Commercialization Grant</option>
-            <option value="Technology Grant">Technology Grant</option>
-            <option value="Sponsorship Grant">Sponsorship Grant</option>
-            <option value="Social Impact Grant">Social Impact Grant</option>
-            <option value="Emergency or Relief Grant">Emergency or Relief Grant</option>
-            <option value="International Grant">International Grant</option>
-            <option value="Equipment Grant">Equipment Grant</option>
-            <option value="Small Business Grant">Small Business Grant</option>
-          </select>
-          {errors.grant_type && (
-            <p className="text-red-500 text-xs mt-1">{errors.grant_type}</p>
-          )}
-        </div>
-      </div>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-      <div className="grid grid-cols-2 gap-8">
-          <div ref={grantThemeRef}>
-            <label className="block text-gray-700 font-medium">Grant Theme (Multiselect)</label>
-            <div
-              className={`relative mt-1 w-full rounded-lg border border-gray-200 p-4 text-sm cursor-pointer bg-white ${
-                dropdownOpen ? "shadow-lg" : ""
-              }`}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
-              {data.grant_theme && data.grant_theme.length > 0
-                ? data.grant_theme.join(", ")
-                : "Select Grant Themes"}
-            </div>
-            {dropdownOpen && (
-              <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg">
-                <div className="p-2 space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      value="Science & Technology"
-                      checked={data.grant_theme.includes("Science & Technology")}
-                      onChange={(e) => handleCheckboxChange(e.target.value)}
-                      className="mr-2"
-                    />
-                    Science & Technology
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      value="Social Science"
-                      checked={data.grant_theme.includes("Social Science")}
-                      onChange={(e) => handleCheckboxChange(e.target.value)}
-                      className="mr-2"
-                    />
-                    Social Science
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6"
+        >
+          <h1 className="text-xl font-bold text-gray-700 text-center">
+            Add New Grant
+          </h1>
 
+          {/* Grant Name */}
           <div>
-            <label className="block text-gray-700 font-medium">Cycle</label>
-            <select
-              id="cycle"
-              name="cycle"
-              value={data.cycle}
-              onChange={(e) => setData("cycle", e.target.value)}
-              className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            >
-              <option value="" disabled hidden>
-                Select Cycle
-              </option>
-              <option value="No Cycle">No Cycle</option>
-              <option value="Cycle 1">Cycle 1</option>
-              <option value="Cycle 2">Cycle 2</option>
-              <option value="Cycle 3">Cycle 3</option>
-            </select>
-            {errors.cycle && (
-              <p className="text-red-500 text-xs mt-1">{errors.cycle}</p>
+            <InputLabel htmlFor="title" value="Grant Name" required />
+            <input
+              type="text"
+              id="title"
+              value={data.title}
+              onChange={(e) => setData("title", e.target.value)}
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              placeholder="Enter grant title"
+            />
+            {errors.title && (
+              <p className="text-red-500 text-xs mt-1">{errors.title}</p>
             )}
           </div>
-        </div>
 
-      {/* Sponsored By and Category */}
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <label className="block text-gray-700 font-medium">Sponsored By</label>
-          <input
-            type="text"
-            value={data.sponsored_by}
-            onChange={(e) => setData("sponsored_by", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter sponsor"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 font-medium">Contact Email</label>
-          <input
-            type="email"
-            value={data.email}
-            onChange={(e) => setData("email", e.target.value)}
-            className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
-            placeholder="Enter email"
-          />
-           {/* Use Personal Email Checkbox */}
-           <div className="mt-2 flex items-center">
-                <input
-                    type="checkbox"
-                    id="usePersonalEmail"
-                    checked={data.email === auth.email}
-                    onChange={(e) => {
-                        if (e.target.checked) {
-                            setData("email", auth.email); // Set email to personal email
-                        } else {
-                            setData("email", ""); // Clear email field
-                        }
-                    }}
-                    className="form-checkbox h-5 w-5 text-blue-600"
-                />
-                <label htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
-                    Use personal email ({auth.email})
-                </label>
+          {/* Grant Description */}
+          <div>
+            <InputLabel htmlFor="description" value="Grant Description" required />
+            <div
+              id="description"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              style={{ height: "300px", overflowY: "auto" }}
+            >
+              <ReactQuill
+                theme="snow"
+                value={data.description}
+                onChange={(value) => setData("description", value)}
+                placeholder="Enter description"
+                style={{ height: "300px", maxHeight: "300px" }}
+              />
             </div>
-        </div>
-      </div>
+            {errors.description && (
+              <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+            )}
+          </div>
 
-      {/* Website and Country */}
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-            <label className="block text-gray-700 font-medium">
-                Website / Link
-            </label>
-            <input
+          {/* Start and End Date */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <InputLabel htmlFor="start_date" value="Start Date (Grant)" />
+              <input
+                id="start_date"
+                type="date"
+                value={data.start_date}
+                onChange={(e) => setData("start_date", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+            <div>
+              <InputLabel htmlFor="end_date" value="End Date (Grant)" />
+              <input
+                id="end_date"
+                type="date"
+                value={data.end_date}
+                min={data.start_date || ""}
+                onChange={(e) => setData("end_date", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+          </div>
+
+          {/* Application Deadline and Grant Type */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <InputLabel htmlFor="application_deadline" value="Application Deadline" />
+              <input
+                id="application_deadline"
+                type="date"
+                value={data.application_deadline}
+                onChange={(e) => setData("application_deadline", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+
+            <div>
+              <InputLabel htmlFor="grant_type" value="Grant Type" />
+              <select
+                id="grant_type"
+                name="grant_type"
+                value={data.grant_type}
+                onChange={(e) => setData("grant_type", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              >
+                <option value="" disabled hidden>
+                  Select a Grant Type
+                </option>
+                <option value="Matching Grant">Matching Grant</option>
+                <option value="Seed Grant">Seed Grant</option>
+                <option value="Research Grant">Research Grant</option>
+                <option value="Travel Grant">Travel Grant</option>
+                <option value="Innovation Grant">Innovation Grant</option>
+                <option value="Collaboration Grant">Collaboration Grant</option>
+                <option value="Training Grant">Training Grant</option>
+                <option value="Capacity-Building Grant">Capacity-Building Grant</option>
+                <option value="Community Grant">Community Grant</option>
+                <option value="Development Grant">Development Grant</option>
+                <option value="Pilot Grant">Pilot Grant</option>
+                <option value="Commercialization Grant">Commercialization Grant</option>
+                <option value="Technology Grant">Technology Grant</option>
+                <option value="Sponsorship Grant">Sponsorship Grant</option>
+                <option value="Social Impact Grant">Social Impact Grant</option>
+                <option value="Emergency or Relief Grant">Emergency or Relief Grant</option>
+                <option value="International Grant">International Grant</option>
+                <option value="Equipment Grant">Equipment Grant</option>
+                <option value="Small Business Grant">Small Business Grant</option>
+              </select>
+              {errors.grant_type && (
+                <p className="text-red-500 text-xs mt-1">{errors.grant_type}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
+            <div ref={grantThemeRef}>
+              <InputLabel htmlFor="grant_theme" value="Grant Theme (Multiselect)" />
+              <div
+                id="grant_theme"
+                className={`relative mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 px-2.5 cursor-pointer bg-white ${
+                  dropdownOpen ? "shadow-lg" : ""
+                }`}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                {data.grant_theme && data.grant_theme.length > 0
+                  ? data.grant_theme.join(", ")
+                  : "Select Grant Themes"}
+              </div>
+              {dropdownOpen && (
+                <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-[37.5rem]">
+                  <div className="p-2 space-y-2">
+                    <InputLabel className="flex items-center" htmlFor="theme-science" value="Science & Technology">
+                      <input
+                        id="theme-science"
+                        type="checkbox"
+                        value="Science & Technology"
+                        checked={data.grant_theme.includes("Science & Technology")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        className="mr-2"
+                      />
+                    </InputLabel>
+                    <InputLabel className="flex items-center" htmlFor="theme-social" value="Social Science">
+                      <input
+                        id="theme-social"
+                        type="checkbox"
+                        value="Social Science"
+                        checked={data.grant_theme.includes("Social Science")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        className="mr-2"
+                      />
+                    </InputLabel>
+                  </div>
+                </div>
+              )}
+              {errors.grant_theme && (
+                <p className="text-red-500 text-xs mt-1">{errors.grant_theme}</p>
+              )}
+            </div>
+
+            <div>
+              <InputLabel htmlFor="cycle" value="Cycle" />
+              <select
+                id="cycle"
+                name="cycle"
+                value={data.cycle}
+                onChange={(e) => setData("cycle", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              >
+                <option value="" disabled hidden>
+                  Select Cycle
+                </option>
+                <option value="No Cycle">No Cycle</option>
+                <option value="Cycle 1">Cycle 1</option>
+                <option value="Cycle 2">Cycle 2</option>
+                <option value="Cycle 3">Cycle 3</option>
+              </select>
+              {errors.cycle && (
+                <p className="text-red-500 text-xs mt-1">{errors.cycle}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Sponsored By and Contact Email */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <InputLabel htmlFor="sponsored_by" value="Sponsored By" />
+              <input
+                id="sponsored_by"
+                type="text"
+                value={data.sponsored_by}
+                onChange={(e) => setData("sponsored_by", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                placeholder="Enter sponsor"
+              />
+            </div>
+            <div>
+              <InputLabel htmlFor="email" value="Contact Email" />
+              <input
+                id="email"
+                type="email"
+                value={data.email}
+                onChange={(e) => setData("email", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                placeholder="Enter email"
+              />
+              <div className="mt-2 flex items-center">
+                <input
+                  type="checkbox"
+                  id="usePersonalEmail"
+                  checked={data.email === auth.email}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setData("email", auth.email);
+                    } else {
+                      setData("email", "");
+                    }
+                  }}
+                  className="form-checkbox h-5 w-5 text-blue-600"
+                />
+                <InputLabel htmlFor="usePersonalEmail" value={`Use personal email (${auth.email})`} className="ml-2 text-gray-700" />
+              </div>
+            </div>
+          </div>
+
+          {/* Website and Country */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <InputLabel htmlFor="website" value="Website / Link" />
+              <input
+                id="website"
                 type="url"
                 value={data.website}
                 onChange={(e) => setData("website", e.target.value)}
-                className="w-full rounded-lg border-gray-200 p-4 text-sm"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter Website / Link"
-            />
-            {errors.website && (
+              />
+              {errors.website && (
                 <p className="text-red-500 text-xs mt-1">{errors.website}</p>
-            )}
-        </div>
+              )}
+            </div>
+            <div>
+              <NationalityForm
+                title="Country"
+                value={data.country}
+                onChange={(value) => setData("country", value)}
+              />
+            </div>
+          </div>
 
-        <div>
-          <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
-        </div>
+          {/* Image and Attachment Upload */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <InputLabel htmlFor="image" value="Upload Image" />
+              <input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setData("image", e.target.files[0])}
+                className="mt-1 block w-full border-gray-300 rounded-md"
+              />
+              {postGrant.image && (
+                <p className="text-gray-600 text-sm mt-2">
+                  Current Image:{" "}
+                  <a
+                    href={`/storage/${postGrant.image}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline"
+                  >
+                    View Image
+                  </a>
+                </p>
+              )}
+            </div>
+            <div>
+              <InputLabel htmlFor="attachment" value="Upload Attachment" />
+              <input
+                id="attachment"
+                type="file"
+                onChange={(e) => setData("attachment", e.target.files[0])}
+                className="mt-1 block w-full border-gray-300 rounded-md"
+              />
+              {postGrant.attachment && (
+                <p className="text-gray-600 text-sm mt-2">
+                  Current Attachment:{" "}
+                  <a
+                    href={`/storage/${postGrant.attachment}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline"
+                  >
+                    View Attachment
+                  </a>
+                </p>
+              )}
+            </div>
+          </div>
 
+          {/* Buttons */}
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={() => {
+                handleSubmit();
+              }}
+              disabled={processing}
+              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+            >
+              Publish
+            </button>
+          </div>
+        </form>
       </div>
-
-      {/* Image and Attachment Upload */}
-      <div className="grid grid-cols-2 gap-8">
-        <div>
-          <label className="block text-gray-700 font-medium">Upload Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setData("image", e.target.files[0])}
-            className="w-full rounded-lg border-gray-200 p-2 text-sm"
-          />
-          {postGrant.image && (
-              <p className="text-gray-600 text-sm mt-2">
-                Current Image:{" "}
-                <a
-                  href={`/storage/${postGrant.image}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  View Image
-                </a>
-              </p>
-            )}
-        </div>
-        <div>
-          <label className="block text-gray-700 font-medium">
-            Upload Attachment
-          </label>
-          <input
-            type="file"
-            onChange={(e) => setData("attachment", e.target.files[0])}
-            className="w-full rounded-lg border-gray-200 p-2 text-sm"
-          />
-          {postGrant.attachment && (
-              <p className="text-gray-600 text-sm mt-2">
-                Current Attachment:{" "}
-                <a
-                  href={`/storage/${postGrant.attachment}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  View Attachment
-                </a>
-              </p>
-            )}
-        </div>
-      </div>
-
-        {/* <div className="grid grid-cols-2 gap-8"> */}
-{/* Tags */}
-{/* <div className="relative">
-  <label htmlFor="tags" className="block text-gray-700 font-medium">
-    Tags
-  </label>
-  <button
-    type="button"
-    className="w-full text-left border rounded-lg p-4 mt-2 text-sm bg-white"
-    onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
-  >
-    Select or Add Tags
-  </button> */}
-
-  {/* Dropdown Menu */}
-  {/* {dropdownOpen && (
-    <div className="absolute z-10 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-      <div className="flex flex-col p-2 max-h-40 overflow-y-auto"> */}
-        {/* Predefined Tags */}
-        {/* <label className="inline-flex items-center py-1">
-          <input
-            type="checkbox"
-            name="tags"
-            value="Artificial Intelligence"
-            checked={data.tags?.includes("Artificial Intelligence")}
-            onChange={(e) => {
-              const tag = e.target.value;
-              setData(
-                "tags",
-                e.target.checked
-                  ? [...(data.tags || []), tag]
-                  : data.tags.filter((t) => t !== tag)
-              );
-            }}
-            className="form-checkbox rounded text-blue-500"
-          />
-          <span className="ml-2">Artificial Intelligence</span>
-        </label> */}
-
-        {/* Other tags */}
-        {/* <label className="inline-flex items-center py-1">
-          <input
-            type="checkbox"
-            name="tags"
-            value="Quantum Computing"
-            checked={data.tags?.includes("Quantum Computing")}
-            onChange={(e) => {
-              const tag = e.target.value;
-              setData(
-                "tags",
-                e.target.checked
-                  ? [...(data.tags || []), tag]
-                  : data.tags.filter((t) => t !== tag)
-              );
-            }}
-            className="form-checkbox rounded text-blue-500"
-          />
-          <span className="ml-2">Quantum Computing</span>
-        </label>
-      </div> */}
-
-      {/* Input for Custom Tag */}
-      {/* <div className="border-t border-gray-200 p-2 mt-2">
-        <input
-          type="text"
-          value={customTag}
-          onChange={(e) => setCustomTag(e.target.value)}
-          placeholder="Add custom tag"
-          className="w-full p-2 border rounded-md text-sm"
-        />
-        <button
-          type="button"
-          onClick={handleAddCustomTag}
-          className="mt-2 w-full bg-blue-500 text-white p-2 rounded-md text-sm hover:bg-blue-600"
-        >
-          Add Tag
-        </button>
-      </div>
-    </div> */}
-  {/* )} */}
-
-  {/* Display Selected Tags */}
-  {/* <div className="mt-3 flex flex-wrap gap-2">
-    {data.tags?.map((tag) => (
-      <div
-        key={tag}
-        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-      >
-        {tag}
-        <button
-          type="button"
-          onClick={() => handleRemoveTag(tag)}
-          className="text-red-500 hover:text-red-700"
-        >
-          &times;
-        </button>
-      </div>
-    ))}
-  </div>
-
-  {errors.tags && <p className="text-red-500 text-xs mt-2">{errors.tags}</p>}
-</div> */}
-
-{/* Featured Grant */}
-{/* <div>
-  <label className="block text-gray-700 font-medium">Featured Grant</label>
-  <div className="flex items-center space-x-4 mt-2">
-    <label className="flex items-center">
-      <input
-        type="radio"
-        name="is_featured"
-        value="true"
-        checked={data.is_featured === 1}
-        onChange={() => setData("is_featured", 1)}
-        className="form-radio h-5 w-5 text-blue-600"
-      />
-      <span className="ml-2 text-gray-700">Yes</span>
-    </label>
-    <label className="flex items-center">
-      <input
-        type="radio"
-        name="is_featured"
-        value="false"
-        checked={data.is_featured === 0}
-        onChange={() => setData("is_featured", 0)}
-        className="form-radio h-5 w-5 text-blue-600"
-      />
-      <span className="ml-2 text-gray-700">No</span>
-    </label>
-  </div>
-  {errors.is_featured && <p className="text-red-500 text-xs mt-1">{errors.is_featured}</p>}
-</div> */}
-{/* </div> */}
-
-
-
-      {/* Buttons */}
-      <div className="flex space-x-4">
-        {/* Save as Draft Button */}
-        {/* <button
-          type="button"
-          onClick={() => {
-            setTempStatus("draft");
-            handleSubmit();
-          }}
-          disabled={processing}
-          className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-300"
-        >
-          Save as Draft
-        </button> */}
-
-        {/* Publish Button */}
-        <button
-          type="button"
-          onClick={() => {
-            handleSubmit();
-          }}
-          disabled={processing}
-          className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
-        >
-          Publish
-        </button>
-
-      </div>
-    </form>
-  </div>
-
-      {/* There will be the avaibility to send the email or chat or request to applied through nexscholar.  */}
-</MainLayout>
-
-);
+    </MainLayout>
+  );
 }

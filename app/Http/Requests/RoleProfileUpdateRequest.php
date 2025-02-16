@@ -57,6 +57,7 @@ class RoleProfileUpdateRequest extends FormRequest
                 'nationality' => ['nullable', 'string', 'max:255'], // Handle selected nationality
                 'english_proficiency_level' => ['nullable', 'string', 'in:Beginner,Elementary,Intermediate,Upper Intermediate,Advanced'], // Validate options
                 'previous_degree' => ['nullable'], // Should be an array
+                'skills' => ['nullable'], // User's skills
             ];
             
         }elseif (BouncerFacade::is(Auth::user())->an('undergraduate')) {
@@ -72,10 +73,10 @@ class RoleProfileUpdateRequest extends FormRequest
                 'university' => ['nullable', 'exists:university_list,id'],
                 'faculty' => ['nullable', 'exists:faculty_list,id'],
                 'matric_no' => ['nullable', 'string', 'max:50'],
-                'skill' => ['nullable', 'string'],
-                'interested_do_research' => [],
+                'skills' => ['nullable'],
+                'interested_do_research' => ['nullable'],
                 'expected_graduate' => ['nullable', 'string', 'max:255'],
-                'research_preference' => ['nullable', 'array'],
+                'research_preference' => ['nullable'],
                 'CV_file' => ['nullable', 'max:5120'],
                 'profile_picture' => ['nullable', 'max:2048'],
                 'background_image' => ['nullable', 'max:2048'],

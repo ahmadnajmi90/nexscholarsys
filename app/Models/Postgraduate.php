@@ -41,10 +41,12 @@ class Postgraduate extends Model
         'funding_requirement',
         'current_postgraduate_status',
         'background_image',
+        'skills'
     ];
 
     protected $casts = [
         'field_of_research' => 'array', // Cast field_of_study as an array
+        'skills' => 'array'
     ];
 
     public function user()
