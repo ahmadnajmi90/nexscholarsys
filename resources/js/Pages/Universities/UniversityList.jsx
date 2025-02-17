@@ -115,7 +115,7 @@ const UniversityList = ({ universities }) => {
                   <p className="text-gray-500 text-sm">{uni.country}</p>
                   <button
                     onClick={() =>
-                      (window.location.href = route("faculties.academicians", { university: uni.id }))
+                      (window.location.href = route("universities.faculties", { university: uni.id }))
                     }
                     className="mt-2 bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
                   >
