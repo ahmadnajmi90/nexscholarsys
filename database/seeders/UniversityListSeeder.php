@@ -59,14 +59,22 @@ class UniversityListSeeder extends Seeder
         ];
 
         foreach ($universities as $university) {
-            DB::table('university_list')
+            $existing = DB::table('university_list')
                 ->where('short_name', $university['short_name'])
-                ->update([
-                    'profile_picture' => $university['profile_picture'],
-                    'background_image' => $university['background_image'],
-                    'university_type' => $university['university_type'],
-                    'university_category' => $university['university_category'] ?? 'N/A', // Default value
-                ]);
+                ->first();
+    
+            if ($existing) {
+                DB::table('university_list')
+                    ->where('short_name', $university['short_name'])
+                    ->update([
+                        'profile_picture' => $university['profile_picture'],
+                        'background_image' => $university['background_image'],
+                        'university_type' => $university['university_type'],
+                        'university_category' => $university['university_category'] ?? 'N/A',
+                    ]);
+            } else {
+                DB::table('university_list')->insert($university);
+            }
         }
     }
 }
