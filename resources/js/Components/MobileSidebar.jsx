@@ -11,10 +11,11 @@ import {
     FaCog,
     FaBookOpen,
     FaNewspaper,
+    FaFilter,
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 
-const MobileSidebar = ({  }) => {
+const MobileSidebar = () => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState({
@@ -39,9 +40,9 @@ const MobileSidebar = ({  }) => {
 
     return (
         <>
-            {/* Toggle Button */}
+            {/* Toggle Button - visible below lg */}
             <button
-                className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-md shadow-md md:hidden"
+                className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-md shadow-md lg:hidden"
                 onClick={toggleSidebar}
             >
                 {isSidebarOpen ? '✕' : '☰'}
@@ -51,7 +52,7 @@ const MobileSidebar = ({  }) => {
             <div
                 className={`fixed top-0 left-0 h-full w-64 bg-white shadow-md z-40 transform transition-transform duration-300 ${
                     isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                }`}
+                } lg:translate-x-0`}
             >
                 <div className="p-4 h-full overflow-auto">
                     {/* Header */}
@@ -88,26 +89,21 @@ const MobileSidebar = ({  }) => {
                         {/* Admin Features Section */}
                         {isAdmin && (
                             <div>
-                                 <h3 className="text-gray-500 uppercase text-xs font-bold">Admin Features</h3>
-                                    {/* {canCreateFacultyAdmin && ( */}
-                                    <Link
-                                        href={route('faculty-admins.index')}
-                                        className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                                    >
-                                        <FaTachometerAlt className="text-gray-600" />
-                                        <span className="ml-2">Create Faculty Admin</span>
-                                    </Link>
-                                    {/* )} */}
-
-                                    {/* {canAssignAbilities && ( */}
-                                    <Link
-                                        href={route('roles.index')}
-                                        className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                                    >
-                                        <FaTachometerAlt className="text-gray-600" />
-                                        <span className="ml-2">Assign Abilities</span>
-                                    </Link>
-                                    {/* )} */}
+                                <h3 className="text-gray-500 uppercase text-xs font-bold">Admin Features</h3>
+                                <Link
+                                    href={route('faculty-admins.index')}
+                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                                >
+                                    <FaTachometerAlt className="text-gray-600" />
+                                    <span className="ml-2">Create Faculty Admin</span>
+                                </Link>
+                                <Link
+                                    href={route('roles.index')}
+                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                                >
+                                    <FaTachometerAlt className="text-gray-600" />
+                                    <span className="ml-2">Assign Abilities</span>
+                                </Link>
                             </div>
                         )}
 
@@ -166,7 +162,7 @@ const MobileSidebar = ({  }) => {
                                     )}
                                 </div>
                             )}
-                               <button
+                            <button
                                 onClick={() => toggleMenu('project')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
                             >
@@ -189,7 +185,6 @@ const MobileSidebar = ({  }) => {
                                     )}
                                 </div>
                             )}
-
                             <button
                                 onClick={() => toggleMenu('event')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
@@ -213,7 +208,6 @@ const MobileSidebar = ({  }) => {
                                     )}
                                 </div>
                             )}
-
                             <button
                                 onClick={() => toggleMenu('post')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
@@ -227,16 +221,14 @@ const MobileSidebar = ({  }) => {
                                     <Link href="/posts" className="block py-2 hover:bg-gray-100 rounded">
                                         View post
                                     </Link>
-                                        <Link
-                                            href={route('create-posts.index')}
-                                            className="block py-2 hover:bg-gray-100 rounded"
-                                        >
-                                            Manage post
-                                        </Link>
+                                    <Link
+                                        href={route('create-posts.index')}
+                                        className="block py-2 hover:bg-gray-100 rounded"
+                                    >
+                                        Manage post
+                                    </Link>
                                 </div>
                             )}
-
-
                         </div>
 
                         {/* Survey Section */}
@@ -304,10 +296,10 @@ const MobileSidebar = ({  }) => {
                 </div>
             </div>
 
-            {/* Overlay */}
+            {/* Overlay for Mobile */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+                    className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
                     onClick={toggleSidebar}
                 ></div>
             )}

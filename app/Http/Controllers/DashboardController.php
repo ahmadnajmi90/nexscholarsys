@@ -11,6 +11,7 @@ use App\Models\PostGrant;
 use App\Models\PostProject;
 use App\Models\PostEvent;
 use App\Models\Academician;
+use App\Models\CreatePost;
 use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
 use App\Models\FacultyList;
@@ -63,7 +64,9 @@ class DashboardController extends Controller
                     ->count(),
                 'clicksByType' => $this->getClickDetails(), // Corrected method call
                 'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
-                // 'events' => PostEvent::all(),
+                'posts' => CreatePost::orderBy('created_at')->get(),
+                'projects' => PostProject::where('application_deadline', '>=', now())->orderBy('application_deadline')->get(),
+                'grants' => PostGrant::where('application_deadline', '>=', now())->orderBy('application_deadline')->get(),
                 'academicians' => $academicians ?? null,
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),

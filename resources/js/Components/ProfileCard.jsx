@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import FilterDropdown from "@/Components/FilterDropdown";
-import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
+import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter } from "react-icons/fa";
+
+// Helper function to capitalize each skill
+const capitalize = (s) => {
+  if (typeof s !== "string") return "";
+  return s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+};
 
 const ProfileGridWithDualFilter = ({
   profilesData,
@@ -16,17 +22,19 @@ const ProfileGridWithDualFilter = ({
   const [selectedArea, setSelectedArea] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState([]);
   const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState([]); // Skills filter
   const [currentPage, setCurrentPage] = useState(1);
-  const profilesPerPage = 9;
+  const [showFilters, setShowFilters] = useState(false); // Mobile filter toggle
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const profilesPerPage = 9;
 
   const handleQuickInfoClick = (profile) => {
     setSelectedProfile(profile);
     setIsModalOpen(true);
   };
 
-  // Extract unique research areas from profilesData and convert to objects
+  // Extract unique research areas from profilesData
   const uniqueResearchAreas = Array.from(
     new Set(
       profilesData.flatMap((profile) => {
@@ -55,7 +63,19 @@ const ProfileGridWithDualFilter = ({
     };
   });
 
-  // Extract unique university IDs from profilesData and map them using universitiesList
+  // Extract unique skills and capitalize labels
+  const uniqueSkills = Array.from(
+    new Set(
+      profilesData.flatMap((profile) =>
+        Array.isArray(profile.skills) ? profile.skills : []
+      )
+    )
+  ).map((skill) => ({
+    value: skill,
+    label: capitalize(skill),
+  }));
+
+  // Extract unique university IDs and map them using universitiesList
   const uniqueUniversityIds = Array.from(
     new Set(profilesData.map((profile) => profile.university))
   );
@@ -68,7 +88,7 @@ const ProfileGridWithDualFilter = ({
   });
 
   const normalizeAvailability = (val) => {
-    if (val === null) return "0"; // Treat null as "No"
+    if (val === null) return "0";
     if (val === true || val === "1" || val === 1) return "1";
     if (val === false || val === "0" || val === 0) return "0";
     return "";
@@ -88,7 +108,10 @@ const ProfileGridWithDualFilter = ({
     const hasSelectedSupervisorAvailability =
       selectedSupervisorAvailability === "" ||
       normalizedAvailability === selectedSupervisorAvailability;
-    return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability;
+    const hasSelectedSkills =
+      selectedSkills.length === 0 ||
+      (profile.skills && profile.skills.some((skill) => selectedSkills.includes(skill)));
+    return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability && hasSelectedSkills;
   });
 
   const totalPages = Math.ceil(filteredProfiles.length / profilesPerPage);
@@ -113,18 +136,39 @@ const ProfileGridWithDualFilter = ({
 
   return (
     <div className="min-h-screen flex">
+      {/* Mobile Filter Toggle Button */}
+      <button
+        onClick={() => setShowFilters(!showFilters)}
+        className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
+      >
+        <FaFilter className="text-xl" />
+      </button>
+
       {/* Sidebar for Filters */}
-      <div className="w-1/4 p-4 bg-gray-100 border-r">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
+      <div
+        className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
+          showFilters ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
+      >
+        <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+          Filters
+          <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+            ✕
+          </button>
+        </h2>
         <div className="space-y-4">
-          {/* Research Area Filter */}
           <FilterDropdown
             label={isUndergraduateList ? "Preferred Research Area" : "Research Area"}
             options={uniqueResearchAreas}
             selectedValues={selectedArea}
             setSelectedValues={setSelectedArea}
           />
-          {/* University Filter */}
+          <FilterDropdown
+            label="Skills"
+            options={uniqueSkills}
+            selectedValues={selectedSkills}
+            setSelectedValues={setSelectedSkills}
+          />
           {!isFacultyAdminDashboard && (
             <FilterDropdown
               label="University"
@@ -133,7 +177,6 @@ const ProfileGridWithDualFilter = ({
               setSelectedValues={setSelectedUniversity}
             />
           )}
-          {/* Supervisor Availability Filter */}
           {!isUndergraduateList && (
             <div>
               {supervisorAvailabilityKey === "availability_as_supervisor" ? (
@@ -163,8 +206,7 @@ const ProfileGridWithDualFilter = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-8">
-        {/* Profile Grid */}
+      <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
           {displayedProfiles.map((profile) => (
             <div
@@ -173,8 +215,7 @@ const ProfileGridWithDualFilter = ({
             >
               {/* University Badge */}
               <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
-                {universitiesList.find((u) => u.id === profile.university)?.short_name ||
-                  "Unknown University"}
+                {universitiesList.find((u) => u.id === profile.university)?.short_name || "Unknown University"}
               </div>
 
               {!isUndergraduateList && (
@@ -200,11 +241,7 @@ const ProfileGridWithDualFilter = ({
               {/* Profile Banner */}
               <div className="h-32">
                 <img
-                  src={
-                    profile.background_image !== null
-                      ? `/storage/${profile.background_image}`
-                      : "/storage/profile_background_images/default.jpg"
-                  }
+                  src={profile.background_image !== null ? `/storage/${profile.background_image}` : "/storage/profile_background_images/default.jpg"}
                   alt="Banner"
                   className="object-cover w-full h-full"
                 />
@@ -214,11 +251,7 @@ const ProfileGridWithDualFilter = ({
               <div className="flex justify-center -mt-12">
                 <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                   <img
-                    src={
-                      profile.profile_picture !== null
-                        ? `/storage/${profile.profile_picture}`
-                        : "/storage/profile_pictures/default.jpg"
-                    }
+                    src={profile.profile_picture !== null ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg"}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
@@ -227,7 +260,7 @@ const ProfileGridWithDualFilter = ({
 
               {/* Profile Info */}
               <div className="text-center mt-4">
-                <h2 className="text-lg font-semibold">{profile.full_name}</h2>
+                <h2 className="text-lg font-semibold truncate">{profile.full_name}</h2>
                 <p
                   className="text-gray-500 text-sm"
                   style={{
@@ -289,7 +322,6 @@ const ProfileGridWithDualFilter = ({
                 <FaEnvelope
                   className="text-gray-500 text-sm cursor-pointer hover:text-blue-700"
                   title="Copy Email"
-                  onClick={() => handleCopyEmail(profile.email)}
                 />
                 <a
                   href={profile.google_scholar}
@@ -335,19 +367,8 @@ const ProfileGridWithDualFilter = ({
                   className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
                   aria-label="Close"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-6 h-6"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
                 <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
@@ -421,6 +442,15 @@ const ProfileGridWithDualFilter = ({
                       return allNames.length > 0 ? allNames.join(", ") : "    ";
                     })()}
                   </p>
+                  {(isPostgraduateList || isUndergraduateList) &&
+                    selectedProfile.skills &&
+                    Array.isArray(selectedProfile.skills) &&
+                    selectedProfile.skills.length > 0 && (
+                      <p className="text-gray-600">
+                        <span className="font-semibold">Skills:</span>{" "}
+                        {selectedProfile.skills.map((s) => capitalize(s)).join(", ")}
+                      </p>
+                    )}
                   {!isUndergraduateList && (
                     <p className="text-gray-600">
                       {supervisorAvailabilityKey === "availability_as_supervisor" ? (
@@ -445,7 +475,7 @@ const ProfileGridWithDualFilter = ({
                 <div className="mt-6 text-center">
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition duration-200"
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
                   >
                     Close
                   </button>
@@ -461,9 +491,7 @@ const ProfileGridWithDualFilter = ({
             <button
               key={index}
               onClick={() => handlePageChange(index + 1)}
-              className={`px-4 py-2 border rounded ${
-                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-              }`}
+              className={`px-4 py-2 border rounded ${currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-white text-gray-700"}`}
             >
               {index + 1}
             </button>

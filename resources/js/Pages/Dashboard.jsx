@@ -12,6 +12,9 @@ const Dashboard = ({
     onlineUsers,
     clicksByType,
     events,
+    posts,
+    projects,
+    grants,
     academicians,
     universities,
     faculties,
@@ -29,6 +32,9 @@ const Dashboard = ({
                 onlineUsers={onlineUsers} 
                 clicksByType={clicksByType} 
                 events={events} 
+                posts={posts}
+                projects={projects}
+                grants={grants}
                 academicians={academicians}
                 universities={universities}
                 faculties={faculties}

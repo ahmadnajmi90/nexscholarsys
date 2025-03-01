@@ -5,14 +5,14 @@ const PostCard = ({ posts }) => {
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Convert unique categories into objects for the new FilterDropdown
+  // Convert unique categories into objects for the FilterDropdown
   const uniqueCategories = [...new Set(posts.map(post => post.category))]
     .filter(Boolean)
     .map(cat => ({ value: cat, label: cat }));
 
   // Filter posts based on selected category values
-  // selectedValues is an array of strings corresponding to the category value
   const filteredPosts = posts.filter(post => {
     return categoryFilter.length === 0 || categoryFilter.includes(post.category);
   });
@@ -25,9 +25,32 @@ const PostCard = ({ posts }) => {
 
   return (
     <div className="min-h-screen flex">
+      {/* Mobile Filter Button */}
+      <button
+        onClick={() => setShowFilters(!showFilters)}
+        className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
+      >
+        {/* Simple filter icon SVG */}
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" 
+             viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4.586L3.293 6.707A1 1 0 013 6V4z" />
+        </svg>
+      </button>
+
       {/* Sidebar for Filters */}
-      <div className="w-full lg:w-1/4 p-4 bg-gray-100 border-r">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
+      <div
+        className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
+          showFilters ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
+      >
+        <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+          Filters
+          {/* Close button for mobile */}
+          <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+            ✕
+          </button>
+        </h2>
         <FilterDropdown
           label="Category"
           options={uniqueCategories}
@@ -37,7 +60,7 @@ const PostCard = ({ posts }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-4">
+      <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedPosts.map((post, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8">
@@ -84,25 +107,19 @@ const PostCard = ({ posts }) => {
           >
             ◄
           </button>
-
           {Array.from({ length: totalPages }, (_, index) => index + 1)
             .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
             .map((page, index, arr) => (
               <React.Fragment key={page}>
-                {index > 0 && page - arr[index - 1] > 1 && (
-                  <span className="px-2">...</span>
-                )}
+                {index > 0 && page - arr[index - 1] > 1 && <span className="px-2">...</span>}
                 <button
                   onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 border rounded ${
-                    currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                  }`}
+                  className={`px-4 py-2 border rounded ${currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"}`}
                 >
                   {page}
                 </button>
               </React.Fragment>
             ))}
-
           <button
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}

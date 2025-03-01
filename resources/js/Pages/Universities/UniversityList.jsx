@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout";
-import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
+import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter } from "react-icons/fa";
 import FilterDropdown from "@/Components/FilterDropdown";
 import useRoles from "@/Hooks/useRoles";
 
@@ -11,17 +11,16 @@ const UniversityList = ({ universities }) => {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   const profilesPerPage = 9;
 
   // Convert unique options to objects with value and label
   const uniqueCountries = [...new Set(universities.map((uni) => uni.country))]
     .filter(Boolean)
     .map((country) => ({ value: country, label: country }));
-
   const uniqueTypes = [...new Set(universities.map((uni) => uni.university_type))]
     .filter(Boolean)
     .map((university_type) => ({ value: university_type, label: university_type }));
-
   const uniqueCategories = [...new Set(universities.map((uni) => uni.university_category))]
     .filter(Boolean)
     .map((university_category) => ({ value: university_category, label: university_category }));
@@ -48,9 +47,27 @@ const UniversityList = ({ universities }) => {
   return (
     <MainLayout title={"List of Universities"}>
       <div className="min-h-screen flex">
+        {/* Mobile Filter Toggle Button */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
+        >
+          <FaFilter className="text-xl" />
+        </button>
+
         {/* Sidebar for Filters */}
-        <div className="w-1/4 p-4 bg-gray-100 border-r">
-          <h2 className="text-lg font-semibold mb-4">Filters</h2>
+        <div
+          className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r p-4 rounded-lg transition-transform duration-300 z-50 ${
+            showFilters ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0`}
+        >
+          <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+            Filters
+            {/* Mobile close button */}
+            <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+              ✕
+            </button>
+          </h2>
           <FilterDropdown
             label="Country"
             options={uniqueCountries}
@@ -72,7 +89,7 @@ const UniversityList = ({ universities }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 px-8">
+        <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
             {displayedUniversities.map((uni) => (
               <div
@@ -109,7 +126,7 @@ const UniversityList = ({ universities }) => {
 
                 {/* University Info */}
                 <div className="text-center mt-4">
-                  <h2 className="text-lg font-semibold px-4 h-16 overflow-hidden">
+                  <h2 className="text-lg font-semibold mb-2 overflow-hidden truncate px-4">
                     {uni.full_name}
                   </h2>
                   <p className="text-gray-500 text-sm">{uni.country}</p>
@@ -128,9 +145,6 @@ const UniversityList = ({ universities }) => {
                   <FaEnvelope
                     className="text-gray-500 text-sm cursor-pointer hover:text-blue-700"
                     title="Copy Email"
-                    onClick={() => {
-                      /* handleCopyEmail(uni.email) if needed */
-                    }}
                   />
                   <a
                     href={uni.google_scholar}

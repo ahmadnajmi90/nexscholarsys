@@ -79,7 +79,9 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 // Mobile-specific content area
                 <div>
                     <Head title={title} />
-                    {children}
+                    <div className="pb-20">
+                        {children}
+                    </div>
 
                     {/* Bottom Navigation Bar */}
                     <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 rounded-t-3xl shadow-lg">

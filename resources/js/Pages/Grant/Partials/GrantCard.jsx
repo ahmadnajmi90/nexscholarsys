@@ -8,6 +8,7 @@ const GrantCard = ({ grants }) => {
   const [grantThemeFilter, setGrantThemeFilter] = useState([]);
   const [countryFilter, setCountryFilter] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 9;
 
   // Convert unique options to objects for react-select
@@ -26,7 +27,6 @@ const GrantCard = ({ grants }) => {
     .map((country) => ({ value: country, label: country }));
 
   // Filter grants based on selected filters.
-  // Note: selectedGrantType, etc., will be an array of string values
   const filteredGrants = grants.filter((grant) => {
     const matchesType =
       grantTypeFilter.length === 0 || grantTypeFilter.includes(grant.grant_type);
@@ -35,7 +35,6 @@ const GrantCard = ({ grants }) => {
       (grant.grant_theme && grant.grant_theme.some((theme) => grantThemeFilter.includes(theme)));
     const matchesCountry =
       countryFilter.length === 0 || countryFilter.includes(grant.country);
-
     return matchesType && matchesTheme && matchesCountry;
   });
 
@@ -45,7 +44,11 @@ const GrantCard = ({ grants }) => {
     currentPage * itemsPerPage
   );
 
-  const handleQuickInfoClick = (grant) => {
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleViewMore = (grant) => {
     setSelectedGrant(grant);
     setIsModalOpen(true);
   };
@@ -57,9 +60,31 @@ const GrantCard = ({ grants }) => {
 
   return (
     <div className="min-h-screen flex">
+      {/* Mobile Filter Toggle Button */}
+      <button
+        onClick={() => setShowFilters(!showFilters)}
+        className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
+      >
+        {/* Simple filter icon */}
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" 
+             viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4.586L3.293 6.707A1 1 0 013 6V4z" />
+        </svg>
+      </button>
+
       {/* Sidebar for Filters */}
-      <div className="w-1/4 p-4 bg-gray-100 border-r">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
+      <div
+        className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
+          showFilters ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
+      >
+        <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+          Filters
+          <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+            ✕
+          </button>
+        </h2>
         <FilterDropdown
           label="Grant Type"
           options={uniqueGrantTypes}
@@ -81,7 +106,7 @@ const GrantCard = ({ grants }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-8">
+      <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedGrants.map((grant, index) => (
             <div
@@ -113,10 +138,9 @@ const GrantCard = ({ grants }) => {
                   dangerouslySetInnerHTML={{ __html: grant.description || "No description available." }}
                 ></p>
               </div>
-
               <button
-                onClick={() => handleQuickInfoClick(grant)}
-                className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark dark:border-dark-300 dark:text-dark-600"
+                onClick={() => handleViewMore(grant)}
+                className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
               >
                 View Details
               </button>
@@ -124,7 +148,7 @@ const GrantCard = ({ grants }) => {
           ))}
         </div>
 
-        {/* Pagination (using arrow-based pagination as in your EventCard) */}
+        {/* Pagination */}
         <div className="flex justify-center mt-6 space-x-2 items-center">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -133,7 +157,6 @@ const GrantCard = ({ grants }) => {
           >
             ◄
           </button>
-
           {Array.from({ length: totalPages }, (_, index) => index + 1)
             .filter(
               (page) =>
@@ -147,16 +170,13 @@ const GrantCard = ({ grants }) => {
                 <button
                   onClick={() => setCurrentPage(page)}
                   className={`px-4 py-2 border rounded ${
-                    currentPage === page
-                      ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-700"
+                    currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
                   }`}
                 >
                   {page}
                 </button>
               </React.Fragment>
             ))}
-
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
@@ -205,9 +225,7 @@ const GrantCard = ({ grants }) => {
             </p>
             <p className="text-gray-600 mb-2">
               <span className="font-semibold">Grant Duration:</span>{" "}
-              {selectedGrant.start_date
-                ? `${selectedGrant.start_date} - ${selectedGrant.end_date}`
-                : "Not provided"}
+              {selectedGrant.start_date ? `${selectedGrant.start_date} - ${selectedGrant.end_date}` : "Not provided"}
             </p>
             <p className="text-gray-600 mb-2">
               <span className="font-semibold">Application Deadline:</span>{" "}
