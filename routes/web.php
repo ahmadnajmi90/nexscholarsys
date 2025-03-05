@@ -147,6 +147,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
 });
 
+// try{
+    Route::post('/academician/generate-profile', [RoleProfileController::class, 'generateProfile'])
+    ->name('academician.generateProfile');
+// } catch (error) {
+//     console.error("Error generating profile:", JSON.stringify(error, null, 2));
+//     res.status(500).json({ error: "Failed to generate profile" });
+//   }
+
+
 Route::resource('academicians', AcademicianController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);

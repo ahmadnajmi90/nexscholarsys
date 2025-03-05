@@ -6,11 +6,9 @@ import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Select from 'react-select';
+import axios from 'axios';
 
-export default function AcademicianForm({
-    className = '',
-    researchOptions
-}) {
+export default function AcademicianForm({ className = '', researchOptions }) {
     const academician = usePage().props.academician; // Related academician data
 
     const { data, setData, post, errors, processing, recentlySuccessful } =
@@ -37,24 +35,74 @@ export default function AcademicianForm({
             background_image: academician?.background_image || '',
         });
 
+    // State for modal and generation
+    const [showMethodModal, setShowMethodModal] = useState(false);
+    const [genMode, setGenMode] = useState('auto'); // 'auto' or 'url'
+    // For URL mode: allow users to optionally add additional URLs.
+    const [providedUrls, setProvidedUrls] = useState(['']);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    // Handle URL input changes
+    const updateUrl = (index, value) => {
+        const urls = [...providedUrls];
+        urls[index] = value;
+        setProvidedUrls(urls);
+    };
+
+    const addUrlField = () => {
+        setProvidedUrls([...providedUrls, '']);
+    };
+
+    // Function to initiate generation
+    const handleGenerateProfile = () => {
+        // Close the method selection modal and start generation
+        setShowMethodModal(false);
+        setIsGenerating(true);
+        axios
+            .post(route('academician.generateProfile'), {
+                mode: genMode,
+                urls: genMode === 'url' ? providedUrls : [],
+            })
+            .then((response) => {
+                const generatedData = response.data;
+                setData((prevData) => ({
+                    ...prevData,
+                    full_name: generatedData.full_name || prevData.full_name,
+                    bio: generatedData.bio || prevData.bio,
+                    current_position: generatedData.current_position || prevData.current_position,
+                    department: generatedData.department || prevData.department,
+                    highest_degree: generatedData.highest_degree || prevData.highest_degree,
+                    field_of_study: generatedData.field_of_study || prevData.field_of_study,
+                    research_expertise: generatedData.research_expertise || prevData.research_expertise,
+                    // The 4 URL fields are already provided by users in their profile.
+                    website: data.website,
+                    linkedin: data.linkedin,
+                    google_scholar: data.google_scholar,
+                    researchgate: data.researchgate,
+                }));
+                setIsGenerating(false);
+            })
+            .catch((error) => {
+                console.error("Profile generation failed:", error);
+                alert("Profile generation failed, please try again.");
+                setIsGenerating(false);
+            });
+    };
+
     const submitImage = (e) => {
         e.preventDefault();
-
         if (!data.profile_picture) {
             alert("Please select a profile picture.");
             return;
         }
-
         const formData = new FormData();
         formData.append("profile_picture", data.profile_picture);
-
         post(route("role.updateProfilePicture"), {
             data: formData,
             headers: { "Content-Type": "multipart/form-data" },
             onSuccess: () => {
                 alert("Profile picture updated successfully.");
                 closeModal();
-                // Refresh the page after alert
                 window.location.reload();
             },
             onError: (errors) => {
@@ -81,7 +129,6 @@ export default function AcademicianForm({
             onSuccess: () => {
                 alert("Background image updated successfully.");
                 setIsBackgroundModalOpen(false);
-                // Refresh the page after alert
                 window.location.reload();
             },
             onError: (errors) => {
@@ -99,7 +146,6 @@ export default function AcademicianForm({
         Object.keys(data).forEach((key) => {
             if (key !== "profile_picture") {
                 if (key === "research_expertise") {
-                    // Transform array into JSON string
                     formData.append(key, JSON.stringify(data[key]));
                 } else if (key === "availability_as_supervisor") {
                     formData.append(key, data[key] === true ? 1 : 0);
@@ -133,7 +179,6 @@ export default function AcademicianForm({
     const closeModal = () => setIsModalOpen(false);
 
     const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
-
     const [activeTab, setActiveTab] = useState('profiles');
 
     return (
@@ -280,18 +325,121 @@ export default function AcademicianForm({
                 </div>
             </div>
 
+            {/* Loading Modal */}
+            {isGenerating && (
+                <Transition
+                    show={isGenerating}
+                    enter="transition-opacity duration-300"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="transition-opacity duration-300"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg">
+                            <p className="text-lg font-medium">Generating profile, please wait...</p>
+                            {/* Optionally add a spinner icon here */}
+                            <svg className="animate-spin h-8 w-8 mt-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </Transition>
+            )}
+{/* Method Selection Modal */}
+<Transition
+                show={showMethodModal}
+                enter="transition-opacity duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="transition-opacity duration-300"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+            >
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    onClick={() => setShowMethodModal(false)}
+                >
+                    <div
+                        className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-lg font-semibold mb-4">Select Generation Method</h3>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Choose method:
+                            </label>
+                            <select
+                                className="block w-full border-gray-300 rounded-md shadow-sm"
+                                value={genMode}
+                                onChange={(e) => setGenMode(e.target.value)}
+                            >
+                                <option value="auto">Auto search from Internet</option>
+                                <option value="url">Use my provided URL(s)</option>
+                            </select>
+                        </div>
+                        {genMode === 'url' && (
+                            <div className="mb-4">
+                                <p className="text-xs text-gray-600 mb-2">
+                                    The system will use the Website, LinkedIn, Google Scholar, and ResearchGate fields from your profile.
+                                    You can also add extra URL(s) below if you wish.
+                                </p>
+                                {providedUrls.map((url, index) => (
+                                    <input
+                                        key={index}
+                                        type="text"
+                                        className="block w-full border-gray-300 rounded-md shadow-sm p-2 mb-2"
+                                        value={url}
+                                        onChange={(e) => updateUrl(index, e.target.value)}
+                                        placeholder="https://example.com/extra-info"
+                                    />
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={addUrlField}
+                                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-800"
+                                >
+                                    Add URL
+                                </button>
+                            </div>
+                        )}
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                onClick={handleGenerateProfile}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-800"
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+
             {/* Tab Content Section */}
             <div className="w-full px-4 py-8">
                 {activeTab === 'profiles' && (
                     <section className={className}>
-                        <header>
-                            <h2 className="text-lg font-medium text-gray-900">
-                                Personal Information
-                            </h2>
-                            <p className="mt-1 text-sm text-gray-600">
-                                Update your personal information.
-                            </p>
-                        </header>
+                          <div className="relative mb-6">
+                            <header>
+                                <h2 className="text-lg font-medium text-gray-900">
+                                    Personal Information
+                                </h2>
+                                <p className="mt-1 text-sm text-gray-600">
+                                    Update your personal information.
+                                </p>
+                            </header>
+                            <button 
+                                type="button" 
+                                onClick={() => setShowMethodModal(true)}
+                                className="absolute top-0 right-0 mt-2 mr-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
+                            >
+                                Generate my profile
+                            </button>
+                        </div>
+
                         <form onSubmit={submit} className="mt-6 space-y-6">
                             {/* Full Name and Phone Number */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">

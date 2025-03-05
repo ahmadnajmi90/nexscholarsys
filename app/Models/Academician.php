@@ -56,6 +56,6 @@ class Academician extends Model
 
     public function faculty()
     {
-        return $this->belongsTo(FacultyList::class, 'faculty');
+        return $this->belongsTo(FacultyList::class, 'faculty', 'id');
     }
 }

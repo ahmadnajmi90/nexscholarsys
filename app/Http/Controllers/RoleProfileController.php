@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 use App\Models\FieldOfResearch;
 use App\Models\ResearchArea;
 use App\Models\NicheDomain;
-
+use App\Services\AIProfileService;
 
 class RoleProfileController extends Controller
 {
@@ -337,4 +337,176 @@ class RoleProfileController extends Controller
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
     }
+
+    public function generateProfile(Request $request)
+    {
+        // Helper functions for validation
+        function validatePhoneNumber($phoneNumber) {
+            return preg_match('/^\+\d{1,3}[\s-]?\d{1,4}([\s-]?\d{1,4})+$/', $phoneNumber);
+        }
+        function validateUrl($url) {
+            return filter_var($url, FILTER_VALIDATE_URL) !== false;
+        }
+
+        $user = auth()->user();
+        if (!BouncerFacade::is($user)->an('academician')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Eager load related models
+        $academician = $user->academician()->with(['universityDetails', 'faculty', 'user'])->first();
+
+        $data = [
+            'full_name'  => $academician->full_name,
+            'university' => optional($academician->universityDetails)->full_name,
+            'faculty'    => data_get($academician->toArray(), 'faculty.name'),
+            'email'      => optional($academician->user)->email,
+            // User provided URL fields:
+            'website'       => $academician->website,
+            'linkedin'      => $academician->linkedin,
+            'google_scholar'=> $academician->google_scholar,
+            'researchgate'  => $academician->researchgate,
+        ];
+
+        // Determine mode: 'auto' for AI search or 'url' for user provided URLs.
+        // Expect 'mode' parameter from the request and optionally an array of URLs.
+        $mode = $request->input('mode', 'auto'); // default to auto search
+        $urls = $request->input('urls'); // expecting an array when mode is 'url'
+
+        $additionalContext = '';
+
+        if ($mode === 'auto') {
+            // Use Google Custom Search to fetch context.
+            $searchQuery = "{$data['university']} {$data['faculty']} {$data['full_name']} academic profile";
+            $googleSearchService = app(\App\Services\GoogleSearchService::class);
+            $searchResults = $googleSearchService->fetchResults($searchQuery);
+
+            $snippets = [];
+            if (!empty($searchResults['items'])) {
+                foreach ($searchResults['items'] as $item) {
+                    if (isset($item['snippet'])) {
+                        $snippets[] = $item['snippet'];
+                    }
+                }
+            }
+            $additionalContext = implode(" ", array_slice($snippets, 0, 3));
+        } elseif ($mode === 'url' && !empty($urls) && is_array($urls)) {
+            // Use user provided URLs: fetch context from each URL.
+            $contexts = [];
+            $client = new \GuzzleHttp\Client([
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+                    'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                ]
+            ]);
+            foreach ($urls as $url) {
+                if (validateUrl($url)) {
+                    try {
+                        $response = $client->get($url);
+                        $html = (string)$response->getBody();
+                        // Use DOMDocument to extract meta description as context
+                        $dom = new \DOMDocument();
+                        @$dom->loadHTML($html);
+                        $metaTags = $dom->getElementsByTagName('meta');
+                        $metaDescription = '';
+                        foreach ($metaTags as $tag) {
+                            if (strtolower($tag->getAttribute('name')) === 'description') {
+                                $metaDescription = $tag->getAttribute('content');
+                                break;
+                            }
+                        }
+                        if ($metaDescription) {
+                            $contexts[] = $metaDescription;
+                        }
+                    } catch (\Exception $e) {
+                        logger()->error("Error fetching URL content from {$url}: " . $e->getMessage());
+                    }
+                }
+            }
+            $additionalContext = implode(" ", $contexts);
+            if (!$additionalContext) {
+                $additionalContext = "No additional context available from provided URLs.";
+            }
+        } else {
+            $additionalContext = "No additional context provided.";
+        }
+
+        // Build the AI prompt. Note that the expected keys in the output no longer include the 4 URL fields.
+        $prompt = "Generate a detailed academic profile for an academician using the following details.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, profile_picture, current_position, department, highest_degree, field_of_study, research_expertise, bio.
+        Each field must be plausible and realistic, if not found then leave it as null:
+        - 'full_name' and 'email' should match the provided details.
+        - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
+        - 'highest_degree' should be one of: Certificate, Diploma, Bachelor's Degree, Master's Degree, Ph.D., or Postdoctoral.
+        - 'current_position' should be one of: Lecturer, Senior Lecturer, Associate Professor, Professor, Postdoctoral Researcher, or Researcher.
+        - 'research_expertise' should be an array of expertise terms.
+        Details: Name: {$data['full_name']}, Email: {$data['email']}, University: {$data['university']}, Faculty: {$data['faculty']}.
+        Additional context from the provided URLs: {$additionalContext}.
+        Data may not be in English, so translate if necessary and extract data in English.
+        Provide plausible academic details based solely on these inputs, and output only valid JSON without any markdown formatting.";
+
+        logger()->info("Final AI Prompt:", ['prompt' => $prompt]);
+
+        // Call the AI service (using the GitHub inference integration)
+        $generatedProfile = app(\App\Services\AIProfileService::class)->generateProfile($prompt);
+
+        // Post-processing validation: phone number and URL fields
+        if ($generatedProfile) {
+            if (isset($generatedProfile['phone_number']) && !validatePhoneNumber($generatedProfile['phone_number'])) {
+                logger()->warning('Invalid phone number generated', ['phone_number' => $generatedProfile['phone_number']]);
+                $generatedProfile['phone_number'] = 'N/A';
+            }
+            // Validate profile_picture if generated
+            if (isset($generatedProfile['profile_picture']) && !validateUrl($generatedProfile['profile_picture'])) {
+                logger()->warning("Invalid URL generated for profile_picture", ['url' => $generatedProfile['profile_picture']]);
+                $generatedProfile['profile_picture'] = 'N/A';
+            }
+            // Map research_expertise terms to structured options and remove those not in the list
+            if (isset($generatedProfile['research_expertise']) && is_array($generatedProfile['research_expertise'])) {
+                $fieldOfResearches = \App\Models\FieldOfResearch::with('researchAreas.nicheDomains')->get();
+                $researchOptions = [];
+                foreach ($fieldOfResearches as $field) {
+                    foreach ($field->researchAreas as $area) {
+                        foreach ($area->nicheDomains as $domain) {
+                            $researchOptions[] = [
+                                'field_of_research_id'   => $field->id,
+                                'field_of_research_name' => $field->name,
+                                'research_area_id'       => $area->id,
+                                'research_area_name'     => $area->name,
+                                'niche_domain_id'        => $domain->id,
+                                'niche_domain_name'      => $domain->name,
+                            ];
+                        }
+                    }
+                }
+        
+                $rawExpertise = $generatedProfile['research_expertise'];
+                $matchedExpertise = [];
+                foreach ($rawExpertise as $term) {
+                    $term = strtolower(trim($term));
+                    $found = false;
+                    foreach ($researchOptions as $option) {
+                        $label = strtolower(
+                            $option['field_of_research_name'] . ' - ' .
+                            $option['research_area_name'] . ' - ' .
+                            $option['niche_domain_name']
+                        );
+                        if (strpos($label, $term) !== false) {
+                            $matchedExpertise[] = $option['field_of_research_id'] . '-' .
+                                                $option['research_area_id'] . '-' .
+                                                $option['niche_domain_id'];
+                            $found = true;
+                            break;
+                        }
+                    }
+                    // Only add term if found, otherwise skip it.
+                }
+                $generatedProfile['research_expertise'] = $matchedExpertise;
+            }
+        
+            return response()->json($generatedProfile);
+        }
+        return response()->json(['error' => 'Profile generation failed'], 500);
+    }
+
 }

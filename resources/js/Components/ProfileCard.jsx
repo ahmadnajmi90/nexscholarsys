@@ -163,12 +163,14 @@ const ProfileGridWithDualFilter = ({
             selectedValues={selectedArea}
             setSelectedValues={setSelectedArea}
           />
-          <FilterDropdown
+          {(isPostgraduateList || isUndergraduateList) &&(
+            <FilterDropdown
             label="Skills"
             options={uniqueSkills}
             selectedValues={selectedSkills}
             setSelectedValues={setSelectedSkills}
-          />
+          />)}
+          
           {!isFacultyAdminDashboard && (
             <FilterDropdown
               label="University"
@@ -260,9 +262,9 @@ const ProfileGridWithDualFilter = ({
 
               {/* Profile Info */}
               <div className="text-center mt-4">
-                <h2 className="text-lg font-semibold truncate">{profile.full_name}</h2>
+                <h2 className="text-lg font-semibold truncate px-6">{profile.full_name}</h2>
                 <p
-                  className="text-gray-500 text-sm"
+                  className="text-gray-500 text-sm px-6"
                   style={{
                     display: "-webkit-box",
                     WebkitLineClamp: 2,

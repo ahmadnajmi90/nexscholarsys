@@ -13,6 +13,7 @@ const Postgraduate = ( { postgraduates, universities, faculties, users, research
             universitiesList={universities} 
             faculties={faculties}
             isPostgraduateList={true}
+            isUndergraduateList={true}
             users={users}
             researchOptions={researchOptions}/>
         </MainLayout>

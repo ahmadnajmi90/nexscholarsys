@@ -91,7 +91,7 @@ const DashboardInsight = ({
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-10 gap-6 mb-[17rem] h-[300px]">
+      <div className="grid grid-cols-1 md:grid-cols-10 gap-6 mb-[10rem] h-[300px]">
         {/* First Column: Post Carousel (4/10) */}
         <div className="relative md:col-span-4 h-full">
           {postLimited.length > 0 && (
@@ -146,7 +146,7 @@ const DashboardInsight = ({
         </div>
 
         {/* Middle Column: Two Rows (Top: Event & Project side-by-side, Bottom: Grant Carousel) */}
-        <div className="md:col-span-3 h-full flex flex-col gap-4">
+        <div className="md:col-span-3 h-full flex flex-col gap-4 h-full">
           {/* Top Half: Event & Project Carousels side by side */}
           <div className="grid grid-cols-2 gap-4 h-1/2">
             {/* Event Carousel */}
