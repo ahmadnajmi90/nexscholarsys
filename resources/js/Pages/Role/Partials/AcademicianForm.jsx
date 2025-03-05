@@ -67,7 +67,7 @@ export default function AcademicianForm({ className = '', researchOptions }) {
                 const generatedData = response.data;
                 setData((prevData) => ({
                     ...prevData,
-                    full_name: generatedData.full_name || prevData.full_name,
+                    full_name: data.full_name,
                     bio: generatedData.bio || prevData.bio,
                     current_position: generatedData.current_position || prevData.current_position,
                     department: generatedData.department || prevData.department,
