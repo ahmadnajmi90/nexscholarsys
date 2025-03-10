@@ -152,7 +152,7 @@ export default function Show() {
             )}
             {project.duration && (
               <p>
-                <span className="font-semibold">Duration:</span> {project.duration}
+                <span className="font-semibold">Duration:</span> {project.duration} <span>(months)</span>
               </p>
             )}
             {project.sponsored_by && (

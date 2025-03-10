@@ -28,7 +28,9 @@ export default function Show() {
       <div className="px-10 md:px-16">
         <div className="max-w-8xl mx-auto py-6">
           {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-bold mb-4 text-left">{grant.title}</h1>
+          {grant.title && (
+            <h1 className="text-2xl md:text-3xl font-bold mb-4 text-left">{grant.title}</h1>
+          )}
 
           {/* Author Info Section */}
           {author ? (
@@ -40,23 +42,27 @@ export default function Show() {
               />
               <div>
                 <div className="text-lg font-semibold">{author.full_name}</div>
-                <div className="text-gray-500">
-                  {new Date(grant.created_at).toLocaleDateString()}
-                </div>
+                {grant.created_at && (
+                  <div className="text-gray-500">
+                    {new Date(grant.created_at).toLocaleDateString()}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 mb-4">
               <img 
                 src={`/storage/Admin.jpg`} 
-                alt='Admin'
+                alt="Admin"
                 className="w-12 h-12 rounded-full object-cover shadow-md border-2 border-white"
               />
               <div>
                 <div className="text-lg font-semibold">Admin</div>
-                <div className="text-gray-500">
-                  {new Date(grant.created_at).toLocaleDateString()}
-                </div>
+                {grant.created_at && (
+                  <div className="text-gray-500">
+                    {new Date(grant.created_at).toLocaleDateString()}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -71,72 +77,94 @@ export default function Show() {
           )}
 
           {/* Description with heading */}
-          <div className="mb-4">
-            <h2 className="text-xl font-bold mb-2">Description</h2>
-            <div 
-              className="text-gray-700 text-justify" 
-              dangerouslySetInnerHTML={{ __html: grant.description }} 
-            />
-          </div>
+          {grant.description && (
+            <div className="mb-4">
+              <h2 className="text-xl font-bold mb-2">Description</h2>
+              <div 
+                className="text-gray-700 text-justify" 
+                dangerouslySetInnerHTML={{ __html: grant.description }} 
+              />
+            </div>
+          )}
 
           {/* Grant Details (listed in a single column) */}
           <div className="mb-4 space-y-2">
-            <p>
-              <span className="font-semibold">Start Date:</span>{" "}
-              {new Date(grant.start_date).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}
-            </p>
-            <p>
-              <span className="font-semibold">End Date:</span>{" "}
-              {new Date(grant.end_date).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}
-            </p>
-            <p>
-              <span className="font-semibold">Application Deadline:</span>{" "}
-              {new Date(grant.application_deadline).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}
-            </p>
-            <p>
-              <span className="font-semibold">Grant Type:</span> {grant.grant_type}
-            </p>
-            <p>
-              <span className="font-semibold">Cycle:</span> {grant.cycle}
-            </p>
-            <p>
-              <span className="font-semibold">Sponsored By:</span> {grant.sponsored_by}
-            </p>
-            <p>
-              <span className="font-semibold">Email:</span> {grant.email}
-            </p>
-            <p>
+            {grant.start_date && (
+              <p>
+                <span className="font-semibold">Start Date:</span>{" "}
+                {new Date(grant.start_date).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            {grant.end_date && (
+              <p>
+                <span className="font-semibold">End Date:</span>{" "}
+                {new Date(grant.end_date).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            {grant.application_deadline && (
+              <p>
+                <span className="font-semibold">Application Deadline:</span>{" "}
+                {new Date(grant.application_deadline).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            {grant.grant_type && (
+              <p>
+                <span className="font-semibold">Grant Type:</span> {grant.grant_type}
+              </p>
+            )}
+            {grant.cycle && (
+              <p>
+                <span className="font-semibold">Cycle:</span> {grant.cycle}
+              </p>
+            )}
+            {grant.sponsored_by && (
+              <p>
+                <span className="font-semibold">Sponsored By:</span> {grant.sponsored_by}
+              </p>
+            )}
+            {grant.email && (
+              <p>
+                <span className="font-semibold">Email:</span> {grant.email}
+              </p>
+            )}
+            {grant.website && (
+              <p>
                 <span className="font-semibold">Website:</span>
                 <a
-                    href={grant.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-2 text-blue-500 underline"
+                  href={grant.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 text-blue-500 underline"
                 >
-                    Website
+                  Website
                 </a>
-            </p>
-            <p>
-              <span className="font-semibold">Country:</span> {grant.country}
-            </p>
-            <p>
-              <span className="font-semibold">Grant Themes:</span>{" "}
-              {Array.isArray(grant.grant_theme)
-                ? grant.grant_theme.join(", ")
-                : grant.grant_theme}
-            </p>
+              </p>
+            )}
+            {grant.country && (
+              <p>
+                <span className="font-semibold">Country:</span> {grant.country}
+              </p>
+            )}
+            {grant.grant_theme && (
+              <p>
+                <span className="font-semibold">Grant Themes:</span>{" "}
+                {Array.isArray(grant.grant_theme)
+                  ? grant.grant_theme.join(", ")
+                  : grant.grant_theme}
+              </p>
+            )}
           </div>
 
           {/* Attachment */}
