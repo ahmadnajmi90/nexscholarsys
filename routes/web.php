@@ -41,9 +41,17 @@ use App\Models\Undergraduate;
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
-
 Route::bind('post', function ($value) {
     return CreatePost::where('url', $value)->firstOrFail();
+});
+Route::bind('grant', function ($value) {
+    return PostGrant::where('url', $value)->firstOrFail();
+});
+Route::bind('event', function ($value) {
+    return PostEvent::where('url', $value)->firstOrFail();
+});
+Route::bind('project', function ($value) {
+    return PostProject::where('url', $value)->firstOrFail();
 });
 
 Route::get('/admin/roles', [RolePermissionController::class, 'index'])->name('roles.index');
@@ -104,6 +112,8 @@ Route::get('/welcome/posts/{post}', function (CreatePost $post) {
 Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
 Route::get('/universities/{university}/faculties', [UniversityController::class, 'faculties'])->name('universities.faculties'); // Faculty list
 Route::get('/faculties/{faculty}/academicians', [UniversityController::class, 'academicians'])->name('faculties.academicians'); // Academician list
+Route::get('/faculties/{faculty}/undergraduates', [UniversityController::class, 'undergraduates'])->name('faculties.undergraduates');
+Route::get('/faculties/{faculty}/postgraduates', [UniversityController::class, 'postgraduates'])->name('faculties.postgraduates');
 
 Route::post('/click-tracking', [ClickTrackingController::class, 'store'])->name('click-tracking.store');
 
@@ -147,13 +157,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
 });
 
-// try{
-    Route::post('/academician/generate-profile', [RoleProfileController::class, 'generateProfile'])
+Route::post('/academician/generate-profile', [RoleProfileController::class, 'generateProfile'])
     ->name('academician.generateProfile');
-// } catch (error) {
-//     console.error("Error generating profile:", JSON.stringify(error, null, 2));
-//     res.status(500).json({ error: "Failed to generate profile" });
-//   }
+
+Route::match(['get', 'post'], '/role/cv/generate', [RoleProfileController::class, 'generateCV'])
+    ->name('role.generateCV')
+    ->middleware('auth');
 
 
 Route::resource('academicians', AcademicianController::class)
@@ -168,13 +177,17 @@ Route::resource('undergraduates', UndergraduateController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::resource('project', ShowProjectController::class)
+Route::resource('projects', ShowProjectController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::resource('event', ShowEventController::class)
+Route::get('projects/{project}', [ShowProjectController::class, 'show'])->name('projects.show');
+
+Route::resource('events', ShowEventController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
+
+Route::get('events/{event}', [ShowEventController::class, 'show'])->name('events.show');
 
 Route::resource('posts', ShowPostController::class)
     ->only(['index'])
@@ -182,9 +195,11 @@ Route::resource('posts', ShowPostController::class)
 
 Route::get('posts/{post}', [ShowPostController::class, 'show'])->name('posts.show');
 
-Route::resource('grant', ShowGrantController::class)
+Route::resource('grants', ShowGrantController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
+
+Route::get('grants/{grant}', [ShowGrantController::class, 'show'])->name('grants.show');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-projects', [PostProjectController::class, 'index'])->name('post-projects.index');

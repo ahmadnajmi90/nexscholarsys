@@ -134,7 +134,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </button>
                         {menuOpen.grant && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">View Grant</Link>
+                                <Link href="/grants" className="block py-2 hover:bg-gray-100 rounded">View Grant</Link>
                                 {canPostGrants && (
                                 <Link href={route('post-grants.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Grants
                                 </Link>)}
@@ -152,7 +152,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </button>
                         {menuOpen.project && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/project" className="block py-2 hover:bg-gray-100 rounded"> View Project</Link>
+                                <Link href="/projects" className="block py-2 hover:bg-gray-100 rounded"> View Project</Link>
                                 {canPostProjects && (
                                 <Link href={route('post-projects.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Projects
                                 </Link>)}
@@ -171,7 +171,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </button>
                         {menuOpen.event && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
+                                <Link href="/events" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
                                 {canPostEvents && (
                                 <Link href={route('post-events.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Event
                                 </Link>)}

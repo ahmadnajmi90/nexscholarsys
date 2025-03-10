@@ -42,28 +42,28 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
             {/* Navigation Tabs */}
             <div className="mt-40 border-b border-gray-300 mb-10">
                 <div className="flex space-x-16 ml-8">
-                    <Link
-                        href="#"
-                        className="text-lg font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
-                    >
-                        Academician
-                    </Link>
-                    <Link
+                    {/* <Link
                         href="#"
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
                     >
                         Top Management
+                    </Link> */}
+                    <Link
+                        href={route('faculties.academicians', faculty.id)}
+                        className="text-lg font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
+                        >
+                        Academician
                     </Link>
                     <Link
-                        href="#"
+                        href={route('faculties.postgraduates', faculty.id)}
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
-                    >
+                        >
                         Postgraduate
                     </Link>
                     <Link
-                        href="#"
+                        href={route('faculties.undergraduates', faculty.id)}
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
-                    >
+                        >
                         Undergraduate
                     </Link>
                 </div>

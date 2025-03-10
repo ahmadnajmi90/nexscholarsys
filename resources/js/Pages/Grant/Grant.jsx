@@ -6,7 +6,7 @@ import GrantCard from './Partials/GrantCard';
 const Grant = ( { grants, users } ) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     return (
-        <MainLayout title="Grant">
+        <MainLayout title="Grants">
             <GrantCard 
             grants={grants}/>
         </MainLayout>

@@ -22,4 +22,14 @@ class FacultyList extends Model
     {
         return $this->hasMany(Academician::class, 'faculty');
     }
+
+    public function postgraduates()
+    {
+        return $this->hasMany(Postgraduate::class, 'faculty');
+    }
+
+    public function undergraduates()
+    {
+        return $this->hasMany(Undergraduate::class, 'faculty');
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class PostProject extends Model
 {
@@ -14,6 +15,7 @@ class PostProject extends Model
     protected $fillable = [
         'author_id',
         'title',
+        'url',
         'description',
         'project_theme',
         'purpose',
@@ -44,6 +46,35 @@ class PostProject extends Model
         'field_of_research' => 'array', // Cast field_of_study as an array
         'purpose' => 'array', // Cast field_of_study as an array
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($project) {
+            if (!$project->url) {
+                $slug = Str::slug($project->title);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->exists()) {
+                    $slug = $originalSlug . $count;
+                    $count++;
+                }
+                $project->url = $slug;
+            }
+        });
+
+        static::updating(function ($project) {
+            if ($project->isDirty('title')) {
+                $slug = Str::slug($project->title);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->where('id', '!=', $project->id)->exists()) {
+                    $slug = $originalSlug . $count;
+                    $count++;
+                }
+                $project->url = $slug;
+            }
+        });
+    }
 
     public function academician()
     {

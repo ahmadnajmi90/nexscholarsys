@@ -219,19 +219,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     <div className="text-center mt-4">
                         <h1 className="text-2xl font-semibold text-gray-800">{data.full_name}</h1>
                         <p className="text-gray-500">
-                            {data.previous_degree?.includes("Master") ? "Master" : "Bachelor Degree"} in{" "}
-                            {data.field_of_research?.map((field) => {
-                                const [fieldId, researchId, nicheId] = field.split("-");
-                                const matchedOption = researchOptions.find(
-                                    (option) =>
-                                        option.field_of_research_id === parseInt(fieldId) &&
-                                        option.research_area_id === parseInt(researchId) &&
-                                        option.niche_domain_id === parseInt(nicheId)
-                                );
-                                return matchedOption
-                                    ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                    : "Unknown Field";
-                            })?.join(", ") || "No Field of Study"}
+                            {data.previous_degree?.includes("Master") ? "Master" : "Bachelor Degree"} in {data.master? data.master: data.bachelor}
                         </p>
                         <p className="text-gray-500">{data.current_position}</p>
                     </div>

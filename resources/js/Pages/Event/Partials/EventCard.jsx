@@ -1,11 +1,10 @@
 import React, { useState } from "react";
+import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
 import { FaFilter } from "react-icons/fa";
 
 const EventCard = ({ events, researchOptions }) => {
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [eventModeFilter, setEventModeFilter] = useState([]);
   const [eventTypeFilter, setEventTypeFilter] = useState([]);
   const [eventThemeFilter, setEventThemeFilter] = useState([]);
@@ -88,11 +87,6 @@ const EventCard = ({ events, researchOptions }) => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
-  const handleQuickInfoClick = (event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
 
   return (
     <div className="min-h-screen flex">
@@ -180,7 +174,7 @@ const EventCard = ({ events, researchOptions }) => {
                   <img
                     src={event.image ? `/storage/${event.image}` : "/storage/default.jpg"}
                     alt={event.event_name}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-auto md:h-48 object-cover"
                   />
                   {isEventEnded && (
                     <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
@@ -210,12 +204,12 @@ const EventCard = ({ events, researchOptions }) => {
                     }}
                   ></p>
                 </div>
-                <button
-                  onClick={() => handleQuickInfoClick(event)}
+                <Link
+                  href={route("events.show", event.url)}
                   className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
                 >
                   View Details
-                </button>
+                </Link>
               </div>
             );
           })}
@@ -254,108 +248,6 @@ const EventCard = ({ events, researchOptions }) => {
           </button>
         </div>
       </div>
-
-      {/* Modal for Event Details */}
-      {isModalOpen && selectedEvent && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full overflow-y-auto max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={selectedEvent.image ? `/storage/${selectedEvent.image}` : "/storage/default.jpg"}
-              alt={selectedEvent.event_name}
-              className="w-full h-48 object-cover rounded-t-lg mb-4"
-            />
-            <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
-              {selectedEvent.event_name}
-            </h3>
-            <p
-              className="text-gray-600 mb-2"
-              dangerouslySetInnerHTML={{ __html: selectedEvent.description }}
-            ></p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Event Type:</span> {selectedEvent.event_type || "Not provided."}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Event Duration:</span>{" "}
-              {selectedEvent.start_date
-                ? `${selectedEvent.start_date} - ${selectedEvent.end_date}`
-                : "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Research Fields:</span>{" "}
-              {Array.isArray(selectedEvent.field_of_research) && selectedEvent.field_of_research.length > 0
-                ? selectedEvent.field_of_research
-                    .map((id) => {
-                      const matchedOption = researchOptions.find(
-                        (option) =>
-                          `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                      );
-                      return matchedOption
-                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                        : null;
-                    })
-                    .filter(Boolean)
-                    .join(", ")
-                : "No Research Fields"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Registration Link:</span>{" "}
-              {selectedEvent.registration_url ? (
-                <a
-                  href={selectedEvent.registration_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  Click Here
-                </a>
-              ) : (
-                "Not provided"
-              )}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Registration Deadline:</span>{" "}
-              {selectedEvent.registration_deadline || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Contact Email:</span>{" "}
-              {selectedEvent.contact_email || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Location:</span>{" "}
-              {`${selectedEvent.venue}, ${selectedEvent.city}, ${selectedEvent.country}` || "Not provided"}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-semibold">Attachment:</span>{" "}
-              {selectedEvent.attachment ? (
-                <a
-                  href={`/storage/${selectedEvent.attachment}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  View Attachment
-                </a>
-              ) : (
-                "No attachment available."
-              )}
-            </p>
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

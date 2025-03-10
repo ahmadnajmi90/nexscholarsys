@@ -19,19 +19,19 @@ export default function Show() {
   return (
     <MainLayout>
       {/* Back arrow */}
-      <div className="absolute top-[5.5rem] left-[18.5rem] z-50">
+      <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-50">
         <Link 
           href={route('posts.index')}
-          className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
+          className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
         >
-          <FaArrowLeft className="text-xl" />
+          <FaArrowLeft className="text-lg md:text-xl" />
         </Link>
       </div>
 
-      <div className="px-16">
+      <div className="px-10 md:px-16">
         <div className="max-w-8xl mx-auto py-6">
           {/* Title */}
-          <h1 className="text-3xl font-bold mb-4 text-left">{post.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-4 text-left">{post.title}</h1>
 
           {/* Author Info Section */}
           {author ? (
@@ -62,9 +62,10 @@ export default function Show() {
 
           {/* Banner */}
           {post.featured_image && (
-            <div
-              className="w-full h-64 bg-cover bg-center mb-4"
-              style={{ backgroundImage: `url(/storage/${post.featured_image})` }}
+            <img 
+              src={`/storage/${post.featured_image}`} 
+              alt="Banner" 
+              className="w-full h-auto md:h-64 object-cover mb-4"
             />
           )}
 
@@ -110,7 +111,7 @@ export default function Show() {
                     <img
                       src={`/storage/${img}`}
                       alt={`Gallery image ${index + 1}`}
-                      className="w-full h-32 object-cover"
+                      className="w-full h-auto md:h-32 object-cover"
                     />
                   </div>
                 ))}
@@ -120,7 +121,7 @@ export default function Show() {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="max-w-3xl mx-auto p-6 flex justify-between">
+        <div className="max-w-3xl mx-auto py-6 flex justify-between">
           {previous ? (
             <Link href={route('posts.show', previous.url)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
               Previous

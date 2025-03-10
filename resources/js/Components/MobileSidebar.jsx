@@ -149,7 +149,7 @@ const MobileSidebar = () => {
                             </button>
                             {menuOpen.grant && (
                                 <div className="ml-6">
-                                    <Link href="/grant" className="block py-2 hover:bg-gray-100 rounded">
+                                    <Link href="/grants" className="block py-2 hover:bg-gray-100 rounded">
                                         View Grant
                                     </Link>
                                     {canPostGrants && (
@@ -172,7 +172,7 @@ const MobileSidebar = () => {
                             </button>
                             {menuOpen.project && (
                                 <div className="ml-6">
-                                    <Link href="/project" className="block py-2 hover:bg-gray-100 rounded">
+                                    <Link href="/projects" className="block py-2 hover:bg-gray-100 rounded">
                                         View project
                                     </Link>
                                     {canPostProjects && (
@@ -195,7 +195,7 @@ const MobileSidebar = () => {
                             </button>
                             {menuOpen.event && (
                                 <div className="ml-6">
-                                    <Link href="/event" className="block py-2 hover:bg-gray-100 rounded">
+                                    <Link href="/events" className="block py-2 hover:bg-gray-100 rounded">
                                         View event
                                     </Link>
                                     {canPostEvents && (

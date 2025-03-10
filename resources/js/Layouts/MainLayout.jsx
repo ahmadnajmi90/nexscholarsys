@@ -87,13 +87,13 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 rounded-t-3xl shadow-lg">
                         <div className="flex justify-around items-center relative py-3">
                             {/* Event */}
-                            <Link href="/event" className={`flex flex-col items-center ${isActive('/event') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/events" className={`flex flex-col items-center ${isActive('/event') ? 'text-blue-500' : 'text-gray-500'}`}>
                                 <Calendar1 className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Event</span>
                             </Link>
 
                             {/* Project */}
-                            <Link href="/project" className={`flex flex-col items-center ${isActive('/project') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/projects" className={`flex flex-col items-center ${isActive('/project') ? 'text-blue-500' : 'text-gray-500'}`}>
                                 <Briefcase className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Project</span>
                             </Link>
@@ -106,7 +106,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                             </div>
 
                             {/* Grant */}
-                            <Link href="/grant" className={`flex flex-col items-center ${isActive('/grant') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/grants" className={`flex flex-col items-center ${isActive('/grant') ? 'text-blue-500' : 'text-gray-500'}`}>
                                 <FileBadge className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Grant</span>
                             </Link>

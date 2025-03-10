@@ -53,7 +53,7 @@ const FacultyList = ({ faculties, university }) => {
                     >
                         Faculty
                     </Link>
-                    <Link
+                    {/* <Link
                         href="#"
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
                     >
@@ -70,7 +70,7 @@ const FacultyList = ({ faculties, university }) => {
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
                     >
                         Study
-                    </Link>
+                    </Link> */}
                 </div>
             </div>
 

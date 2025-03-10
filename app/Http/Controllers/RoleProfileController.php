@@ -18,6 +18,12 @@ use App\Models\FieldOfResearch;
 use App\Models\ResearchArea;
 use App\Models\NicheDomain;
 use App\Services\AIProfileService;
+use GuzzleHttp\Client;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
+use Illuminate\Support\Facades\Log;
+use App\Services\AICVService;
+use Symfony\Component\DomCrawler\Crawler;
 
 class RoleProfileController extends Controller
 {
@@ -509,4 +515,220 @@ class RoleProfileController extends Controller
         return response()->json(['error' => 'Profile generation failed'], 500);
     }
 
+    public function generateCV(Request $request)
+    {
+        $user = auth()->user();
+        // Retrieve the academician profile (adjust relationship as needed)
+        $academicianProfile = $user->academician()->with('user')->first();
+
+        if (!$academicianProfile) {
+            return response()->json(['error' => 'Profile not found'], 404);
+        }
+
+        // Fetch data from various sources
+        $websiteUrl       = $academicianProfile->website;
+        $googleScholarUrl = $academicianProfile->google_scholar;
+
+        $websiteContent      = $this->fetchWebsiteContent($websiteUrl);
+        $scholarContent      = $this->fetchScholarContent($googleScholarUrl);
+
+        // Extract publications from Google Scholar using Guzzle + DomCrawler
+        $publications = $this->extractPublicationsFromScholar($googleScholarUrl);
+        $publicationsText = $this->formatPublications($publications);
+
+        // Combine additional context for the prompt
+        $additionalContext = "";
+        if ($websiteContent) {
+            $additionalContext .= "Website Content:\n" . $websiteContent . "\n";
+        }
+
+        // Format research expertise
+        $researchExpertise = is_array($academicianProfile->research_expertise)
+            ? implode(', ', $academicianProfile->research_expertise)
+            : $academicianProfile->research_expertise;
+
+        // Build a detailed prompt for GPT-4o (via your AICVService)
+        $prompt = "Generate a professional academic Curriculum Vitae based strictly on the provided data.
+        Do not fabricate details that are not available.
+
+        Personal Information:
+        - Full Name: {$academicianProfile->full_name}
+        - Email: {$academicianProfile->user->email}
+        - Phone: " . ($academicianProfile->phone_number ?: 'Not Provided') . "
+        - Current Position: {$academicianProfile->current_position}
+        - Department: {$academicianProfile->department}
+
+        Education:
+        " . ($websiteContent ? "Extract from Website Content:\n" . $websiteContent : "Not Provided") . "
+
+        Research Experience:
+        " . (($websiteContent || $scholarContent) ? "Extract from sources:\n" . $websiteContent . "\n" . $scholarContent : "Not Provided") . "
+
+        Publications:
+        " . ($publicationsText ? $publicationsText : "Not Provided") . "
+
+        Research Expertise:
+        - {$researchExpertise}
+
+        Additional Information:
+        " . ($additionalContext ? $additionalContext : "Not Provided") . "
+
+        Use a structured, professional academic CV format.";
+
+        Log::info('GPT-4o Input Prompt:', ['prompt' => $prompt]);
+
+        // If the request is GET with a preview parameter, return the generated CV text for preview
+        if ($request->isMethod('get') && $request->has('preview')) {
+            // If a customized CV isn't provided, use AI to generate it
+            if (!$request->has('customized_cv')) {
+                $aiCVService = app(AICVService::class);
+                $aiResponse = $aiCVService->generateCV($prompt);
+                $finalCVText = $aiResponse['cv_text'] ?? "Unable to generate CV content. Please try again later.";
+            } else {
+                $finalCVText = $request->input('customized_cv');
+            }
+            return response()->json(['cv_text' => $finalCVText]);
+        }
+
+        // Otherwise, process the CV generation (using any customized CV text if provided)
+        $customizedCV = $request->input('customized_cv');
+        if ($customizedCV) {
+            $finalCVText = $customizedCV;
+        } else {
+            $aiCVService = app(AICVService::class);
+            $aiResponse = $aiCVService->generateCV($prompt);
+            $finalCVText = $aiResponse['cv_text'] ?? "Unable to generate CV content. Please try again later.";
+        }
+
+        // Generate the DOCX file using PHPWord with basic formatting
+        $phpWord = new PhpWord();
+        $phpWord->addTitleStyle(1, ['bold' => true, 'size' => 20, 'name' => 'Arial'], ['spaceAfter' => 240]);
+        $phpWord->addTitleStyle(2, ['bold' => true, 'size' => 16, 'name' => 'Arial'], ['spaceAfter' => 120]);
+        $paragraphStyle = ['spaceAfter' => 120];
+
+        $section = $phpWord->addSection();
+        $section->addTitle($academicianProfile->full_name . " - Curriculum Vitae", 1);
+
+        // Split the final CV text by newline and add with formatting
+        $lines = preg_split('/\r\n|\r|\n/', $finalCVText);
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if (empty($trimmed)) {
+                $section->addTextBreak();
+            } elseif (preg_match('/^(CURRICULUM VITAE|PERSONAL INFORMATION|EDUCATION|RESEARCH EXPERIENCE|PUBLICATIONS|RESEARCH GRANTS|TEACHING EXPERIENCE|PROFESSIONAL MEMBERSHIPS|AWARDS AND HONORS|ADDITIONAL INFORMATION)$/i', $trimmed)) {
+                $section->addTitle($trimmed, 2);
+            } else {
+                $section->addText($trimmed, ['name' => 'Arial', 'size' => 12], $paragraphStyle);
+            }
+        }
+
+        $fileName = 'cv_' . $academicianProfile->full_name . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'cv_') .  $academicianProfile->full_name . '.docx';
+        IOFactory::createWriter($phpWord, 'Word2007')->save($tempFile);
+
+        return response()->download($tempFile, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ])->deleteFileAfterSend(true);
+    }
+
+    // Fetch full textual content from a generic website using Guzzle and DomCrawler
+    protected function fetchWebsiteContent($url)
+    {
+        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+        $client = new Client([
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (compatible; MyScraper/1.0)',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            ],
+        ]);
+
+        try {
+            $response = $client->get($url);
+            $html = (string)$response->getBody();
+            $crawler = new Crawler($html);
+            $paragraphs = $crawler->filter('p');
+            $content = "";
+            foreach ($paragraphs as $p) {
+                $text = trim($p->textContent);
+                if (!empty($text)) {
+                    $content .= $text . "\n";
+                }
+            }
+            return $content ?: null;
+        } catch (\Exception $e) {
+            Log::error("Error fetching content from {$url}: " . $e->getMessage());
+        }
+        return null;
+    }
+
+    // Fetch specific summary content from Google Scholar using Guzzle and DomCrawler
+    protected function fetchScholarContent($url)
+    {
+        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+        try {
+            $client = new Client([
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (compatible; MyScraper/1.0)'
+                ]
+            ]);
+            $response = $client->get($url);
+            $html = (string)$response->getBody();
+            $crawler = new Crawler($html);
+            // Adjust the selector based on the actual structure of Google Scholar pages
+            $content = $crawler->filter('div#gsc_prf_iv')->count() ? $crawler->filter('div#gsc_prf_iv')->first()->text() : null;
+            return $content;
+        } catch (\Exception $e) {
+            Log::error("Error fetching Scholar content from {$url}: " . $e->getMessage());
+        }
+        return null;
+    }
+
+    // Extract publications from Google Scholar using Guzzle and DomCrawler
+    protected function extractPublicationsFromScholar($url)
+    {
+        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+            return [];
+        }
+        try {
+            $client = new Client([
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (compatible; MyScraper/1.0)'
+                ]
+            ]);
+            $response = $client->get($url);
+            $html = (string)$response->getBody();
+            $crawler = new Crawler($html);
+            $publications = $crawler->filter('.gsc_a_tr')->each(function (Crawler $node) {
+                $title = $node->filter('.gsc_a_at')->count() ? $node->filter('.gsc_a_at')->text() : '';
+                $authors = $node->filter('.gs_gray')->eq(0)->count() ? $node->filter('.gs_gray')->eq(0)->text() : '';
+                $journal = $node->filter('.gs_gray')->eq(1)->count() ? $node->filter('.gs_gray')->eq(1)->text() : '';
+                $year = $node->filter('.gsc_a_y')->count() ? $node->filter('.gsc_a_y')->text() : '';
+                return compact('title', 'authors', 'journal', 'year');
+            });
+            return $publications;
+        } catch (\Exception $e) {
+            Log::error("Error extracting publications from Scholar {$url}: " . $e->getMessage());
+        }
+        return [];
+    }
+
+    // Format the publications array into a readable string
+    protected function formatPublications($publications)
+    {
+        if (empty($publications)) {
+            return null;
+        }
+        $formatted = "Publications:\n";
+        foreach ($publications as $pub) {
+            $formatted .= "- " . ($pub['title'] ?: 'Untitled') . ". " .
+                ($pub['authors'] ?: 'No Authors') . ". " .
+                ($pub['journal'] ?: 'No Journal') . ". " .
+                ($pub['year'] ?: 'No Year') . ".\n";
+        }
+        return $formatted;
+    }
 }

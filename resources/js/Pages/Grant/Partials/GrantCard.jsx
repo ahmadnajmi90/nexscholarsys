@@ -1,9 +1,8 @@
 import React, { useState } from "react";
+import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
 
 const GrantCard = ({ grants }) => {
-  const [selectedGrant, setSelectedGrant] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [grantTypeFilter, setGrantTypeFilter] = useState([]);
   const [grantThemeFilter, setGrantThemeFilter] = useState([]);
   const [countryFilter, setCountryFilter] = useState([]);
@@ -11,7 +10,7 @@ const GrantCard = ({ grants }) => {
   const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 9;
 
-  // Convert unique options to objects for react-select
+  // Unique filter options based on grant attributes
   const uniqueGrantTypes = [...new Set(grants.map((grant) => grant.grant_type))]
     .filter(Boolean)
     .map((type) => ({ value: type, label: type }));
@@ -48,16 +47,6 @@ const GrantCard = ({ grants }) => {
     setCurrentPage(page);
   };
 
-  const handleViewMore = (grant) => {
-    setSelectedGrant(grant);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setSelectedGrant(null);
-    setIsModalOpen(false);
-  };
-
   return (
     <div className="min-h-screen flex">
       {/* Mobile Filter Toggle Button */}
@@ -65,11 +54,19 @@ const GrantCard = ({ grants }) => {
         onClick={() => setShowFilters(!showFilters)}
         className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
       >
-        {/* Simple filter icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" 
-             viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4.586L3.293 6.707A1 1 0 013 6V4z" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4.586L3.293 6.707A1 1 0 013 6V4z"
+          />
         </svg>
       </button>
 
@@ -116,7 +113,7 @@ const GrantCard = ({ grants }) => {
               <img
                 src={grant.image ? `/storage/${grant.image}` : "/storage/default.jpg"}
                 alt={grant.title}
-                className="w-full h-48 object-cover"
+                className="w-full h-auto md:h-48 object-cover"
               />
               <div className="p-6">
                 <h2
@@ -135,15 +132,18 @@ const GrantCard = ({ grants }) => {
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                   }}
-                  dangerouslySetInnerHTML={{ __html: grant.description || "No description available." }}
+                  dangerouslySetInnerHTML={{
+                    __html: grant.description || "No description available.",
+                  }}
                 ></p>
               </div>
-              <button
-                onClick={() => handleViewMore(grant)}
+              {/* Changed View Details to a Link to grants.show route using the grant's URL */}
+              <Link 
+                href={route("grants.show", { grant: grant.url })}
                 className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
               >
                 View Details
-              </button>
+              </Link>
             </div>
           ))}
         </div>
@@ -186,89 +186,6 @@ const GrantCard = ({ grants }) => {
           </button>
         </div>
       </div>
-
-      {/* Modal for View More */}
-      {isModalOpen && selectedGrant && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-white p-6 rounded-lg shadow-lg max-w-3xl w-full overflow-y-auto max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={selectedGrant.image ? `/storage/${selectedGrant.image}` : "/storage/default.jpg"}
-              alt={selectedGrant.title}
-              className="w-full h-48 object-cover rounded-t-lg mb-4"
-            />
-            <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
-              {selectedGrant.title}
-            </h3>
-            <p
-              className="text-gray-600 mb-2"
-              dangerouslySetInnerHTML={{ __html: selectedGrant.description }}
-            ></p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Grant Type:</span>{" "}
-              {selectedGrant.grant_type || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Grant Theme:</span>{" "}
-              {Array.isArray(selectedGrant.grant_theme)
-                ? selectedGrant.grant_theme.join(", ")
-                : "No Grant Theme Specified"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Cycle:</span>{" "}
-              {selectedGrant.cycle || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Grant Duration:</span>{" "}
-              {selectedGrant.start_date ? `${selectedGrant.start_date} - ${selectedGrant.end_date}` : "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Application Deadline:</span>{" "}
-              {selectedGrant.application_deadline || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Sponsored by:</span>{" "}
-              {selectedGrant.sponsored_by || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Website / Link:</span>{" "}
-              {selectedGrant.website || "Not provided"}
-            </p>
-            <p className="text-gray-600 mb-2">
-              <span className="font-semibold">Contact Email:</span>{" "}
-              {selectedGrant.email || "Not provided"}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-semibold">Attachment:</span>{" "}
-              {selectedGrant.attachment ? (
-                <a
-                  href={`/storage/${selectedGrant.attachment}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline"
-                >
-                  View Attachment
-                </a>
-              ) : (
-                "No attachment available."
-              )}
-            </p>
-            <div className="mt-6 text-center">
-              <button
-                onClick={closeModal}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
