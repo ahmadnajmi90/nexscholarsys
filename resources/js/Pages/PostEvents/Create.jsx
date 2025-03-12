@@ -43,11 +43,8 @@ export default function Create() {
 
     // Add all other fields to FormData
     Object.keys(data).forEach((key) => {
-      if (data[key] instanceof File) {
-        formData.append(key, data[key]);
-      } else {
-        formData.append(key, data[key]);
-      }
+      // You could check for files if needed, here we append regardless
+      formData.append(key, data[key]);
     });
 
     // Debug FormData
@@ -170,6 +167,7 @@ export default function Create() {
                 onChange={(e) => setData("start_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.start_date && <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>}
             </div>
             <div>
               <InputLabel>End Date</InputLabel>
@@ -180,6 +178,7 @@ export default function Create() {
                 onChange={(e) => setData("end_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.end_date && <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>}
             </div>
           </div>
 
@@ -193,6 +192,7 @@ export default function Create() {
                 onChange={(e) => setData("start_time", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.start_time && <p className="text-red-500 text-xs mt-1">{errors.start_time}</p>}
             </div>
             <div>
               <InputLabel>End Time</InputLabel>
@@ -202,6 +202,7 @@ export default function Create() {
                 onChange={(e) => setData("end_time", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.end_time && <p className="text-red-500 text-xs mt-1">{errors.end_time}</p>}
             </div>
           </div>
 
@@ -254,6 +255,7 @@ export default function Create() {
                 }}
                 placeholder="Search and select fields of research..."
               />
+              {errors.field_of_research && <p className="text-red-500 text-xs mt-1">{errors.field_of_research}</p>}
             </div>
           </div>
 
@@ -268,6 +270,7 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter registration URL"
               />
+              {errors.registration_url && <p className="text-red-500 text-xs mt-1">{errors.registration_url}</p>}
             </div>
             <div>
               <InputLabel>Registration Deadline</InputLabel>
@@ -277,6 +280,7 @@ export default function Create() {
                 onChange={(e) => setData("registration_deadline", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.registration_deadline && <p className="text-red-500 text-xs mt-1">{errors.registration_deadline}</p>}
             </div>
           </div>
 
@@ -306,6 +310,7 @@ export default function Create() {
             </div>
             <div>
               <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+              {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
             </div>
           </div>
 
@@ -320,6 +325,7 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter contact email"
               />
+              {errors.contact_email && <p className="text-red-500 text-xs mt-1">{errors.contact_email}</p>}
               {/* Use Personal Email Checkbox */}
               <div className="mt-2 flex items-center">
                 <input
@@ -348,6 +354,7 @@ export default function Create() {
                 onChange={(e) => setData("image", e.target.files[0])}
                 className="mt-1 block w-full border-gray-300 rounded-md py-2"
               />
+              {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
             </div>
           </div>
 

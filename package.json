@@ -21,6 +21,8 @@
         "vite": "^5.0"
     },
     "dependencies": {
+        "@heroicons/react": "^2.2.0",
+        "@tailwindcss/typography": "^0.5.16",
         "body-parser": "latest",
         "chart.js": "^4.4.6",
         "dotenv": "^16.4.7",

@@ -50,12 +50,11 @@ const DashboardInsight = ({
           ></div>
         )}
         <p className="text-xs mt-1">
-        {new Date(post.created_at).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        })}
-
+          {new Date(post.created_at).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
         </p>
       </div>
     </div>
@@ -81,7 +80,7 @@ const DashboardInsight = ({
           {new Date(event.created_at).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
-            year: "numeric"
+            year: "numeric",
           })}
         </p>
       </div>
@@ -108,7 +107,7 @@ const DashboardInsight = ({
           {new Date(project.created_at).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
-            year: "numeric"
+            year: "numeric",
           })}
         </p>
       </div>
@@ -135,7 +134,7 @@ const DashboardInsight = ({
           {new Date(grant.created_at).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
-            year: "numeric"
+            year: "numeric",
           })}
         </p>
       </div>
@@ -174,7 +173,8 @@ const DashboardInsight = ({
             timer={7000}
             fadeDuration={300}
             renderItem={renderPostItem}
-            label="Post"  // Label for Post carousel
+            label="Post"
+            seoPrefix="/posts/"
           />
         </div>
 
@@ -187,6 +187,7 @@ const DashboardInsight = ({
               fadeDuration={300}
               renderItem={renderEventItem}
               label="Event"
+              seoPrefix="/events/"
             />
             <Carousel
               items={projects.slice(0, 5)}
@@ -194,6 +195,7 @@ const DashboardInsight = ({
               fadeDuration={300}
               renderItem={renderProjectItem}
               label="Project"
+              seoPrefix="/projects/"
             />
           </div>
           <div className="h-1/2">
@@ -203,6 +205,7 @@ const DashboardInsight = ({
               fadeDuration={300}
               renderItem={renderGrantItem}
               label="Grant"
+              seoPrefix="/grants/"
             />
           </div>
         </div>

@@ -42,8 +42,11 @@ const Dashboard = ({
                 researchOptions={researchOptions}
                 />):
                 (
-                    <Dashboard_m events={events}
-                    users={users}/>
+                    <Dashboard_m 
+                    events={events}
+                    users={users}
+                    grants={grants}
+                    posts={posts}/>
                 )
                     }
                 {/* <RadarChart />

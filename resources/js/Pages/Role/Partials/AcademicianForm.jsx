@@ -459,7 +459,9 @@ export default function AcademicianForm({ className = '', researchOptions }) {
                   Update your personal information.
                 </p>
               </header>
-              <div className="flex space-x-2 absolute top-0 right-0 mt-2 mr-2">
+              
+              {/* Desktop view: button in the top right */}
+              <div className="hidden sm:flex space-x-2 absolute top-0 right-0 mt-2 mr-2">
                 <button 
                   type="button" 
                   onClick={() => setShowMethodModal(true)}
@@ -468,12 +470,30 @@ export default function AcademicianForm({ className = '', researchOptions }) {
                   AI Generated Profile
                 </button>
                 {/* <button 
+                              type="button" 
+                              onClick={handleCVButtonClick}
+                              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Preview & Generate CV
+                            </button> */}
+              </div>
+              
+              {/* Mobile view: button below header */}
+              <div className="sm:hidden mt-4">
+                <button 
                   type="button" 
-                  onClick={handleCVButtonClick}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700"
+                  onClick={() => setShowMethodModal(true)}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
                 >
-                  Preview & Generate CV
-                </button> */}
+                  AI Generated Profile
+                </button>
+                {/* <button 
+                              type="button" 
+                              onClick={handleCVButtonClick}
+                              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Preview & Generate CV
+                            </button> */}
               </div>
             </div>
 
@@ -552,7 +572,7 @@ export default function AcademicianForm({ className = '', researchOptions }) {
               </div>
 
               {/* Research Expertise Searchable Dropdown */}
-              <div className="w-full">
+              <div className="w-11/12">
                 <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
                   Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
                 </label>

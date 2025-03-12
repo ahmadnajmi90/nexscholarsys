@@ -102,7 +102,7 @@ export default function Show() {
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2">Description</h2>
               <div 
-                className="text-gray-700 text-justify" 
+                className="text-gray-700 prose" 
                 dangerouslySetInnerHTML={{ __html: project.description }} 
               />
             </div>

@@ -11,6 +11,7 @@ export default function UpdateRoleInformationForm_m({
     academician,
     undergraduate,
     researchOptions,
+    skills
 }) {
     const { isPostgraduate, isUndergraduate, isAcademician } = useRoles();
 
@@ -28,6 +29,7 @@ export default function UpdateRoleInformationForm_m({
                     universities={universities}
                     faculties={faculties}
                     researchOptions={researchOptions}
+                    skills={skills}
                 />
             )}
             {isUndergraduate && (
@@ -36,6 +38,7 @@ export default function UpdateRoleInformationForm_m({
                     universities={universities}
                     faculties={faculties}
                     researchOptions={researchOptions}
+                    skills={skills}
                 />
             )}
         </div>

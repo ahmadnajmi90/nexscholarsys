@@ -9,6 +9,7 @@ use App\Models\UniversityList;
 use App\Models\User;
 use App\Models\FieldOfResearch;
 use App\Models\FacultyList;
+use App\Models\Skill;
 
 use Illuminate\Http\Request;
 
@@ -39,6 +40,7 @@ class UndergraduateController extends Controller
             'faculties' => FacultyList::all(),
             'users' => User::all(),
             'researchOptions' => $researchOptions,
+            'skills' => Skill::all(),
         ]);
     }
 

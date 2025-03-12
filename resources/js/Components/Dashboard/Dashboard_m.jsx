@@ -1,161 +1,165 @@
-import React, { useState, useEffect, useRef } from "react";
-import { FaFire } from "react-icons/fa"; // Import fire icon
+import React from "react";
+import Carousel from "./Carousel"; // Adjust the import path as needed
+import QuickLinks from "./QuickActions"; // Adjust the import path as needed
 
-const Dashboard_M = ({ events, users }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [fade, setFade] = useState(true); // State for controlling fade effect
-    const touchStartRef = useRef(null); // Reference to store the start of a touch event
-    const touchEndRef = useRef(null); // Reference to store the end of a touch event
+const Dashboard_M = ({ posts, events, grants, users }) => {
+  // Format today’s date as dd/mm/yyyy
+  const todayDate = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
-    // Process event data
-    const eventData = events.map((event) => {
-        const author = users.find((user) => user.unique_id === event.author_id)?.name || "Unknown Author";
-        return {
-            id: event.id,
-            url: event.image ? `/storage/${event.image}` : "https://via.placeholder.com/800x600",
-            title: event.event_name || "Untitled Event",
-            author: author,
-            theme: event.event_theme || "No Theme",
-            isFresh: true, // Modify condition if needed (e.g., recent events)
-        };
-    });
+  // Render functions for carousel items
+  const renderPostItem = (post) => (
+    <div
+      className="block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-full flex flex-col justify-end"
+      style={{
+        backgroundImage: `url(${encodeURI(
+          post.featured_image ? `/storage/${post.featured_image}` : "/storage/default.jpg"
+        )})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="absolute inset-0 bg-black opacity-40"></div>
+      <div className="relative z-10 text-white pr-10">
+        <h2 className="text-4xl font-bold truncate" title={post.title}>
+          {post.title || "Untitled Post"}
+        </h2>
+        {post.content && (
+          <div
+            className="text-sm line-clamp-2 mb-2"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          ></div>
+        )}
+        <p className="text-xs mt-1">
+          {new Date(post.created_at).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
+  );
 
-    const uniqueEventData = Array.from(
-        new Map(eventData.map((item) => [item.id + item.title, item])).values()
-    );
+  const renderEventItem = (event) => (
+    <div
+      className="block relative p-3 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-full flex flex-col justify-end"
+      style={{
+        backgroundImage: `url(${encodeURI(
+          event.image ? `/storage/${event.image}` : "/storage/default.jpg"
+        )})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="absolute inset-0 bg-black opacity-40"></div>
+      <div className="relative z-10 text-white">
+        <h3 className="text-lg font-bold truncate" title={event.event_name}>
+          {event.event_name || "Untitled Event"}
+        </h3>
+        <p className="text-xs">
+          {new Date(event.created_at).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
+  );
 
-    const limitedEventData = uniqueEventData.slice(0, 7);
+  const renderGrantItem = (grant) => (
+    <div
+      className="relative p-3 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-full flex flex-col justify-end"
+      style={{
+        backgroundImage: `url(${encodeURI(
+          grant.image ? `/storage/${grant.image}` : "/storage/default.jpg"
+        )})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="absolute inset-0 bg-black opacity-40"></div>
+      <div className="relative z-10 text-white">
+        <h3 className="text-lg font-bold truncate" title={grant.title}>
+          {grant.title || "Untitled Grant"}
+        </h3>
+        <p className="text-xs">
+          {new Date(grant.created_at).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
+        </p>
+      </div>
+    </div>
+  );
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setFade(false); // Start fade-out
-            setTimeout(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % limitedEventData.length);
-                setFade(true); // Start fade-in
-            }, 300); // Wait for fade-out duration
-        }, 7000); // Auto-slide every 7 seconds
-        return () => clearInterval(interval);
-    }, [limitedEventData.length]);
+  return (
+    <div className="w-screen bg-gray-200 flex items-center justify-center p-4">
+      <div
+        className="bg-white text-gray-800 rounded-xl shadow-lg overflow-hidden relative flex flex-col"
+        style={{ width: "414px", maxWidth: "100%" }}
+      >
+        <div className="bg-white w-full px-5 pt-6 pb-4 overflow-y-auto">
+          {/* Today Section */}
+          <div className="mb-3">
+            <h1 className="text-3xl font-bold">Today</h1>
+            <p className="text-sm text-gray-500 uppercase font-bold">
+              {todayDate}
+            </p>
+          </div>
 
-    const handleDotClick = (index) => {
-        setFade(false);
-        setTimeout(() => {
-            setCurrentIndex(index);
-            setFade(true);
-        }, 300);
-    };
-
-    // Function to handle touch start
-    const handleTouchStart = (e) => {
-        touchStartRef.current = e.touches[0].clientX;
-    };
-
-    // Function to handle touch end
-    const handleTouchEnd = (e) => {
-        touchEndRef.current = e.changedTouches[0].clientX;
-        handleSwipeGesture();
-    };
-
-    // Function to handle swipe gestures
-    const handleSwipeGesture = () => {
-        const swipeDistance = touchStartRef.current - touchEndRef.current;
-
-        // Threshold to detect a valid swipe (e.g., 50px)
-        if (swipeDistance > 50) {
-            // Swipe left - move to the next slide
-            setFade(false);
-            setTimeout(() => {
-                setCurrentIndex((prevIndex) => (prevIndex + 1) % limitedEventData.length);
-                setFade(true);
-            }, 300);
-        } else if (swipeDistance < -50) {
-            // Swipe right - move to the previous slide
-            setFade(false);
-            setTimeout(() => {
-                setCurrentIndex((prevIndex) =>
-                    prevIndex === 0 ? limitedEventData.length - 1 : prevIndex - 1
-                );
-                setFade(true);
-            }, 300);
-        }
-    };
-
-    return (
-        <div className="w-screen h-screen bg-gray-200 flex items-center justify-center">
-            <div
-                className="bg-white text-gray-800 rounded-xl shadow-lg overflow-hidden relative flex flex-col"
-                style={{ width: "414px", height: "736px", maxWidth: "100%", maxHeight: "100%" }}
-            >
-                <div
-                    className="bg-white w-full px-5 pt-6 pb-20 overflow-y-auto h-full"
-                    onTouchStart={handleTouchStart} // Attach touch start event
-                    onTouchEnd={handleTouchEnd} // Attach touch end event
-                >
-                    {/* Today Section */}
-                    <div className="mb-3">
-                        <h1 className="text-3xl font-bold">Today</h1>
-                        <p className="text-sm text-gray-500 uppercase font-bold">{new Date().toDateString()}</p>
-                    </div>
-
-                      {/* Carousel Section */}
-                    <div className="mb-5 relative">
-                        {limitedEventData.length > 0 && (
-                           <a
-                           href="#"
-                           className={`block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden ${
-                               fade ? "opacity-100" : "opacity-0"
-                           }`}
-                           style={{
-                               backgroundImage: `url(${encodeURI(limitedEventData[currentIndex].url)})`,
-                               backgroundSize: "cover",
-                               backgroundPosition: "center",
-                           }}
-                       >
-                                {/* Overlay */}
-                                <div className="absolute inset-0 bg-black opacity-40"></div>
-
-                                {/* "Fresh" Label */}
-                                {limitedEventData[currentIndex].isFresh && (
-                                    <div className="absolute top-3 right-3 bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center">
-                                        <FaFire className="mr-1 text-sm" /> Event
-                                    </div>
-                                )}
-
-                                {/* Content */}
-                                <div className="relative z-10">
-                                    <div className="h-48"></div>
-                                    <h2
-                                        className="text-white text-2xl font-bold leading-tight mb-3 pr-5"
-                                        style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}
-                                    >
-                                        {limitedEventData[currentIndex].title}
-                                    </h2>
-                                    <div className="flex w-full items-center text-sm text-gray-300 font-medium">
-                                        <div className="flex-1 flex items-center">
-                                            {/* <div>{limitedEventData[currentIndex].author}</div> */}
-                                        </div>
-                                        {/* <div>{limitedEventData[currentIndex].theme}</div> */}
-                                    </div>
-                                </div>
-                            </a>
-                        )}
-                        {/* Pagination Dots */}
-                        <div className="absolute bottom-2 right-2 flex space-x-2">
-                            {limitedEventData.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => handleDotClick(index)}
-                                    className={`w-2 h-2 rounded-full ${
-                                        index === currentIndex ? "bg-indigo-500" : "bg-gray-300"
-                                    }`}
-                                ></button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+          {/* Carousel Section */}
+          <div className="mb-5">
+            {/* First Row: Post Carousel (full width, spans both columns) */}
+            <div className="mb-4 h-[280px]">
+              <Carousel
+                items={posts.slice(0, 5)}
+                timer={7000}
+                fadeDuration={300}
+                renderItem={renderPostItem}
+                label="Post"
+                seoPrefix="/posts/"
+              />
             </div>
+
+            {/* Second Row: Two Columns - Event Carousel and Grant Carousel */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="h-[160px]">
+                <Carousel
+                  items={events.slice(0, 5)}
+                  timer={8000}
+                  fadeDuration={300}
+                  renderItem={renderEventItem}
+                  label="Event"
+                  seoPrefix="/events/"
+                />
+              </div>
+              <div className="h-[160px]">
+                <Carousel
+                  items={grants.slice(0, 5)}
+                  timer={9000}
+                  fadeDuration={300}
+                  renderItem={renderGrantItem}
+                  label="Grant"
+                  seoPrefix="/grants/"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* QuickLinks Section */}
+          <div className="mb-4">
+            <QuickLinks />
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default Dashboard_M;

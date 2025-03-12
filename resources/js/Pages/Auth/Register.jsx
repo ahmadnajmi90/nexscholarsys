@@ -156,6 +156,22 @@ export default function Register() {
                                     </Link>
                                 </p>
                             </div>
+
+                            <div className="mt-4">
+                            <a
+                                href={route('auth.google')}
+                                className="flex items-center pl-4 w-60 py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
+                            >
+                                <div className="bg-white p-2 rounded-lg mr-3">
+                                    <img
+                                        src="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
+                                        alt="Google Logo"
+                                        className="w-5 h-5"
+                                    />
+                                </div>
+                                <span>Register with Google</span>
+                            </a>
+                        </div>
                         </form>
                     </div>
                 </main>

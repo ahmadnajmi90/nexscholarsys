@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import { useState, useEffect, useRef } from "react";
 import NationalityForm from "../Role/Partials/NationalityForm";
 import Select from "react-select";
 import ReactQuill from "react-quill";
@@ -43,8 +42,7 @@ export default function Create() {
   });
 
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
-
-  const [dropdownOpen, setDropdownOpen] = useState(false); // State to manage dropdown visibility
+  const [dropdownOpen, setDropdownOpen] = useState(false); // For purpose dropdown
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -53,11 +51,8 @@ export default function Create() {
         setDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleCheckboxChange = (value) => {
@@ -75,48 +70,37 @@ export default function Create() {
     }
   };
 
-  const [customTag, setCustomTag] = useState(""); // State to manage custom tag input
+  const [customTag, setCustomTag] = useState(""); // For custom tag input
 
   const handleAddCustomTag = () => {
     if (customTag.trim() !== "" && !data.tags?.includes(customTag)) {
-      setData("tags", [...(data.tags || []), customTag]); // Add the custom tag
-      setCustomTag(""); // Clear the input field
+      setData("tags", [...(data.tags || []), customTag]);
+      setCustomTag("");
     }
   };
 
   const handleRemoveTag = (tagToRemove) => {
-    setData("tags", data.tags?.filter((tag) => tag !== tagToRemove)); // Remove the tag
+    setData("tags", data.tags?.filter((tag) => tag !== tagToRemove));
   };
 
   function handleSubmit(e) {
     if (e) e.preventDefault();
 
     const formData = new FormData();
-
-    // Add all other fields to FormData
     Object.keys(data).forEach((key) => {
       if (data[key] instanceof File) {
-        formData.append(key, data[key]); // Append file fields
+        formData.append(key, data[key]);
       } else if (Array.isArray(data[key])) {
-        formData.append(key, JSON.stringify(data[key])); // Convert arrays to JSON strings
+        formData.append(key, JSON.stringify(data[key]));
       } else {
-        formData.append(key, data[key]); // Append non-file fields
+        formData.append(key, data[key]);
       }
     });
 
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`);
-      console.log(`${key}: ${typeof value}`);
-    }
-
-    // Submit the form using Inertia.js
     post(route("post-projects.store"), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
-
-      onSuccess: () => {
-        alert("Project posted successfully.");
-      },
+      onSuccess: () => alert("Project posted successfully."),
       onError: (errors) => {
         console.error("Error updating Project:", errors);
         alert("Failed to post the Project. Please try again.");
@@ -132,22 +116,12 @@ export default function Create() {
           onClick={() => window.history.back()}
           className="absolute top-4 left-4 text-gray-700 hover:text-gray-900"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6"
-        >
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Add New Project</h1>
 
           {/* Project Name */}
@@ -165,141 +139,25 @@ export default function Create() {
             {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
           </div>
 
+          {/* Project Description */}
           <div>
-            {/* Description */}
-            <div>
-              <InputLabel className="block text-gray-700 font-medium">
-                Project Description <span className="text-red-500">*</span>
-              </InputLabel>
-              <div
-                className="mt-1 w-full rounded-lg border border-gray-200"
-                style={{
-                  height: "300px", // Set a default height
-                  overflowY: "auto", // Add vertical scrollbar
-                }}
-              >
-                <ReactQuill
-                  theme="snow"
-                  value={data.description}
-                  onChange={(value) => setData("description", value)}
-                  placeholder="Enter description"
-                  style={{
-                    height: "300px", // Set height for the editor content area
-                    maxHeight: "300px", // Restrict content height
-                  }}
-                />
-              </div>
-              {errors.description && (
-                <p className="text-red-500 text-xs mt-1">{errors.description}</p>
-              )}
+            <InputLabel className="block text-gray-700 font-medium">
+              Project Description <span className="text-red-500">*</span>
+            </InputLabel>
+            <div className="mt-1 w-full rounded-lg border border-gray-200" style={{ height: "300px", overflowY: "auto" }}>
+              <ReactQuill
+                theme="snow"
+                value={data.description}
+                onChange={(value) => setData("description", value)}
+                placeholder="Enter description"
+                style={{ height: "300px", maxHeight: "300px" }}
+              />
             </div>
+            {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
           </div>
 
+          {/* Project Theme and Purpose */}
           <div className="grid grid-cols-2 gap-8">
-            {/* Purpose (Multiselect) */}
-            <div ref={dropdownRef}>
-              <InputLabel className="block text-gray-700 font-medium">
-                Purpose (Multiselect)
-              </InputLabel>
-              <div
-                className={`relative mt-1 w-full rounded-lg border border-gray-200 p-2 px-2.5 cursor-pointer bg-white ${
-                  dropdownOpen ? "shadow-lg" : ""
-                }`}
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                {data.purpose && data.purpose.length > 0
-                  ? data.purpose.join(", ")
-                  : "Select Purposes"}
-              </div>
-              {dropdownOpen && (
-                <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg w-[37.5rem]">
-                  <div className="p-2 space-y-2">
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase")
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Postgraduate"
-                        checked={data.purpose.includes("Seek for Postgraduate")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Postgraduate
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase")
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Academician Collaboration"
-                        checked={data.purpose.includes("Seek for Academician Collaboration")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Academician Collaboration
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase")
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Industrial Collaboration"
-                        checked={data.purpose.includes("Seek for Industrial Collaboration")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Industrial Collaboration
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.some(
-                          (item) =>
-                            item === "Seek for Postgraduate" ||
-                            item === "Seek for Academician Collaboration" ||
-                            item === "Seek for Industrial Collaboration"
-                        )
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="For Showcase"
-                        checked={data.purpose.includes("For Showcase")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.some(
-                          (item) =>
-                            item === "Seek for Postgraduate" ||
-                            item === "Seek for Academician Collaboration" ||
-                            item === "Seek for Industrial Collaboration"
-                        )}
-                        className="mr-2"
-                      />
-                      For Showcase
-                    </InputLabel>
-                  </div>
-                </div>
-              )}
-              {errors.purpose && (
-                <p className="text-red-500 text-xs mt-1">{errors.purpose}</p>
-              )}
-            </div>
-
             <div>
               <InputLabel className="block text-gray-700 font-medium">
                 Project Theme
@@ -315,12 +173,84 @@ export default function Create() {
                 <option value="Science & Technology">Science & Technology</option>
                 <option value="Social Science">Social Science</option>
               </select>
+              {errors.project_theme && <p className="text-red-500 text-xs mt-1">{errors.project_theme}</p>}
+            </div>
+
+            <div ref={dropdownRef}>
+              <InputLabel className="block text-gray-700 font-medium">
+                Purpose (Multiselect)
+              </InputLabel>
+              <div
+                className={`relative mt-1 w-full rounded-lg border border-gray-200 p-2 px-2.5 cursor-pointer bg-white ${dropdownOpen ? "shadow-lg" : ""}`}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                {data.purpose && data.purpose.length > 0 ? data.purpose.join(", ") : "Select Purposes"}
+              </div>
+              {dropdownOpen && (
+                <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg w-[37.5rem]">
+                  <div className="p-2 space-y-2">
+                    <InputLabel className={`flex items-center ${data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      <input
+                        type="checkbox"
+                        value="Seek for Postgraduate"
+                        checked={data.purpose.includes("Seek for Postgraduate")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        disabled={data.purpose.includes("For Showcase")}
+                        className="mr-2"
+                      />
+                      Seek for Postgraduate
+                    </InputLabel>
+                    <InputLabel className={`flex items-center ${data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      <input
+                        type="checkbox"
+                        value="Seek for Academician Collaboration"
+                        checked={data.purpose.includes("Seek for Academician Collaboration")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        disabled={data.purpose.includes("For Showcase")}
+                        className="mr-2"
+                      />
+                      Seek for Academician Collaboration
+                    </InputLabel>
+                    <InputLabel className={`flex items-center ${data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      <input
+                        type="checkbox"
+                        value="Seek for Industrial Collaboration"
+                        checked={data.purpose.includes("Seek for Industrial Collaboration")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        disabled={data.purpose.includes("For Showcase")}
+                        className="mr-2"
+                      />
+                      Seek for Industrial Collaboration
+                    </InputLabel>
+                    <InputLabel className={`flex items-center ${data.purpose.some(item =>
+                      item === "Seek for Postgraduate" ||
+                      item === "Seek for Academician Collaboration" ||
+                      item === "Seek for Industrial Collaboration"
+                    ) ? "opacity-50 cursor-not-allowed" : ""}`}>
+                      <input
+                        type="checkbox"
+                        value="For Showcase"
+                        checked={data.purpose.includes("For Showcase")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        disabled={data.purpose.some(item =>
+                          item === "Seek for Postgraduate" ||
+                          item === "Seek for Academician Collaboration" ||
+                          item === "Seek for Industrial Collaboration"
+                        )}
+                        className="mr-2"
+                      />
+                      For Showcase
+                    </InputLabel>
+                  </div>
+                </div>
+              )}
+              {errors.purpose && <p className="text-red-500 text-xs mt-1">{errors.purpose}</p>}
             </div>
           </div>
 
+          {/* Dates: Start Date, End Date, Application Deadline, Duration */}
           {!data.purpose.includes("For Showcase") && (
             <>
-              {/* Start and End Date */}
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
@@ -329,11 +259,10 @@ export default function Create() {
                   <input
                     type="date"
                     value={data.start_date}
-                    onChange={(e) => {
-                      setData("start_date", e.target.value);
-                    }}
+                    onChange={(e) => setData("start_date", e.target.value)}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
+                  {errors.start_date && <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>}
                 </div>
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
@@ -343,15 +272,12 @@ export default function Create() {
                     type="date"
                     value={data.end_date}
                     min={data.start_date || ""}
-                    onChange={(e) => {
-                      setData("end_date", e.target.value);
-                    }}
+                    onChange={(e) => setData("end_date", e.target.value)}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
+                  {errors.end_date && <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>}
                 </div>
               </div>
-
-              {/* Application Deadline and Duration */}
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <InputLabel className="mt-1 block text-gray-700 font-medium">
@@ -363,8 +289,8 @@ export default function Create() {
                     onChange={(e) => setData("application_deadline", e.target.value)}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
+                  {errors.application_deadline && <p className="text-red-500 text-xs mt-1">{errors.application_deadline}</p>}
                 </div>
-
                 <div>
                   <InputLabel className="mt-1 block text-gray-700 font-medium">
                     Duration (in months)
@@ -376,6 +302,7 @@ export default function Create() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                     placeholder="Enter grant duration"
                   />
+                  {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
                 </div>
               </div>
             </>
@@ -394,6 +321,7 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter sponsor"
               />
+              {errors.sponsored_by && <p className="text-red-500 text-xs mt-1">{errors.sponsored_by}</p>}
             </div>
             <div>
               <InputLabel htmlFor="category" className="block text-gray-700 font-medium">
@@ -412,27 +340,21 @@ export default function Create() {
                 <option value="Fundamental Research">Fundamental Research</option>
                 <option value="Applied Research">Applied Research</option>
                 <option value="Fundamental + Applied">Fundamental + Applied</option>
-                <option value="Knowledge Transfer Program (KTP)">
-                  Knowledge Transfer Program (KTP)
-                </option>
-                <option value="CSR (Corporate Social Responsibility)">
-                  CSR (Corporate Social Responsibility)
-                </option>
+                <option value="Knowledge Transfer Program (KTP)">Knowledge Transfer Program (KTP)</option>
+                <option value="CSR (Corporate Social Responsibility)">CSR (Corporate Social Responsibility)</option>
               </select>
-              {errors.category && (
-                <p className="text-red-500 text-xs mt-1">{errors.category}</p>
-              )}
+              {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
             </div>
           </div>
 
-          {/* Field of Research and Grant Supervisor */}
+          {/* Field of Research and Supervisor */}
           <div className="grid grid-cols-2 gap-8">
             {(data.category === "Fundamental Research" ||
               data.category === "Applied Research" ||
               data.category === "Fundamental + Applied") && (
               <div className="w-full">
                 <InputLabel htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
-                  Field of Research Structure : Field of Research - Research Area - Niche Domain
+                  Field of Research Structure: Field of Research - Research Area - Niche Domain
                 </InputLabel>
                 <Select
                   id="field_of_research"
@@ -446,8 +368,7 @@ export default function Create() {
                   value={data.field_of_research?.map((selectedValue) => {
                     const matchedOption = researchOptions.find(
                       (option) =>
-                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
-                        selectedValue
+                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
                     );
                     return {
                       value: selectedValue,
@@ -462,6 +383,7 @@ export default function Create() {
                   }}
                   placeholder="Search and select fields of research..."
                 />
+                {errors.field_of_research && <p className="text-red-500 text-xs mt-1">{errors.field_of_research}</p>}
               </div>
             )}
 
@@ -477,6 +399,7 @@ export default function Create() {
                 <option value="Own Name">Own Name</option>
                 <option value="On Behalf">On Behalf</option>
               </select>
+              {errors.supervisor_category && <p className="text-red-500 text-xs mt-1">{errors.supervisor_category}</p>}
             </div>
           </div>
 
@@ -492,6 +415,7 @@ export default function Create() {
                   onChange={(e) => setData("supervisor_name", e.target.value)}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 />
+                {errors.supervisor_name && <p className="text-red-500 text-xs mt-1">{errors.supervisor_name}</p>}
               </div>
 
               <div>
@@ -517,11 +441,12 @@ export default function Create() {
                     </option>
                   ))}
                 </select>
+                {errors.university && <p className="text-red-500 text-xs mt-1">{errors.university}</p>}
               </div>
             </div>
           )}
 
-          {/* Email and Contact Number */}
+          {/* Email and Origin Country */}
           <div className="grid grid-cols-2 gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">Email</InputLabel>
@@ -532,7 +457,6 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter email"
               />
-              {/* Use Personal Email Checkbox */}
               <div className="mt-2 flex items-center">
                 <input
                   type="checkbox"
@@ -551,6 +475,7 @@ export default function Create() {
                   Use personal email ({auth.email})
                 </InputLabel>
               </div>
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
 
             <div>
@@ -559,6 +484,7 @@ export default function Create() {
                 value={data.origin_country}
                 onChange={(value) => setData("origin_country", value)}
               />
+              {errors.origin_country && <p className="text-red-500 text-xs mt-1">{errors.origin_country}</p>}
             </div>
           </div>
 
@@ -572,6 +498,7 @@ export default function Create() {
                     isNotSpecify={true}
                     onChange={(value) => setData("student_nationality", value)}
                   />
+                  {errors.student_nationality && <p className="text-red-500 text-xs mt-1">{errors.student_nationality}</p>}
                 </div>
 
                 <div>
@@ -589,6 +516,7 @@ export default function Create() {
                     <option value="Master">Master</option>
                     <option value="Ph.D.">Ph.D.</option>
                   </select>
+                  {errors.student_level && <p className="text-red-500 text-xs mt-1">{errors.student_level}</p>}
                 </div>
               </div>
 
@@ -614,9 +542,11 @@ export default function Create() {
                   <option value="Scholarship Recipient">Scholarship Recipient</option>
                   <option value="Intern">Intern</option>
                 </select>
+                {errors.appointment_type && <p className="text-red-500 text-xs mt-1">{errors.appointment_type}</p>}
               </div>
             </>
           )}
+
           {(data.purpose.includes("Seek for Academician Collaboration") &&
             data.purpose.includes("Seek for Industrial Collaboration")) && (
             <div>
@@ -625,15 +555,11 @@ export default function Create() {
               </InputLabel>
               <textarea
                 value={data.purpose_of_collaboration}
-                onChange={(e) =>
-                  setData("purpose_of_collaboration", e.target.value || "")
-                }
+                onChange={(e) => setData("purpose_of_collaboration", e.target.value || "")}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter Purpose of Collaboration"
               ></textarea>
-              {errors.purpose_of_collaboration && (
-                <p className="text-red-500 text-xs mt-1">{errors.purpose_of_collaboration}</p>
-              )}
+              {errors.purpose_of_collaboration && <p className="text-red-500 text-xs mt-1">{errors.purpose_of_collaboration}</p>}
             </div>
           )}
 
@@ -647,6 +573,7 @@ export default function Create() {
                 onChange={(e) => setData("image", e.target.files[0])}
                 className="w-full rounded-lg border-gray-200 py-2 text-sm"
               />
+              {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
             </div>
             <div>
               <InputLabel className="block text-gray-700 font-medium">Upload Attachment</InputLabel>
@@ -655,6 +582,7 @@ export default function Create() {
                 onChange={(e) => setData("attachment", e.target.files[0])}
                 className="w-full rounded-lg border-gray-200 py-2 text-sm"
               />
+              {errors.attachment && <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>}
             </div>
           </div>
 
@@ -672,6 +600,7 @@ export default function Create() {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   placeholder="Enter amount (e.g., 5000.00)"
                 />
+                {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
               </div>
             )}
 
@@ -686,13 +615,10 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter application URL"
               />
-              {errors.application_url && (
-                <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>
-              )}
+              {errors.application_url && <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>}
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex space-x-4">
             <button
               type="button"

@@ -7,6 +7,7 @@ const Carousel = ({
   fadeDuration = 300,
   className = "",
   label, // Optional label prop
+  seoPrefix = "/events/", // Default prefix; adjust as needed
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
@@ -82,6 +83,16 @@ const Carousel = ({
     handleSwipeEnd(e.clientX);
   };
 
+  // Click handler for navigating to an item's SEO-friendly link.
+  const handleItemClick = () => {
+    const currentItem = items[currentIndex];
+    if (currentItem && currentItem.url) {
+      // The url attribute stored in the database is just the last part.
+      // Prepend the appropriate prefix (for example, '/events/') to form the full URL.
+      window.location.href = `${seoPrefix}${currentItem.url}`;
+    }
+  };
+
   return (
     <div
       className={`relative h-full ${className}`}
@@ -100,9 +111,10 @@ const Carousel = ({
       )}
       {items.length > 0 && (
         <>
-          {/* Render the current slide with fade animation */}
+          {/* Render the current slide with fade animation and clickable wrapper */}
           <div
-            className={`transform h-full transition-opacity duration-${fadeDuration} ${
+            onClick={handleItemClick}
+            className={`cursor-pointer transform h-full transition-opacity duration-${fadeDuration} ${
               fade ? "opacity-100" : "opacity-0"
             }`}
           >

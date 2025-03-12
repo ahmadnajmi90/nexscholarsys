@@ -58,6 +58,7 @@ class RoleProfileController extends Controller
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
             'researchOptions' => $researchOptions,
+            'skills' => \App\Models\Skill::all(),
         ]);
     }
 
@@ -298,9 +299,14 @@ class RoleProfileController extends Controller
                         $validatedData['skills'] = null;
                         logger()->info('Skills are empty; deleting field.');
                     } else {
-                        $validatedData['skills'] = $decoded;
-                        logger()->info('Skills:', $validatedData['skills']);
+                        // Ensure skills are stored as an array of integer IDs.
+                        $validatedData['skills'] = array_map('intval', $decoded);
+                        logger()->info('Skills stored as IDs:', $validatedData['skills']);
                     }
+                } elseif (is_array($validatedData['skills'])) {
+                    // If already an array, convert each element to an integer.
+                    $validatedData['skills'] = array_map('intval', $validatedData['skills']);
+                    logger()->info('Skills stored as IDs:', $validatedData['skills']);
                 }
             }
 

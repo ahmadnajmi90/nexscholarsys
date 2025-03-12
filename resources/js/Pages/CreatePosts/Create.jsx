@@ -148,10 +148,23 @@ export default function Create() {
                 <option value="Academic Research">Academic Research</option>
                 <option value="Student Life">Student Life</option>
                 <option value="Career Opportunities">Career Opportunities</option>
-                <option value="Events & Workshops">Events & Workshops</option>
-                <option value="Scholarships & Funding">
-                  Scholarships & Funding
-                </option>
+                <option value="News">News</option>
+                <option value="Startup">Startup</option>
+                <option value="Technology">Technology</option>
+                <option value="Research Methodology">Research Methodology</option>
+                <option value="Research Paradigm">Research Paradigm</option>
+                <option value="Science & Technology">Science & Technology</option>
+                <option value="Social Science">Social Science</option>
+                <option value="Community">Community</option>
+                <option value="Award">Award</option>
+                <option value="Achievement">Achievement</option>
+                <option value="Business">Business</option>
+                <option value="Economy">Economy</option>
+                <option value="Health">Health</option>
+                <option value="Science">Science</option>
+                <option value="Sport">Sport</option>
+                <option value="Corporate Social Responsibility">Corporate Social Responsibility</option>
+                <option value="Knowledge Transfer Program">Knowledge Transfer Program</option>
               </select>
               {errors.category && (
                 <p className="text-red-500 text-xs mt-1">{errors.category}</p>

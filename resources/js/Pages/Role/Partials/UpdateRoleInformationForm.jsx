@@ -14,7 +14,8 @@ export default function UpdateProfileInformation({
     universities,
     faculties,
     className = '',
-    researchOptions
+    researchOptions,
+    skills
 }) {
     const academician = usePage().props.academician; // Related academician data
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
@@ -24,8 +25,8 @@ export default function UpdateProfileInformation({
     return (
         <>
             {academician && (<AcademicianForm academician={academician} researchOptions={researchOptions}/> )}
-            {postgraduate && (<PostgraduateForm postgraduate={postgraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} /> )}
-            {undergraduate && (<UndergraduateForm undergraduate={undergraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} /> )}
+            {postgraduate && (<PostgraduateForm postgraduate={postgraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} skills={skills}/> )}
+            {undergraduate && (<UndergraduateForm undergraduate={undergraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} skills={skills} /> )}
         </>
     );
 }

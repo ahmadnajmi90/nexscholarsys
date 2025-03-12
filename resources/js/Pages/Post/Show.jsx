@@ -71,7 +71,7 @@ export default function Show() {
 
           {/* Content */}
           <div
-            className="mb-4 text-gray-700 text-justify"
+            className="mb-4 text-gray-700 prose"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
 

@@ -146,7 +146,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
 
           {/* Project Name */}
           <div>
-          <InputLabel>
+            <InputLabel>
               Project Name <span className="text-red-500">*</span>
             </InputLabel>
             <input
@@ -161,7 +161,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
 
           {/* Project Description */}
           <div>
-          <InputLabel>
+            <InputLabel>
               Project Description <span className="text-red-500">*</span>
             </InputLabel>
             <div
@@ -185,10 +185,10 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Purpose (Multiselect) */}
             <div ref={dropdownRef}>
-            <InputLabel>
+              <InputLabel>
                 Purpose (Multiselect)
               </InputLabel>
               <div
@@ -200,7 +200,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 {data.purpose && data.purpose.length > 0 ? data.purpose.join(", ") : "Select Purposes"}
               </div>
               {dropdownOpen && (
-                <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg w-[37.5rem]">
+                <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg w-full">
                   <div className="p-2 space-y-2">
                     <InputLabel
                       className={`flex items-center ${
@@ -281,7 +281,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             </div>
 
             <div>
-            <InputLabel>
+              <InputLabel>
                 Project Theme
               </InputLabel>
               <select
@@ -295,14 +295,15 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 <option value="Science & Technology">Science & Technology</option>
                 <option value="Social Science">Social Science</option>
               </select>
+              {errors.project_theme && <p className="text-red-500 text-xs mt-1">{errors.project_theme}</p>}
             </div>
           </div>
 
           {!data.purpose.includes("For Showcase") && (
             <>
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                <InputLabel>
+                  <InputLabel>
                     Start Date
                   </InputLabel>
                   <input
@@ -311,9 +312,10 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     onChange={(e) => setData("start_date", e.target.value)}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
+                  {errors.start_date && <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>}
                 </div>
                 <div>
-                <InputLabel>
+                  <InputLabel>
                     End Date
                   </InputLabel>
                   <input
@@ -323,12 +325,13 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     onChange={(e) => setData("end_date", e.target.value)}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
+                  {errors.end_date && <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                <InputLabel>
+                  <InputLabel>
                     Application Deadline
                   </InputLabel>
                   <input
@@ -337,10 +340,11 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     onChange={(e) => setData("application_deadline", e.target.value)}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
+                  {errors.application_deadline && <p className="text-red-500 text-xs mt-1">{errors.application_deadline}</p>}
                 </div>
 
                 <div>
-                <InputLabel>
+                  <InputLabel>
                     Duration (in months)
                   </InputLabel>
                   <input
@@ -350,14 +354,15 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                     placeholder="Enter grant duration"
                   />
+                  {errors.duration && <p className="text-red-500 text-xs mt-1">{errors.duration}</p>}
                 </div>
               </div>
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-            <InputLabel>
+              <InputLabel>
                 Sponsored By
               </InputLabel>
               <input
@@ -367,9 +372,10 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter sponsor"
               />
+              {errors.sponsored_by && <p className="text-red-500 text-xs mt-1">{errors.sponsored_by}</p>}
             </div>
             <div>
-            <InputLabel>
+              <InputLabel>
                 Category
               </InputLabel>
               <select
@@ -396,7 +402,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {(data.category === "Fundamental Research" ||
               data.category === "Applied Research" ||
               data.category === "Fundamental + Applied") && (
@@ -432,11 +438,12 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   }}
                   placeholder="Search and select fields of research..."
                 />
+                {errors.field_of_research && <p className="text-red-500 text-xs mt-1">{errors.field_of_research}</p>}
               </div>
             )}
 
             <div>
-            <InputLabel>
+              <InputLabel>
                 Project Supervisor / Project Leader
               </InputLabel>
               <select
@@ -447,13 +454,14 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 <option value="Own Name">Own Name</option>
                 <option value="On Behalf">On Behalf</option>
               </select>
+              {errors.supervisor_category && <p className="text-red-500 text-xs mt-1">{errors.supervisor_category}</p>}
             </div>
           </div>
 
           {data.supervisor_category === "On Behalf" && (
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-              <InputLabel>
+                <InputLabel>
                   Supervisor / Project Leader Name
                 </InputLabel>
                 <input
@@ -462,10 +470,11 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   onChange={(e) => setData("supervisor_name", e.target.value)}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 />
+                {errors.supervisor_name && <p className="text-red-500 text-xs mt-1">{errors.supervisor_name}</p>}
               </div>
 
               <div>
-              <InputLabel>
+                <InputLabel>
                   University
                 </InputLabel>
                 <select
@@ -487,11 +496,12 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     </option>
                   ))}
                 </select>
+                {errors.university && <p className="text-red-500 text-xs mt-1">{errors.university}</p>}
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputLabel>
                 Email
@@ -503,6 +513,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter email"
               />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               <div className="mt-2 flex items-center">
                 <input
                   type="checkbox"
@@ -525,18 +536,20 @@ export default function Edit({ postProject, auth, researchOptions, universities 
 
             <div>
               <NationalityForm title={"Project Origin Country"} value={data.origin_country} onChange={(value) => setData("origin_country", value)} />
+              {errors.origin_country && <p className="text-red-500 text-xs mt-1">{errors.origin_country}</p>}
             </div>
           </div>
 
           {data.purpose.includes("Seek for Postgraduate") && (
             <>
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <NationalityForm title={"Student Nationality"} value={data.student_nationality} isNotSpecify={true} onChange={(value) => setData("student_nationality", value)} />
+                  {errors.student_nationality && <p className="text-red-500 text-xs mt-1">{errors.student_nationality}</p>}
                 </div>
 
                 <div>
-                <InputLabel>
+                  <InputLabel>
                     Level of Study
                   </InputLabel>
                   <select
@@ -550,11 +563,12 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     <option value="Master">Master</option>
                     <option value="Ph.D.">Ph.D.</option>
                   </select>
+                  {errors.student_level && <p className="text-red-500 text-xs mt-1">{errors.student_level}</p>}
                 </div>
               </div>
 
               <div>
-              <InputLabel>
+                <InputLabel>
                   Appointment Type
                 </InputLabel>
                 <select
@@ -575,6 +589,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   <option value="Scholarship Recipient">Scholarship Recipient</option>
                   <option value="Intern">Intern</option>
                 </select>
+                {errors.appointment_type && <p className="text-red-500 text-xs mt-1">{errors.appointment_type}</p>}
               </div>
             </>
           )}
@@ -594,9 +609,9 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-            <InputLabel>
+              <InputLabel>
                 Upload Image
               </InputLabel>
               <input
@@ -618,9 +633,10 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   </a>
                 </p>
               )}
+              {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
             </div>
             <div>
-            <InputLabel>
+              <InputLabel>
                 Upload Attachment
               </InputLabel>
               <input
@@ -641,10 +657,11 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   </a>
                 </p>
               )}
+              {errors.attachment && <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {data.purpose !== "Seek for Postgraduate" && (
               <div>
                 <InputLabel>
@@ -657,6 +674,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   placeholder="Enter amount (e.g., 5000.00)"
                 />
+                {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
               </div>
             )}
 

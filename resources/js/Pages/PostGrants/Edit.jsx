@@ -91,7 +91,6 @@ export default function Edit({ postGrant, auth }) {
     console.log("Form Data Contents:");
     for (let pair of formData.entries()) {
       console.log(pair[0] + ": " + pair[1]);
-      console.log(pair[0] + ": " + typeof pair[1]);
     }
 
     post(route("post-grants.update", postGrant.id), {
@@ -173,7 +172,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Start and End Date */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputLabel htmlFor="start_date" value="Start Date (Grant)" />
               <input
@@ -183,6 +182,9 @@ export default function Edit({ postGrant, auth }) {
                 onChange={(e) => setData("start_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.start_date && (
+                <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>
+              )}
             </div>
             <div>
               <InputLabel htmlFor="end_date" value="End Date (Grant)" />
@@ -194,11 +196,14 @@ export default function Edit({ postGrant, auth }) {
                 onChange={(e) => setData("end_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.end_date && (
+                <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>
+              )}
             </div>
           </div>
 
           {/* Application Deadline and Grant Type */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputLabel htmlFor="application_deadline" value="Application Deadline" />
               <input
@@ -208,6 +213,9 @@ export default function Edit({ postGrant, auth }) {
                 onChange={(e) => setData("application_deadline", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.application_deadline && (
+                <p className="text-red-500 text-xs mt-1">{errors.application_deadline}</p>
+              )}
             </div>
 
             <div>
@@ -248,7 +256,8 @@ export default function Edit({ postGrant, auth }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          {/* Grant Theme and Cycle */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div ref={grantThemeRef}>
               <InputLabel htmlFor="grant_theme" value="Grant Theme (Multiselect)" />
               <div
@@ -263,7 +272,7 @@ export default function Edit({ postGrant, auth }) {
                   : "Select Grant Themes"}
               </div>
               {dropdownOpen && (
-                <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-[37.5rem]">
+                <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded shadow-lg w-full">
                   <div className="p-2 space-y-2">
                     <InputLabel className="flex items-center" htmlFor="theme-science" value="Science & Technology">
                       <input
@@ -317,7 +326,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Sponsored By and Contact Email */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputLabel htmlFor="sponsored_by" value="Sponsored By" />
               <input
@@ -328,6 +337,9 @@ export default function Edit({ postGrant, auth }) {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter sponsor"
               />
+              {errors.sponsored_by && (
+                <p className="text-red-500 text-xs mt-1">{errors.sponsored_by}</p>
+              )}
             </div>
             <div>
               <InputLabel htmlFor="email" value="Contact Email" />
@@ -339,6 +351,9 @@ export default function Edit({ postGrant, auth }) {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter email"
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
               <div className="mt-2 flex items-center">
                 <input
                   type="checkbox"
@@ -359,7 +374,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Website and Country */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputLabel htmlFor="website" value="Website / Link" />
               <input
@@ -380,11 +395,14 @@ export default function Edit({ postGrant, auth }) {
                 value={data.country}
                 onChange={(value) => setData("country", value)}
               />
+              {errors.country && (
+                <p className="text-red-500 text-xs mt-1">{errors.country}</p>
+              )}
             </div>
           </div>
 
           {/* Image and Attachment Upload */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <InputLabel htmlFor="image" value="Upload Image" />
               <input
@@ -394,6 +412,9 @@ export default function Edit({ postGrant, auth }) {
                 onChange={(e) => setData("image", e.target.files[0])}
                 className="mt-1 block w-full border-gray-300 rounded-md"
               />
+              {errors.image && (
+                <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+              )}
               {postGrant.image && (
                 <p className="text-gray-600 text-sm mt-2">
                   Current Image:{" "}
@@ -416,6 +437,9 @@ export default function Edit({ postGrant, auth }) {
                 onChange={(e) => setData("attachment", e.target.files[0])}
                 className="mt-1 block w-full border-gray-300 rounded-md"
               />
+              {errors.attachment && (
+                <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
+              )}
               {postGrant.attachment && (
                 <p className="text-gray-600 text-sm mt-2">
                   Current Attachment:{" "}

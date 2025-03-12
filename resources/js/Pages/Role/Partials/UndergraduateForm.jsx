@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import NationalityForm from "./NationalityForm";
 import Select from 'react-select';
 
-export default function UndergraduateForm({ universities, faculties, className = '', researchOptions }) {
+export default function UndergraduateForm({ universities, faculties, className = '', researchOptions, skills }) {
   const undergraduate = usePage().props.undergraduate;
 
   const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
@@ -23,7 +23,7 @@ export default function UndergraduateForm({ universities, faculties, className =
     university: undergraduate?.university || '',
     faculty: undergraduate?.faculty || '',
     matric_no: undergraduate?.matric_no || '',
-    // Use "skills" as a JSON array
+    // Use "skills" as a JSON array (storing skill IDs)
     skills: undergraduate?.skills || [],
     interested_do_research: undergraduate?.interested_do_research || false,
     expected_graduate: undergraduate?.expected_graduate || '',
@@ -66,42 +66,11 @@ export default function UndergraduateForm({ universities, faculties, className =
     faculty => faculty.university_id === parseInt(selectedUniversity)
   );
 
-  // Define a skillsOptions array (extend as needed)
-  const skillsOptions = [
-    { value: 'programming', label: 'Programming Skills' },
-    { value: 'data_analysis', label: 'Data Analysis' },
-    { value: 'machine_learning', label: 'Machine Learning' },
-    { value: 'statistical_analysis', label: 'Statistical Analysis' },
-    { value: 'research_methodology', label: 'Research Methodology' },
-    { value: 'project_management', label: 'Project Management' },
-    { value: 'experimental_design', label: 'Experimental Design' },
-    { value: 'quantitative_analysis', label: 'Quantitative Analysis' },
-    { value: 'qualitative_analysis', label: 'Qualitative Analysis' },
-    { value: 'technical_writing', label: 'Technical Writing' },
-    { value: 'public_speaking', label: 'Public Speaking' },
-    { value: 'grant_writing', label: 'Grant Writing' },
-    { value: 'software_development', label: 'Software Development' },
-    { value: 'data_visualization', label: 'Data Visualization' },
-    { value: 'web_development', label: 'Web Development' },
-    { value: 'database_management', label: 'Database Management' },
-    { value: 'simulation', label: 'Simulation' },
-    { value: 'modeling', label: 'Modeling' },
-    { value: 'critical_thinking', label: 'Critical Thinking' },
-    { value: 'problem_solving', label: 'Problem Solving' },
-    { value: 'literature_review', label: 'Literature Review' },
-    { value: 'data_mining', label: 'Data Mining' },
-    { value: 'cloud_computing', label: 'Cloud Computing' },
-    { value: 'statistical_software', label: 'Statistical Software Proficiency' },
-    { value: 'survey_design', label: 'Survey Design' },
-    { value: 'data_cleaning', label: 'Data Cleaning' },
-    { value: 'communication', label: 'Communication Skills' },
-    { value: 'interdisciplinary_collaboration', label: 'Interdisciplinary Collaboration' },
-    { value: 'innovation', label: 'Innovation' },
-    { value: 'academic_writing', label: 'Academic Writing' },
-    { value: 'research_ethics', label: 'Research Ethics' },
-    { value: 'strategic_planning', label: 'Strategic Planning' },
-    { value: 'networking', label: 'Networking' },
-  ];
+  // Create options for skills from the skills prop (each skill has id and name)
+  const skillsOptions = skills.map(skill => ({
+    value: skill.id,
+    label: skill.name,
+  }));
 
   // Handler for research preference change (if interested in research)
   const handleResearchPreferenceChange = (selectedOptions) => {
@@ -127,7 +96,6 @@ export default function UndergraduateForm({ universities, faculties, className =
     });
     for (let [key, value] of formData.entries()) {
         console.log(`${key}: ${value}`);
-        console.log(`${key}: ${typeof value}`);
     }
     post(route("role.update"), {
       data: formData,
@@ -148,11 +116,9 @@ export default function UndergraduateForm({ universities, faculties, className =
   const closeModal = () => setIsModalOpen(false);
   const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
 
-  // Local state for active tab (if needed)
-  const [activeTab, setActiveTab] = useState('profiles');
-
   return (
-    <div className="pb-8">
+    // Responsive container
+    <div className="max-w-7xl mx-auto px-4 pb-8">
       {/* Header Section with Background and Profile Picture */}
       <div className="w-full bg-white pb-12 shadow-md relative mb-4">
         {/* Background Image */}
@@ -246,391 +212,361 @@ export default function UndergraduateForm({ universities, faculties, className =
         </div>
       )}
 
-      {/* Tabs Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto flex space-x-8 px-4 sm:px-6">
-          {['profiles', 'projects', 'works', 'teams', 'network', 'activity', 'more'].map(tab => (
-            <button
-              key={tab}
-              className={`py-4 px-3 font-medium text-sm ${activeTab === tab ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tab Content Section */}
-      <div className="w-full px-4 py-8">
-        {activeTab === 'profiles' && (
-          <section className={className}>
-            <header>
-              <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>
-              <p className="mt-1 text-sm text-gray-600">Update your personal information.</p>
-            </header>
-            <form onSubmit={submit} className="mt-6 space-y-6">
-              {/* Full Name */}
-              <div className="grid grid-cols-1 gap-6 w-full">
-                <div className="w-full">
-                  <InputLabel htmlFor="full_name" value="Full Name" required />
-                  <TextInput
-                    id="full_name"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.full_name}
-                    onChange={e => setData('full_name', e.target.value)}
-                    required
-                    autoComplete="full_name"
-                  />
-                  <InputError className="mt-2" message={errors.full_name} />
-                </div>
-              </div>
-
-              {/* Bio */}
-              <div className="grid grid-cols-1 gap-6 w-full">
-                <div className="w-full">
-                  <InputLabel htmlFor="bio" value="Short Bio" />
-                  <textarea
-                    id="bio"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-4"
-                    value={data.bio}
-                    onChange={e => setData('bio', e.target.value)}
-                    rows={4}
-                  />
-                  <InputError className="mt-2" message={errors.bio} />
-                </div>
-              </div>
-
-              {/* Degree Details: Bachelor and CGPA */}
-              <div className="grid grid-cols-2 gap-6 w-full">
-                <div>
-                  <InputLabel htmlFor="bachelor" value="Name of Bachelor Degree" />
-                  <TextInput
-                    id="bachelor"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.bachelor}
-                    onChange={e => setData('bachelor', e.target.value)}
-                  />
-                  <InputError className="mt-2" message={errors.bachelor} />
-                </div>
-                <div>
-                  <InputLabel htmlFor="CGPA_bachelor" value="CGPA Bachelor" />
-                  <TextInput
-                    id="CGPA_bachelor"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.CGPA_bachelor}
-                    onChange={e => setData('CGPA_bachelor', e.target.value)}
-                  />
-                  <InputError className="mt-2" message={errors.CGPA_bachelor} />
-                </div>
-              </div>
-
-              {/* Contact Details: Phone and Nationality */}
-              <div className="grid grid-cols-2 gap-6 w-full">
-                <div>
-                  <InputLabel htmlFor="phone_number" value="Phone Number" required />
-                  <TextInput
-                    id="phone_number"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.phone_number}
-                    onChange={e => setData('phone_number', e.target.value)}
-                    autoComplete="tel"
-                  />
-                  <InputError className="mt-2" message={errors.phone_number} />
-                </div>
-                <div>
-                  <NationalityForm title="Nationality" value={data.nationality} onChange={value => setData('nationality', value)} />
-                </div>
-              </div>
-
-              {/* English Proficiency & Current Undergraduate Status */}
-              <div className="grid grid-cols-2 gap-6 w-full">
-                <div>
-                  <InputLabel htmlFor="english_proficiency_level" value="English Proficiency Level" />
-                  <select
-                    id="english_proficiency_level"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.english_proficiency_level}
-                    onChange={e => setData('english_proficiency_level', e.target.value)}
-                  >
-                    <option value="" hidden>Select English Proficiency Level</option>
-                    <option value="Beginner">Beginner</option>
-                    <option value="Elementary">Elementary</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Upper Intermediate">Upper Intermediate</option>
-                    <option value="Advanced">Advanced</option>
-                  </select>
-                  <InputError className="mt-2" message={errors.english_proficiency_level} />
-                </div>
-                <div>
-                  <InputLabel htmlFor="current_undergraduate_status" value="Current Undergraduate Status" />
-                  <select
-                    id="current_undergraduate_status"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.current_undergraduate_status}
-                    onChange={handleStatusChange}
-                  >
-                    <option value="" hidden>Select your status</option>
-                    <option value="Not registered yet">Not registered yet</option>
-                    <option value="Registered">Registered</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* University and Matric No (if Registered) */}
-              {data.current_undergraduate_status === "Registered" && (
-                <div className="grid grid-cols-2 gap-6 w-full">
-                  <div>
-                    <InputLabel htmlFor="university" value="University" required />
-                    <select
-                      id="university"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      value={selectedUniversity || ''}
-                      onChange={e => {
-                        const uniId = parseInt(e.target.value);
-                        setSelectedUniversity(uniId);
-                        setData('university', uniId);
-                      }}
-                    >
-                      <option value="" hidden>Select your University</option>
-                      {universities.map(uni => (
-                        <option key={uni.id} value={uni.id}>{uni.full_name}</option>
-                      ))}
-                    </select>
-                    <InputError className="mt-2" message={errors.university} />
-                  </div>
-
-                    <div className="w-full">
-                        <InputLabel htmlFor="faculty" value="Faculty" required />
-                        <select
-                            id="faculty"
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                            value={data.faculty}
-                            onChange={e => setData('faculty', e.target.value)}
-                        >
-                            <option value="" hidden>Select your Faculty</option>
-                            {filteredFaculties.map(fac => (
-                            <option key={fac.id} value={fac.id}>{fac.name}</option>
-                            ))}
-                        </select>
-                        <InputError className="mt-2" message={errors.faculty} />
-                    </div>
-                </div>
-              )}
-
-              {/* Skills (Multiselect) */}
-              <div className="grid grid-cols-2 gap-6 w-full">
-              {data.current_undergraduate_status === "Registered" && (
-                <div>
-                    <InputLabel htmlFor="matric_no" value="Matric No." required />
-                    <TextInput
-                      id="matric_no"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      value={data.matric_no}
-                      onChange={e => setData('matric_no', e.target.value)}
-                      required
-                      autoComplete="matric_no"
-                    />
-                    <InputError className="mt-2" message={errors.matric_no} />
-                  </div>)}
-
-                <div className="w-full">
-                  <InputLabel htmlFor="skills" value="Skills" />
-                  <Select
-                    id="skills"
-                    isMulti
-                    options={skillsOptions}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    classNamePrefix="select"
-                    value={data.skills?.map(selectedValue => {
-                      const matched = skillsOptions.find(opt => opt.value === selectedValue);
-                      return matched || { value: selectedValue, label: selectedValue };
-                    })}
-                    onChange={selectedOptions => {
-                      const values = selectedOptions.map(opt => opt.value);
-                      setData('skills', values);
-                    }}
-                    placeholder="Select your skills..."
-                  />
-                </div>
-              </div>
-
-              {/* Interested to do research and Expected Graduate */}
-              <div className="grid grid-cols-2 gap-6 w-full">
-                <div>
-                  <InputLabel htmlFor="interested_do_research" value="Interested to do research after bachelor degree?" />
-                  <select
-                    id="interested_do_research"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.interested_do_research ? "true" : "false"}
-                    onChange={e => setData('interested_do_research', e.target.value === "true")}
-                  >
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
-                  </select>
-                </div>
-                <div>
-                  <InputLabel htmlFor="expected_graduate" value="Expected Graduate (Month/Year)" required />
-                  <TextInput
-                    id="expected_graduate"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.expected_graduate}
-                    onChange={e => setData('expected_graduate', e.target.value)}
-                    required
-                    autoComplete="expected_graduate"
-                  />
-                  <InputError className="mt-2" message={errors.expected_graduate} />
-                </div>
-              </div>
-
-              {/* If interested in research, show Research Preference Multiselect */}
-              {data.interested_do_research === true && (
-                <div className="w-full">
-                  <InputLabel htmlFor="research_preference" value="Preferred Field of Research" />
-                  <Select
-                    id="research_preference"
-                    isMulti
-                    options={researchOptions.map(option => ({
-                      value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
-                      label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
-                    }))}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    classNamePrefix="select"
-                    value={data.research_preference?.map(selectedValue => {
-                      const matchedOption = researchOptions.find(option =>
-                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
-                      );
-                      return {
-                        value: selectedValue,
-                        label: matchedOption
-                          ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                          : selectedValue,
-                      };
-                    })}
-                    onChange={handleResearchPreferenceChange}
-                    placeholder="Select preferred field of research..."
-                  />
-                </div>
-              )}
-
-              {/* CV File */}
-              <div className="w-full">
-                <InputLabel htmlFor="CV_file" value="Upload CV (Max 5MB)" />
-                <input
-                  type="file"
-                  id="CV_file"
-                  accept=".pdf,.doc,.docx"
-                  className="mt-1 block w-full border-gray-300 rounded-md py-2"
-                  onChange={e => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      if (file.size <= 5 * 1024 * 1024) {
-                        setData('CV_file', file);
-                      } else {
-                        alert("File size exceeds 5MB. Please upload a smaller file.");
-                      }
-                    }
-                  }}
-                />
-                {data.CV_file && (
-                  <div className="mt-2">
-                    {typeof data.CV_file === 'string' ? (
-                      <a
-                        href={`/storage/${data.CV_file}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-500 hover:underline"
-                      >
-                        View Current File: {data.CV_file.split('/').pop()}
-                      </a>
-                    ) : (
-                      <p className="text-sm text-gray-500">File Selected: {data.CV_file.name}</p>
-                    )}
-                  </div>
-                )}
-                <InputError className="mt-2" message={errors.CV_file} />
-              </div>
-
-              {/* Website */}
-              <div className="w-full">
-                <InputLabel htmlFor="website" value="Website" />
-                <TextInput
-                  id="website"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  value={data.website}
-                  onChange={e => setData('website', e.target.value)}
-                  autoComplete="url"
-                />
-                <InputError className="mt-2" message={errors.website} />
-              </div>
-
-              {/* LinkedIn */}
-              <div className="w-full">
-                <InputLabel htmlFor="linkedin" value="LinkedIn" />
-                <TextInput
-                  id="linkedin"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  value={data.linkedin}
-                  onChange={e => setData('linkedin', e.target.value)}
-                  autoComplete="url"
-                />
-                <InputError className="mt-2" message={errors.linkedin} />
-              </div>
-
-              {/* Google Scholar */}
-              <div className="w-full">
-                <InputLabel htmlFor="google_scholar" value="Google Scholar" />
-                <TextInput
-                  id="google_scholar"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  value={data.google_scholar}
-                  onChange={e => setData('google_scholar', e.target.value)}
-                  autoComplete="url"
-                />
-                <InputError className="mt-2" message={errors.google_scholar} />
-              </div>
-
-              {/* ResearchGate */}
-              <div className="w-full">
-                <InputLabel htmlFor="researchgate" value="ResearchGate" />
-                <TextInput
-                  id="researchgate"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  value={data.researchgate}
-                  onChange={e => setData('researchgate', e.target.value)}
-                  autoComplete="url"
-                />
-                <InputError className="mt-2" message={errors.researchgate} />
-              </div>
-
-              {/* Buttons */}
-              <div className="flex items-center gap-4">
-                <PrimaryButton disabled={processing}>Save</PrimaryButton>
-                <Link
-                  href={route("create-posts.index")}
-                  className="inline-block rounded-lg bg-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-400"
-                >
-                  Cancel
-                </Link>
-                <Transition
-                  show={recentlySuccessful}
-                  enter="transition ease-in-out"
-                  enterFrom="opacity-0"
-                  leave="transition ease-in-out"
-                  leaveTo="opacity-0"
-                >
-                  <p className="text-sm text-gray-600">Saved.</p>
-                </Transition>
-              </div>
-            </form>
-          </section>
-        )}
-        {activeTab === 'projects' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Additional tab content */}
+      {/* Form Section */}
+      <section className={className}>
+        <header>
+          <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>
+          <p className="mt-1 text-sm text-gray-600">Update your personal information.</p>
+        </header>
+        <form onSubmit={submit} className="mt-6 space-y-6">
+          {/* Full Name */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <div className="w-full">
+              <InputLabel htmlFor="full_name" value="Full Name" required />
+              <TextInput
+                id="full_name"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.full_name}
+                onChange={e => setData('full_name', e.target.value)}
+                required
+                autoComplete="full_name"
+              />
+              <InputError className="mt-2" message={errors.full_name} />
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Bio */}
+          <div className="grid grid-cols-1 gap-6 w-full">
+            <div className="w-full">
+              <InputLabel htmlFor="bio" value="Short Bio" />
+              <textarea
+                id="bio"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-4"
+                value={data.bio}
+                onChange={e => setData('bio', e.target.value)}
+                rows={4}
+              />
+              <InputError className="mt-2" message={errors.bio} />
+            </div>
+          </div>
+
+          {/* Degree Details: Bachelor and CGPA */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <div>
+              <InputLabel htmlFor="bachelor" value="Name of Bachelor Degree" />
+              <TextInput
+                id="bachelor"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.bachelor}
+                onChange={e => setData('bachelor', e.target.value)}
+              />
+              <InputError className="mt-2" message={errors.bachelor} />
+            </div>
+            <div>
+              <InputLabel htmlFor="CGPA_bachelor" value="CGPA Bachelor" />
+              <TextInput
+                id="CGPA_bachelor"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.CGPA_bachelor}
+                onChange={e => setData('CGPA_bachelor', e.target.value)}
+              />
+              <InputError className="mt-2" message={errors.CGPA_bachelor} />
+            </div>
+          </div>
+
+          {/* Contact Details: Phone and Nationality */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <div>
+              <InputLabel htmlFor="phone_number" value="Phone Number" required />
+              <TextInput
+                id="phone_number"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.phone_number}
+                onChange={e => setData('phone_number', e.target.value)}
+                autoComplete="tel"
+              />
+              <InputError className="mt-2" message={errors.phone_number} />
+            </div>
+            <div>
+              <NationalityForm title="Nationality" value={data.nationality} onChange={value => setData('nationality', value)} />
+            </div>
+          </div>
+
+          {/* English Proficiency & Current Undergraduate Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <div>
+              <InputLabel htmlFor="english_proficiency_level" value="English Proficiency Level" />
+              <select
+                id="english_proficiency_level"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.english_proficiency_level}
+                onChange={e => setData('english_proficiency_level', e.target.value)}
+              >
+                <option value="" hidden>Select English Proficiency Level</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Elementary">Elementary</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Upper Intermediate">Upper Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+              <InputError className="mt-2" message={errors.english_proficiency_level} />
+            </div>
+            <div>
+              <InputLabel htmlFor="current_undergraduate_status" value="Current Undergraduate Status" />
+              <select
+                id="current_undergraduate_status"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.current_undergraduate_status}
+                onChange={handleStatusChange}
+              >
+                <option value="" hidden>Select your status</option>
+                <option value="Not registered yet">Not registered yet</option>
+                <option value="Registered">Registered</option>
+              </select>
+            </div>
+          </div>
+
+          {/* University and Matric No (if Registered) */}
+          {data.current_undergraduate_status === "Registered" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+              <div>
+                <InputLabel htmlFor="university" value="University" required />
+                <select
+                  id="university"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  value={selectedUniversity || ''}
+                  onChange={e => {
+                    const uniId = parseInt(e.target.value);
+                    setSelectedUniversity(uniId);
+                    setData('university', uniId);
+                  }}
+                >
+                  <option value="" hidden>Select your University</option>
+                  {universities.map(uni => (
+                    <option key={uni.id} value={uni.id}>{uni.full_name}</option>
+                  ))}
+                </select>
+                <InputError className="mt-2" message={errors.university} />
+              </div>
+
+              <div className="w-full">
+                <InputLabel htmlFor="faculty" value="Faculty" required />
+                <select
+                  id="faculty"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  value={data.faculty}
+                  onChange={e => setData('faculty', e.target.value)}
+                >
+                  <option value="" hidden>Select your Faculty</option>
+                  {filteredFaculties.map(fac => (
+                    <option key={fac.id} value={fac.id}>{fac.name}</option>
+                  ))}
+                </select>
+                <InputError className="mt-2" message={errors.faculty} />
+              </div>
+            </div>
+          )}
+
+          {/* Skills (Multiselect) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            {data.current_undergraduate_status === "Registered" && (
+              <div>
+                <InputLabel htmlFor="matric_no" value="Matric No." required />
+                <TextInput
+                  id="matric_no"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  value={data.matric_no}
+                  onChange={e => setData('matric_no', e.target.value)}
+                  required
+                  autoComplete="matric_no"
+                />
+                <InputError className="mt-2" message={errors.matric_no} />
+              </div>
+            )}
+            <div className="w-full">
+              <InputLabel htmlFor="skills" value="Skills" />
+              <Select
+                id="skills"
+                isMulti
+                options={skillsOptions}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                classNamePrefix="select"
+                value={data.skills?.map(selectedId => {
+                  const found = skillsOptions.find(option => option.value === selectedId);
+                  return found || { value: selectedId, label: selectedId };
+                })}
+                onChange={selectedOptions => {
+                  const values = selectedOptions.map(opt => opt.value);
+                  setData('skills', values);
+                }}
+                placeholder="Select your skills..."
+              />
+            </div>
+          </div>
+
+          {/* Interested to do research and Expected Graduate */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <div>
+              <InputLabel htmlFor="interested_do_research" value="Interested to do research after bachelor degree?" />
+              <select
+                id="interested_do_research"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.interested_do_research ? "true" : "false"}
+                onChange={e => setData('interested_do_research', e.target.value === "true")}
+              >
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            <div>
+              <InputLabel htmlFor="expected_graduate" value="Expected Graduate (Month/Year)" required />
+              <TextInput
+                id="expected_graduate"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.expected_graduate}
+                onChange={e => setData('expected_graduate', e.target.value)}
+                required
+                autoComplete="expected_graduate"
+              />
+              <InputError className="mt-2" message={errors.expected_graduate} />
+            </div>
+          </div>
+
+          {/* If interested in research, show Research Preference Multiselect */}
+          {data.interested_do_research === true && (
+            <div className="w-full">
+              <InputLabel htmlFor="research_preference" value="Preferred Field of Research" />
+              <Select
+                id="research_preference"
+                isMulti
+                options={researchOptions.map(option => ({
+                  value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
+                  label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
+                }))}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                classNamePrefix="select"
+                value={data.research_preference?.map(selectedValue => {
+                  const matchedOption = researchOptions.find(option =>
+                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
+                  );
+                  return {
+                    value: selectedValue,
+                    label: matchedOption
+                      ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                      : selectedValue,
+                  };
+                })}
+                onChange={handleResearchPreferenceChange}
+                placeholder="Select preferred field of research..."
+              />
+            </div>
+          )}
+
+          {/* CV File */}
+          <div className="w-full">
+            <InputLabel htmlFor="CV_file" value="Upload CV (Max 5MB)" />
+            <input
+              type="file"
+              id="CV_file"
+              accept=".pdf,.doc,.docx"
+              className="mt-1 block w-full border-gray-300 rounded-md py-2"
+              onChange={e => {
+                const file = e.target.files[0];
+                if (file) {
+                  if (file.size <= 5 * 1024 * 1024) {
+                    setData('CV_file', file);
+                  } else {
+                    alert("File size exceeds 5MB. Please upload a smaller file.");
+                  }
+                }
+              }}
+            />
+            {data.CV_file && (
+              <div className="mt-2">
+                {typeof data.CV_file === 'string' ? (
+                  <a
+                    href={`/storage/${data.CV_file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:underline"
+                  >
+                    View Current File: {data.CV_file.split('/').pop()}
+                  </a>
+                ) : (
+                  <p className="text-sm text-gray-500">File Selected: {data.CV_file.name}</p>
+                )}
+              </div>
+            )}
+            <InputError className="mt-2" message={errors.CV_file} />
+          </div>
+
+          {/* Website */}
+          <div className="w-full">
+            <InputLabel htmlFor="website" value="Website" />
+            <TextInput
+              id="website"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              value={data.website}
+              onChange={e => setData('website', e.target.value)}
+              autoComplete="url"
+            />
+            <InputError className="mt-2" message={errors.website} />
+          </div>
+
+          {/* LinkedIn */}
+          <div className="w-full">
+            <InputLabel htmlFor="linkedin" value="LinkedIn" />
+            <TextInput
+              id="linkedin"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              value={data.linkedin}
+              onChange={e => setData('linkedin', e.target.value)}
+              autoComplete="url"
+            />
+            <InputError className="mt-2" message={errors.linkedin} />
+          </div>
+
+          {/* Google Scholar */}
+          <div className="w-full">
+            <InputLabel htmlFor="google_scholar" value="Google Scholar" />
+            <TextInput
+              id="google_scholar"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              value={data.google_scholar}
+              onChange={e => setData('google_scholar', e.target.value)}
+              autoComplete="url"
+            />
+            <InputError className="mt-2" message={errors.google_scholar} />
+          </div>
+
+          {/* ResearchGate */}
+          <div className="w-full">
+            <InputLabel htmlFor="researchgate" value="ResearchGate" />
+            <TextInput
+              id="researchgate"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              value={data.researchgate}
+              onChange={e => setData('researchgate', e.target.value)}
+              autoComplete="url"
+            />
+            <InputError className="mt-2" message={errors.researchgate} />
+          </div>
+
+          {/* Save Button */}
+          <div className="flex items-center gap-4">
+            <PrimaryButton disabled={processing}>Save</PrimaryButton>
+            <Transition
+              show={recentlySuccessful}
+              enter="transition ease-in-out"
+              enterFrom="opacity-0"
+              leave="transition ease-in-out"
+              leaveTo="opacity-0"
+            >
+              <p className="text-sm text-gray-600">Saved.</p>
+            </Transition>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import useRoles from '@/Hooks/useRoles';
 import { Head, usePage } from '@inertiajs/react';
 
 export default function Edit() {
-    const { universities, postgraduate, academician, faculties, researchOptions } = usePage().props;
+    const { universities, postgraduate, academician, faculties, researchOptions, skills } = usePage().props;
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const [isDesktop, setIsDesktop] = useState(false); // Detect screen size
 
@@ -43,6 +43,7 @@ export default function Edit() {
                                 academician={academician}
                                 faculties={faculties}
                                 researchOptions={researchOptions}
+                                skills={skills}
                                 className="max-w-xl"
                             />
                         ) : (
@@ -52,6 +53,7 @@ export default function Edit() {
                                 academician={academician}
                                 faculties={faculties}
                                 researchOptions={researchOptions}
+                                skills={skills}
                                 className="max-w-xl"
                             />
                         )}

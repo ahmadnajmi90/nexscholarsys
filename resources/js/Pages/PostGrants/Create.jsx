@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, usePage } from "@inertiajs/react";
 import MainLayout from "../../Layouts/MainLayout";
-import { useState, useEffect, useRef } from "react";
 import NationalityForm from "../Role/Partials/NationalityForm";
 import Select from "react-select";
 import ReactQuill from "react-quill";
@@ -84,6 +83,7 @@ export default function Create() {
       }
     });
 
+    // Log form data entries for debugging
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
       console.log(`${key}: ${typeof value}`);
@@ -181,6 +181,9 @@ export default function Create() {
                 onChange={(e) => setData("start_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.start_date && (
+                <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>
+              )}
             </div>
             <div>
               <InputLabel htmlFor="end_date" value="End Date (Grant)" />
@@ -192,6 +195,9 @@ export default function Create() {
                 onChange={(e) => setData("end_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.end_date && (
+                <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>
+              )}
             </div>
           </div>
 
@@ -206,6 +212,9 @@ export default function Create() {
                 onChange={(e) => setData("application_deadline", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.application_deadline && (
+                <p className="text-red-500 text-xs mt-1">{errors.application_deadline}</p>
+              )}
             </div>
             <div>
               <InputLabel htmlFor="grant_type" value="Grant Type" />
@@ -322,6 +331,9 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter sponsor"
               />
+              {errors.sponsored_by && (
+                <p className="text-red-500 text-xs mt-1">{errors.sponsored_by}</p>
+              )}
             </div>
             <div>
               <InputLabel htmlFor="email" value="Contact Email" />
@@ -333,6 +345,9 @@ export default function Create() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter email"
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
               <div className="mt-2 flex items-center">
                 <input
                   type="checkbox"
@@ -377,6 +392,9 @@ export default function Create() {
                 isNotSpecify={true}
                 onChange={(value) => setData("country", value)}
               />
+              {errors.country && (
+                <p className="text-red-500 text-xs mt-1">{errors.country}</p>
+              )}
             </div>
           </div>
 
@@ -391,6 +409,9 @@ export default function Create() {
                 onChange={(e) => setData("image", e.target.files[0])}
                 className="mt-1 block w-full border-gray-300 rounded-md py-2 text-sm"
               />
+              {errors.image && (
+                <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+              )}
             </div>
             <div>
               <InputLabel htmlFor="attachment" value="Upload Attachment" />
@@ -400,6 +421,9 @@ export default function Create() {
                 onChange={(e) => setData("attachment", e.target.files[0])}
                 className="mt-1 block w-full border-gray-300 rounded-md py-2 text-sm"
               />
+              {errors.attachment && (
+                <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
+              )}
             </div>
           </div>
 

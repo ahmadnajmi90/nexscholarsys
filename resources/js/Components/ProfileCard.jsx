@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, usePage } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter } from "react-icons/fa";
 
@@ -19,6 +20,25 @@ const ProfileGridWithDualFilter = ({
   users,
   researchOptions,
 }) => {
+  // Global skills from the backend (all skills in the table)
+  const { skills } = usePage().props;
+
+  // Determine which skills are actually used in profilesData
+  const uniqueProfileSkillIds = new Set(
+    profilesData.flatMap((profile) =>
+      Array.isArray(profile.skills) ? profile.skills : []
+    )
+  );
+
+  // Filter the global skills list so that only skills used in profilesData are shown
+  const filteredSkillsOptions = (Array.isArray(skills) ? skills : [])
+  .filter((skill) => uniqueProfileSkillIds.has(skill.id))
+  .map((skill) => ({
+    value: skill.id,
+    label: capitalize(skill.name),
+  }));
+
+
   const [selectedArea, setSelectedArea] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState([]);
   const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
@@ -62,18 +82,6 @@ const ProfileGridWithDualFilter = ({
         : "Unknown Research Area",
     };
   });
-
-  // Extract unique skills and capitalize labels
-  const uniqueSkills = Array.from(
-    new Set(
-      profilesData.flatMap((profile) =>
-        Array.isArray(profile.skills) ? profile.skills : []
-      )
-    )
-  ).map((skill) => ({
-    value: skill,
-    label: capitalize(skill),
-  }));
 
   // Extract unique university IDs and map them using universitiesList
   const uniqueUniversityIds = Array.from(
@@ -163,14 +171,14 @@ const ProfileGridWithDualFilter = ({
             selectedValues={selectedArea}
             setSelectedValues={setSelectedArea}
           />
-          {(isPostgraduateList || isUndergraduateList) &&(
+          {(isPostgraduateList || isUndergraduateList) && (
             <FilterDropdown
-            label="Skills"
-            options={uniqueSkills}
-            selectedValues={selectedSkills}
-            setSelectedValues={setSelectedSkills}
-          />)}
-          
+              label="Skills"
+              options={filteredSkillsOptions}
+              selectedValues={selectedSkills}
+              setSelectedValues={setSelectedSkills}
+            />
+          )}
           {!isFacultyAdminDashboard && (
             <FilterDropdown
               label="University"
@@ -450,7 +458,9 @@ const ProfileGridWithDualFilter = ({
                     selectedProfile.skills.length > 0 && (
                       <p className="text-gray-600">
                         <span className="font-semibold">Skills:</span>{" "}
-                        {selectedProfile.skills.map((s) => capitalize(s)).join(", ")}
+                        {selectedProfile.skills
+                          .map((s) => capitalize(s))
+                          .join(", ")}
                       </p>
                     )}
                   {!isUndergraduateList && (

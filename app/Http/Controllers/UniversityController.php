@@ -10,6 +10,7 @@ use App\Models\FieldOfResearch;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Skill;
 
 class UniversityController extends Controller
 {
@@ -87,6 +88,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::all(),
+            'skills' => Skill::all(),
         ]);
     }
 
@@ -119,6 +121,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::all(),
+            'skills'        => Skill::all(),
         ]);
     }
 

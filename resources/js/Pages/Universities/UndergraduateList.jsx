@@ -4,7 +4,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
 import { Link } from '@inertiajs/react';
 
-const UndergraduateList = ({ undergraduates, faculties, researchOptions, universities, faculty, university, users }) => {
+const UndergraduateList = ({ undergraduates, faculties, researchOptions, universities, faculty, university, users, skills }) => {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
   
   return (
@@ -65,7 +65,8 @@ const UndergraduateList = ({ undergraduates, faculties, researchOptions, univers
           isPostgraduateList={true}  // Set to false for undergraduates
           isUndergraduateList={true}  // Set to true for undergraduates
           users={users}
-          researchOptions={researchOptions}/>
+          researchOptions={researchOptions}
+          skills={skills}/>
     </MainLayout>
   );
 };

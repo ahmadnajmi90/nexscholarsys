@@ -37,6 +37,8 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Models\Academician;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
+use App\Models\FieldOfResearch;
+use App\Models\UniversityList;
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
@@ -98,7 +100,7 @@ Route::get('/', function () {
         'projects' => $projects,
         'grants' => $grants,
     ]);
-});
+})->name('welcome');
 
 Route::get('/welcome/posts/{post}', function (CreatePost $post) {
     return Inertia::render('Post/WelcomePostShow', [
@@ -108,6 +110,64 @@ Route::get('/welcome/posts/{post}', function (CreatePost $post) {
         'undergraduates' => Undergraduate::all(),
     ]);
 })->name('welcome.posts.show');
+
+Route::get('/welcome/events/{event}', function (PostEvent $event) {
+    $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+    $researchOptions = [];
+    foreach ($fieldOfResearches as $field) {
+        foreach ($field->researchAreas as $area) {
+            foreach ($area->nicheDomains as $domain) {
+                $researchOptions[] = [
+                    'field_of_research_id' => $field->id,
+                    'field_of_research_name' => $field->name,
+                    'research_area_id' => $area->id,
+                    'research_area_name' => $area->name,
+                    'niche_domain_id' => $domain->id,
+                    'niche_domain_name' => $domain->name,
+                ];
+            }
+        }
+    }
+
+    return Inertia::render('Event/WelcomeEventShow', [
+        'event' => $event,
+        'academicians' => Academician::all(),
+        'researchOptions' => $researchOptions,
+    ]);
+})->name('welcome.events.show');
+
+Route::get('/welcome/projects/{project}', function (PostProject $project) {
+    $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+    $researchOptions = [];
+    foreach ($fieldOfResearches as $field) {
+        foreach ($field->researchAreas as $area) {
+            foreach ($area->nicheDomains as $domain) {
+                $researchOptions[] = [
+                    'field_of_research_id' => $field->id,
+                    'field_of_research_name' => $field->name,
+                    'research_area_id' => $area->id,
+                    'research_area_name' => $area->name,
+                    'niche_domain_id' => $domain->id,
+                    'niche_domain_name' => $domain->name,
+                ];
+            }
+        }
+    }
+
+    return Inertia::render('Project/WelcomeProjectShow', [
+        'project' => $project,
+        'academicians' => Academician::all(),
+        'researchOptions' => $researchOptions,
+        'universities' => UniversityList::all(),
+    ]);
+})->name('welcome.projects.show');
+
+Route::get('/welcome/grants/{grant}', function (PostGrant $grant) {
+    return Inertia::render('Grant/WelcomeGrantShow', [
+        'grant' => $grant,
+        'academicians' => Academician::all(),
+    ]);
+})->name('welcome.grants.show');
 
 Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
 Route::get('/universities/{university}/faculties', [UniversityController::class, 'faculties'])->name('universities.faculties'); // Faculty list

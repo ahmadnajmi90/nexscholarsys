@@ -9,11 +9,9 @@ import InputLabel from '@/Components/InputLabel';
 import Select from "react-select";
 
 export default function Edit({ postEvent, auth }) {
-  // Include researchOptions from Inertia props
   const { auth: user, researchOptions } = usePage().props;
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
   
-  // Add field_of_research property with a default value (from postEvent if available)
   const { data, setData, post, processing, errors } = useForm({
     event_name: postEvent.event_name || "",
     description: postEvent.description || "",
@@ -39,8 +37,6 @@ export default function Edit({ postEvent, auth }) {
     if (e) e.preventDefault();
 
     const formData = new FormData();
-
-    // Add all data to FormData
     Object.keys(data).forEach((key) => {
       if (data[key] instanceof File) {
         formData.append(key, data[key]);
@@ -49,7 +45,6 @@ export default function Edit({ postEvent, auth }) {
       }
     });
 
-    // Debug FormData
     console.log("Form Data Contents:");
     for (let pair of formData.entries()) {
       console.log(pair[0] + ": " + pair[1]);
@@ -86,7 +81,9 @@ export default function Edit({ postEvent, auth }) {
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               placeholder="Enter Event Name"
             />
-            {errors.event_name && <p className="text-red-500 text-xs mt-1">{errors.event_name}</p>}
+            {errors.event_name && (
+              <p className="text-red-500 text-xs mt-1">{errors.event_name}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -107,7 +104,9 @@ export default function Edit({ postEvent, auth }) {
                 placeholder="Enter description"
               />
             </div>
-            {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+            {errors.description && (
+              <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+            )}
           </div>
 
           {/* Event Type and Mode */}
@@ -130,7 +129,9 @@ export default function Edit({ postEvent, auth }) {
                 <option value="Seminar">Seminar</option>
                 <option value="Webinar">Webinar</option>
               </select>
-              {errors.event_type && <p className="text-red-500 text-xs mt-1">{errors.event_type}</p>}
+              {errors.event_type && (
+                <p className="text-red-500 text-xs mt-1">{errors.event_type}</p>
+              )}
             </div>
 
             <div>
@@ -149,7 +150,9 @@ export default function Edit({ postEvent, auth }) {
                 <option value="Online">Online</option>
                 <option value="Hybrid">Hybrid</option>
               </select>
-              {errors.event_mode && <p className="text-red-500 text-xs mt-1">{errors.event_mode}</p>}
+              {errors.event_mode && (
+                <p className="text-red-500 text-xs mt-1">{errors.event_mode}</p>
+              )}
             </div>
           </div>
 
@@ -163,6 +166,9 @@ export default function Edit({ postEvent, auth }) {
                 onChange={(e) => setData("start_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.start_date && (
+                <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>
+              )}
             </div>
             <div>
               <InputLabel>End Date</InputLabel>
@@ -173,6 +179,9 @@ export default function Edit({ postEvent, auth }) {
                 onChange={(e) => setData("end_date", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.end_date && (
+                <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>
+              )}
             </div>
           </div>
 
@@ -186,6 +195,9 @@ export default function Edit({ postEvent, auth }) {
                 onChange={(e) => setData("start_time", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.start_time && (
+                <p className="text-red-500 text-xs mt-1">{errors.start_time}</p>
+              )}
             </div>
             <div>
               <InputLabel>End Time</InputLabel>
@@ -195,6 +207,9 @@ export default function Edit({ postEvent, auth }) {
                 onChange={(e) => setData("end_time", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.end_time && (
+                <p className="text-red-500 text-xs mt-1">{errors.end_time}</p>
+              )}
             </div>
           </div>
 
@@ -215,7 +230,9 @@ export default function Edit({ postEvent, auth }) {
                 <option value="Science and Technology">Science and Technology</option>
                 <option value="Social Science">Social Science</option>
               </select>
-              {errors.event_theme && <p className="text-red-500 text-xs mt-1">{errors.event_theme}</p>}
+              {errors.event_theme && (
+                <p className="text-red-500 text-xs mt-1">{errors.event_theme}</p>
+              )}
             </div>
             <div>
               <InputLabel>Field of Research</InputLabel>
@@ -228,24 +245,29 @@ export default function Edit({ postEvent, auth }) {
                 }))}
                 className="mt-1"
                 classNamePrefix="select"
-                value={data.field_of_research?.map((selectedValue) => {
-                  const matchedOption = researchOptions.find(
-                    (option) =>
-                      `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
-                  );
-                  return {
-                    value: selectedValue,
-                    label: matchedOption
-                      ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                      : selectedValue,
-                  };
-                })}
+                value={
+                  data.field_of_research?.map((selectedValue) => {
+                    const matchedOption = researchOptions.find(
+                      (option) =>
+                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
+                    );
+                    return {
+                      value: selectedValue,
+                      label: matchedOption
+                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                        : selectedValue,
+                    };
+                  })
+                }
                 onChange={(selectedOptions) => {
                   const selectedValues = selectedOptions.map((option) => option.value);
                   setData("field_of_research", selectedValues);
                 }}
                 placeholder="Search and select fields of research..."
               />
+              {errors.field_of_research && (
+                <p className="text-red-500 text-xs mt-1">{errors.field_of_research}</p>
+              )}
             </div>
           </div>
 
@@ -260,6 +282,9 @@ export default function Edit({ postEvent, auth }) {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter registration URL"
               />
+              {errors.registration_url && (
+                <p className="text-red-500 text-xs mt-1">{errors.registration_url}</p>
+              )}
             </div>
             <div>
               <InputLabel>Registration Deadline</InputLabel>
@@ -269,6 +294,9 @@ export default function Edit({ postEvent, auth }) {
                 onChange={(e) => setData("registration_deadline", e.target.value)}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               />
+              {errors.registration_deadline && (
+                <p className="text-red-500 text-xs mt-1">{errors.registration_deadline}</p>
+              )}
             </div>
           </div>
 
@@ -283,7 +311,9 @@ export default function Edit({ postEvent, auth }) {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter venue"
               />
-              {errors.venue && <p className="text-red-500 text-xs mt-1">{errors.venue}</p>}
+              {errors.venue && (
+                <p className="text-red-500 text-xs mt-1">{errors.venue}</p>
+              )}
             </div>
             <div>
               <InputLabel>City</InputLabel>
@@ -294,10 +324,19 @@ export default function Edit({ postEvent, auth }) {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter city"
               />
-              {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+              {errors.city && (
+                <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+              )}
             </div>
             <div>
-              <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+              <NationalityForm
+                title={"Country"}
+                value={data.country}
+                onChange={(value) => setData('country', value)}
+              />
+              {errors.country && (
+                <p className="text-red-500 text-xs mt-1">{errors.country}</p>
+              )}
             </div>
           </div>
 
@@ -312,6 +351,9 @@ export default function Edit({ postEvent, auth }) {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 placeholder="Enter contact email"
               />
+              {errors.contact_email && (
+                <p className="text-red-500 text-xs mt-1">{errors.contact_email}</p>
+              )}
               {/* Use Personal Email Checkbox */}
               <div className="mt-2 flex items-center">
                 <input
@@ -340,6 +382,9 @@ export default function Edit({ postEvent, auth }) {
                 onChange={(e) => setData("image", e.target.files[0])}
                 className="mt-1 block w-full border-gray-300 rounded-md py-2"
               />
+              {errors.image && (
+                <p className="text-red-500 text-xs mt-1">{errors.image}</p>
+              )}
               {postEvent.image && (
                 <p className="text-gray-600 text-sm mt-2">
                   Current Image:{" "}
