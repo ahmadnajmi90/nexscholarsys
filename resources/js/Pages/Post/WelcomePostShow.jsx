@@ -107,7 +107,7 @@ export default function WelcomePostShow() {
 
           {/* Content */}
           <div
-            className="mb-4 text-gray-700 prose"
+            className="mb-4 text-gray-700 prose w-full text-justify max-w-none"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
 

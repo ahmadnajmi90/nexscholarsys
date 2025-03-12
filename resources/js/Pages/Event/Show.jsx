@@ -95,7 +95,7 @@ export default function Show() {
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2">Description</h2>
               <div 
-                className="text-gray-700 prose" 
+                className="mb-4 text-gray-700 prose w-full text-justify max-w-none" 
                 dangerouslySetInnerHTML={{ __html: event.description }} 
               />
             </div>
