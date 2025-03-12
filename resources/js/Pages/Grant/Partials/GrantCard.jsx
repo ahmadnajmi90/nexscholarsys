@@ -117,13 +117,13 @@ const GrantCard = ({ grants }) => {
               />
               <div className="p-6">
                 <h2
-                  className="text-xl font-semibold text-gray-800 truncate"
+                  className="text-lg font-semibold text-gray-800 truncate"
                   title={grant.title}
                 >
                   {grant.title}
                 </h2>
                 <p
-                  className="text-gray-600 mt-4 text-center font-extralight"
+                  className="text-gray-600 h-12 mt-4 text-center font-extralight"
                   style={{
                     maxWidth: "100%",
                     overflow: "hidden",

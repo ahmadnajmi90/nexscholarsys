@@ -70,11 +70,11 @@ const PostCard = ({ posts }) => {
                 className="w-full h-auto md:h-48 object-cover"
               />
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-800 truncate" title={post.title}>
+                <h2 className="text-lg font-semibold text-gray-800 truncate" title={post.title}>
                   {post.title}
                 </h2>
                 <p
-                  className="text-gray-600 mt-4 text-center font-extralight"
+                  className="text-gray-600 h-12 mt-4 text-center font-extralight"
                   style={{
                     maxWidth: "100%",
                     overflow: "hidden",

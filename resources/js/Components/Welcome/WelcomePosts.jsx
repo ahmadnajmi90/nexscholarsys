@@ -33,48 +33,38 @@ const WelcomePosts = ({ posts }) => {
         {/* Desktop View: Grid with 5 columns */}
         <div className="hidden md:grid md:grid-cols-5 gap-4">
           {totalPosts.map(post => (
-            <div
-              key={post.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col text-center pb-6 h-96"
-            >
-              <img
-                src={post.featured_image ? `/storage/${post.featured_image}` : "/storage/default.jpg"}
-                alt={post.title}
-                className="w-full h-48 object-cover"
-              />
-              {/* Content area grows to push the button to the bottom */}
-              <div className="p-6 flex-grow">
-                <h2
-                  className="text-xl font-semibold text-gray-800 truncate"
-                  title={post.title}
-                >
-                  {post.title}
-                </h2>
-                <p
-                  className="text-gray-600 mt-4 text-center font-extralight"
-                  style={{
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: post.content.replace(/<[^>]+>/g, '').substring(0, 100) + "..."
-                  }}
-                ></p>
-              </div>
-              {/* Button container */}
-              <div className="px-4 mt-auto pb-4">
-                <Link
-                  href={route('welcome.posts.show', post.url)}
-                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
-                >
-                  View Details
-                </Link>
-              </div>
+            <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8">
+            <img
+              src={post.featured_image ? `/storage/${post.featured_image}` : "/storage/default.jpg"}
+              alt={post.title}
+              className="w-full h-auto md:h-48 object-cover"
+            />
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-800 truncate" title={post.title}>
+                {post.title}
+              </h2>
+              <p
+                className="text-gray-600 h-12 mt-4 text-center font-extralight"
+                style={{
+                  maxWidth: "100%",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                }}
+                dangerouslySetInnerHTML={{ __html: post.content || "No content available." }}
+              ></p>
             </div>
+            <div className="px-4">
+              <a 
+                href={route('posts.show', post.url)}
+                className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
+              >
+                View Details
+              </a>
+            </div>
+          </div>
           ))}
         </div>
 

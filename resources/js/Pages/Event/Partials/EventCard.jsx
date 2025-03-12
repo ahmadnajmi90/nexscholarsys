@@ -184,13 +184,13 @@ const EventCard = ({ events, researchOptions }) => {
                 </div>
                 <div className="p-6">
                   <h2
-                    className="text-xl font-semibold text-gray-800 truncate"
+                    className="text-lg font-semibold text-gray-800 truncate"
                     title={event.event_name}
                   >
                     {event.event_name}
                   </h2>
                   <p
-                    className="text-gray-600 mt-4 text-center font-extralight"
+                    className="text-gray-600 h-12 mt-4 text-center font-extralight"
                     style={{
                       maxWidth: "100%",
                       overflow: "hidden",

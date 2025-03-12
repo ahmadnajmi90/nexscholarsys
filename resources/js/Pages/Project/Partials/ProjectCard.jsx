@@ -128,14 +128,14 @@ const ProjectCard = ({ projects }) => {
               />
               <div className="p-8">
                 <h2
-                  className="text-xl font-semibold text-gray-800 text-center truncate"
+                  className="text-lg font-semibold text-gray-800 text-center truncate"
                   style={{ maxWidth: "100%" }}
                   title={project.title}
                 >
                   {project.title}
                 </h2>
                 <p
-                  className="text-gray-600 mt-4 text-center font-extralight"
+                  className="text-gray-600 mt-4 h-12 text-center font-extralight"
                   style={{
                     maxWidth: "100%",
                     overflow: "hidden",

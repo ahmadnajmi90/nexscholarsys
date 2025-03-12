@@ -25,22 +25,19 @@ export default function ItemCard({ item, auth, type }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col text-center pb-6 w-[21rem] h-[24rem] md:w-full md:h-full">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8">
       <img
         src={item.image ? `/storage/${item.image}` : "/storage/default.jpg"}
         alt={title}
-        className="w-full h-48 object-cover"
+        className="w-full h-auto md:h-48 object-cover"
       />
       {/* Content container */}
-      <div className="p-6 flex-grow">
-        <h2
-          className="text-xl font-semibold text-gray-800 truncate"
-          title={title}
-        >
+      <div className="p-6">
+        <h2 className="text-xl font-semibold text-gray-800 truncate" title={title}>
           {title}
         </h2>
         <p
-          className="text-gray-600 mt-4 text-center font-extralight"
+          className="text-gray-600 mt-4 h-12 text-center font-extralight"
           style={{
             maxWidth: '100%',
             overflow: 'hidden',
@@ -53,10 +50,10 @@ export default function ItemCard({ item, auth, type }) {
         ></p>
       </div>
       {/* Button container */}
-      <div className="px-4 mt-auto pb-4">
+      <div className="px-4">
         <button
           onClick={handleViewDetails}
-          className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
+          className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
         >
           View Details
         </button>
