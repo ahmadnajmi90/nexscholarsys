@@ -63,10 +63,10 @@ class DashboardController extends Controller
                     ->where('last_activity', '>=', now()->subMinutes(5))
                     ->count(),
                 'clicksByType' => $this->getClickDetails(), // Corrected method call
-                'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date')->get(),
-                'posts' => CreatePost::orderBy('created_at')->get(),
-                'projects' => PostProject::where('application_deadline', '>=', now())->orderBy('application_deadline')->get(),
-                'grants' => PostGrant::where('application_deadline', '>=', now())->orderBy('application_deadline')->get(),
+                'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date', 'asc')->get(),
+                'posts' => CreatePost::orderBy('created_at', 'desc')->get(),
+                'projects' => PostProject::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
+                'grants' => PostGrant::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
                 'academicians' => $academicians ?? null,
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),
