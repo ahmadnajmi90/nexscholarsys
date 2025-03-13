@@ -191,6 +191,7 @@ const DashboardInsight = ({
             renderItem={renderPostItem}
             label="Post"
             seoPrefix="/posts/"
+            label_color="bg-blue-500"
           />
         </div>
 
@@ -204,6 +205,7 @@ const DashboardInsight = ({
               renderItem={renderEventItem}
               label="Event"
               seoPrefix="/events/"
+              label_color="bg-red-500"
             />
             <Carousel
               items={projects.slice(0, 5)}
@@ -212,6 +214,7 @@ const DashboardInsight = ({
               renderItem={renderProjectItem}
               label="Project"
               seoPrefix="/projects/"
+              label_color="bg-orange-500"
             />
           </div>
           <div className="h-1/2">
@@ -222,6 +225,7 @@ const DashboardInsight = ({
               renderItem={renderGrantItem}
               label="Grant"
               seoPrefix="/grants/"
+              label_color="bg-green-700"
             />
           </div>
         </div>

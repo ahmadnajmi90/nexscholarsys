@@ -144,7 +144,11 @@ export default function EventContent({ event, previous, next, academicians, rese
             <div>
               <div className="text-lg font-semibold">{author.full_name}</div>
               <div className="text-gray-500">
-                {event.created_at ? new Date(event.created_at).toLocaleDateString() : ""}
+                {event.created_at ? new Date(event.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }) : ""}
               </div>
             </div>
           </div>
@@ -158,7 +162,11 @@ export default function EventContent({ event, previous, next, academicians, rese
             <div>
               <div className="text-lg font-semibold">Admin</div>
               <div className="text-gray-500">
-                {event.created_at ? new Date(event.created_at).toLocaleDateString() : ""}
+                {event.created_at ? new Date(event.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }) : ""}
               </div>
             </div>
           </div>

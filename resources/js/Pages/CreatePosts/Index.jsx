@@ -38,7 +38,7 @@ const Index = () => {
     return (
         <MainLayout title="">
             {/* Center content with a max-width container */}
-            <div className="max-w-7xl mx-auto px-4">
+            <div className="max-w-8xl mx-auto px-4 pt-20 md:pt-0 lg:pt-0">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-semibold">Your Posts</h1>
                     <Link
@@ -68,7 +68,7 @@ const Index = () => {
                     <table className="min-w-full bg-white border">
                         <thead>
                             <tr>
-                                <th className="py-2 px-4 border-b">Title</th>
+                                <th className="py-2 px-4 border-b text-left">Title</th>
                                 <th className="py-2 px-4 border-b">Category</th>
                                 <th className="py-2 px-4 border-b">Date of Published</th>
                                 <th className="py-2 px-4 border-b">Statistics</th>
@@ -78,7 +78,7 @@ const Index = () => {
                         <tbody>
                             {createPosts.data.map(post => (
                                 <tr key={post.id} className="border-b">
-                                    <td className="py-2 px-4 font-semibold text-center">{post.title}</td>
+                                    <td className="py-2 px-4 font-semibold text-left">{post.title}</td>
                                     <td className="py-2 px-4 text-center">{post.category}</td>
                                     <td className="py-2 px-4 text-center">{formatDate(post.created_at)}</td>
                                     <td className="py-2 px-4 text-center">
@@ -112,6 +112,11 @@ const Index = () => {
                                             method="delete"
                                             as="button"
                                             title="Delete"
+                                            onClick={(e) => {
+                                                if (!window.confirm("Are you sure you want to delete this post?")) {
+                                                  e.preventDefault();
+                                                }
+                                              }}
                                             className="inline-block"
                                         >
                                             <div className="w-8 h-8 bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center rounded">
@@ -129,46 +134,57 @@ const Index = () => {
                 <div className="md:hidden">
                     {createPosts.data.map(post => (
                         <div key={post.id} className="bg-white rounded-lg shadow-md p-4 mb-4">
-                            <h2 className="text-lg font-semibold mb-2">{post.title}</h2>
-                            <p className="text-sm text-gray-500">Category: {post.category}</p>
-                            <p className="text-sm text-gray-500">Published: {formatDate(post.created_at)}</p>
-                            <p className="text-sm text-gray-500 flex items-center space-x-2">
-                                <span>Statistics:</span>
-                                <span className="flex items-center">
-                                    <FaEye className="w-4 h-4 mr-1" /> {post.total_views}
-                                </span>
-                                <span className="flex items-center">
-                                    <FaHeart className="w-4 h-4 mr-1 text-red-600" /> {post.total_likes}
-                                </span>
-                                <span className="flex items-center">
-                                    <FaShareAlt className="w-4 h-4 mr-1" /> {post.total_shares}
-                                </span>
-                            </p>
-                            <div className="mt-2 flex space-x-4">
-                                <Link
-                                    href={route('create-posts.edit', post.id)}
-                                    title="Edit"
-                                    className="inline-block"
-                                >
-                                    <div className="w-8 h-8 bg-blue-100 text-blue-500 hover:bg-blue-200 flex items-center justify-center rounded">
-                                        <PencilIcon className="w-5 h-5" />
-                                    </div>
-                                </Link>
-                                <Link
-                                    href={route('create-posts.destroy', post.id)}
-                                    method="delete"
-                                    as="button"
-                                    title="Delete"
-                                    className="inline-block"
-                                >
-                                    <div className="w-8 h-8 bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center rounded">
-                                        <TrashIcon className="w-5 h-5" />
-                                    </div>
-                                </Link>
+                        <h2 className="text-lg font-semibold mb-2">{post.title}</h2>
+                        <p className="text-sm text-gray-500">Category: {post.category}</p>
+                        <p className="text-sm text-gray-500">Published: {formatDate(post.created_at)}</p>
+                        
+                        <div className="flex justify-between items-center mt-2">
+                            {/* Statistics */}
+                            <div className="flex items-center space-x-2">
+                            <span>Statistics:</span>
+                            <span className="flex items-center">
+                                <FaEye className="w-4 h-4 mr-1" /> {post.total_views}
+                            </span>
+                            <span className="flex items-center">
+                                <FaHeart className="w-4 h-4 mr-1 text-red-600" /> {post.total_likes}
+                            </span>
+                            <span className="flex items-center">
+                                <FaShareAlt className="w-4 h-4 mr-1" /> {post.total_shares}
+                            </span>
+                            </div>
+                            
+                            {/* Edit & Delete Buttons */}
+                            <div className="flex space-x-4">
+                            <Link
+                                href={route('create-posts.edit', post.id)}
+                                title="Edit"
+                                className="inline-block"
+                            >
+                                <div className="w-8 h-8 bg-blue-100 text-blue-500 hover:bg-blue-200 flex items-center justify-center rounded">
+                                <PencilIcon className="w-5 h-5" />
+                                </div>
+                            </Link>
+                            <Link
+                                href={route('create-posts.destroy', post.id)}
+                                method="delete"
+                                as="button"
+                                title="Delete"
+                                onClick={(e) => {
+                                if (!window.confirm("Are you sure you want to delete this post?")) {
+                                    e.preventDefault();
+                                }
+                                }}
+                                className="inline-block"
+                            >
+                                <div className="w-8 h-8 bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center rounded">
+                                <TrashIcon className="w-5 h-5" />
+                                </div>
+                            </Link>
                             </div>
                         </div>
+                        </div>
                     ))}
-                </div>
+                    </div>
 
                 {/* Pagination Links */}
                 <div className="mt-4 flex justify-center">

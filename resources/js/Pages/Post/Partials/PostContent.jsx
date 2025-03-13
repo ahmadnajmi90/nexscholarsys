@@ -120,7 +120,11 @@ export default function PostContent({ post, previous, next, academicians, postgr
             />
             <div>
               <div className="text-lg font-semibold">{author.full_name}</div>
-              <div className="text-gray-500">{new Date(post.created_at).toLocaleDateString()}</div>
+              <div className="text-gray-500">{new Date(post.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}</div>
             </div>
           </div>
         ) : (
@@ -132,7 +136,11 @@ export default function PostContent({ post, previous, next, academicians, postgr
             />
             <div>
               <div className="text-lg font-semibold">Admin</div>
-              <div className="text-gray-500">{new Date(post.created_at).toLocaleDateString()}</div>
+              <div className="text-gray-500">{new Date(post.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}</div>
             </div>
           </div>
         )}

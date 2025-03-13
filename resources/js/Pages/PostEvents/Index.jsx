@@ -38,7 +38,7 @@ const Index = () => {
   return (
     <MainLayout title="">
       {/* Center the content */}
-      <div className="max-w-7xl w-full mx-auto px-4">
+      <div className="max-w-8xl mx-auto px-4 pt-20 md:pt-0 lg:pt-0">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold">Your Events</h1>
           <Link
@@ -68,7 +68,7 @@ const Index = () => {
           <table className="min-w-full bg-white border">
             <thead>
               <tr>
-                <th className="py-2 px-4 border-b">Title</th>
+                <th className="py-2 px-4 border-b text-left">Title</th>
                 <th className="py-2 px-4 border-b">Category</th>
                 <th className="py-2 px-4 border-b">Date of Published</th>
                 <th className="py-2 px-4 border-b">Statistics</th>
@@ -78,7 +78,7 @@ const Index = () => {
             <tbody>
               {postEvents.data.map(event => (
                 <tr key={event.id} className="border-b">
-                  <td className="py-2 px-4 font-semibold text-center">{event.event_name}</td>
+                  <td className="py-2 px-4 font-semibold text-left">{event.event_name}</td>
                   <td className="py-2 px-4 text-center">{event.event_type}</td>
                   <td className="py-2 px-4 text-center">{formatDate(event.created_at)}</td>
                   <td className="py-2 px-4 text-center">
@@ -112,6 +112,11 @@ const Index = () => {
                       method="delete"
                       as="button"
                       title="Delete"
+                      onClick={(e) => {
+                        if (!window.confirm("Are you sure you want to delete this event?")) {
+                          e.preventDefault();
+                        }
+                      }}
                       className="inline-block"
                     >
                       <div className="w-8 h-8 bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center rounded">
@@ -132,44 +137,53 @@ const Index = () => {
               <h2 className="text-lg font-semibold mb-2">{event.event_name}</h2>
               <p className="text-sm text-gray-500">Category: {event.event_type}</p>
               <p className="text-sm text-gray-500">Published: {formatDate(event.created_at)}</p>
-              <p className="text-sm text-gray-500 flex items-center space-x-2">
-                <span>Statistics:</span>
-                <span className="flex items-center">
-                  <FaEye className="w-4 h-4 mr-1" /> {event.total_views}
-                </span>
-                <span className="flex items-center">
-                  <FaHeart className="w-4 h-4 mr-1 text-red-600" /> {event.total_likes}
-                </span>
-                <span className="flex items-center">
-                  <FaShareAlt className="w-4 h-4 mr-1" /> {event.total_shares}
-                </span>
-              </p>
+              
+              <div className="mt-2 flex justify-between items-center">
+                <p className="text-sm text-gray-500 flex items-center space-x-2 m-0">
+                  <span>Statistics:</span>
+                  <span className="flex items-center">
+                    <FaEye className="w-4 h-4 mr-1" /> {event.total_views}
+                  </span>
+                  <span className="flex items-center">
+                    <FaHeart className="w-4 h-4 mr-1 text-red-600" /> {event.total_likes}
+                  </span>
+                  <span className="flex items-center">
+                    <FaShareAlt className="w-4 h-4 mr-1" /> {event.total_shares}
+                  </span>
+                </p>
 
-              <div className="mt-2 flex space-x-4">
-                <Link
-                  href={route('post-events.edit', event.id)}
-                  title="Edit"
-                  className="inline-block"
-                >
-                  <div className="w-8 h-8 bg-blue-100 text-blue-500 hover:bg-blue-200 flex items-center justify-center rounded">
-                    <PencilIcon className="w-5 h-5" />
-                  </div>
-                </Link>
-                <Link
-                  href={route('post-events.destroy', event.id)}
-                  method="delete"
-                  as="button"
-                  title="Delete"
-                  className="inline-block"
-                >
-                  <div className="w-8 h-8 bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center rounded">
-                    <TrashIcon className="w-5 h-5" />
-                  </div>
-                </Link>
+                <div className="flex space-x-2">
+                  <Link
+                    href={route('post-events.edit', event.id)}
+                    title="Edit"
+                    className="inline-block"
+                  >
+                    <div className="w-8 h-8 bg-blue-100 text-blue-500 hover:bg-blue-200 flex items-center justify-center rounded">
+                      <PencilIcon className="w-5 h-5" />
+                    </div>
+                  </Link>
+                  <Link
+                    href={route('post-events.destroy', event.id)}
+                    method="delete"
+                    as="button"
+                    title="Delete"
+                    onClick={(e) => {
+                      if (!window.confirm("Are you sure you want to delete this event?")) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="inline-block"
+                  >
+                    <div className="w-8 h-8 bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center rounded">
+                      <TrashIcon className="w-5 h-5" />
+                    </div>
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
         </div>
+
 
         {/* Pagination Links */}
         <div className="mt-4 flex justify-center">

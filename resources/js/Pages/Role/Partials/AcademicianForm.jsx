@@ -572,38 +572,43 @@ export default function AcademicianForm({ className = '', researchOptions }) {
               </div>
 
               {/* Research Expertise Searchable Dropdown */}
-              <div className="w-11/12">
+              <div className="w-full">
                 <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
                   Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
                 </label>
                 <Select
-                  id="research_expertise"
-                  isMulti
-                  options={researchOptions.map((option) => ({
-                    value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
-                    label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
-                  }))}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  classNamePrefix="select"
-                  value={data.research_expertise?.map((selectedValue) => {
-                    const matchedOption = researchOptions.find(
-                      (option) =>
-                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
-                        selectedValue
-                    );
-                    return {
-                      value: selectedValue,
-                      label: matchedOption
-                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                        : selectedValue,
-                    };
-                  })}
-                  onChange={(selectedOptions) => {
-                    const selectedValues = selectedOptions.map((option) => option.value);
-                    setData('research_expertise', selectedValues);
-                  }}
-                  placeholder="Select field of research..."
-                />
+  id="research_expertise"
+  isMulti
+  options={researchOptions.map((option) => ({
+    value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
+    label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
+  }))}
+  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm truncate" // apply truncate only if necessary on the container's content
+  classNamePrefix="select"
+  menuPortalTarget={document.body} // render dropdown outside the container
+  styles={{
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  }}
+  value={data.research_expertise?.map((selectedValue) => {
+    const matchedOption = researchOptions.find(
+      (option) =>
+        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+        selectedValue
+    );
+    return {
+      value: selectedValue,
+      label: matchedOption
+        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+        : selectedValue,
+    };
+  })}
+  onChange={(selectedOptions) => {
+    const selectedValues = selectedOptions.map((option) => option.value);
+    setData('research_expertise', selectedValues);
+  }}
+  placeholder="Select field of research..."
+/>
+
               </div>
 
               {/* Additional Fields for Academician */}

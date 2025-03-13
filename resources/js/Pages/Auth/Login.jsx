@@ -1,9 +1,10 @@
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
+import { FaGoogle } from 'react-icons/fa';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -20,20 +21,52 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <section className="relative flex flex-wrap lg:h-screen lg:items-center">
+        <section className="relative flex flex-col-reverse lg:flex-row lg:h-screen lg:items-center">
             <Head title="Log in" />
 
-            <div className="w-full px-4 py-12 sm:px-6 sm:py-16 lg:w-1/2 lg:px-8 lg:py-24">
-                <div className="mx-auto max-w-lg text-center">
-                    <h1 className="text-2xl font-bold sm:text-3xl">Welcome Back!</h1>
-                    <p className="mt-4 text-gray-500">
-                        Enter your email and password to access your account.
-                    </p>
-                </div>
+            {/* LEFT SIDE (Form Area) */}
+            <div className="w-full px-4 py-8 sm:px-6 sm:py-16 lg:w-1/2 lg:px-8 lg:py-24">
+                <div className="mx-auto w-full max-w-md">
 
-                <form onSubmit={submit} className="mx-auto mb-0 mt-8 max-w-md space-y-4">
-                    <div>
+                    {/* BRAND + HEADINGS (MOBILE) */}
+                    <div className="mb-6 text-center lg:hidden">
+                        <h1 className="ml-2 text-3xl text-blue-600 font-semibold">Nexscholar</h1>
+                        <p className="mt-1 text-gray-500">Welcome back</p>
+                        <p className="text-gray-500">Sign in to your account to continue</p>
+                    </div>
+
+                    {/* BRAND + HEADINGS (DESKTOP) */}
+                    <div className="hidden lg:block text-center mb-8">
+                        <h1 className="text-3xl font-bold">Welcome Back!</h1>
+                        <p className="mt-4 text-gray-500">
+                            Enter your email and password to access your account.
+                        </p>
+                    </div>
+
+                    {/* SOCIAL SIGN-IN BUTTON (GOOGLE) */}
+                    <div className="flex flex-col sm:flex-row sm:space-x-2">
+                        <a
+                            href={route('auth.google')}
+                            className="mb-3 sm:mb-0 flex items-center justify-center w-full py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
+                        >
+                            <FaGoogle className="mr-2" />
+                            <span>Sign in with Google</span>
+                        </a>
+                    </div>
+
+                    {/* SEPARATOR WITH HORIZONTAL LINES */}
+                    <div className="flex items-center my-4">
+                        <div className="flex-grow border-t border-gray-300"></div>
+                        <span className="mx-2 text-gray-400 text-sm">OR CONTINUE WITH EMAIL</span>
+                        <div className="flex-grow border-t border-gray-300"></div>
+                    </div>
+
+                    {/* LOGIN FORM */}
+                    <form onSubmit={submit} className="space-y-4">
+
+                        {/* EMAIL FIELD */}
                         <div className="relative">
+                            <InputLabel htmlFor="email" value="Email" />
                             <TextInput
                                 id="email"
                                 type="email"
@@ -45,10 +78,10 @@ export default function Login({ status, canResetPassword }) {
                                 isFocused={true}
                                 onChange={(e) => setData('email', e.target.value)}
                             />
-                            <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
+                            <span className="absolute inset-y-0 right-4 grid place-content-center">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="size-4 text-gray-400"
+                                    className="w-5 h-5 text-gray-400"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -63,111 +96,111 @@ export default function Login({ status, canResetPassword }) {
                             </span>
                             <InputError message={errors.email} className="mt-2" />
                         </div>
-                    </div>
 
-                    <div>
-                        <div className="relative">
-                            <TextInput
-                                id="password"
-                                type="password"
-                                name="password"
-                                value={data.password}
-                                placeholder="Enter password"
-                                className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
-                                autoComplete="current-password"
-                                onChange={(e) => setData('password', e.target.value)}
-                            />
-                            <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="size-4 text-gray-400"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                    />
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                    />
-                                </svg>
-                            </span>
-                            <InputError message={errors.password} className="mt-2" />
+                        {/* PASSWORD FIELD + FORGOT PASSWORD (MOBILE) */}
+                        <div>
+                            {/* 
+                              Put the "Forgot?" link in the same row as the label on mobile,
+                              hidden on large screens (block lg:hidden).
+                            */}
+                            <div className="flex items-center justify-between mb-1">
+                                <InputLabel htmlFor="password" value="Password" />
+                                {canResetPassword && (
+                                    <a
+                                        href={route('password.request')}
+                                        className="text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 block lg:hidden"
+                                    >
+                                        Forgot Password?
+                                    </a>
+                                )}
+                            </div>
+
+                            <div className="relative">
+                                <TextInput
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    value={data.password}
+                                    placeholder="Enter password"
+                                    className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+                                    autoComplete="current-password"
+                                    onChange={(e) => setData('password', e.target.value)}
+                                />
+                                <span className="absolute inset-y-0 right-4 grid place-content-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-5 h-5 text-gray-400"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                        />
+                                    </svg>
+                                </span>
+                                <InputError message={errors.password} className="mt-2" />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="block">
-                        <label className="flex items-center">
+                        {/* REMEMBER ME */}
+                        <div className="flex items-center">
                             <Checkbox
                                 name="remember"
                                 checked={data.remember}
-                                onChange={(e) =>
-                                    setData('remember', e.target.checked)
-                                }
+                                onChange={(e) => setData('remember', e.target.checked)}
                             />
-                            <span className="ms-2 text-sm text-gray-600">
+                            <span className="ml-2 text-sm text-gray-600">
                                 Remember me
                             </span>
-                        </label>
-                    </div>
+                        </div>
 
-                    <div className="flex items-center justify-between">
-                        {canResetPassword && (
-                            <a
-                                href={route('password.request')}
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            >
-                                Forgot your password?
-                            </a>
-                        )}
-                        <div className="flex space-x-4">
+                        {/* FORGOT PASSWORD (DESKTOP) + SIGN IN BUTTON */}
+                        <div className="flex items-center justify-between">
+                            {canResetPassword && (
+                                <a
+                                    href={route('password.request')}
+                                    className="hidden lg:block rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                >
+                                    Forgot your password?
+                                </a>
+                            )}
                             <button
                                 type="submit"
-                                className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+                                className="inline-block w-full lg:w-auto rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
                                 disabled={processing}
                             >
-                                Log in
+                                Sign in
                             </button>
+                        </div>
+
+                        <p className="mt-4 text-center text-sm text-gray-500">
+                            Don’t have an account?{' '}
                             <a
-                                href={route('register')} // Replace with your route for sign-up (adjust the route name as needed)
-                                className="inline-block rounded-lg bg-gray-200 px-5 py-3 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                                href={route('register')}
+                                className="font-medium text-blue-600 hover:text-blue-500"
                             >
                                 Sign up
                             </a>
-                        </div>  
-                    </div>
-
-                    
-                    <div className="mt-4">
-                        <a
-                            href={route('auth.google')}
-                            className="flex items-center pl-4 w-56 py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
-                        >
-                            <div className="bg-white p-2 rounded-lg mr-3">
-                                <img
-                                    src="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
-                                    alt="Google Logo"
-                                    className="w-5 h-5"
-                                />
-                            </div>
-                            <span>Sign in with Google</span>
-                        </a>
-                    </div>
-
-                </form>
+                        </p>
+                    </form>
+                </div>
             </div>
 
+            {/* RIGHT SIDE (Image) */}
             <div className="relative h-64 w-full sm:h-96 lg:h-full lg:w-1/2">
                 <img
                     alt="Login"
-                    src="https://images.unsplash.com/photo-1630450202872-e0829c9d6172?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80"
+                    src="https://images.unsplash.com/photo-1630450202872-e0829c9d6172?ixlib=rb-1.2.1&auto=format&fit=crop&w=774&q=80"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
             </div>

@@ -39,6 +39,12 @@ use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
+use App\Http\Controllers\EmailController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
+    Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+});
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);

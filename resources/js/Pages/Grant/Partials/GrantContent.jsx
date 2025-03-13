@@ -123,7 +123,11 @@ export default function GrantContent({ grant, previous, next, academicians, auth
               <div className="text-lg font-semibold">{author.full_name}</div>
               {grant.created_at && (
                 <div className="text-gray-500">
-                  {new Date(grant.created_at).toLocaleDateString()}
+                  {new Date(grant.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </div>
               )}
             </div>
@@ -139,7 +143,11 @@ export default function GrantContent({ grant, previous, next, academicians, auth
               <div className="text-lg font-semibold">Admin</div>
               {grant.created_at && (
                 <div className="text-gray-500">
-                  {new Date(grant.created_at).toLocaleDateString()}
+                  {new Date(grant.created_at).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </div>
               )}
             </div>

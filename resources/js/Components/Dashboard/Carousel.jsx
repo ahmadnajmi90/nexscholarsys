@@ -8,6 +8,7 @@ const Carousel = ({
   className = "",
   label, // Optional label prop
   seoPrefix = "/events/", // Default prefix; adjust as needed
+  label_color
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
@@ -105,7 +106,7 @@ const Carousel = ({
     >
       {/* Optional Label at Top Right */}
       {label && (
-        <div className="absolute top-2 right-3 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded z-50">
+        <div className={`absolute top-2 left-3 ${label_color} text-white px-2 py-1 text-xs font-bold rounded z-10`}>
           {label}
         </div>
       )}

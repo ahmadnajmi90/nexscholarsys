@@ -117,10 +117,10 @@ const Dashboard_M = ({ posts, events, grants, users }) => {
   );
 
   return (
-    <div className="w-screen bg-gray-200 flex items-center justify-center p-4">
+    <div className="w-screen bg-gray-200 flex items-center justify-center">
       <div
-        className="bg-white text-gray-800 rounded-xl shadow-lg overflow-hidden relative flex flex-col"
-        style={{ width: "414px", maxWidth: "100%" }}
+        className="bg-white text-gray-800 shadow-lg overflow-hidden relative flex flex-col"
+        style={{ width: "500px", maxWidth: "100%" }}
       >
         <div className="bg-white w-full px-5 pt-6 pb-4 overflow-y-auto">
           {/* Today Section */}
@@ -142,6 +142,7 @@ const Dashboard_M = ({ posts, events, grants, users }) => {
                 renderItem={renderPostItem}
                 label="Post"
                 seoPrefix="/posts/"
+                label_color="bg-blue-500"
               />
             </div>
 
@@ -155,6 +156,7 @@ const Dashboard_M = ({ posts, events, grants, users }) => {
                   renderItem={renderEventItem}
                   label="Event"
                   seoPrefix="/events/"
+                  label_color="bg-red-500"
                 />
               </div>
               <div className="h-[160px]">
@@ -165,6 +167,7 @@ const Dashboard_M = ({ posts, events, grants, users }) => {
                   renderItem={renderGrantItem}
                   label="Grant"
                   seoPrefix="/grants/"
+                  label_color="bg-green-700"
                 />
               </div>
             </div>
