@@ -113,6 +113,7 @@ const Carousel = ({
         <>
           {/* Render the current slide with fade animation and clickable wrapper */}
           <div
+            key={items[currentIndex].id}
             onClick={handleItemClick}
             className={`cursor-pointer transform h-full transition-opacity duration-${fadeDuration} ${
               fade ? "opacity-100" : "opacity-0"
