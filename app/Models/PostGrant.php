@@ -28,6 +28,9 @@ class PostGrant extends Model
         'image',
         'attachment',
         'status',
+        'total_views',
+        'total_likes',
+        'total_shares',
     ];
 
     protected $casts = [
@@ -70,5 +73,10 @@ class PostGrant extends Model
     public function academician()
     {
         return $this->belongsTo(User::class, 'author_id', 'unique_id'); // Adjust to match your unique identifier field
+    }
+
+    public function likedUsers()
+    {
+        return $this->belongsToMany(User::class, 'grant_user_likes', 'grant_id', 'user_id')->withTimestamps();
     }
 }

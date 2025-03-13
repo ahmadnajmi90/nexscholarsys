@@ -24,6 +24,9 @@ class CreatePost extends Model
         'featured_image',
         'attachment',
         'status',
+        'total_views',
+        'total_likes',
+        'total_shares',
     ];
 
     protected $casts = [
@@ -82,4 +85,10 @@ class CreatePost extends Model
     {
         return $this->belongsTo(User::class, 'author_id', 'unique_id'); // Adjust to match your unique identifier field
     }
+
+    public function likedUsers()
+    {
+        return $this->belongsToMany(User::class, 'post_user_likes', 'post_id', 'user_id')->withTimestamps();
+    }
+
 }

@@ -46,13 +46,53 @@ class ShowGrantController extends Controller
                         ->orderBy('created_at', 'desc')
                         ->first();
 
+        $grant->increment('total_views'); // Increment view count
+        $user = auth()->user();
+        // Check if the authenticated user has liked the post
+        $grant->liked = $user ? $grant->likedUsers->contains($user->id) : false;
+
         return Inertia::render('Grant/Show', [
             'grant'     => $grant,
             'previous' => $previous,
             'next'     => $next,
             'users'     => User::all(),
-            'academicians' => Academician::all()
+            'academicians' => Academician::all(),
         ]);
+    }
+
+    public function toggleLike(Request $request, $url)
+    {
+        $grant = PostGrant::where('url', $url)->firstOrFail();
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($grant->likedUsers()->where('user_id', $user->id)->exists()) {
+            // Unlike
+            $grant->likedUsers()->detach($user->id);
+        } else {
+            // Like
+            $grant->likedUsers()->attach($user->id);
+        }
+        
+        // Optionally update a cached total like count on the posts table.
+        $grant->total_likes = $grant->likedUsers()->count();
+        $grant->save();
+
+        return response()->json([
+            'total_likes' => $grant->total_likes,
+            'liked' => $grant->likedUsers()->where('user_id', $user->id)->exists()
+        ]);
+    }
+
+    public function share($url)
+    {
+        $grant = PostGrant::where('url', $url)->firstOrFail();
+        $grant->increment('total_shares');
+
+        return response()->json(['total_shares' => $grant->total_shares]);
     }
 
 }

@@ -82,6 +82,11 @@ class ShowEventController extends Controller
             }
         }
 
+        $event->increment('total_views'); // Increment view count
+        $user = auth()->user();
+        // Check if the authenticated user has liked the post
+        $event->liked = $user ? $event->likedUsers->contains($user->id) : false;
+
         return Inertia::render('Event/Show', [
             'event'     => $event,
             'previous' => $previous,
@@ -90,5 +95,40 @@ class ShowEventController extends Controller
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
         ]);
+    }
+
+    public function toggleLike(Request $request, $url)
+    {
+        $event = PostEvent::where('url', $url)->firstOrFail();
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($event->likedUsers()->where('user_id', $user->id)->exists()) {
+            // Unlike
+            $event->likedUsers()->detach($user->id);
+        } else {
+            // Like
+            $event->likedUsers()->attach($user->id);
+        }
+        
+        // Optionally update a cached total like count on the posts table.
+        $event->total_likes = $event->likedUsers()->count();
+        $event->save();
+
+        return response()->json([
+            'total_likes' => $event->total_likes,
+            'liked' => $event->likedUsers()->where('user_id', $user->id)->exists()
+        ]);
+    }
+
+    public function share($url)
+    {
+        $event = PostEvent::where('url', $url)->firstOrFail();
+        $event->increment('total_shares');
+
+        return response()->json(['total_shares' => $event->total_shares]);
     }
 }

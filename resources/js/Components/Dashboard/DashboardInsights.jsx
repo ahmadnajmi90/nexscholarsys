@@ -7,6 +7,7 @@ import ClicksByType from "./ClicksByType";
 import ProfileCard from "../ProfileCard";
 import useRoles from "../../Hooks/useRoles";
 import Carousel from "./Carousel"; // Adjust the import path if needed
+import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
 
 const DashboardInsight = ({
   totalUsers,
@@ -30,9 +31,7 @@ const DashboardInsight = ({
       className="block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-full flex flex-col justify-end"
       style={{
         backgroundImage: `url(${encodeURI(
-          post.featured_image
-            ? `/storage/${post.featured_image}`
-            : "/storage/default.jpg"
+          post.featured_image ? `/storage/${post.featured_image}` : "/storage/default.jpg"
         )})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -49,13 +48,30 @@ const DashboardInsight = ({
             dangerouslySetInnerHTML={{ __html: post.content }}
           ></div>
         )}
-        <p className="text-xs mt-1">
-          {new Date(post.created_at).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
-        </p>
+        {/* Date and Statistics Section */}
+        <div className="flex items-center mt-1 space-x-2">
+          <p className="text-xs">
+            {new Date(post.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
+          </p>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center text-xs">
+              <FaEye className="w-4 h-4" />
+              <span className="ml-1">{post.total_views}</span>
+            </div>
+            <div className="flex items-center text-xs">
+              <FaHeart className="w-4 h-4 text-red-500" />
+              <span className="ml-1">{post.total_likes}</span>
+            </div>
+            <div className="flex items-center text-xs">
+              <FaShareAlt className="w-4 h-4" />
+              <span className="ml-1">{post.total_shares}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

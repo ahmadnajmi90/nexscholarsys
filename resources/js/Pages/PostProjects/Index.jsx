@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import useRoles from '../../Hooks/useRoles';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -80,7 +81,22 @@ const Index = () => {
                   <td className="py-2 px-4 font-semibold text-center">{project.title}</td>
                   <td className="py-2 px-4 text-center">{project.category}</td>
                   <td className="py-2 px-4 text-center">{formatDate(project.created_at)}</td>
-                  <td className="py-2 px-4 text-center">{project.sponsored_by}</td>
+                  <td className="py-2 px-4 text-center">
+                      <div className="flex justify-center space-x-2 items-center">
+                          <div className="flex items-center">
+                          <FaEye className="w-5 h-5 text-gray-600" />
+                          <span className="ml-1">{project.total_views}</span>
+                          </div>
+                          <div className="flex items-center">
+                          <FaHeart className="w-5 h-5 text-red-600" />
+                          <span className="ml-1">{project.total_likes}</span>
+                          </div>
+                          <div className="flex items-center">
+                          <FaShareAlt className="w-5 h-5 text-blue-600" />
+                          <span className="ml-1">{project.total_shares}</span>
+                          </div>
+                      </div>
+                  </td>
                   <td className="py-2 px-4 text-center">
                     <Link
                       href={route('post-projects.edit', project.id)}
@@ -116,7 +132,18 @@ const Index = () => {
               <h2 className="text-lg font-semibold mb-2">{project.title}</h2>
               <p className="text-sm text-gray-500">Category: {project.category}</p>
               <p className="text-sm text-gray-500">Published: {formatDate(project.created_at)}</p>
-              <p className="text-sm text-gray-500">Statistics: {project.sponsored_by}</p>
+              <p className="text-sm text-gray-500 flex items-center space-x-2">
+                <span>Statistics:</span>
+                <span className="flex items-center">
+                  <FaEye className="w-4 h-4 mr-1" /> {project.total_views}
+                </span>
+                <span className="flex items-center">
+                  <FaHeart className="w-4 h-4 mr-1 text-red-600" /> {project.total_likes}
+                </span>
+                <span className="flex items-center">
+                  <FaShareAlt className="w-4 h-4 mr-1" /> {project.total_shares}
+                </span>
+              </p>
               <div className="mt-2 flex space-x-4">
                 <Link
                   href={route('post-projects.edit', project.id)}

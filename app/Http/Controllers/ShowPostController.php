@@ -42,6 +42,11 @@ class ShowPostController extends Controller
                         ->orderBy('created_at', 'desc')
                         ->first();
 
+        $post->increment('total_views'); // Increment view count
+        $user = auth()->user();
+        // Check if the authenticated user has liked the post
+        $post->liked = $user ? $post->likedUsers->contains($user->id) : false;
+
         return Inertia::render('Post/Show', [
             'post'     => $post,
             'previous' => $previous,
@@ -51,5 +56,40 @@ class ShowPostController extends Controller
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
         ]);
+    }
+
+    public function toggleLike(Request $request, $url)
+    {
+        $post = CreatePost::where('url', $url)->firstOrFail();
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($post->likedUsers()->where('user_id', $user->id)->exists()) {
+            // Unlike
+            $post->likedUsers()->detach($user->id);
+        } else {
+            // Like
+            $post->likedUsers()->attach($user->id);
+        }
+        
+        // Optionally update a cached total like count on the posts table.
+        $post->total_likes = $post->likedUsers()->count();
+        $post->save();
+
+        return response()->json([
+            'total_likes' => $post->total_likes,
+            'liked' => $post->likedUsers()->where('user_id', $user->id)->exists()
+        ]);
+    }
+
+    public function share($url)
+    {
+        $post = CreatePost::where('url', $url)->firstOrFail();
+        $post->increment('total_shares');
+
+        return response()->json(['total_shares' => $post->total_shares]);
     }
 }

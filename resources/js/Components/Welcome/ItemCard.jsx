@@ -2,9 +2,10 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 
 export default function ItemCard({ item, auth, type }) {
-  // Determine title and description based on type.
+  // For posts, use content; for others, use description.
   const title = type === 'event' ? item.event_name : item.title;
-  const description = item.description;
+  const content = type === 'post' ? item.content : item.description;
+  const image = type === 'post' ? item.featured_image : item.image;
 
   // Determine the correct route based on the type.
   const getRoute = () => {
@@ -14,26 +15,28 @@ export default function ItemCard({ item, auth, type }) {
       return route("welcome.projects.show", item.url);
     } else if (type === 'grant') {
       return route("welcome.grants.show", item.url);
+    } else if (type === 'post') {
+      return route("welcome.posts.show", item.url);
     } else {
       return "#";
     }
   };
 
   const handleViewDetails = () => {
-    // Navigate to the SEO-friendly URL
+    // Navigate to the SEO-friendly URL.
     window.location.href = getRoute();
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8">
       <img
-        src={item.image ? `/storage/${item.image}` : "/storage/default.jpg"}
+        src={image ? `/storage/${image}` : "/storage/default.jpg"}
         alt={title}
         className="w-full h-auto md:h-48 object-cover"
       />
       {/* Content container */}
       <div className="p-6">
-        <h2 className="text-xl font-semibold text-gray-800 truncate" title={title}>
+        <h2 className="text-lg font-semibold text-gray-800 truncate" title={title}>
           {title}
         </h2>
         <p
@@ -46,7 +49,8 @@ export default function ItemCard({ item, auth, type }) {
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
           }}
-          dangerouslySetInnerHTML={{ __html: description || "No content available." }}
+          // For posts, this renders content; for other types, description.
+          dangerouslySetInnerHTML={{ __html: content || "No content available." }}
         ></p>
       </div>
       {/* Button container */}

@@ -224,7 +224,7 @@ const HeroSection = ({ auth, posts, events, projects, grants }) => {
       </section>
 
       {/* Posts Preview Section */}
-      <WelcomePosts posts={posts} />
+      <WelcomeItems items={posts} auth={auth} title="Posts" type="post" />
 
       {/* Events Preview Section */}
       <WelcomeItems items={events} auth={auth} title="Events" type="event" />

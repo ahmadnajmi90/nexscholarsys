@@ -64,6 +64,11 @@ class ShowProjectController extends Controller
             }
         }
 
+        $project->increment('total_views'); // Increment view count
+        $user = auth()->user();
+        // Check if the authenticated user has liked the post
+        $project->liked = $user ? $project->likedUsers->contains($user->id) : false;
+
         return Inertia::render('Project/Show', [
             'project'     => $project,
             'previous' => $previous,
@@ -73,6 +78,41 @@ class ShowProjectController extends Controller
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
         ]);
+    }
+
+    public function toggleLike(Request $request, $url)
+    {
+        $project = PostProject::where('url', $url)->firstOrFail();
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        if ($project->likedUsers()->where('user_id', $user->id)->exists()) {
+            // Unlike
+            $project->likedUsers()->detach($user->id);
+        } else {
+            // Like
+            $project->likedUsers()->attach($user->id);
+        }
+        
+        // Optionally update a cached total like count on the posts table.
+        $project->total_likes = $project->likedUsers()->count();
+        $project->save();
+
+        return response()->json([
+            'total_likes' => $project->total_likes,
+            'liked' => $project->likedUsers()->where('user_id', $user->id)->exists()
+        ]);
+    }
+
+    public function share($url)
+    {
+        $project = PostProject::where('url', $url)->firstOrFail();
+        $project->increment('total_shares');
+
+        return response()->json(['total_shares' => $project->total_shares]);
     }
 
 }

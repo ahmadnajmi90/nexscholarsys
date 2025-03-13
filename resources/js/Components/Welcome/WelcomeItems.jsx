@@ -29,6 +29,8 @@ export default function WelcomeItems({ items, auth, title, type }) {
                 ? route("events.index")
                 : type === "project"
                 ? route("projects.index")
+                : type === "post"
+                ? route("posts.index")
                 : route("grants.index")
             }
             className="absolute right-0 px-4 py-2 md:px-6 md:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"

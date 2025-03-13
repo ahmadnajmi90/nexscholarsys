@@ -31,6 +31,9 @@ class PostEvent extends Model
         'country',
         'event_status',
         'field_of_research',
+        'total_views',
+        'total_likes',
+        'total_shares',
     ];
 
     protected $casts = [
@@ -72,5 +75,10 @@ class PostEvent extends Model
     public function academician()
     {
         return $this->belongsTo(User::class, 'author_id', 'unique_id'); // Adjust to match your unique identifier field
+    }
+
+    public function likedUsers()
+    {
+        return $this->belongsToMany(User::class, 'event_user_likes', 'event_id', 'user_id')->withTimestamps();
     }
 }

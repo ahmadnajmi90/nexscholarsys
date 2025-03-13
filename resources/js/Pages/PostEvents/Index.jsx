@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import useRoles from '../../Hooks/useRoles';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -81,7 +82,20 @@ const Index = () => {
                   <td className="py-2 px-4 text-center">{event.event_type}</td>
                   <td className="py-2 px-4 text-center">{formatDate(event.created_at)}</td>
                   <td className="py-2 px-4 text-center">
-                    {event.venue}, {event.city}, {event.country}
+                      <div className="flex justify-center space-x-2 items-center">
+                          <div className="flex items-center">
+                          <FaEye className="w-5 h-5 text-gray-600" />
+                          <span className="ml-1">{event.total_views}</span>
+                          </div>
+                          <div className="flex items-center">
+                          <FaHeart className="w-5 h-5 text-red-600" />
+                          <span className="ml-1">{event.total_likes}</span>
+                          </div>
+                          <div className="flex items-center">
+                          <FaShareAlt className="w-5 h-5 text-blue-600" />
+                          <span className="ml-1">{event.total_shares}</span>
+                          </div>
+                      </div>
                   </td>
                   <td className="py-2 px-4 text-center">
                     <Link
@@ -118,9 +132,19 @@ const Index = () => {
               <h2 className="text-lg font-semibold mb-2">{event.event_name}</h2>
               <p className="text-sm text-gray-500">Category: {event.event_type}</p>
               <p className="text-sm text-gray-500">Published: {formatDate(event.created_at)}</p>
-              <p className="text-sm text-gray-500">
-                Statistics: {event.venue}, {event.city}, {event.country}
+              <p className="text-sm text-gray-500 flex items-center space-x-2">
+                <span>Statistics:</span>
+                <span className="flex items-center">
+                  <FaEye className="w-4 h-4 mr-1" /> {event.total_views}
+                </span>
+                <span className="flex items-center">
+                  <FaHeart className="w-4 h-4 mr-1 text-red-600" /> {event.total_likes}
+                </span>
+                <span className="flex items-center">
+                  <FaShareAlt className="w-4 h-4 mr-1" /> {event.total_shares}
+                </span>
               </p>
+
               <div className="mt-2 flex space-x-4">
                 <Link
                   href={route('post-events.edit', event.id)}

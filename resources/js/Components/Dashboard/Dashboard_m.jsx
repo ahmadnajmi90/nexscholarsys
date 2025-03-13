@@ -1,6 +1,7 @@
 import React from "react";
 import Carousel from "./Carousel"; // Adjust the import path as needed
 import QuickLinks from "./QuickActions"; // Adjust the import path as needed
+import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
 
 const Dashboard_M = ({ posts, events, grants, users }) => {
   // Format today’s date as dd/mm/yyyy
@@ -33,13 +34,30 @@ const Dashboard_M = ({ posts, events, grants, users }) => {
             dangerouslySetInnerHTML={{ __html: post.content }}
           ></div>
         )}
-        <p className="text-xs mt-1">
-          {new Date(post.created_at).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
-        </p>
+        {/* Date and Statistics */}
+        <div className="flex items-center mt-1 space-x-2">
+          <p className="text-xs">
+            {new Date(post.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
+          </p>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center text-xs">
+              <FaEye className="w-4 h-4" />
+              <span className="ml-1">{post.total_views}</span>
+            </div>
+            <div className="flex items-center text-xs">
+              <FaHeart className="w-4 h-4 text-red-500" />
+              <span className="ml-1">{post.total_likes}</span>
+            </div>
+            <div className="flex items-center text-xs">
+              <FaShareAlt className="w-4 h-4" />
+              <span className="ml-1">{post.total_shares}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

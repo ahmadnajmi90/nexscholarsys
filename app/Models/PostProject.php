@@ -39,7 +39,10 @@ class PostProject extends Model
         'attachment',
         'application_url',
         'amount',
-        'project_status'
+        'project_status',
+        'total_views',
+        'total_likes',
+        'total_shares',
     ];
 
     protected $casts = [
@@ -79,6 +82,11 @@ class PostProject extends Model
     public function academician()
     {
         return $this->belongsTo(User::class, 'author_id', 'unique_id'); // Adjust to match your unique identifier field
+    }
+
+    public function likedUsers()
+    {
+        return $this->belongsToMany(User::class, 'project_user_likes', 'project_id', 'user_id')->withTimestamps();
     }
 }
 
