@@ -158,7 +158,7 @@ const DashboardInsight = ({
   );
 
   return (
-    <div className="p-6 min-h-screen">
+    <div className="p-6 md:py-0 md:px-2 min-h-screen">
       {/* Admin Insights */}
       {isAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

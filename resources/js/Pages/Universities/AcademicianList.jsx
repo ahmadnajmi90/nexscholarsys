@@ -14,8 +14,11 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
              <div className="relative bg-gray-200">
                 {/* Banner Image */}
                 <div className="w-full h-64 overflow-hidden">
-                    <img
-                        src={ `/storage/${university.background_image}`
+                <img
+                        src={
+                            university.background_image
+                                ? `/storage/${university.background_image}`
+                                : '/storage/university_background_images/default.jpg'
                         }
                         alt="Faculty Banner"
                         className="w-full h-full object-cover"
@@ -33,15 +36,15 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
                         />
                     </div>
 
-                    <h1 className="mt-8 text-3xl font-bold text-gray-800">
+                    <h1 className="mt-8 text-2xl md:text-3xl sm:text-lg font-bold text-gray-800">
                         {faculty.name}
                     </h1>
                 </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="mt-40 border-b border-gray-300 mb-10">
-                <div className="flex space-x-16 ml-8">
+            <div className="md:mt-40 mt-36 border-b border-gray-300 mb-10">
+                <div className="flex md:space-x-16 space-x-6 md:ml-0 ml-4">
                     {/* <Link
                         href="#"
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
@@ -50,19 +53,19 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
                     </Link> */}
                     <Link
                         href={route('faculties.academicians', faculty.id)}
-                        className="text-lg font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
+                        className="md:text-lg text-normal font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
                         >
                         Academician
                     </Link>
                     <Link
                         href={route('faculties.postgraduates', faculty.id)}
-                        className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                        className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
                         >
                         Postgraduate
                     </Link>
                     <Link
                         href={route('faculties.undergraduates', faculty.id)}
-                        className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                        className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
                         >
                         Undergraduate
                     </Link>

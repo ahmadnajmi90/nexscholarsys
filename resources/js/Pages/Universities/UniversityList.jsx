@@ -94,7 +94,7 @@ const UniversityList = ({ universities }) => {
             {displayedUniversities.map((uni) => (
               <div
                 key={uni.id}
-                className="bg-white shadow-md rounded-lg overflow-hidden relative"
+                className="bg-white shadow-md rounded-lg overflow-hidden relative w-full min-w-[300px]"
               >
                 {/* Faculty Banner */}
                 <div className="h-32">
@@ -126,7 +126,7 @@ const UniversityList = ({ universities }) => {
 
                 {/* University Info */}
                 <div className="text-center mt-4">
-                  <h2 className="text-lg font-semibold mb-2 overflow-hidden truncate px-4">
+                  <h2 className="block w-full text-lg font-semibold truncate px-12">
                     {uni.full_name}
                   </h2>
                   <p className="text-gray-500 text-sm">{uni.country}</p>

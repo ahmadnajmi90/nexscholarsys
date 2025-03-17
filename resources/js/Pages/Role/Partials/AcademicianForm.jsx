@@ -261,9 +261,11 @@ export default function AcademicianForm({ className = '', researchOptions }) {
           {/* Profile Details */}
           <div className="text-center mt-4">
             <h1 className="text-2xl font-semibold text-gray-800">{data.full_name}</h1>
-            <p className="text-gray-500">
-              {data.highest_degree} in {data.field_of_study}
-            </p>
+            {data.highest_degree && (
+              <p className="text-gray-500">
+                {data.highest_degree} in {data.field_of_study} 
+              </p>
+            )}
             <p className="text-gray-500">{data.current_position}</p>
           </div>
         </div>
@@ -577,38 +579,52 @@ export default function AcademicianForm({ className = '', researchOptions }) {
                   Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
                 </label>
                 <Select
-  id="research_expertise"
-  isMulti
-  options={researchOptions.map((option) => ({
-    value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
-    label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
-  }))}
-  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm truncate" // apply truncate only if necessary on the container's content
-  classNamePrefix="select"
-  menuPortalTarget={document.body} // render dropdown outside the container
-  styles={{
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  }}
-  value={data.research_expertise?.map((selectedValue) => {
-    const matchedOption = researchOptions.find(
-      (option) =>
-        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
-        selectedValue
-    );
-    return {
-      value: selectedValue,
-      label: matchedOption
-        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-        : selectedValue,
-    };
-  })}
-  onChange={(selectedOptions) => {
-    const selectedValues = selectedOptions.map((option) => option.value);
-    setData('research_expertise', selectedValues);
-  }}
-  placeholder="Select field of research..."
-/>
-
+                  id="research_expertise"
+                  isMulti
+                  options={researchOptions.map((option) => ({
+                    value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
+                    label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
+                  }))}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  classNamePrefix="select"
+                  menuPortalTarget={document.body}
+                  styles={{
+                    valueContainer: (provided) => ({
+                      ...provided,
+                      maxWidth: '100%', // ensure the container stays within its parent width
+                    }),
+                    multiValueLabel: (provided) => ({
+                      ...provided,
+                      maxWidth: 250, // set a fixed max width for each selected label (adjust as needed)
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }),
+                    menuPortal: (provided) => ({
+                      ...provided,
+                      zIndex: 9999,
+                    }),
+                  }}
+                  
+                  value={data.research_expertise?.map((selectedValue) => {
+                    const matchedOption = researchOptions.find(
+                      (option) =>
+                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
+                        selectedValue
+                    );
+                    return {
+                      value: selectedValue,
+                      label: matchedOption
+                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                        : selectedValue,
+                    };
+                  })}
+                  onChange={(selectedOptions) => {
+                    const selectedValues = selectedOptions.map((option) => option.value);
+                    setData('research_expertise', selectedValues);
+                  }}
+                  placeholder="Select field of research..."
+                />
               </div>
 
               {/* Additional Fields for Academician */}

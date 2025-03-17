@@ -456,6 +456,23 @@ export default function UndergraduateForm({ universities, faculties, className =
                       : selectedValue,
                   };
                 })}
+                styles={{
+                  valueContainer: (provided) => ({
+                    ...provided,
+                    maxWidth: '100%', // ensure the container stays within its parent width
+                  }),
+                  multiValueLabel: (provided) => ({
+                    ...provided,
+                    maxWidth: 250, // set a fixed max width for each selected label (adjust as needed)
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }),
+                  menuPortal: (provided) => ({
+                    ...provided,
+                    zIndex: 9999,
+                  }),
+                }}
                 onChange={handleResearchPreferenceChange}
                 placeholder="Select preferred field of research..."
               />

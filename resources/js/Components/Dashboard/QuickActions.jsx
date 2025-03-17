@@ -115,7 +115,7 @@ const QuickLinks = () => {
   ];
 
   return (
-    <div className="mx-auto">
+    <div className="md:mx-0 md:auto">
       <h2 className="text-2xl font-semibold mb-4 mt-4">QuickLinks</h2>
       {/* Use grid with 3 columns */}
       <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-9 gap-4">

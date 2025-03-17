@@ -38,18 +38,18 @@ const FacultyList = ({ faculties, university }) => {
                         />
                     </div>
 
-                    <h1 className="mt-8 text-3xl font-bold text-gray-800">
+                    <h1 className="mt-8 md:text-3xl text-2xl sm:text-lg font-bold text-gray-800">
                         {university.full_name}
                     </h1>
                 </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="mt-40 border-b border-gray-300">
-                <div className="flex space-x-16 ml-8">
+            <div className="md:mt-40 mt-36 border-b border-gray-300 mb-10">
+                <div className="flex md:space-x-16 space-x-6 ml-8">
                     <Link
                         href="#"
-                        className="text-lg font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
+                        className="md:text-lg text-normal font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
                     >
                         Faculty
                     </Link>

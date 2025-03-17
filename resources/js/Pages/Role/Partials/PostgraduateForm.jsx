@@ -189,9 +189,11 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     </div>
                     <div className="text-center mt-4">
                         <h1 className="text-2xl font-semibold text-gray-800">{data.full_name}</h1>
-                        <p className="text-gray-500">
-                            {data.previous_degree?.includes("Master") ? "Master" : "Bachelor Degree"} in {data.master ? data.master : data.bachelor}
-                        </p>
+                        {data.previous_degree && (
+                            <p className="text-gray-500">
+                                {data.previous_degree?.includes("Master") ? "Master" : "Bachelor Degree"} in {data.master ? data.master : data.bachelor}
+                            </p>
+                        )}
                         <p className="text-gray-500">{data.current_position}</p>
                     </div>
                 </div>
@@ -630,6 +632,23 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                         : selectedValue,
                                 };
                             })}
+                            styles={{
+                                valueContainer: (provided) => ({
+                                  ...provided,
+                                  maxWidth: '100%', // ensure the container stays within its parent width
+                                }),
+                                multiValueLabel: (provided) => ({
+                                  ...provided,
+                                  maxWidth: 250, // set a fixed max width for each selected label (adjust as needed)
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }),
+                                menuPortal: (provided) => ({
+                                  ...provided,
+                                  zIndex: 9999,
+                                }),
+                              }}
                             onChange={(selectedOptions) => {
                                 const selectedValues = selectedOptions.map((option) => option.value);
                                 setData('field_of_research', selectedValues);

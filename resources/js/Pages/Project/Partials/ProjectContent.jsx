@@ -108,7 +108,7 @@ export default function ProjectContent({ project, previous, next, academicians, 
       <div className="max-w-8xl mx-auto py-6">
         {/* Back Arrow */}
         {!isWelcome ? (
-            <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-50">
+            <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-10">
             <Link 
                 href={route('projects.index')}
                 className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
@@ -117,7 +117,7 @@ export default function ProjectContent({ project, previous, next, academicians, 
             </Link>
             </div>
             ) : (
-            <div className="absolute top-[6.2rem] left-2 md:top-[6.1rem] md:left-[1rem] z-50">
+            <div className="absolute top-[6.2rem] left-2 md:top-[6.1rem] md:left-[1rem] z-10">
                 <Link 
                 href={route('welcome')}
                 className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
