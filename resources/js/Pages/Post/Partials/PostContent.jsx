@@ -16,7 +16,6 @@ export default function PostContent({
   metaTags // Add metaTags prop here
 }) {
   const { isAcademician, isPostgraduate, isUndergraduate } = useRoles();
-  console.log(metaTags.images); // Check the images array in the console
 
   // Initialize state for like/share features.
   const [likes, setLikes] = useState(post.total_likes || 0);
