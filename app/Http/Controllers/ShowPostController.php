@@ -67,15 +67,21 @@ class ShowPostController extends Controller
             'metaTags' => [
                 'title' => $post->title,
                 'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200),
-                'image' => $post->featured_image ? url('storage/' . $post->featured_image) : url('storage/default-image.jpg'),
-                'url' => url()->current(),
-                'type' => 'article'
+                'image' => $post->featured_image 
+                        ? url('/storage/' . $post->featured_image) 
+                        : url('/storage/default-image.jpg'),
+                'type' => 'article',
+                'url' => route('posts.show', $post->url),
+                'published_time' => $post->created_at->toIso8601String(),
+                'category' => $post->category ?? null
             ],
         ])->withViewData([
             'metaTags' => [
                 'title' => $post->title,
                 'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200),
-                'image' => $post->featured_image ? url('storage/' . $post->featured_image) : url('storage/default-image.jpg'),
+                'image' => $post->featured_image 
+                    ? url('/storage/' . $post->featured_image) 
+                    : url('/storage/default-image.jpg'),
                 'type' => 'article',
                 'url' => route('posts.show', $post->url),
                 'published_time' => $post->created_at->toIso8601String(),
