@@ -63,10 +63,24 @@ class ShowPostController extends Controller
             'academicians' => Academician::all(),
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
-            'ogTitle' => $ogTitle,
-            'ogDescription' => $ogDescription,
-            'ogUrl' => $ogUrl,
-            'ogImage' => $ogImage,
+            // Pass meta tags as props to the component
+            'metaTags' => [
+                'title' => $post->title,
+                'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200),
+                'image' => $post->featured_image ? url('storage/' . $post->featured_image) : url('storage/default-image.jpg'),
+                'url' => url()->current(),
+                'type' => 'article'
+            ],
+        ])->withViewData([
+            'metaTags' => [
+                'title' => $post->title,
+                'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200),
+                'image' => $post->featured_image ? url('storage/' . $post->featured_image) : url('storage/default-image.jpg'),
+                'type' => 'article',
+                'url' => route('posts.show', $post->url),
+                'published_time' => $post->created_at->toIso8601String(),
+                'category' => $post->category ?? null
+            ],
         ]);
     }
 

@@ -3,13 +3,18 @@ import { Link } from '@inertiajs/react';
 import { FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
-import { Helmet } from 'react-helmet';
 
-export default function PostContent({ post, previous, next, academicians, postgraduates, undergraduates, isWelcome, auth, ogTitle, ogDescription, ogUrl, ogImage }) {
-  console.log(ogTitle);
-  console.log(ogDescription);
-  console.log(ogUrl);
-  console.log(ogImage);
+export default function PostContent({ 
+  post, 
+  previous, 
+  next, 
+  academicians, 
+  postgraduates, 
+  undergraduates, 
+  isWelcome, 
+  auth,
+  metaTags // Add metaTags prop here
+}) {
   const { isAcademician, isPostgraduate, isUndergraduate } = useRoles();
 
   // Initialize state for like/share features.
@@ -35,6 +40,8 @@ export default function PostContent({ post, previous, next, academicians, postgr
     (isPostgraduate && postgraduates && postgraduates.find(p => p.postgraduate_id === post.author_id)) ||
     (isUndergraduate && undergraduates && undergraduates.find(u => u.undergraduate_id === post.author_id)) ||
     null;
+
+  console.log(metaTags); // Check the metaTags object in the console
 
   // Toggle like
   const handleLike = () => {
@@ -88,25 +95,6 @@ export default function PostContent({ post, previous, next, academicians, postgr
 
   return (
     <div className="px-10 md:px-16">
-      {/* Open Graph Meta Tags */}
-      <Helmet>
-        <meta property="og:title" content={ogTitle} />
-        <meta property="og:description" content={ogDescription} />
-        <meta property="og:url" content={ogUrl} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Nexscholar" />
-        {/* Facebook Meta Tags */}
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        
-        {/* WhatsApp Meta Tags */}
-        <meta property="og:image" content={ogImage} />
-
-        {/* LinkedIn Meta Tags */}
-        <meta property="og:image" content={ogImage} />
-      </Helmet>
-
       {/* Back Arrow */}
       {!isWelcome ? (
         <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-10">

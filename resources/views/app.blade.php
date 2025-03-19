@@ -1,10 +1,32 @@
+\views\app.blade.php
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ $metaTags['title'] ?? config('app.name') }}</title>
+        <meta name="description" content="{{ $metaTags['description'] ?? config('app.description') }}">
+
+        <!-- Open Graph / Social Media Meta Tags -->
+        <meta property="og:title" content="{{ $metaTags['title'] ?? config('app.name') }}">
+        <meta property="og:description" content="{{ $metaTags['description'] ?? config('app.description') }}">
+        <meta property="og:url" content="{{ $metaTags['url'] ?? Request::url() }}">
+        <meta property="og:type" content="{{ $metaTags['type'] ?? 'website' }}">
+        <meta property="og:image" content="{{ $metaTags['image'] ?? asset('images/default.jpg') }}">
+        <meta property="og:image:secure_url" content="{{ $metaTags['image'] ?? asset('images/default.jpg') }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta property="og:image:alt" content="{{ $metaTags['title'] ?? config('app.name') }}">
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        <meta property="og:locale" content="en_US">
+        
+        @if(isset($metaTags['type']) && $metaTags['type'] === 'article')
+            <meta property="article:published_time" content="{{ $metaTags['published_time'] ?? '' }}">
+            @if(isset($metaTags['category']))
+                <meta property="article:section" content="{{ $metaTags['category'] }}">
+            @endif
+        @endif
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
