@@ -604,6 +604,7 @@ export default function Create() {
               </div>
             )}
 
+            {!data.purpose.includes("For Showcase") && (
             <div>
               <InputLabel className="block text-gray-700 font-medium">
                 Application URL
@@ -617,6 +618,7 @@ export default function Create() {
               />
               {errors.application_url && <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>}
             </div>
+            )}
           </div>
 
           <div className="flex space-x-4">

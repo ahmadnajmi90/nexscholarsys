@@ -186,6 +186,24 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <InputLabel>
+                Project Theme
+              </InputLabel>
+              <select
+                value={data.project_theme}
+                onChange={(e) => setData("project_theme", e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              >
+                <option value="" disabled hidden>
+                  Select a Project Theme
+                </option>
+                <option value="Science & Technology">Science & Technology</option>
+                <option value="Social Science">Social Science</option>
+              </select>
+              {errors.project_theme && <p className="text-red-500 text-xs mt-1">{errors.project_theme}</p>}
+            </div>
+
             {/* Purpose (Multiselect) */}
             <div ref={dropdownRef}>
               <InputLabel>
@@ -278,24 +296,6 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 </div>
               )}
               {errors.purpose && <p className="text-red-500 text-xs mt-1">{errors.purpose}</p>}
-            </div>
-
-            <div>
-              <InputLabel>
-                Project Theme
-              </InputLabel>
-              <select
-                value={data.project_theme}
-                onChange={(e) => setData("project_theme", e.target.value)}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-              >
-                <option value="" disabled hidden>
-                  Select a Project Theme
-                </option>
-                <option value="Science & Technology">Science & Technology</option>
-                <option value="Social Science">Social Science</option>
-              </select>
-              {errors.project_theme && <p className="text-red-500 text-xs mt-1">{errors.project_theme}</p>}
             </div>
           </div>
 
@@ -678,8 +678,9 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               </div>
             )}
 
+            {!data.purpose.includes("For Showcase") && (
             <div>
-              <InputLabel>
+              <InputLabel className="block text-gray-700 font-medium">
                 Application URL
               </InputLabel>
               <input
@@ -691,6 +692,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               />
               {errors.application_url && <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>}
             </div>
+            )}
           </div>
 
           <div className="flex space-x-4">
