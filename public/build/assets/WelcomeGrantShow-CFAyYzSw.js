@@ -1,1 +1,0 @@
-import{q as m,j as o}from"./app-DikJv5gO.js";import{W as a}from"./WelcomeLayout-Dvg9beWU.js";import n from"./GrantContent-BVRuWZYp.js";import"./index-3-Iofj4O.js";import"./useRoles-Du-nPZAJ.js";function f(){const{grant:r,auth:t,academicians:e}=m().props;return o.jsx(a,{auth:t,children:o.jsx(n,{grant:r,academicians:e,isWelcome:!0,auth:t})})}export{f as default};

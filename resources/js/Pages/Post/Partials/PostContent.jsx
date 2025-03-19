@@ -5,7 +5,11 @@ import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 
-export default function PostContent({ post, previous, next, academicians, postgraduates, undergraduates, isWelcome, auth }) {
+export default function PostContent({ post, previous, next, academicians, postgraduates, undergraduates, isWelcome, auth, ogTitle, ogDescription, ogUrl, ogImage }) {
+  console.log(ogTitle);
+  console.log(ogDescription);
+  console.log(ogUrl);
+  console.log(ogImage);
   const { isAcademician, isPostgraduate, isUndergraduate } = useRoles();
 
   // Initialize state for like/share features.
@@ -31,12 +35,6 @@ export default function PostContent({ post, previous, next, academicians, postgr
     (isPostgraduate && postgraduates && postgraduates.find(p => p.postgraduate_id === post.author_id)) ||
     (isUndergraduate && undergraduates && undergraduates.find(u => u.undergraduate_id === post.author_id)) ||
     null;
-
-  // Open Graph meta tags
-  const ogTitle = post.title;
-  const ogDescription = post.excerpt || post.content.substring(0, 200); // Shortened description (you can customize this)
-  const ogUrl = window.location.href;
-  const ogImage = post.featured_image ? `/storage/${post.featured_image}` : "/storage/default-image.jpg";
 
   // Toggle like
   const handleLike = () => {

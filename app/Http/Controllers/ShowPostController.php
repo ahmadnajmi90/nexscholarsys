@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Academician;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
+use Illuminate\Support\Str;
 
 use Illuminate\Http\Request;
 
@@ -47,6 +48,13 @@ class ShowPostController extends Controller
         // Check if the authenticated user has liked the post
         $post->liked = $user ? $post->likedUsers->contains($user->id) : false;
 
+        $ogTitle = $post->title;
+        $ogDescription = $post->excerpt ?? Str::limit(strip_tags($post->content), 200);
+        $ogUrl = url()->current();
+        $ogImage = $post->featured_image 
+            ? asset('storage/' . $post->featured_image) 
+            : asset('storage/default-image.jpg');
+
         return Inertia::render('Post/Show', [
             'post'     => $post,
             'previous' => $previous,
@@ -55,6 +63,10 @@ class ShowPostController extends Controller
             'academicians' => Academician::all(),
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
+            'ogTitle' => $ogTitle,
+            'ogDescription' => $ogDescription,
+            'ogUrl' => $ogUrl,
+            'ogImage' => $ogImage,
         ]);
     }
 
