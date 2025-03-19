@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
+import { Helmet } from 'react-helmet';
 
 export default function PostContent({ post, previous, next, academicians, postgraduates, undergraduates, isWelcome, auth }) {
   const { isAcademician, isPostgraduate, isUndergraduate } = useRoles();
@@ -30,6 +31,12 @@ export default function PostContent({ post, previous, next, academicians, postgr
     (isPostgraduate && postgraduates && postgraduates.find(p => p.postgraduate_id === post.author_id)) ||
     (isUndergraduate && undergraduates && undergraduates.find(u => u.undergraduate_id === post.author_id)) ||
     null;
+
+  // Open Graph meta tags
+  const ogTitle = post.title;
+  const ogDescription = post.excerpt || post.content.substring(0, 200); // Shortened description (you can customize this)
+  const ogUrl = window.location.href;
+  const ogImage = post.featured_image ? `/storage/${post.featured_image}` : "/storage/default-image.jpg";
 
   // Toggle like
   const handleLike = () => {
@@ -83,11 +90,30 @@ export default function PostContent({ post, previous, next, academicians, postgr
 
   return (
     <div className="px-10 md:px-16">
+      {/* Open Graph Meta Tags */}
+      <Helmet>
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:url" content={ogUrl} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Nexscholar" />
+        {/* Facebook Meta Tags */}
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* WhatsApp Meta Tags */}
+        <meta property="og:image" content={ogImage} />
+
+        {/* LinkedIn Meta Tags */}
+        <meta property="og:image" content={ogImage} />
+      </Helmet>
+
       {/* Back Arrow */}
       {!isWelcome ? (
         <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-10">
         <Link 
-          href={route('posts.index')}
+          onClick={() => window.history.back()}
           className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
         >
           <FaArrowLeft className="text-lg md:text-xl" />
@@ -96,7 +122,7 @@ export default function PostContent({ post, previous, next, academicians, postgr
       ) : (
         <div className="absolute top-[6.2rem] left-2 md:top-[6.1rem] md:left-[1rem] z-10">
           <Link 
-            href={route('welcome')}
+            onClick={() => window.history.back()}
             className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
           >
             <FaArrowLeft className="text-lg md:text-xl" />

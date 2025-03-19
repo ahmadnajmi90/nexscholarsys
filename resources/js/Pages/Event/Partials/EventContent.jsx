@@ -111,7 +111,7 @@ export default function EventContent({ event, previous, next, academicians, rese
         {!isWelcome ? (
             <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-10">
             <Link 
-                href={route('events.index')}
+                onClick={() => window.history.back()}
                 className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
             >
                 <FaArrowLeft className="text-lg md:text-xl" />
@@ -120,7 +120,7 @@ export default function EventContent({ event, previous, next, academicians, rese
             ) : (
             <div className="absolute top-[6.2rem] left-2 md:top-[6.1rem] md:left-[1rem] z-10">
                 <Link 
-                href={route('welcome')}
+                onClick={() => window.history.back()}
                 className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
                 >
                 <FaArrowLeft className="text-lg md:text-xl" />
