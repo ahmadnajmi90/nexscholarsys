@@ -41,7 +41,7 @@ export default function PostContent({
     (isUndergraduate && undergraduates && undergraduates.find(u => u.undergraduate_id === post.author_id)) ||
     null;
 
-  console.log(metaTags); // Check the metaTags object in the console
+  console.log('Props:', { post, metaTags });
 
   // Toggle like
   const handleLike = () => {

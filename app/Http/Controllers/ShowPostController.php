@@ -48,12 +48,18 @@ class ShowPostController extends Controller
         // Check if the authenticated user has liked the post
         $post->liked = $user ? $post->likedUsers->contains($user->id) : false;
 
-        $ogTitle = $post->title;
-        $ogDescription = $post->excerpt ?? Str::limit(strip_tags($post->content), 200);
-        $ogUrl = url()->current();
-        $ogImage = $post->featured_image 
-            ? asset('storage/' . $post->featured_image) 
-            : asset('storage/default-image.jpg');
+        $metaTags = [
+            'title' => $post->title,
+            'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200) . '...',
+            'image' => $post->featured_image 
+                ? url('/storage/' . $post->featured_image) 
+                : url('/storage/default-image.jpg'),
+            'type' => 'article',
+            'url' => url()->current(),
+            'published_time' => $post->created_at->toIso8601String(),
+            'category' => $post->category ?? null
+        ];
+            
 
         return Inertia::render('Post/Show', [
             'post'     => $post,
@@ -64,29 +70,9 @@ class ShowPostController extends Controller
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
             // Pass meta tags as props to the component
-            'metaTags' => [
-                'title' => $post->title,
-                'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200),
-                'image' => $post->featured_image 
-                        ? url('/storage/' . $post->featured_image) 
-                        : url('/storage/default-image.jpg'),
-                'type' => 'article',
-                'url' => route('posts.show', $post->url),
-                'published_time' => $post->created_at->toIso8601String(),
-                'category' => $post->category ?? null
-            ],
+            'metaTags' => $metaTags,
         ])->withViewData([
-            'metaTags' => [
-                'title' => $post->title,
-                'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200),
-                'image' => $post->featured_image 
-                    ? url('/storage/' . $post->featured_image) 
-                    : url('/storage/default-image.jpg'),
-                'type' => 'article',
-                'url' => route('posts.show', $post->url),
-                'published_time' => $post->created_at->toIso8601String(),
-                'category' => $post->category ?? null
-            ],
+            'metaTags' => $metaTags,
         ]);
     }
 

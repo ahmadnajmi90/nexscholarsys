@@ -13,7 +13,8 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Nexscholar'),
+    'description' => 'Discover the latest articles and resources on Nexscholar.',
 
     /*
     |--------------------------------------------------------------------------

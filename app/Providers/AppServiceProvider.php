@@ -11,9 +11,9 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    protected $policies = [
-        PostGrantForStudent::class => PostGrantForStudentPolicy::class,
-    ];
+    // protected $policies = [
+    //     PostGrantForStudent::class => PostGrantForStudentPolicy::class,
+    // ];
 
     public function register(): void
     {
@@ -29,5 +29,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Register the middleware manually
         $this->app['router']->pushMiddlewareToGroup('web', InjectUserRoles::class);
+
+        // Disable response caching during debugging
+        \Inertia\Inertia::version(function () {
+            return uniqid();
+        });
     }
 }
