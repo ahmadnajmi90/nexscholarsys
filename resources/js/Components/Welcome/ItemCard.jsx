@@ -28,11 +28,11 @@ export default function ItemCard({ item, auth, type }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 w-full">
       <img
         src={image ? `/storage/${image}` : "/storage/default.jpg"}
         alt={title}
-        className="w-full h-auto md:h-48 object-cover"
+        className="w-full h-48 object-cover"
       />
       {/* Content container */}
       <div className="p-6">
