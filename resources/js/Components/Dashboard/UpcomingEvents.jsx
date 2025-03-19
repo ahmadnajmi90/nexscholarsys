@@ -45,7 +45,11 @@ const UpcomingEvents = ({ events = [] }) => {
                   {event.event_name}
                 </p>
                 <p className="text-xs text-gray-600">
-                  {event.start_date_time} &nbsp; {event.location}
+                  {new Date(event.start_date).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
                 </p>
               </div>
             </div>

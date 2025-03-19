@@ -124,7 +124,7 @@ const ProjectCard = ({ projects }) => {
               <img
                 src={project.image ? `/storage/${project.image}` : "/storage/default.jpg"}
                 alt={project.title}
-                className="w-full h-auto md:h-48 object-cover"
+                className="w-full h-48 object-cover"
               />
               <div className="p-8">
                 <h2

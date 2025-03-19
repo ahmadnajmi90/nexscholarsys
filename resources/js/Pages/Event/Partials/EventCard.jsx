@@ -174,7 +174,7 @@ const EventCard = ({ events, researchOptions }) => {
                   <img
                     src={event.image ? `/storage/${event.image}` : "/storage/default.jpg"}
                     alt={event.event_name}
-                    className="w-full h-auto md:h-48 object-cover"
+                    className="w-full h-48 object-cover"
                   />
                   {isEventEnded && (
                     <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">

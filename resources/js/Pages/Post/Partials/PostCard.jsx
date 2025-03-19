@@ -67,7 +67,7 @@ const PostCard = ({ posts }) => {
               <img
                 src={post.featured_image ? `/storage/${post.featured_image}` : "/storage/default.jpg"}
                 alt={post.title}
-                className="w-full h-auto md:h-48 object-cover"
+                className="w-full h-48 object-cover"
               />
               <div className="p-6">
                 <h2 className="text-lg font-semibold text-gray-800 truncate" title={post.title}>

@@ -113,7 +113,7 @@ const GrantCard = ({ grants }) => {
               <img
                 src={grant.image ? `/storage/${grant.image}` : "/storage/default.jpg"}
                 alt={grant.title}
-                className="w-full h-auto md:h-48 object-cover"
+                className="w-full h-48 object-cover"
               />
               <div className="p-6">
                 <h2
