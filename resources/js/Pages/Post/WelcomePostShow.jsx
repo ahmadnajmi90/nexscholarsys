@@ -5,7 +5,7 @@ import WelcomeLayout from '@/Layouts/WelcomeLayout';
 import PostContent from './Partials/PostContent';
 
 export default function WelcomePostShow() {
-  const { post, auth, academicians, postgraduates, undergraduates } = usePage().props;
+  const { post, auth, academicians, postgraduates, undergraduates, metaTags } = usePage().props;
   
   return (
     <WelcomeLayout auth={auth}>
@@ -16,6 +16,7 @@ export default function WelcomePostShow() {
         undergraduates={undergraduates}
         isWelcome={true}
         auth={auth}
+        metaTags={metaTags}
       />
     </WelcomeLayout>
   );
