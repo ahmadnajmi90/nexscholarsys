@@ -35,12 +35,15 @@ class WelcomeController extends Controller
             ? secure_url('/storage/' . $post->featured_image) 
             : secure_url('/storage/default-image.jpg');
 
+        // Get the full URL for the current page
+        $currentUrl = secure_url()->current();
+
         $metaTags = [
             'title' => $post->title,
             'description' => $post->excerpt ?? $description,
             'image' => $imageUrl,
             'type' => 'article',
-            'url' => secure_url(request()->path()),
+            'url' => $currentUrl,
             'published_time' => $post->created_at->toIso8601String(),
             'category' => $post->category ?? null,
             'site_name' => config('app.name'),
