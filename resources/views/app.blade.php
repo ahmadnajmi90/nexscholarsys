@@ -12,8 +12,8 @@
         <meta property="og:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
         <meta property="og:url" content="{{ $meta['url'] ?? Request::url() }}">
         <meta property="og:type" content="{{ $meta['type'] ?? 'website' }}">
-        <meta property="og:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
-        <meta property="og:image:secure_url" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
+        <meta property="og:image" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
+        <meta property="og:image:secure_url" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
@@ -26,13 +26,13 @@
         <meta name="twitter:creator" content="@{{ config('app.name') }}">
         <meta name="twitter:title" content="{{ $meta['title'] ?? config('app.name') }}">
         <meta name="twitter:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
-        <meta name="twitter:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
+        <meta name="twitter:image" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
         <meta name="twitter:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
         
         <!-- LinkedIn Meta Tags -->
         <meta property="linkedin:title" content="{{ $meta['title'] ?? config('app.name') }}">
         <meta property="linkedin:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
-        <meta property="linkedin:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
+        <meta property="linkedin:image" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
         <meta property="linkedin:url" content="{{ $meta['url'] ?? Request::url() }}">
         <meta property="linkedin:card" content="summary_large_image">
         
