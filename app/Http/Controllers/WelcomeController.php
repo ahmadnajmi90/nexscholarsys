@@ -32,10 +32,19 @@ class WelcomeController extends Controller
         $description = preg_replace('/\s+/', ' ', $description);
         $description = substr($description, 0, 200) . '...';
 
-        // Ensure we have a proper image URL
+        // Ensure we have a proper image URL and dimensions
         $imageUrl = $post->featured_image 
             ? url('storage/' . $post->featured_image) 
             : url('storage/default.jpg');
+
+        // Get image dimensions if possible
+        $imagePath = $post->featured_image 
+            ? storage_path('app/public/' . $post->featured_image)
+            : public_path('storage/default.jpg');
+            
+        $imageSize = @getimagesize($imagePath);
+        $imageWidth = $imageSize ? $imageSize[0] : 1200;
+        $imageHeight = $imageSize ? $imageSize[1] : 630;
 
         // Get the full URL for the current page
         $currentUrl = url()->current();
@@ -44,6 +53,8 @@ class WelcomeController extends Controller
             'title' => $post->title,
             'description' => $post->excerpt ?? $description,
             'image' => $imageUrl,
+            'image_width' => $imageWidth,
+            'image_height' => $imageHeight,
             'type' => 'article',
             'url' => $currentUrl,
             'published_time' => $post->created_at->toIso8601String(),

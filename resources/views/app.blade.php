@@ -29,11 +29,22 @@
         <meta property="og:type" content="{{ $meta['type'] }}">
         <meta property="og:image" content="{{ $meta['image'] }}">
         <meta property="og:image:secure_url" content="{{ $meta['image'] }}">
-        <meta property="og:image:width" content="1200">
-        <meta property="og:image:height" content="630">
+        <meta property="og:image:width" content="{{ $meta['image_width'] ?? 1200 }}">
+        <meta property="og:image:height" content="{{ $meta['image_height'] ?? 630 }}">
+        <meta property="og:image:type" content="image/jpeg">
         <meta property="og:image:alt" content="{{ $meta['title'] }}">
         <meta property="og:site_name" content="{{ $meta['site_name'] }}">
         <meta property="og:locale" content="{{ $meta['locale'] }}">
+        
+        <!-- Facebook Additional Tags -->
+        <meta property="fb:app_id" content="{{ config('services.facebook.client_id', '') }}">
+        
+        <!-- Ensure immediate image loading -->
+        <link rel="preload" as="image" href="{{ $meta['image'] }}">
+        
+        <!-- Force Facebook to fetch new image -->
+        <meta property="og:image:url" content="{{ $meta['image'] }}">
+        <meta property="og:updated_time" content="{{ now()->toIso8601String() }}">
         
         <!-- Twitter Card Meta Tags -->
         <meta name="twitter:card" content="summary_large_image">
