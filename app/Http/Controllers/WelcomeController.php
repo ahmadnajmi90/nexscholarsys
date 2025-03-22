@@ -32,11 +32,11 @@ class WelcomeController extends Controller
 
         // Ensure we have a proper image URL
         $imageUrl = $post->featured_image 
-            ? secure_url('/storage/' . $post->featured_image) 
-            : secure_url('/storage/default-image.jpg');
+            ? asset('storage/' . $post->featured_image) 
+            : asset('storage/default-image.jpg');
 
         // Get the full URL for the current page
-        $currentUrl = secure_url(request()->path());
+        $currentUrl = url()->current();
 
         $metaTags = [
             'title' => $post->title,
