@@ -8,45 +8,38 @@
         <meta name="description" content="{{ $meta['description'] ?? config('app.description') }}">
 
         <!-- Open Graph / Facebook Meta Tags -->
-        <meta property="og:title" content="{{ $meta['title'] ?? config('app.name') }}">
-        <meta property="og:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
-        <meta property="og:url" content="{{ $meta['url'] ?? Request::url() }}">
-        <meta property="og:type" content="{{ $meta['type'] ?? 'website' }}">
-        <meta property="og:image" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
-        <meta property="og:image:secure_url" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
+        <meta property="og:title" content="{{ $meta['title'] }}">
+        <meta property="og:description" content="{{ $meta['description'] }}">
+        <meta property="og:url" content="{{ $meta['url'] }}">
+        <meta property="og:type" content="{{ $meta['type'] }}">
+        <meta property="og:image" content="{{ $meta['image'] }}">
+        <meta property="og:image:secure_url" content="{{ $meta['image'] }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
-        <meta property="og:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
-        <meta property="og:site_name" content="{{ $meta['site_name'] ?? config('app.name') }}">
-        <meta property="og:locale" content="{{ $meta['locale'] ?? 'en_US' }}">
+        <meta property="og:image:alt" content="{{ $meta['title'] }}">
+        <meta property="og:site_name" content="{{ $meta['site_name'] }}">
+        <meta property="og:locale" content="{{ $meta['locale'] }}">
         
         <!-- Twitter Card Meta Tags -->
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:site" content="@{{ config('app.name') }}">
-        <meta name="twitter:creator" content="@{{ config('app.name') }}">
-        <meta name="twitter:title" content="{{ $meta['title'] ?? config('app.name') }}">
-        <meta name="twitter:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
-        <meta name="twitter:image" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
-        <meta name="twitter:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
+        <meta name="twitter:title" content="{{ $meta['title'] }}">
+        <meta name="twitter:description" content="{{ $meta['description'] }}">
+        <meta name="twitter:image" content="{{ $meta['image'] }}">
+        <meta name="twitter:image:alt" content="{{ $meta['title'] }}">
         
         <!-- LinkedIn Meta Tags -->
-        <meta property="linkedin:title" content="{{ $meta['title'] ?? config('app.name') }}">
-        <meta property="linkedin:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
-        <meta property="linkedin:image" content="{{ $meta['image'] ?? asset('storage/default.jpg') }}">
-        <meta property="linkedin:url" content="{{ $meta['url'] ?? Request::url() }}">
-        <meta property="linkedin:card" content="summary_large_image">
+        <meta property="linkedin:title" content="{{ $meta['title'] }}">
+        <meta property="linkedin:description" content="{{ $meta['description'] }}">
+        <meta property="linkedin:image" content="{{ $meta['image'] }}">
+        <meta property="linkedin:url" content="{{ $meta['url'] }}">
         
         <!-- WhatsApp Meta Tags -->
-        <meta property="og:site_name" content="{{ $meta['site_name'] ?? config('app.name') }}">
+        <meta property="og:site_name" content="{{ $meta['site_name'] }}">
         <meta property="og:image:type" content="image/jpeg">
-        <meta property="og:image:width" content="1200">
-        <meta property="og:image:height" content="630">
         
         @if(isset($meta['type']) && $meta['type'] === 'article')
-            <meta property="article:published_time" content="{{ $meta['published_time'] ?? '' }}">
-            @if(isset($meta['category']))
-                <meta property="article:section" content="{{ $meta['category'] }}">
-            @endif
+            <meta property="article:published_time" content="{{ $meta['published_time'] }}">
+            <meta property="article:section" content="{{ $meta['category'] }}">
         @endif
 
         <!-- Debug Meta Tags -->
