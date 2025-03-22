@@ -49,8 +49,17 @@
             @endif
         @endif
 
-        <!-- Default image fallback for testing -->
-        <link rel="image_src" href="{{ $meta['image'] ?? asset('images/default.jpg') }}" />
+        <!-- Debug Meta Tags -->
+        @if(config('app.debug'))
+            <!--
+            Meta Tags Debug:
+            Title: {{ $meta['title'] ?? 'Not set' }}
+            Description: {{ $meta['description'] ?? 'Not set' }}
+            Image: {{ $meta['image'] ?? 'Not set' }}
+            URL: {{ $meta['url'] ?? 'Not set' }}
+            Type: {{ $meta['type'] ?? 'Not set' }}
+            -->
+        @endif
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
