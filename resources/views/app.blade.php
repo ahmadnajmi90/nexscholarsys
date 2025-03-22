@@ -7,7 +7,7 @@
         <title>{{ $meta['title'] ?? config('app.name') }}</title>
         <meta name="description" content="{{ $meta['description'] ?? config('app.description') }}">
 
-        <!-- Open Graph / Social Media Meta Tags -->
+        <!-- Open Graph / Facebook Meta Tags -->
         <meta property="og:title" content="{{ $meta['title'] ?? config('app.name') }}">
         <meta property="og:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
         <meta property="og:url" content="{{ $meta['url'] ?? Request::url() }}">
@@ -19,6 +19,25 @@
         <meta property="og:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
         <meta property="og:site_name" content="{{ config('app.name') }}">
         <meta property="og:locale" content="en_US">
+        
+        <!-- Twitter Card Meta Tags -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $meta['title'] ?? config('app.name') }}">
+        <meta name="twitter:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
+        <meta name="twitter:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
+        <meta name="twitter:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
+        
+        <!-- LinkedIn Meta Tags -->
+        <meta property="linkedin:title" content="{{ $meta['title'] ?? config('app.name') }}">
+        <meta property="linkedin:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
+        <meta property="linkedin:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
+        <meta property="linkedin:url" content="{{ $meta['url'] ?? Request::url() }}">
+        
+        <!-- WhatsApp Meta Tags -->
+        <meta property="og:site_name" content="{{ config('app.name') }}">
+        <meta property="og:image:type" content="image/jpeg">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
         
         @if(isset($meta['type']) && $meta['type'] === 'article')
             <meta property="article:published_time" content="{{ $meta['published_time'] ?? '' }}">
