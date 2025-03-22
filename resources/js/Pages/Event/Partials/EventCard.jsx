@@ -61,8 +61,7 @@ const EventCard = ({ events, researchOptions }) => {
     const matchesType =
       eventTypeFilter.length === 0 || eventTypeFilter.includes(event.event_type);
     const matchesTheme =
-      eventThemeFilter.length === 0 ||
-      (event.event_theme && event.event_theme.some((theme) => eventThemeFilter.includes(theme)));
+      eventThemeFilter.length === 0 || eventThemeFilter.includes(event.event_theme);
     const matchesCountry =
       countryFilter.length === 0 || countryFilter.includes(event.country);
     const matchesResearchArea =

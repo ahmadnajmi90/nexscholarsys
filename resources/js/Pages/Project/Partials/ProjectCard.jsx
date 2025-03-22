@@ -43,8 +43,7 @@ const ProjectCard = ({ projects }) => {
       countryFilter.length === 0 || countryFilter.includes(project.origin_country);
     const matchesTheme =
       themeFilter.length === 0 ||
-      (project.project_theme &&
-        project.project_theme.some((theme) => themeFilter.includes(theme)));
+      themeFilter.includes(project.project_theme);
     return matchesType && matchesCountry && matchesTheme;
   });
 
