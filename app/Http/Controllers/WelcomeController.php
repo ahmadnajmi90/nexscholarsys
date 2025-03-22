@@ -33,7 +33,7 @@ class WelcomeController extends Controller
         // Ensure we have a proper image URL
         $imageUrl = $post->featured_image 
             ? asset('storage/' . $post->featured_image) 
-            : asset('storage/default-image.jpg');
+            : asset('storage/default.jpg');
 
         // Get the full URL for the current page
         $currentUrl = url()->current();
