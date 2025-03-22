@@ -17,11 +17,13 @@
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="{{ $meta['title'] ?? config('app.name') }}">
-        <meta property="og:site_name" content="{{ config('app.name') }}">
-        <meta property="og:locale" content="en_US">
+        <meta property="og:site_name" content="{{ $meta['site_name'] ?? config('app.name') }}">
+        <meta property="og:locale" content="{{ $meta['locale'] ?? 'en_US' }}">
         
         <!-- Twitter Card Meta Tags -->
         <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@{{ config('app.name') }}">
+        <meta name="twitter:creator" content="@{{ config('app.name') }}">
         <meta name="twitter:title" content="{{ $meta['title'] ?? config('app.name') }}">
         <meta name="twitter:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
         <meta name="twitter:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
@@ -32,9 +34,10 @@
         <meta property="linkedin:description" content="{{ $meta['description'] ?? 'Discover the latest articles and resources on NexScholar.' }}">
         <meta property="linkedin:image" content="{{ $meta['image'] ?? asset('images/default.jpg') }}">
         <meta property="linkedin:url" content="{{ $meta['url'] ?? Request::url() }}">
+        <meta property="linkedin:card" content="summary_large_image">
         
         <!-- WhatsApp Meta Tags -->
-        <meta property="og:site_name" content="{{ config('app.name') }}">
+        <meta property="og:site_name" content="{{ $meta['site_name'] ?? config('app.name') }}">
         <meta property="og:image:type" content="image/jpeg">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">

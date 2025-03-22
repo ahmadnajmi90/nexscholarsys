@@ -31,33 +31,39 @@ class ShowPostController extends Controller
     public function show(CreatePost $post)
     {
         // Using created_at for ordering, matching the index order (newest first)
-
-        // For descending order, the "previous" post is the one with a created_at value greater than the current post.
-        // If the current post is the latest, no such post exists.
         $previous = CreatePost::where('created_at', '>', $post->created_at)
                             ->orderBy('created_at', 'desc')
                             ->first();
 
-        // The "next" post is the one with a created_at value less than the current post.
         $next = CreatePost::where('created_at', '<', $post->created_at)
                         ->orderBy('created_at', 'desc')
                         ->first();
 
         $post->increment('total_views'); // Increment view count
         $user = auth()->user();
-        // Check if the authenticated user has liked the post
         $post->liked = $user ? $post->likedUsers->contains($user->id) : false;
+
+        // Ensure we have a clean description without HTML tags
+        $description = strip_tags($post->content);
+        $description = str_replace(["\n", "\r", "\t"], ' ', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+        $description = substr($description, 0, 200) . '...';
+
+        // Ensure we have a proper image URL
+        $imageUrl = $post->featured_image 
+            ? secure_url('/storage/' . $post->featured_image) 
+            : secure_url('/storage/default-image.jpg');
 
         $metaTags = [
             'title' => $post->title,
-            'description' => $post->excerpt ?? substr(strip_tags($post->content), 0, 200) . '...',
-            'image' => $post->featured_image 
-                ? url('/storage/' . $post->featured_image) 
-                : url('/storage/default-image.jpg'),
+            'description' => $post->excerpt ?? $description,
+            'image' => $imageUrl,
             'type' => 'article',
-            'url' => url()->current(),
+            'url' => secure_url()->current(),
             'published_time' => $post->created_at->toIso8601String(),
-            'category' => $post->category ?? null
+            'category' => $post->category ?? null,
+            'site_name' => config('app.name'),
+            'locale' => 'en_US'
         ];
 
         return Inertia::render('Post/Show', [

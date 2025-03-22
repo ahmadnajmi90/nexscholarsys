@@ -62,35 +62,44 @@ export default function PostContent({
   };  
 
   // Generic share handler
-  const handleShare = (shareFunc) => {
-    shareFunc();
-    axios.post(route('posts.share', post.url))
-      .then(response => {
-        setShares(response.data.total_shares);
-      })
-      .catch(error => console.error(error));
-  };
+  const handleShare = (platform) => {
+    // Use the welcome route for sharing
+    const shareUrl = route('welcome.posts.show', post.url);
+    const title = encodeURIComponent(post.title);
+    const text = encodeURIComponent(metaTags.description);
+    
+    let shareLink = '';
+    switch (platform) {
+      case 'facebook':
+        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'whatsapp':
+        shareLink = `https://wa.me/?text=${title}%20${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'linkedin':
+        shareLink = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${title}&summary=${text}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+        return;
+      default:
+        return;
+    }
 
-  // Sharing functions
-  const shareOnFacebook = () => {
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-  };
-
-  const shareOnWhatsApp = () => {
-    const shareUrl = `https://wa.me/?text=${encodeURIComponent(window.location.href)}`;
-    window.open(shareUrl, '_blank');
-  };
-
-  const shareOnLinkedIn = () => {
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-  };
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert("Link copied to clipboard");
-    });
+    // Open share dialog in a new window
+    window.open(shareLink, '_blank', 'width=600,height=400');
+    
+    // Increment share count if user is logged in
+    if (auth.user) {
+      axios.post(route('posts.share', post.url))
+        .then(response => {
+          setShares(response.data.total_shares);
+        })
+        .catch(error => {
+          console.error('Error updating share count:', error);
+        });
+    }
   };
 
   return (
@@ -183,7 +192,7 @@ export default function PostContent({
               {shareMenuOpen && (
                 <div className="absolute left-0 mt-2 w-40 bg-white shadow-lg rounded z-10">
                   <button
-                    onClick={() => { handleShare(copyLink); setShareMenuOpen(false); }}
+                    onClick={() => { handleShare('copy'); setShareMenuOpen(false); }}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
                   >
                     <FaLink className="w-5 h-5 inline mr-2 text-gray-600" />
@@ -191,21 +200,21 @@ export default function PostContent({
                   </button>
                   <hr className="my-1" />
                   <button
-                    onClick={() => { handleShare(shareOnFacebook); setShareMenuOpen(false); }}
+                    onClick={() => { handleShare('facebook'); setShareMenuOpen(false); }}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
                   >
                     <FaFacebook className="w-5 h-5 inline mr-2 text-blue-600" />
                     Facebook
                   </button>
                   <button
-                    onClick={() => { handleShare(shareOnWhatsApp); setShareMenuOpen(false); }}
+                    onClick={() => { handleShare('whatsapp'); setShareMenuOpen(false); }}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
                   >
                     <FaWhatsapp className="w-5 h-5 inline mr-2 text-green-600" />
                     WhatsApp
                   </button>
                   <button
-                    onClick={() => { handleShare(shareOnLinkedIn); setShareMenuOpen(false); }}
+                    onClick={() => { handleShare('linkedin'); setShareMenuOpen(false); }}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
                   >
                     <FaLinkedin className="w-5 h-5 inline mr-2 text-blue-700" />
