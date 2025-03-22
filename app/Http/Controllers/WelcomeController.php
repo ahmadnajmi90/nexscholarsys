@@ -9,7 +9,7 @@ use App\Models\Academician;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Session;
 
 class WelcomeController extends Controller
 {
@@ -55,8 +55,8 @@ class WelcomeController extends Controller
         // Log the meta tags for debugging
         Log::info('Meta Tags:', $metaTags);
 
-        // Share meta tags with the Blade view
-        View::share('meta', $metaTags);
+        // Store meta tags in session
+        Session::put('meta', $metaTags);
 
         return Inertia::render('Post/WelcomePostShow', [
             'post' => $post,

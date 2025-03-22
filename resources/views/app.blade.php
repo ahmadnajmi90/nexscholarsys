@@ -1,11 +1,26 @@
+@php
+    use Illuminate\Support\Facades\Session;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ $meta['title'] ?? config('app.name') }}</title>
-        <meta name="description" content="{{ $meta['description'] ?? config('app.description') }}">
+        @php
+            $meta = Session::get('meta', [
+                'title' => config('app.name'),
+                'description' => 'Discover the latest articles and resources on NexScholar.',
+                'image' => url('storage/default.jpg'),
+                'type' => 'website',
+                'url' => url()->current(),
+                'site_name' => 'NexScholar',
+                'locale' => 'en_US'
+            ]);
+        @endphp
+
+        <title>{{ $meta['title'] }}</title>
+        <meta name="description" content="{{ $meta['description'] }}">
 
         <!-- Open Graph / Facebook Meta Tags -->
         <meta property="og:title" content="{{ $meta['title'] }}">
@@ -46,11 +61,11 @@
         @if(config('app.debug'))
             <!--
             Meta Tags Debug:
-            Title: {{ $meta['title'] ?? 'Not set' }}
-            Description: {{ $meta['description'] ?? 'Not set' }}
-            Image: {{ $meta['image'] ?? 'Not set' }}
-            URL: {{ $meta['url'] ?? 'Not set' }}
-            Type: {{ $meta['type'] ?? 'Not set' }}
+            Title: {{ $meta['title'] }}
+            Description: {{ $meta['description'] }}
+            Image: {{ $meta['image'] }}
+            URL: {{ $meta['url'] }}
+            Type: {{ $meta['type'] }}
             -->
         @endif
 

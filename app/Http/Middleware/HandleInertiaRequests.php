@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -29,11 +30,35 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
+        $defaultMetaTags = [
+            'title' => config('app.name'),
+            'description' => 'Discover the latest articles and resources on NexScholar.',
+            'image' => url('storage/default.jpg'),
+            'type' => 'website',
+            'url' => url()->current(),
+            'site_name' => 'NexScholar',
+            'locale' => 'en_US',
+            'published_time' => now()->toIso8601String(),
+            'category' => 'General'
+        ];
+
+        return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
             ],
-        ];
+            'ziggy' => [
+                'url' => $request->url(),
+                'port' => null,
+                'defaults' => [],
+                'routes' => collect(Route::getRoutes()->getRoutesByName())
+                    ->map(function ($route) {
+                        return [
+                            'uri' => $route->uri(),
+                            'methods' => $route->methods(),
+                        ];
+                    }),
+            ],
+            'meta' => session('meta', $defaultMetaTags),
+        ]);
     }
 }
