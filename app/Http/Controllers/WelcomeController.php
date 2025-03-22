@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Academician;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
+use Illuminate\Support\Facades\Log;
 
 class WelcomeController extends Controller
 {
@@ -32,8 +33,8 @@ class WelcomeController extends Controller
 
         // Ensure we have a proper image URL
         $imageUrl = $post->featured_image 
-            ? asset('storage/' . $post->featured_image) 
-            : asset('storage/default.jpg');
+            ? url('storage/' . $post->featured_image) 
+            : url('storage/default.jpg');
 
         // Get the full URL for the current page
         $currentUrl = url()->current();
@@ -45,10 +46,13 @@ class WelcomeController extends Controller
             'type' => 'article',
             'url' => $currentUrl,
             'published_time' => $post->created_at->toIso8601String(),
-            'category' => $post->category ?? null,
-            'site_name' => config('app.name'),
+            'category' => $post->category,
+            'site_name' => 'NexScholar',
             'locale' => 'en_US'
         ];
+
+        // Log the meta tags for debugging
+        Log::info('Meta Tags:', $metaTags);
 
         return Inertia::render('Post/WelcomePostShow', [
             'post' => $post,
@@ -58,8 +62,8 @@ class WelcomeController extends Controller
             'academicians' => Academician::all(),
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
-            'metaTags' => $metaTags,
-        ])->with([
+            'metaTags' => $metaTags
+        ])->withViewData([
             'meta' => $metaTags
         ]);
     }
