@@ -59,7 +59,6 @@ class ShowPostController extends Controller
             'published_time' => $post->created_at->toIso8601String(),
             'category' => $post->category ?? null
         ];
-            
 
         return Inertia::render('Post/Show', [
             'post'     => $post,
@@ -69,10 +68,9 @@ class ShowPostController extends Controller
             'academicians' => Academician::all(),
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
-            // Pass meta tags as props to the component
             'metaTags' => $metaTags,
-        ])->withViewData([
-            'metaTags' => $metaTags,
+        ])->with([
+            'meta' => $metaTags
         ]);
     }
 
