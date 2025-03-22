@@ -9,6 +9,7 @@ use App\Models\Academician;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
 
 class WelcomeController extends Controller
 {
@@ -54,6 +55,9 @@ class WelcomeController extends Controller
         // Log the meta tags for debugging
         Log::info('Meta Tags:', $metaTags);
 
+        // Share meta tags with the Blade view
+        View::share('meta', $metaTags);
+
         return Inertia::render('Post/WelcomePostShow', [
             'post' => $post,
             'previous' => $previous,
@@ -63,8 +67,6 @@ class WelcomeController extends Controller
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
             'metaTags' => $metaTags
-        ])->withViewData([
-            'meta' => $metaTags
         ]);
     }
 } 
