@@ -40,7 +40,7 @@ class WelcomeController extends Controller
             'description' => $post->excerpt ?? $description,
             'image' => $imageUrl,
             'type' => 'article',
-            'url' => secure_url()->current(),
+            'url' => secure_url(request()->path()),
             'published_time' => $post->created_at->toIso8601String(),
             'category' => $post->category ?? null,
             'site_name' => config('app.name'),
