@@ -36,7 +36,7 @@ class WelcomeController extends Controller
             : secure_url('/storage/default-image.jpg');
 
         // Get the full URL for the current page
-        $currentUrl = secure_url()->current();
+        $currentUrl = secure_url(request()->path());
 
         $metaTags = [
             'title' => $post->title,
