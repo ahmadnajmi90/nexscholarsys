@@ -12,7 +12,7 @@ export default function WelcomeLayout({ children, auth }) {
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           <div className="text-blue-600 text-lg font-bold">Nexscholar</div>
           <div className="flex items-center space-x-4">
-             {auth ? (
+             {auth?.user ? (
                 <Link
                 href={route('dashboard')}
                 className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-blue-500"
