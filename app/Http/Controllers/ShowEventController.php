@@ -52,14 +52,13 @@ class ShowEventController extends Controller
 
     public function show(PostEvent $event)
     {
-        // Using created_at for ordering, matching the index order (newest first)
-        $previous = PostEvent::where('created_at', '>', $event->created_at)
-                            ->orderBy('created_at', 'desc')
-                            ->first();
-
-        $next = PostEvent::where('created_at', '<', $event->created_at)
-                        ->orderBy('created_at', 'desc')
-                        ->first();
+        // Get 3 latest events excluding the current event, ordered by start_date
+        $relatedEvents = PostEvent::where('id', '!=', $event->id)
+            ->where('event_status', 'published')
+            ->where('start_date', '>=', now())
+            ->orderBy('start_date', 'asc')
+            ->take(3)
+            ->get();
         
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
@@ -107,12 +106,11 @@ class ShowEventController extends Controller
 
         return Inertia::render('Event/Show', [
             'event'     => $event,
-            'previous' => $previous,
-            'next'     => $next,
             'users'     => User::all(),
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
-            'metaTags' => $metaTags
+            'metaTags' => $metaTags,
+            'relatedEvents' => $relatedEvents
         ])->with([
             'meta' => $metaTags
         ]);

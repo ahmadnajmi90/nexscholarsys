@@ -84,6 +84,11 @@ export default function Create() {
     Object.keys(data).forEach((key) => {
       if (key === "tags") {
         formData.append(key, JSON.stringify(data[key]));
+      } else if (key === "images" && Array.isArray(data[key])) {
+        // Handle multiple images
+        data[key].forEach((file, index) => {
+          formData.append(`images[${index}]`, file);
+        });
       } else if (data[key] instanceof File) {
         formData.append(key, data[key]);
       } else {
@@ -94,12 +99,13 @@ export default function Create() {
     post(route("create-posts.store"), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
+      preserveScroll: true,
       onSuccess: () => {
         alert("Post created successfully.");
       },
       onError: (errors) => {
         console.error("Error creating Post:", errors);
-        alert("Failed to create the Post. Please try again.");
+        alert("Failed to create the Post. Please check the form for errors.");
       },
     });
   }
@@ -115,9 +121,27 @@ export default function Create() {
             Add New Post
           </h1>
 
+          {/* Display any general errors at the top */}
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+              <strong className="font-bold">Please fix the following errors:</strong>
+              <ul className="mt-2 list-disc list-inside">
+                {Object.entries(errors).map(([key, value]) => (
+                  <li key={key}>
+                    {key === 'images' ? 
+                      Object.entries(value).map(([imgKey, imgValue]) => (
+                        <span key={imgKey}>Image {parseInt(imgKey) + 1}: {imgValue}</span>
+                      ))
+                      : value}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* First Row: Title and Category */}
-          <div className="grid grid-cols-10 gap-8">
-            <div className="col-span-7">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-8">
+            <div className="lg:col-span-7">
               <label className="block text-gray-700 font-medium">
                 Post Title<span className="text-red-500">*</span>
               </label>
@@ -128,11 +152,9 @@ export default function Create() {
                 className="mt-1 w-full rounded-lg border-gray-200 p-4 text-sm"
                 placeholder="Enter Post Title"
               />
-              {errors.title && (
-                <p className="text-red-500 text-xs mt-1">{errors.title}</p>
-              )}
+              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
-            <div className="col-span-3">
+            <div className="lg:col-span-3">
               <label className="block text-gray-700 font-medium">Category</label>
               <select
                 id="category"
@@ -166,16 +188,14 @@ export default function Create() {
                 <option value="Corporate Social Responsibility">Corporate Social Responsibility</option>
                 <option value="Knowledge Transfer Program">Knowledge Transfer Program</option>
               </select>
-              {errors.category && (
-                <p className="text-red-500 text-xs mt-1">{errors.category}</p>
-              )}
+              {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
             </div>
           </div>
 
           {/* Second Row: Content and Right Column for Tags, Image, Featured Image, Attachment */}
-          <div className="grid grid-cols-10 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-8">
             {/* Left Column: Content Editor */}
-            <div className="col-span-7">
+            <div className="lg:col-span-7">
               <label className="block text-gray-700 font-medium">
                 Content <span className="text-red-500">*</span>
               </label>
@@ -191,20 +211,16 @@ export default function Create() {
                   style={{ height: "300px", maxHeight: "300px" }}
                 />
               </div>
-              {errors.content && (
-                <p className="text-red-500 text-xs mt-1">{errors.content}</p>
-              )}
+              {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
             </div>
 
             {/* Right Column: Stack for Tags, Image, Featured Image, Attachment */}
-            <div className="col-span-3 flex flex-col space-y-6">
+            <div className="lg:col-span-3 flex flex-col space-y-4 lg:space-y-6">
               {/* Tags */}
               <div>
                 <label className="block text-gray-700 font-medium">Tags</label>
                 <TagInput tags={data.tags} setTags={setTags} />
-                {errors.tags && (
-                  <p className="text-red-500 text-xs mt-1">{errors.tags}</p>
-                )}
+                {errors.tags && <p className="text-red-500 text-xs mt-1">{errors.tags}</p>}
               </div>
 
               {/* Upload Images */}
@@ -216,11 +232,20 @@ export default function Create() {
                   type="file"
                   accept="image/*"
                   multiple
-                  onChange={(e) => setData("images", e.target.files)}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    setData("images", files);
+                  }}
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
                 {errors.images && (
-                  <p className="text-red-500 text-xs mt-1">{errors.images}</p>
+                  <div className="mt-1">
+                    {Object.entries(errors.images).map(([key, value]) => (
+                      <p key={key} className="text-red-500 text-xs">
+                        Image {parseInt(key) + 1}: {value}
+                      </p>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -232,14 +257,10 @@ export default function Create() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setData("featured_image", e.target.files[0])
-                  }
+                  onChange={(e) => setData("featured_image", e.target.files[0])}
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
-                {errors.featured_image && (
-                  <p className="text-red-500 text-xs mt-1">{errors.featured_image}</p>
-                )}
+                {errors.featured_image && <p className="text-red-500 text-xs mt-1">{errors.featured_image}</p>}
               </div>
 
               {/* Upload Attachment */}
@@ -249,31 +270,26 @@ export default function Create() {
                 </label>
                 <input
                   type="file"
-                  onChange={(e) =>
-                    setData("attachment", e.target.files[0])
-                  }
+                  onChange={(e) => setData("attachment", e.target.files[0])}
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
-                {errors.attachment && (
-                  <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>
-                )}
+                {errors.attachment && <p className="text-red-500 text-xs mt-1">{errors.attachment}</p>}
               </div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row gap-4 sm:space-x-4">
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={processing}
-              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+              className="w-full sm:w-auto inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
             >
               Publish
             </button>
             <Link
               href={route("create-posts.index")}
-              className="inline-block rounded-lg bg-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-400"
+              className="w-full sm:w-auto inline-block rounded-lg bg-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-400 text-center"
             >
               Cancel
             </Link>

@@ -249,6 +249,7 @@ class PostEventController extends Controller
 
                     'image' => [
                         'nullable',
+                        'max:2048',
                         function ($attribute, $value, $fail) use ($request) {
                             if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
                                 $fail('The ' . $attribute . ' field must be an existing file.');

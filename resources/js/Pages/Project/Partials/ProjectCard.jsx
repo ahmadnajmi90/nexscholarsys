@@ -118,13 +118,60 @@ const ProjectCard = ({ projects }) => {
           {displayedProjects.map((project, index) => (
             <div
               key={index}
-              className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8"
+              className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 relative"
             >
               <img
                 src={project.image ? `/storage/${project.image}` : "/storage/default.jpg"}
                 alt={project.title}
                 className="w-full h-48 object-cover"
               />
+              {/* Purpose Labels */}
+              <div className="absolute top-2 left-2 flex flex-wrap gap-2">
+                {Array.isArray(project.purpose) ? (
+                  project.purpose.map((purpose, index) => {
+                    let labelText = "";
+                    let labelColor = "bg-blue-500"; // default color
+
+                    switch (purpose) {
+                      case "For Showcase":
+                        labelText = "Showcase";
+                        labelColor = "bg-purple-500";
+                        break;
+                      case "Seek for Postgraduate":
+                        labelText = "Grant for Postgraduate";
+                        labelColor = "bg-green-500";
+                        break;
+                      case "Seek for Undergraduate":
+                        labelText = "Grant for Undergraduate";
+                        labelColor = "bg-yellow-500";
+                        break;
+                      case "Seek for Academician Collaboration":
+                        labelText = "Academician Collaboration";
+                        labelColor = "bg-indigo-500";
+                        break;
+                      case "Seek for Industrial Collaboration":
+                        labelText = "Industry Collaboration";
+                        labelColor = "bg-orange-500";
+                        break;
+                      default:
+                        labelText = purpose;
+                    }
+
+                    return (
+                      <span
+                        key={index}
+                        className={`${labelColor} text-white text-xs font-semibold px-2 py-1 rounded`}
+                      >
+                        {labelText}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                    {project.purpose}
+                  </span>
+                )}
+              </div>
               <div className="p-8">
                 <h2
                   className="text-lg font-semibold text-gray-800 text-center truncate"

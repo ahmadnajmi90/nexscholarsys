@@ -8,7 +8,15 @@ import {
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 
-export default function GrantContent({ grant, previous, next, academicians, auth, isWelcome }) {
+export default function GrantContent({ 
+  grant, 
+  previous, 
+  next, 
+  academicians, 
+  auth,
+  isWelcome,
+  relatedGrants
+}) {
   const { isAcademician } = useRoles();
 
   // Initialize state for like/share features.
@@ -330,6 +338,68 @@ export default function GrantContent({ grant, previous, next, academicians, auth
                 View Attachment
               </a>
             </p>
+          </div>
+        )}
+
+        <hr className="my-6 border-gray-200" />
+
+        {/* Related Grants Section */}
+        {relatedGrants && relatedGrants.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-6">Other Grants</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedGrants.map((relatedGrant) => (
+                <Link 
+                  key={relatedGrant.id}
+                  href={isWelcome ? route('welcome.grants.show', relatedGrant.url) : route('grants.show', relatedGrant.url)}
+                  className="block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-[300px] flex flex-col justify-end hover:opacity-90"
+                  style={{
+                    backgroundImage: `url(${encodeURI(
+                      relatedGrant.image ? `/storage/${relatedGrant.image}` : "/storage/default.jpg"
+                    )})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-black opacity-40"></div>
+                  <div className="relative z-10 text-white pr-10">
+                    <h2 className="text-2xl font-bold truncate" title={relatedGrant.title}>
+                      {relatedGrant.title || "Untitled Grant"}
+                    </h2>
+                    {relatedGrant.description && (
+                      <div
+                        className="text-sm line-clamp-2 mb-2"
+                        dangerouslySetInnerHTML={{ __html: relatedGrant.description }}
+                      ></div>
+                    )}
+                    {/* Date and Statistics Section */}
+                    <div className="flex items-center mt-1 space-x-2">
+                      <p className="text-xs">
+                        Deadline: {new Date(relatedGrant.application_deadline).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center text-xs">
+                          <FaEye className="w-4 h-4" />
+                          <span className="ml-1">{relatedGrant.total_views || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaHeart className="w-4 h-4 text-red-500" />
+                          <span className="ml-1">{relatedGrant.total_likes || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaShareAlt className="w-4 h-4" />
+                          <span className="ml-1">{relatedGrant.total_shares || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

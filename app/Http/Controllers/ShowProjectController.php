@@ -34,15 +34,6 @@ class ShowProjectController extends Controller
 
     public function show(PostProject $project)
     {
-        // Using created_at for ordering, matching the index order (newest first)
-        $previous = PostProject::where('created_at', '>', $project->created_at)
-                            ->orderBy('created_at', 'desc')
-                            ->first();
-
-        $next = PostProject::where('created_at', '<', $project->created_at)
-                        ->orderBy('created_at', 'desc')
-                        ->first();
-
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -63,6 +54,14 @@ class ShowProjectController extends Controller
         $project->increment('total_views'); // Increment view count
         $user = auth()->user();
         $project->liked = $user ? $project->likedUsers->contains($user->id) : false;
+
+        // Get 3 latest projects excluding the current project, ordered by application_deadline
+        $relatedProjects = PostProject::where('id', '!=', $project->id)
+            ->where('project_status', 'published')
+            ->where('application_deadline', '>=', now())
+            ->orderBy('application_deadline', 'asc')
+            ->take(3)
+            ->get();
 
         // Clean description for meta tags
         $description = strip_tags($project->description);
@@ -88,14 +87,13 @@ class ShowProjectController extends Controller
         ];
 
         return Inertia::render('Project/Show', [
-            'project'     => $project,
-            'previous' => $previous,
-            'next'     => $next,
-            'users'     => User::all(),
+            'project' => $project,
+            'users' => User::all(),
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
-            'metaTags' => $metaTags
+            'metaTags' => $metaTags,
+            'relatedProjects' => $relatedProjects
         ])->with([
             'meta' => $metaTags
         ]);

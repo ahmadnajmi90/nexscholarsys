@@ -33,18 +33,17 @@ class ShowGrantController extends Controller
 
     public function show(PostGrant $grant)
     {
-        // Using created_at for ordering, matching the index order (newest first)
-        $previous = PostGrant::where('created_at', '>', $grant->created_at)
-                            ->orderBy('created_at', 'desc')
-                            ->first();
-
-        $next = PostGrant::where('created_at', '<', $grant->created_at)
-                        ->orderBy('created_at', 'desc')
-                        ->first();
-
         $grant->increment('total_views'); // Increment view count
         $user = auth()->user();
         $grant->liked = $user ? $grant->likedUsers->contains($user->id) : false;
+
+        // Get 3 latest grants excluding the current grant, ordered by application_deadline
+        $relatedGrants = PostGrant::where('id', '!=', $grant->id)
+            ->where('status', 'published')
+            ->where('application_deadline', '>=', now())
+            ->orderBy('application_deadline', 'asc')
+            ->take(3)
+            ->get();
 
         // Clean description for meta tags
         $description = strip_tags($grant->description);
@@ -70,12 +69,11 @@ class ShowGrantController extends Controller
         ];
 
         return Inertia::render('Grant/Show', [
-            'grant'     => $grant,
-            'previous' => $previous,
-            'next'     => $next,
-            'users'     => User::all(),
+            'grant' => $grant,
+            'users' => User::all(),
             'academicians' => Academician::all(),
-            'metaTags' => $metaTags
+            'metaTags' => $metaTags,
+            'relatedGrants' => $relatedGrants
         ])->with([
             'meta' => $metaTags
         ]);

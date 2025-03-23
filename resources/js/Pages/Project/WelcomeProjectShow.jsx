@@ -5,7 +5,7 @@ import WelcomeLayout from '@/Layouts/WelcomeLayout';
 import ProjectContent from './Partials/ProjectContent';
 
 export default function WelcomeProjectShow() {
-  const { project, auth, academicians, researchOptions, universities } = usePage().props;
+  const { project, auth, academicians, researchOptions, universities, relatedProjects } = usePage().props;
   
   return (
     <WelcomeLayout auth={auth}>
@@ -16,6 +16,7 @@ export default function WelcomeProjectShow() {
         isWelcome={true}
         auth={auth}
         universities={universities}
+        relatedProjects={relatedProjects}
       />
     </WelcomeLayout>
   );

@@ -10,12 +10,20 @@ import {
   FaLink, 
   FaFacebook, 
   FaWhatsapp, 
-  FaLinkedin 
+  FaLinkedin,
+  FaTimes
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 
-export default function EventContent({ event, previous, next, academicians, researchOptions, isWelcome, auth }) {
+export default function EventContent({ 
+  event, 
+  academicians, 
+  researchOptions,
+  isWelcome, 
+  auth,
+  relatedEvents
+}) {
   const { isAcademician } = useRoles();
 
   // Like/share state for event.
@@ -351,29 +359,67 @@ export default function EventContent({ event, previous, next, academicians, rese
           )}
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="max-w-3xl mx-auto py-6 flex justify-between">
-          {previous ? (
-            <Link 
-              href={route('events.show', previous.url)} 
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Previous
-            </Link>
-          ) : (
-            <span></span>
-          )}
-          {next ? (
-            <Link 
-              href={route('events.show', next.url)} 
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Next
-            </Link>
-          ) : (
-            <span></span>
-          )}
-        </div>
+        <hr className="my-6 border-gray-200" />
+
+        {/* Related Events Section */}
+        {relatedEvents && relatedEvents.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-6">Other Events</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedEvents.map((relatedEvent) => (
+                <Link 
+                  key={relatedEvent.id}
+                  href={isWelcome ? route('welcome.events.show', relatedEvent.url) : route('events.show', relatedEvent.url)}
+                  className="block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-[300px] flex flex-col justify-end hover:opacity-90"
+                  style={{
+                    backgroundImage: `url(${encodeURI(
+                      relatedEvent.image ? `/storage/${relatedEvent.image}` : "/storage/default.jpg"
+                    )})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-black opacity-40"></div>
+                  <div className="relative z-10 text-white pr-10">
+                    <h2 className="text-2xl font-bold truncate" title={relatedEvent.event_name}>
+                      {relatedEvent.event_name || "Untitled Event"}
+                    </h2>
+                    {relatedEvent.description && (
+                      <div
+                        className="text-sm line-clamp-2 mb-2"
+                        dangerouslySetInnerHTML={{ __html: relatedEvent.description }}
+                      ></div>
+                    )}
+                    {/* Date and Statistics Section */}
+                    <div className="flex items-center mt-1 space-x-2">
+                      <p className="text-xs">
+                        {new Date(relatedEvent.start_date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center text-xs">
+                          <FaEye className="w-4 h-4" />
+                          <span className="ml-1">{relatedEvent.total_views || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaHeart className="w-4 h-4 text-red-500" />
+                          <span className="ml-1">{relatedEvent.total_likes || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaShareAlt className="w-4 h-4" />
+                          <span className="ml-1">{relatedEvent.total_shares || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

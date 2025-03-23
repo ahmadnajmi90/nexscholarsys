@@ -87,6 +87,11 @@ export default function Edit() {
     Object.keys(data).forEach((key) => {
       if (key === "tags") {
         formData.append(key, JSON.stringify(data[key]));
+      } else if (key === "images" && Array.isArray(data[key])) {
+        // Handle multiple images
+        data[key].forEach((file, index) => {
+          formData.append(`images[${index}]`, file);
+        });
       } else if (data[key] instanceof File) {
         formData.append(key, data[key]);
       } else {
@@ -102,12 +107,13 @@ export default function Edit() {
     post(route("create-posts.update", currentPost.id), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
+      preserveScroll: true,
       onSuccess: () => {
         alert("Post updated successfully.");
       },
       onError: (errors) => {
         console.error("Error updating Post:", errors);
-        alert("Failed to update the Post. Please try again.");
+        alert("Failed to update the Post. Please check the form for errors.");
       },
     });
   }
@@ -118,9 +124,27 @@ export default function Edit() {
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Edit Post</h1>
 
+          {/* Display any general errors at the top */}
+          {Object.keys(errors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative" role="alert">
+              <strong className="font-bold">Please fix the following errors:</strong>
+              <ul className="mt-2 list-disc list-inside">
+                {Object.entries(errors).map(([key, value]) => (
+                  <li key={key}>
+                    {key === 'images' ? 
+                      Object.entries(value).map(([imgKey, imgValue]) => (
+                        <span key={imgKey}>Image {parseInt(imgKey) + 1}: {imgValue}</span>
+                      ))
+                      : value}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* First Row: Title and Category */}
-          <div className="grid grid-cols-10 gap-8">
-            <div className="col-span-7">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-8">
+            <div className="lg:col-span-7">
               <label className="block text-gray-700 font-medium">
                 Post Title<span className="text-red-500">*</span>
               </label>
@@ -133,7 +157,7 @@ export default function Edit() {
               />
               {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
-            <div className="col-span-3">
+            <div className="lg:col-span-3">
               <label className="block text-gray-700 font-medium">Category</label>
               <select
                 id="category"
@@ -172,8 +196,8 @@ export default function Edit() {
           </div>
 
           {/* Second Row: URL (disabled) and Tags */}
-          <div className="grid grid-cols-10 gap-8">
-            <div className="col-span-7">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-8">
+            <div className="lg:col-span-7">
               <label className="block text-gray-700 font-medium">Post URL</label>
               <input
                 type="url"
@@ -183,8 +207,9 @@ export default function Edit() {
                 className="mt-1 w-full rounded-lg border-gray-200 p-4 bg-gray-100 text-sm cursor-not-allowed"
                 placeholder="Auto-generated from title"
               />
+              {errors.url && <p className="text-red-500 text-xs mt-1">{errors.url}</p>}
             </div>
-            <div className="col-span-3">
+            <div className="lg:col-span-3">
               <label className="block text-gray-700 font-medium">Tags</label>
               <TagInput tags={data.tags} setTags={setTags} />
               {errors.tags && <p className="text-red-500 text-xs mt-1">{errors.tags}</p>}
@@ -192,8 +217,8 @@ export default function Edit() {
           </div>
 
           {/* Third Row: Content and File Uploads */}
-          <div className="grid grid-cols-10 gap-8">
-            <div className="col-span-7">
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-8">
+            <div className="lg:col-span-7">
               <label className="block text-gray-700 font-medium">
                 Content <span className="text-red-500">*</span>
               </label>
@@ -210,9 +235,8 @@ export default function Edit() {
             </div>
 
             {/* Right Column: File Uploads */}
-            <div className="col-span-3 flex flex-col space-y-6">
+            <div className="lg:col-span-3 flex flex-col space-y-4 lg:space-y-6">
               {/* Upload Images (multiple) */}
-              {/* Upload Images */}
               <div>
                 <label className="block text-gray-700 font-medium">Upload Images (Multiple Allowed)</label>
                 <p className="text-sm text-gray-500">(Upload new images will delete all existed images)</p>
@@ -221,8 +245,8 @@ export default function Edit() {
                   accept="image/*"
                   multiple
                   onChange={(e) => {
-                    // Convert FileList to an array if needed
-                    setData("images", Array.from(e.target.files));
+                    const files = Array.from(e.target.files);
+                    setData("images", files);
                   }}
                   className="mt-1 w-full rounded-lg border-gray-200 p-2 text-sm"
                 />
@@ -245,7 +269,13 @@ export default function Edit() {
                   </div>
                 )}
                 {errors.images && (
-                  <p className="text-red-500 text-xs mt-1">{errors.images}</p>
+                  <div className="mt-1">
+                    {Object.entries(errors.images).map(([key, value]) => (
+                      <p key={key} className="text-red-500 text-xs">
+                        Image {parseInt(key) + 1}: {value}
+                      </p>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -301,17 +331,17 @@ export default function Edit() {
           </div>
 
           {/* Buttons */}
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row gap-4 sm:space-x-4">
             <button
               type="submit"
               disabled={processing}
-              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+              className="w-full sm:w-auto inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
             >
               Update
             </button>
             <Link
               href={route("create-posts.index")}
-              className="inline-block rounded-lg bg-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-400"
+              className="w-full sm:w-auto inline-block rounded-lg bg-gray-300 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-400 text-center"
             >
               Cancel
             </Link>

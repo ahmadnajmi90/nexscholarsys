@@ -8,13 +8,14 @@ import {
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 
-export default function ProjectContent({ project, previous, next, academicians, researchOptions, universities, auth, isWelcome }) {
+export default function ProjectContent({ project, previous, next, academicians, researchOptions, universities, auth, isWelcome, relatedProjects }) {
   // State for like/share features.
   const [likes, setLikes] = useState(project.total_likes || 0);
   const [shares, setShares] = useState(project.total_shares || 0);
   const [liked, setLiked] = useState(project.liked || false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const shareMenuRef = useRef(null);
+  console.log(relatedProjects);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -395,6 +396,68 @@ export default function ProjectContent({ project, previous, next, academicians, 
                 View Attachment
               </a>
             </p>
+          </div>
+        )}
+
+        <hr className="my-6 border-gray-200" />
+
+        {/* Related Projects Section */}
+        {relatedProjects && relatedProjects.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-6">Other Projects</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedProjects.map((relatedProject) => (
+                <Link 
+                  key={relatedProject.id}
+                  href={isWelcome ? route('welcome.projects.show', relatedProject.url) : route('projects.show', relatedProject.url)}
+                  className="block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-[300px] flex flex-col justify-end hover:opacity-90"
+                  style={{
+                    backgroundImage: `url(${encodeURI(
+                      relatedProject.image ? `/storage/${relatedProject.image}` : "/storage/default.jpg"
+                    )})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-black opacity-40"></div>
+                  <div className="relative z-10 text-white pr-10">
+                    <h2 className="text-2xl font-bold truncate" title={relatedProject.title}>
+                      {relatedProject.title || "Untitled Project"}
+                    </h2>
+                    {relatedProject.description && (
+                      <div
+                        className="text-sm line-clamp-2 mb-2"
+                        dangerouslySetInnerHTML={{ __html: relatedProject.description }}
+                      ></div>
+                    )}
+                    {/* Date and Statistics Section */}
+                    <div className="flex items-center mt-1 space-x-2">
+                      <p className="text-xs">
+                        Deadline: {new Date(relatedProject.application_deadline).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center text-xs">
+                          <FaEye className="w-4 h-4" />
+                          <span className="ml-1">{relatedProject.total_views || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaHeart className="w-4 h-4 text-red-500" />
+                          <span className="ml-1">{relatedProject.total_likes || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaShareAlt className="w-4 h-4" />
+                          <span className="ml-1">{relatedProject.total_shares || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

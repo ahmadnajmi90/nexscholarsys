@@ -242,6 +242,21 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     >
                       <input
                         type="checkbox"
+                        value="Seek for Undergraduate"
+                        checked={data.purpose.includes("Seek for Undergraduate")}
+                        onChange={(e) => handleCheckboxChange(e.target.value)}
+                        disabled={data.purpose.includes("For Showcase")}
+                        className="mr-2"
+                      />
+                      Seek for Undergraduate
+                    </InputLabel>
+                    <InputLabel
+                      className={`flex items-center ${
+                        data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
                         value="Seek for Academician Collaboration"
                         checked={data.purpose.includes("Seek for Academician Collaboration")}
                         onChange={(e) => handleCheckboxChange(e.target.value)}
@@ -270,6 +285,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                         data.purpose.some(
                           (item) =>
                             item === "Seek for Postgraduate" ||
+                            item === "Seek for Undergraduate" ||
                             item === "Seek for Academician Collaboration" ||
                             item === "Seek for Industrial Collaboration"
                         )
@@ -285,6 +301,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                         disabled={data.purpose.some(
                           (item) =>
                             item === "Seek for Postgraduate" ||
+                            item === "Seek for Undergraduate" ||
                             item === "Seek for Academician Collaboration" ||
                             item === "Seek for Industrial Collaboration"
                         )}

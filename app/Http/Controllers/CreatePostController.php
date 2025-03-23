@@ -60,12 +60,17 @@ class CreatePostController extends Controller
                 'content' => 'nullable|string',
                 'category' => 'nullable|string|max:255',
                 'tags' => 'nullable|array',
-                // Remove 'image' rule and add 'images'
-                'images' => 'nullable',
-                'images.*' => 'image|max:2048',
+                'images' => 'nullable|array',
+                'images.*' => 'image|max:2048', // Each image must be less than 2MB
                 'featured_image' => 'nullable|image|max:2048',
                 'attachment' => 'nullable|file|max:5120',
                 'status' => 'nullable|string|in:draft,published',
+            ], [
+                'images.*.max' => 'Each image must not be greater than 2MB (2048 kilobytes).',
+                'images.*.image' => 'Each file must be a valid image.',
+                'featured_image.max' => 'The featured image must not be greater than 2MB (2048 kilobytes).',
+                'featured_image.image' => 'The featured image must be a valid image file.',
+                'attachment.max' => 'The attachment must not be greater than 5MB (5120 kilobytes).',
             ]);
 
             // Process multiple images
@@ -154,11 +159,11 @@ class CreatePostController extends Controller
                 'content' => 'nullable|string',
                 'category' => 'nullable|string|max:255',
                 'tags' => 'nullable|array',
-                // We’re no longer validating a single "image" field.
                 'images' => 'nullable|array',
-                'images.*' => 'image|max:2048',  // Each uploaded file must be an image
+                'images.*' => 'image|max:2048', // Each image must be less than 2MB
                 'featured_image' => [
                     'nullable',
+                    'max:2048',
                     function ($attribute, $value, $fail) use ($request) {
                         if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
                             $fail('The ' . $attribute . ' field must be an existing file.');
@@ -169,6 +174,7 @@ class CreatePostController extends Controller
                 ],
                 'attachment' => [
                     'nullable',
+                    'max:5120',
                     function ($attribute, $value, $fail) use ($request) {
                         if (is_string($value) && !file_exists(public_path('storage/' . $value))) {
                             $fail('The ' . $attribute . ' field must be an existing file.');
@@ -178,6 +184,12 @@ class CreatePostController extends Controller
                     },
                 ],
                 'status' => 'nullable|string|in:draft,published',
+            ], [
+                'images.*.max' => 'Each image must not be greater than 2MB (2048 kilobytes).',
+                'images.*.image' => 'Each file must be a valid image.',
+                'featured_image.max' => 'The featured image must not be greater than 2MB (2048 kilobytes).',
+                'featured_image.image' => 'The featured image must be a valid image file.',
+                'attachment.max' => 'The attachment must not be greater than 5MB (5120 kilobytes).',
             ]);
 
             // Handle Images Upload: If new images are uploaded, delete all old images.

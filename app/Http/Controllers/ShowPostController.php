@@ -30,16 +30,23 @@ class ShowPostController extends Controller
 
     public function show(CreatePost $post)
     {
-        // Using created_at for ordering, matching the index order (newest first)
-        $previous = CreatePost::where('created_at', '>', $post->created_at)
-                            ->orderBy('created_at', 'desc')
-                            ->first();
+        $post->increment('total_views');
 
-        $next = CreatePost::where('created_at', '<', $post->created_at)
-                        ->orderBy('created_at', 'desc')
-                        ->first();
+        // Get the previous and next posts
+        $previous = CreatePost::where('created_at', '<', $post->created_at)
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-        $post->increment('total_views'); // Increment view count
+        $next = CreatePost::where('created_at', '>', $post->created_at)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        // Get 4 latest posts excluding the current post
+        $relatedPosts = CreatePost::where('id', '!=', $post->id)
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+
         $user = auth()->user();
         $post->liked = $user ? $post->likedUsers->contains($user->id) : false;
 
@@ -67,13 +74,13 @@ class ShowPostController extends Controller
         ];
 
         return Inertia::render('Post/Show', [
-            'post'     => $post,
+            'post' => $post,
             'previous' => $previous,
-            'next'     => $next,
-            'users'     => User::all(),
+            'next' => $next,
             'academicians' => Academician::all(),
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
+            'relatedPosts' => $relatedPosts,
             'metaTags' => $metaTags,
         ])->with([
             'meta' => $metaTags

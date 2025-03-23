@@ -62,69 +62,31 @@ class WelcomeController extends Controller
     
     public function showPost(CreatePost $post)
     {
-        // Using created_at for ordering
-        $previous = CreatePost::where('created_at', '>', $post->created_at)
-                            ->orderBy('created_at', 'desc')
-                            ->first();
+        $post->increment('total_views');
 
-        $next = CreatePost::where('created_at', '<', $post->created_at)
-                        ->orderBy('created_at', 'desc')
-                        ->first();
+        // Get the previous and next posts
+        $previous = CreatePost::where('created_at', '<', $post->created_at)
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-        $post->increment('total_views'); // Increment view count
+        $next = CreatePost::where('created_at', '>', $post->created_at)
+            ->orderBy('created_at', 'asc')
+            ->first();
 
-        // Ensure we have a clean description without HTML tags
-        $description = strip_tags($post->content);
-        $description = str_replace(["\n", "\r", "\t"], ' ', $description);
-        $description = preg_replace('/\s+/', ' ', $description);
-        $description = substr($description, 0, 200) . '...';
-
-        // Ensure we have a proper image URL and dimensions
-        $imageUrl = $post->featured_image 
-            ? url('storage/' . $post->featured_image) 
-            : url('storage/default.jpg');
-
-        // Get image dimensions if possible
-        $imagePath = $post->featured_image 
-            ? storage_path('app/public/' . $post->featured_image)
-            : public_path('storage/default.jpg');
-            
-        $imageSize = @getimagesize($imagePath);
-        $imageWidth = $imageSize ? $imageSize[0] : 1200;
-        $imageHeight = $imageSize ? $imageSize[1] : 630;
-
-        // Get the full URL for the current page
-        $currentUrl = url()->current();
-
-        $metaTags = [
-            'title' => $post->title,
-            'description' => $post->excerpt ?? $description,
-            'image' => $imageUrl,
-            'image_width' => $imageWidth,
-            'image_height' => $imageHeight,
-            'type' => 'article',
-            'url' => $currentUrl,
-            'published_time' => $post->created_at->toIso8601String(),
-            'category' => $post->category,
-            'site_name' => 'NexScholar',
-            'locale' => 'en_US'
-        ];
-
-        // Log the meta tags for debugging
-        Log::info('Meta Tags:', $metaTags);
-
-        // Store meta tags in session
-        Session::put('meta', $metaTags);
+        // Get 4 latest posts excluding the current post
+        $relatedPosts = CreatePost::where('id', '!=', $post->id)
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
 
         return Inertia::render('Post/WelcomePostShow', [
             'post' => $post,
             'previous' => $previous,
             'next' => $next,
-            'users' => User::all(),
             'academicians' => Academician::all(),
             'postgraduates' => Postgraduate::all(),
             'undergraduates' => Undergraduate::all(),
-            'metaTags' => $metaTags
+            'relatedPosts' => $relatedPosts,
         ]);
     }
 
@@ -148,6 +110,14 @@ class WelcomeController extends Controller
         }
 
         $event->increment('total_views');
+
+        // Get 3 latest events excluding the current event, ordered by start_date
+        $relatedEvents = PostEvent::where('id', '!=', $event->id)
+            ->where('event_status', 'published')
+            ->where('start_date', '>=', now())
+            ->orderBy('start_date', 'asc')
+            ->take(3)
+            ->get();
 
         // Clean description for meta tags
         $description = strip_tags($event->description);
@@ -191,7 +161,8 @@ class WelcomeController extends Controller
             'event' => $event,
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
-            'metaTags' => $metaTags
+            'metaTags' => $metaTags,
+            'relatedEvents' => $relatedEvents
         ]);
     }
 
@@ -215,6 +186,14 @@ class WelcomeController extends Controller
         }
 
         $project->increment('total_views');
+
+        // Get 3 latest projects excluding the current project, ordered by application_deadline
+        $relatedProjects = PostProject::where('id', '!=', $project->id)
+            ->where('project_status', 'published')
+            ->where('application_deadline', '>=', now())
+            ->orderBy('application_deadline', 'asc')
+            ->take(3)
+            ->get();
 
         // Clean description for meta tags
         $description = strip_tags($project->description);
@@ -259,13 +238,22 @@ class WelcomeController extends Controller
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
-            'metaTags' => $metaTags
+            'metaTags' => $metaTags,
+            'relatedProjects' => $relatedProjects
         ]);
     }
 
     public function showGrant(PostGrant $grant)
     {
         $grant->increment('total_views');
+
+        // Get 3 latest grants excluding the current grant, ordered by application_deadline
+        $relatedGrants = PostGrant::where('id', '!=', $grant->id)
+            ->where('status', 'published')
+            ->where('application_deadline', '>=', now())
+            ->orderBy('application_deadline', 'asc')
+            ->take(3)
+            ->get();
 
         // Clean description for meta tags
         $description = strip_tags($grant->description);
@@ -308,7 +296,8 @@ class WelcomeController extends Controller
         return Inertia::render('Grant/WelcomeGrantShow', [
             'grant' => $grant,
             'academicians' => Academician::all(),
-            'metaTags' => $metaTags
+            'metaTags' => $metaTags,
+            'relatedGrants' => $relatedGrants
         ]);
     }
 } 

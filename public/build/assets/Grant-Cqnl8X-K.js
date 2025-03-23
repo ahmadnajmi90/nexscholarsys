@@ -1,0 +1,1 @@
+import{j as r}from"./app-bAKhYWrJ.js";import{M as o}from"./MainLayout-CI6Y8TP6.js";import{u as s}from"./useRoles-D5L1HMhp.js";import m from"./GrantCard-B5BbobPh.js";import"./index-Cu_Vc-Oe.js";import"./FilterDropdown-Caj_Xl95.js";import"./react-select.esm-DpXd8cUc.js";const j=({grants:t,users:a})=>(s(),r.jsx(o,{title:"Grants",children:r.jsx(m,{grants:t})}));export{j as default};

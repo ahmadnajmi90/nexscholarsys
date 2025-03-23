@@ -5,7 +5,8 @@ import MainLayout from '@/Layouts/MainLayout';
 import ProjectContent from './Partials/ProjectContent';
 
 export default function Show() {
-  const { project, auth, academicians, previous, next, researchOptions, universities } = usePage().props;
+  const { project, auth, academicians, previous, next, researchOptions, universities, relatedProjects } = usePage().props;
+  console.log(relatedProjects);
   return (
     <MainLayout auth={auth}>
       <ProjectContent 
@@ -17,6 +18,7 @@ export default function Show() {
         previous={previous}
         next={next}
         universities={universities}
+        relatedProjects={relatedProjects}
       />
     </MainLayout>
   );

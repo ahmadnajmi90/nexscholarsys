@@ -5,7 +5,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import GrantContent from './Partials/GrantContent';
 
 export default function Show() {
-  const { grant, auth, academicians, previous, next } = usePage().props;
+  const { grant, auth, academicians, previous, next, relatedGrants } = usePage().props;
   return (
     <MainLayout auth={auth}>
       <GrantContent 
@@ -15,6 +15,7 @@ export default function Show() {
         auth={auth}
         previous={previous}
         next={next}
+        relatedGrants={relatedGrants}
       />
     </MainLayout>
   );

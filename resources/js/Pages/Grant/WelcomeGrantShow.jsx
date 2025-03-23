@@ -5,7 +5,7 @@ import WelcomeLayout from '@/Layouts/WelcomeLayout';
 import GrantContent from './Partials/GrantContent';
 
 export default function WelcomeGrantShow() {
-  const { grant, auth, academicians } = usePage().props;
+  const { grant, auth, academicians, relatedGrants } = usePage().props;
   
   return (
     <WelcomeLayout auth={auth}>
@@ -14,6 +14,7 @@ export default function WelcomeGrantShow() {
         academicians={academicians}
         isWelcome={true}
         auth={auth}
+        relatedGrants={relatedGrants}
       />
     </WelcomeLayout>
   );

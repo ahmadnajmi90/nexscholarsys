@@ -5,7 +5,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import EventContent from './Partials/EventContent';
 
 export default function Show() {
-  const { event, auth, academicians, previous, next, researchOptions } = usePage().props;
+  const { event, auth, academicians, researchOptions, relatedEvents } = usePage().props;
   return (
     <MainLayout auth={auth}>
       <EventContent 
@@ -14,8 +14,7 @@ export default function Show() {
         isWelcome={false}
         auth={auth}
         researchOptions={researchOptions}
-        previous={previous}
-        next={next}
+        relatedEvents={relatedEvents}
       />
     </MainLayout>
   );

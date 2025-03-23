@@ -1,21 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
-import { FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin } from 'react-icons/fa';
+import { FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
+import Carousel from '@/Components/Dashboard/Carousel';
 
 export default function PostContent({ 
   post, 
-  previous, 
-  next, 
   academicians, 
   postgraduates, 
   undergraduates, 
   isWelcome, 
   auth,
-  metaTags // Add metaTags prop here
+  metaTags,
+  relatedPosts
 }) {
   const { isAcademician, isPostgraduate, isUndergraduate } = useRoles();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Initialize state for like/share features.
   const [likes, setLikes] = useState(post.total_likes || 0);
@@ -89,6 +91,68 @@ export default function PostContent({
         console.error('Error sharing:', error);
       });
   };
+
+  // Handle image click
+  const handleImageClick = (img) => {
+    setSelectedImage(img);
+    setIsModalOpen(true);
+  };
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
+  // Close modal on escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
+  // Render function for related posts carousel
+  const renderRelatedPost = (post) => (
+    <div className="relative h-full">
+      <Link href={isWelcome ? route('welcome.posts.show', post.url) : route('posts.show', post.url)}>
+        <div className="relative h-full">
+          {post.featured_image ? (
+            <img
+              src={`/storage/${post.featured_image}`}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">No image</span>
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4">
+            <h3 className="text-lg font-semibold line-clamp-2">{post.title}</h3>
+            <p className="text-sm text-gray-200">
+              {new Date(post.created_at).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
 
   return (
     <div className="px-10 md:px-16">
@@ -260,17 +324,23 @@ export default function PostContent({
           </p>
         )}
 
+        <hr className="my-6 border-gray-200" />
+
         {/* Gallery */}
         {post.images && (
           <div className="mt-4">
-            <h2 className="text-xl font-bold mb-2">Gallery</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <h2 className="text-2xl font-bold mb-6">Gallery</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {JSON.parse(post.images).map((img, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div 
+                  key={index} 
+                  className="bg-white rounded-lg shadow-md overflow-hidden aspect-square cursor-pointer"
+                  onClick={() => handleImageClick(img)}
+                >
                   <img
                     src={`/storage/${img}`}
                     alt={`Gallery image ${index + 1}`}
-                    className="w-full h-auto md:h-32 object-cover"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </div>
               ))}
@@ -278,24 +348,85 @@ export default function PostContent({
           </div>
         )}
 
-        {/* Navigation Buttons */}
-        {!isWelcome && (
-        <div className="max-w-3xl mx-auto py-6 flex justify-between">
-          {previous ? (
-            <Link href={route('posts.show', previous.url)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-              Previous
-            </Link>
-          ) : (
-            <span></span>
-          )}
-          {next ? (
-            <Link href={route('posts.show', next.url)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-              Next
-            </Link>
-          ) : (
-            <span></span>
-          )}
-        </div>
+        <hr className="my-6 border-gray-200" />
+
+        {/* Other Posts Section */}
+        {relatedPosts && relatedPosts.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-6">Other Posts</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedPosts.map((relatedPost) => (
+                <Link 
+                  key={relatedPost.id}
+                  href={isWelcome ? route('welcome.posts.show', relatedPost.url) : route('posts.show', relatedPost.url)}
+                  className="block relative p-5 transform transition-opacity duration-500 rounded-2xl overflow-hidden h-[300px] flex flex-col justify-end hover:opacity-90"
+                  style={{
+                    backgroundImage: `url(${encodeURI(
+                      relatedPost.featured_image ? `/storage/${relatedPost.featured_image}` : "/storage/default.jpg"
+                    )})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-black opacity-40"></div>
+                  <div className="relative z-10 text-white pr-10">
+                    <h2 className="text-2xl font-bold truncate" title={relatedPost.title}>
+                      {relatedPost.title || "Untitled Post"}
+                    </h2>
+                    {relatedPost.content && (
+                      <div
+                        className="text-sm line-clamp-2 mb-2"
+                        dangerouslySetInnerHTML={{ __html: relatedPost.content }}
+                      ></div>
+                    )}
+                    {/* Date and Statistics Section */}
+                    <div className="flex items-center mt-1 space-x-2">
+                      <p className="text-xs">
+                        {new Date(relatedPost.created_at).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center text-xs">
+                          <FaEye className="w-4 h-4" />
+                          <span className="ml-1">{relatedPost.total_views || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaHeart className="w-4 h-4 text-red-500" />
+                          <span className="ml-1">{relatedPost.total_likes || 0}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <FaShareAlt className="w-4 h-4" />
+                          <span className="ml-1">{relatedPost.total_shares || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Image Modal */}
+        {isModalOpen && selectedImage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+            <div className="relative max-w-7xl mx-auto p-4">
+              <button
+                onClick={handleCloseModal}
+                className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+              >
+                <FaTimes className="w-8 h-8" />
+              </button>
+              <img
+                src={`/storage/${selectedImage}`}
+                alt="Full size image"
+                className="max-h-[90vh] w-auto object-contain"
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>

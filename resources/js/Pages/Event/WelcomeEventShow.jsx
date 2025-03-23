@@ -5,7 +5,7 @@ import WelcomeLayout from '@/Layouts/WelcomeLayout';
 import EventContent from './Partials/EventContent';
 
 export default function WelcomeEventShow() {
-  const { event, auth, academicians, researchOptions } = usePage().props;
+  const { event, auth, academicians, researchOptions, relatedEvents } = usePage().props;
   
   return (
     <WelcomeLayout auth={auth}>
@@ -15,6 +15,7 @@ export default function WelcomeEventShow() {
         researchOptions={researchOptions}
         isWelcome={true}
         auth={auth}
+        relatedEvents={relatedEvents}
       />
     </WelcomeLayout>
   );

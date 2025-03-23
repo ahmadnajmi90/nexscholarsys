@@ -5,6 +5,7 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react'; // Import useState if not already imported
+import { FaGoogle } from 'react-icons/fa';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -157,21 +158,25 @@ export default function Register() {
                                 </p>
                             </div>
 
-                            <div className="mt-4">
-                            <a
-                                href={route('auth.google')}
-                                className="flex items-center pl-4 w-60 py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
-                            >
-                                <div className="bg-white p-2 rounded-lg mr-3">
-                                    <img
-                                        src="https://cdn4.iconfinder.com/data/icons/logos-brands-7/512/google_logo-google_icongoogle-512.png"
-                                        alt="Google Logo"
-                                        className="w-5 h-5"
-                                    />
+                            <div className="col-span-6">
+                                {/* SEPARATOR WITH HORIZONTAL LINES */}
+                                <div className="flex items-center my-4">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="mx-2 text-gray-400 text-sm">OR</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
                                 </div>
-                                <span>Register with Google</span>
-                            </a>
-                        </div>
+
+                                {/* SOCIAL SIGN-IN BUTTON (GOOGLE) */}
+                                <div className="w-full">
+                                    <a
+                                        href={route('auth.google')}
+                                        className="flex items-center justify-center w-full py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
+                                    >
+                                        <FaGoogle className="mr-2" />
+                                        <span>Sign in with Google</span>
+                                    </a>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </main>

@@ -5,7 +5,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import PostContent from './Partials/PostContent';
 
 export default function Show() {
-  const { post, auth, academicians, postgraduates, undergraduates, previous, next, metaTags } = usePage().props;
+  const { post, auth, academicians, postgraduates, undergraduates, previous, next, metaTags, relatedPosts } = usePage().props;
   
   return (
     <MainLayout auth={auth}>
@@ -19,6 +19,7 @@ export default function Show() {
         previous={previous}
         next={next}
         metaTags={metaTags}
+        relatedPosts={relatedPosts}
       />
     </MainLayout>
   );
