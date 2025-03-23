@@ -108,12 +108,48 @@ class ShowGrantController extends Controller
         ]);
     }
 
-    public function share($url)
+    public function share(Request $request, $url)
     {
         $grant = PostGrant::where('url', $url)->firstOrFail();
-        $grant->increment('total_shares');
+        
+        // Clean description for meta tags
+        $description = strip_tags($grant->description);
+        $description = str_replace(["\n", "\r", "\t"], ' ', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+        $description = substr($description, 0, 200) . '...';
 
-        return response()->json(['total_shares' => $grant->total_shares]);
+        // Handle image URL and dimensions
+        $imageUrl = $grant->image 
+            ? secure_url('/storage/' . $grant->image) 
+            : secure_url('/storage/default-image.jpg');
+
+        // Get image dimensions
+        $imagePath = $grant->image 
+            ? storage_path('app/public/' . $grant->image)
+            : public_path('storage/default-image.jpg');
+            
+        $imageSize = @getimagesize($imagePath);
+        $imageWidth = $imageSize ? $imageSize[0] : 1200;
+        $imageHeight = $imageSize ? $imageSize[1] : 630;
+
+        $metaTags = [
+            'title' => $grant->title,
+            'description' => $description,
+            'image' => $imageUrl,
+            'image_width' => $imageWidth,
+            'image_height' => $imageHeight,
+            'type' => 'article',
+            'url' => route('welcome.grants.show', $grant),
+            'published_time' => $grant->created_at->toIso8601String(),
+            'category' => 'Grant',
+            'site_name' => config('app.name'),
+            'locale' => 'en_US'
+        ];
+
+        return response()->json([
+            'success' => true,
+            'metaTags' => $metaTags
+        ]);
     }
 
 }
