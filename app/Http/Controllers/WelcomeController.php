@@ -15,9 +15,51 @@ use App\Models\Undergraduate;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
 
 class WelcomeController extends Controller
 {
+    public function index()
+    {
+        $posts = CreatePost::where('status', 'published')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        $today = Carbon::today();
+
+        $events = PostEvent::where('event_status', 'published')
+            ->where('start_date', '>=', $today)
+            ->orderBy('start_date', 'asc')
+            ->take(5)
+            ->get();
+        
+        $projects = PostProject::where('project_status', 'published')
+            ->where('application_deadline', '>=', $today)
+            ->orderBy('application_deadline', 'asc')
+            ->take(5)
+            ->get();
+        
+        $grants = PostGrant::where('status', 'published')
+            ->where('application_deadline', '>=', $today)
+            ->orderBy('application_deadline', 'asc')
+            ->take(5)
+            ->get();
+
+        return Inertia::render('Welcome', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+            'posts' => $posts,
+            'events' => $events,
+            'projects' => $projects,
+            'grants' => $grants,
+        ]);
+    }
+    
     public function showPost(CreatePost $post)
     {
         // Using created_at for ordering

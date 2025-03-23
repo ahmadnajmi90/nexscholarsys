@@ -71,43 +71,7 @@ Route::post('/abilities', [AbilityController::class, 'store'])->name('abilities.
 Route::delete('/abilities/{id}', [AbilityController::class, 'destroy'])->name('abilities.destroy');
 
 
-Route::get('/', function () {
-    $posts = CreatePost::where('status', 'published')
-        ->orderBy('created_at', 'desc')
-        ->take(5)
-        ->get();
-
-    $today = Carbon::today();
-
-    $events = PostEvent::where('event_status', 'published')
-        ->where('start_date', '>=', $today)
-        ->orderBy('start_date', 'asc')
-        ->take(5)
-        ->get();
-    
-    $projects = PostProject::where('project_status', 'published')
-        ->where('application_deadline', '>=', $today)
-        ->orderBy('application_deadline', 'asc')
-        ->take(5)
-        ->get();
-    
-    $grants = PostGrant::where('status', 'published')
-        ->where('application_deadline', '>=', $today)
-        ->orderBy('application_deadline', 'asc')
-        ->take(5)
-        ->get();
-
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-        'posts' => $posts,
-        'events' => $events,
-        'projects' => $projects,
-        'grants' => $grants,
-    ]);
-})->name('welcome');
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 Route::get('welcome/posts/{post}', [WelcomeController::class, 'showPost'])->name('welcome.posts.show');
 Route::get('welcome/events/{event}', [WelcomeController::class, 'showEvent'])->name('welcome.events.show');

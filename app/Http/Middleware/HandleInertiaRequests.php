@@ -34,6 +34,8 @@ class HandleInertiaRequests extends Middleware
             'title' => config('app.name'),
             'description' => 'Discover the latest articles and resources on NexScholar.',
             'image' => url('storage/default.jpg'),
+            'image_width' => 1200,
+            'image_height' => 630,
             'type' => 'website',
             'url' => url()->current(),
             'site_name' => 'NexScholar',
