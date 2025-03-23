@@ -84,30 +84,22 @@ export default function ProjectContent({ project, previous, next, academicians, 
 
   // Sharing functions.
   const shareOnFacebook = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.projects.show', project.url)
-      : route('projects.show', project.url);
+    const shareUrl = route('welcome.projects.show', project.url);
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400');
   };
 
   const shareOnWhatsApp = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.projects.show', project.url)
-      : route('projects.show', project.url);
+    const shareUrl = route('welcome.projects.show', project.url);
     window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
   };
 
   const shareOnLinkedIn = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.projects.show', project.url)
-      : route('projects.show', project.url);
+    const shareUrl = route('welcome.projects.show', project.url);
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400');
   };
 
   const copyLink = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.projects.show', project.url)
-      : route('projects.show', project.url);
+    const shareUrl = route('welcome.projects.show', project.url);
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert("Link copied to clipboard");
     });

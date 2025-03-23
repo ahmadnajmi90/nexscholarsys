@@ -62,30 +62,22 @@ export default function GrantContent({ grant, previous, next, academicians, auth
 
   // Sharing functions for various platforms.
   const shareOnFacebook = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.grants.show', grant.url)
-      : route('grants.show', grant.url);
+    const shareUrl = route('welcome.grants.show', grant.url);
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400');
   };
 
   const shareOnWhatsApp = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.grants.show', grant.url)
-      : route('grants.show', grant.url);
+    const shareUrl = route('welcome.grants.show', grant.url);
     window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
   };
 
   const shareOnLinkedIn = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.grants.show', grant.url)
-      : route('grants.show', grant.url);
+    const shareUrl = route('welcome.grants.show', grant.url);
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400');
   };
 
   const copyLink = () => {
-    const shareUrl = isWelcome 
-      ? route('welcome.grants.show', grant.url)
-      : route('grants.show', grant.url);
+    const shareUrl = route('welcome.grants.show', grant.url);
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert("Link copied to clipboard");
     });

@@ -63,9 +63,7 @@ export default function PostContent({
 
   // Generic share handler
   const handleShare = (platform) => {
-    const shareUrl = isWelcome 
-      ? route('welcome.posts.show', post.url)
-      : route('posts.show', post.url);
+    const shareUrl = route('welcome.posts.show', post.url);
 
     switch (platform) {
       case 'copy':
