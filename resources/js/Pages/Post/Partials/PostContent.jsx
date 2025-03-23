@@ -63,43 +63,33 @@ export default function PostContent({
 
   // Generic share handler
   const handleShare = (platform) => {
-    // Use the welcome route for sharing
-    const shareUrl = route('welcome.posts.show', post.url);
-    const title = encodeURIComponent(post.title);
-    const text = encodeURIComponent(metaTags.description);
-    
-    let shareLink = '';
+    const shareUrl = isWelcome 
+      ? route('welcome.posts.show', post.url)
+      : route('posts.show', post.url);
+
     switch (platform) {
-      case 'facebook':
-        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-        break;
-      case 'whatsapp':
-        shareLink = `https://wa.me/?text=${title}%20${encodeURIComponent(shareUrl)}`;
-        break;
-      case 'linkedin':
-        shareLink = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${title}&summary=${text}`;
-        break;
       case 'copy':
         navigator.clipboard.writeText(shareUrl);
-        alert('Link copied to clipboard!');
-        return;
-      default:
-        return;
+        break;
+      case 'facebook':
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+        break;
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
+        break;
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(post.title)}`, '_blank');
+        break;
     }
 
-    // Open share dialog in a new window
-    window.open(shareLink, '_blank', 'width=600,height=400');
-    
-    // Increment share count if user is logged in
-    if (auth.user) {
-      axios.post(route('posts.share', post.url))
-        .then(response => {
-          setShares(response.data.total_shares);
-        })
-        .catch(error => {
-          console.error('Error updating share count:', error);
-        });
-    }
+    // Increment share count
+    axios.post(route('posts.share', post.url))
+      .then(response => {
+        setShares(response.data.total_shares);
+      })
+      .catch(error => {
+        console.error('Error sharing:', error);
+      });
   };
 
   return (

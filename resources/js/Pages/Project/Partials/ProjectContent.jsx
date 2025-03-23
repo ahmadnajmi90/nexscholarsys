@@ -84,22 +84,31 @@ export default function ProjectContent({ project, previous, next, academicians, 
 
   // Sharing functions.
   const shareOnFacebook = () => {
-    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    const shareUrl = isWelcome 
+      ? route('welcome.projects.show', project.url)
+      : route('projects.show', project.url);
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400');
   };
 
   const shareOnWhatsApp = () => {
-    const shareUrl = `https://wa.me/?text=${encodeURIComponent(window.location.href)}`;
-    window.open(shareUrl, '_blank');
+    const shareUrl = isWelcome 
+      ? route('welcome.projects.show', project.url)
+      : route('projects.show', project.url);
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, '_blank');
   };
 
   const shareOnLinkedIn = () => {
-    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`;
-    window.open(shareUrl, '_blank', 'width=600,height=400');
+    const shareUrl = isWelcome 
+      ? route('welcome.projects.show', project.url)
+      : route('projects.show', project.url);
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank', 'width=600,height=400');
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
+    const shareUrl = isWelcome 
+      ? route('welcome.projects.show', project.url)
+      : route('projects.show', project.url);
+    navigator.clipboard.writeText(shareUrl).then(() => {
       alert("Link copied to clipboard");
     });
   };

@@ -53,14 +53,10 @@ class ShowEventController extends Controller
     public function show(PostEvent $event)
     {
         // Using created_at for ordering, matching the index order (newest first)
-
-        // For descending order, the "previous" post is the one with a created_at value greater than the current post.
-        // If the current post is the latest, no such post exists.
         $previous = PostEvent::where('created_at', '>', $event->created_at)
                             ->orderBy('created_at', 'desc')
                             ->first();
 
-        // The "next" post is the one with a created_at value less than the current post.
         $next = PostEvent::where('created_at', '<', $event->created_at)
                         ->orderBy('created_at', 'desc')
                         ->first();
@@ -84,8 +80,30 @@ class ShowEventController extends Controller
 
         $event->increment('total_views'); // Increment view count
         $user = auth()->user();
-        // Check if the authenticated user has liked the post
         $event->liked = $user ? $event->likedUsers->contains($user->id) : false;
+
+        // Clean description for meta tags
+        $description = strip_tags($event->description);
+        $description = str_replace(["\n", "\r", "\t"], ' ', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+        $description = substr($description, 0, 200) . '...';
+
+        // Handle image URL and dimensions
+        $imageUrl = $event->image 
+            ? secure_url('/storage/' . $event->image) 
+            : secure_url('/storage/default-image.jpg');
+
+        $metaTags = [
+            'title' => $event->event_name,
+            'description' => $description,
+            'image' => $imageUrl,
+            'type' => 'article',
+            'url' => route('welcome.events.show', $event),
+            'published_time' => $event->created_at->toIso8601String(),
+            'category' => 'Event',
+            'site_name' => config('app.name'),
+            'locale' => 'en_US'
+        ];
 
         return Inertia::render('Event/Show', [
             'event'     => $event,
@@ -94,6 +112,9 @@ class ShowEventController extends Controller
             'users'     => User::all(),
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
+            'metaTags' => $metaTags
+        ])->with([
+            'meta' => $metaTags
         ]);
     }
 

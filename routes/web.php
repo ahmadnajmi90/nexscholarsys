@@ -110,79 +110,9 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::get('welcome/posts/{post}', [WelcomeController::class, 'showPost'])->name('welcome.posts.show');
-
-Route::get('/welcome/events/{event}', function (PostEvent $event) {
-    $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
-    $researchOptions = [];
-    foreach ($fieldOfResearches as $field) {
-        foreach ($field->researchAreas as $area) {
-            foreach ($area->nicheDomains as $domain) {
-                $researchOptions[] = [
-                    'field_of_research_id' => $field->id,
-                    'field_of_research_name' => $field->name,
-                    'research_area_id' => $area->id,
-                    'research_area_name' => $area->name,
-                    'niche_domain_id' => $domain->id,
-                    'niche_domain_name' => $domain->name,
-                ];
-            }
-        }
-    }
-
-    $event->increment('total_views'); // Increment view count
-    $user = auth()->user();
-    // Check if the authenticated user has liked the post
-    $event->liked = $user ? $event->likedUsers->contains($user->id) : false;
-
-    return Inertia::render('Event/WelcomeEventShow', [
-        'event' => $event,
-        'academicians' => Academician::all(),
-        'researchOptions' => $researchOptions
-    ]);
-})->name('welcome.events.show');
-
-Route::get('/welcome/projects/{project}', function (PostProject $project) {
-    $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
-    $researchOptions = [];
-    foreach ($fieldOfResearches as $field) {
-        foreach ($field->researchAreas as $area) {
-            foreach ($area->nicheDomains as $domain) {
-                $researchOptions[] = [
-                    'field_of_research_id' => $field->id,
-                    'field_of_research_name' => $field->name,
-                    'research_area_id' => $area->id,
-                    'research_area_name' => $area->name,
-                    'niche_domain_id' => $domain->id,
-                    'niche_domain_name' => $domain->name,
-                ];
-            }
-        }
-    }
-
-    $project->increment('total_views'); // Increment view count
-    $user = auth()->user();
-    // Check if the authenticated user has liked the post
-    $project->liked = $user ? $project->likedUsers->contains($user->id) : false;
-
-    return Inertia::render('Project/WelcomeProjectShow', [
-        'project' => $project,
-        'academicians' => Academician::all(),
-        'researchOptions' => $researchOptions,
-        'universities' => UniversityList::all()
-    ]);
-})->name('welcome.projects.show');
-
-Route::get('/welcome/grants/{grant}', function (PostGrant $grant) {
-    $grant->increment('total_views'); // Increment view count
-    $user = auth()->user();
-    // Check if the authenticated user has liked the post
-    $grant->liked = $user ? $grant->likedUsers->contains($user->id) : false;
-
-    return Inertia::render('Grant/WelcomeGrantShow', [
-        'grant' => $grant,
-        'academicians' => Academician::all(),
-    ]);
-})->name('welcome.grants.show');
+Route::get('welcome/events/{event}', [WelcomeController::class, 'showEvent'])->name('welcome.events.show');
+Route::get('welcome/projects/{project}', [WelcomeController::class, 'showProject'])->name('welcome.projects.show');
+Route::get('welcome/grants/{grant}', [WelcomeController::class, 'showGrant'])->name('welcome.grants.show');
 
 Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
 Route::get('/universities/{university}/faculties', [UniversityController::class, 'faculties'])->name('universities.faculties'); // Faculty list

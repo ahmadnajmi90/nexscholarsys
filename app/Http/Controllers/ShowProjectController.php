@@ -35,14 +35,10 @@ class ShowProjectController extends Controller
     public function show(PostProject $project)
     {
         // Using created_at for ordering, matching the index order (newest first)
-
-        // For descending order, the "previous" post is the one with a created_at value greater than the current post.
-        // If the current post is the latest, no such post exists.
         $previous = PostProject::where('created_at', '>', $project->created_at)
                             ->orderBy('created_at', 'desc')
                             ->first();
 
-        // The "next" post is the one with a created_at value less than the current post.
         $next = PostProject::where('created_at', '<', $project->created_at)
                         ->orderBy('created_at', 'desc')
                         ->first();
@@ -66,8 +62,30 @@ class ShowProjectController extends Controller
 
         $project->increment('total_views'); // Increment view count
         $user = auth()->user();
-        // Check if the authenticated user has liked the post
         $project->liked = $user ? $project->likedUsers->contains($user->id) : false;
+
+        // Clean description for meta tags
+        $description = strip_tags($project->description);
+        $description = str_replace(["\n", "\r", "\t"], ' ', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+        $description = substr($description, 0, 200) . '...';
+
+        // Handle image URL and dimensions
+        $imageUrl = $project->image 
+            ? secure_url('/storage/' . $project->image) 
+            : secure_url('/storage/default-image.jpg');
+
+        $metaTags = [
+            'title' => $project->title,
+            'description' => $description,
+            'image' => $imageUrl,
+            'type' => 'article',
+            'url' => route('welcome.projects.show', $project),
+            'published_time' => $project->created_at->toIso8601String(),
+            'category' => 'Project',
+            'site_name' => config('app.name'),
+            'locale' => 'en_US'
+        ];
 
         return Inertia::render('Project/Show', [
             'project'     => $project,
@@ -77,6 +95,9 @@ class ShowProjectController extends Controller
             'academicians' => Academician::all(),
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
+            'metaTags' => $metaTags
+        ])->with([
+            'meta' => $metaTags
         ]);
     }
 
