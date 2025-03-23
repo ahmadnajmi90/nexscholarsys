@@ -153,7 +153,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
 
     return (
         // Responsive outer container
-        <div className="max-w-7xl mx-auto px-4 pb-8">
+        <div className="max-w-8xl mx-auto px-4 pb-8">
             {/* Header Section */}
             <div className="w-full bg-white pb-12 shadow-md relative mb-4">
                 {/* Background Image */}

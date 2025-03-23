@@ -337,7 +337,7 @@ export default function AcademicianForm({ className = '', researchOptions }) {
 
       {/* Tabs Section */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto flex space-x-8 px-4 sm:px-6">
+        <div className="max-w-8xl mx-auto flex space-x-8 px-4 sm:px-6">
           {/* {['Profiles', 'Projects', 'Works', 'Teams', 'Network', 'Activity', 'More'].map((tab) => ( */}
           {['Profiles'].map((tab) => (
             <button

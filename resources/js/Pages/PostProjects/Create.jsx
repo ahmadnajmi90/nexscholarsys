@@ -121,7 +121,7 @@ export default function Create() {
           </svg>
         </button>
 
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 rounded-lg max-w-7xl mx-auto space-y-4 sm:space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Add New Project</h1>
 
           {/* Project Name */}
@@ -157,7 +157,7 @@ export default function Create() {
           </div>
 
           {/* Project Theme and Purpose */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">
                 Project Theme
@@ -264,7 +264,7 @@ export default function Create() {
           {/* Dates: Start Date, End Date, Application Deadline, Duration */}
           {!data.purpose.includes("For Showcase") && (
             <>
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
                     Start Date
@@ -291,7 +291,7 @@ export default function Create() {
                   {errors.end_date && <p className="text-red-500 text-xs mt-1">{errors.end_date}</p>}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel className="mt-1 block text-gray-700 font-medium">
                     Application Deadline
@@ -322,7 +322,7 @@ export default function Create() {
           )}
 
           {/* Sponsored By and Category */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">
                 Sponsored By
@@ -361,7 +361,7 @@ export default function Create() {
           </div>
 
           {/* Field of Research and Supervisor */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             {(data.category === "Fundamental Research" ||
               data.category === "Applied Research" ||
               data.category === "Fundamental + Applied") && (
@@ -417,7 +417,7 @@ export default function Create() {
           </div>
 
           {data.supervisor_category === "On Behalf" && (
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
               <div>
                 <InputLabel className="mt-1 block text-gray-700 font-medium">
                   Supervisor / Project Leader Name
@@ -460,7 +460,7 @@ export default function Create() {
           )}
 
           {/* Email and Origin Country */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">Email</InputLabel>
               <input
@@ -503,7 +503,7 @@ export default function Create() {
 
           {data.purpose.includes("Seek for Postgraduate") && (
             <>
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <NationalityForm
                     title={"Student Nationality"}
@@ -577,7 +577,7 @@ export default function Create() {
           )}
 
           {/* Image and Attachment Upload */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">Upload Image</InputLabel>
               <input
@@ -600,7 +600,7 @@ export default function Create() {
           </div>
 
           {/* Budget and Application URL */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             {data.purpose !== "Seek for Postgraduate" && (
               <div>
                 <InputLabel className="block text-gray-700 font-medium">
@@ -641,7 +641,7 @@ export default function Create() {
                 handleSubmit();
               }}
               disabled={processing}
-              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+              className="w-full sm:w-auto inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
             >
               Publish
             </button>

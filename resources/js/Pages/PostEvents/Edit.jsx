@@ -66,7 +66,7 @@ export default function Edit({ postEvent, auth }) {
   return (
     <MainLayout title="">
       <div className="p-4">
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white p-4 md:p-6 rounded-lg max-w-7xl mx-auto space-y-4 md:space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Edit Event</h1>
 
           {/* Event Name */}
@@ -110,7 +110,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Event Type and Mode */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
               <InputLabel>Event Type</InputLabel>
               <select
@@ -157,7 +157,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Start/End Date */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
               <InputLabel>Start Date</InputLabel>
               <input
@@ -186,7 +186,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Start/End Time */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
               <InputLabel>Start Time</InputLabel>
               <input
@@ -214,7 +214,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Event Theme and Field of Research */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
               <InputLabel>Event Theme</InputLabel>
               <select
@@ -243,7 +243,7 @@ export default function Edit({ postEvent, auth }) {
                   value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
                   label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
                 }))}
-                className="mt-1"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 classNamePrefix="select"
                 value={
                   data.field_of_research?.map((selectedValue) => {
@@ -272,7 +272,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Registration URL and Deadline */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
               <InputLabel>Registration URL</InputLabel>
               <input
@@ -301,7 +301,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Venue, City and Country */}
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <div>
               <InputLabel>Venue</InputLabel>
               <input
@@ -341,7 +341,7 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Contact Email and Upload Image */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
               <InputLabel>Contact Email</InputLabel>
               <input
@@ -402,12 +402,12 @@ export default function Edit({ postEvent, auth }) {
           </div>
 
           {/* Buttons */}
-          <div className="flex space-x-4">
+          <div className="flex justify-center md:justify-start space-x-4">
             <button
               type="button"
               onClick={() => handleSubmit()}
               disabled={processing}
-              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600 w-full md:w-auto"
             >
               Publish
             </button>

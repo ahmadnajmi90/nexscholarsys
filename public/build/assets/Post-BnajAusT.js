@@ -1,1 +1,0 @@
-import{j as o}from"./app-DLHVWjEF.js";import{M as r}from"./MainLayout-Sj14D8A7.js";import{u as s}from"./useRoles-D0WkMBED.js";import m from"./PostCard-DSgGBz3t.js";import"./index-CBHmLID5.js";import"./FilterDropdown-BZFv7r0S.js";import"./react-select.esm-BYCPoN5W.js";const x=({posts:t})=>(s(),o.jsx(r,{title:"Posts",children:o.jsx(m,{posts:t})}));export{x as default};

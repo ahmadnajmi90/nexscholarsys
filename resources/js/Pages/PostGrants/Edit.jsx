@@ -128,7 +128,7 @@ export default function Edit({ postGrant, auth }) {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-lg max-w-7xl mx-auto space-y-6"
+          className="bg-white p-4 sm:p-6 rounded-lg max-w-7xl mx-auto space-y-4 sm:space-y-6"
         >
           <h1 className="text-xl font-bold text-gray-700 text-center">
             Add New Grant
@@ -172,7 +172,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Start and End Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel htmlFor="start_date" value="Start Date (Grant)" />
               <input
@@ -203,7 +203,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Application Deadline and Grant Type */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel htmlFor="application_deadline" value="Application Deadline" />
               <input
@@ -257,7 +257,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Grant Theme and Cycle */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div ref={grantThemeRef}>
               <InputLabel htmlFor="grant_theme" value="Grant Theme (Multiselect)" />
               <div
@@ -326,7 +326,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Sponsored By and Contact Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel htmlFor="sponsored_by" value="Sponsored By" />
               <input
@@ -374,7 +374,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Website and Country */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel htmlFor="website" value="Website / Link" />
               <input
@@ -402,7 +402,7 @@ export default function Edit({ postGrant, auth }) {
           </div>
 
           {/* Image and Attachment Upload */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel htmlFor="image" value="Upload Image" />
               <input
@@ -464,7 +464,7 @@ export default function Edit({ postGrant, auth }) {
                 handleSubmit();
               }}
               disabled={processing}
-              className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
+              className="w-full sm:w-auto inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600"
             >
               Publish
             </button>
