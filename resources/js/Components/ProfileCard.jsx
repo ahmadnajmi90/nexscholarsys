@@ -329,26 +329,19 @@ const ProfileGridWithDualFilter = ({
 
               {/* Social Links */}
               <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-              <button 
-                onClick={() => {
-                  const email = users.find(
-                    (user) =>
-                      user.unique_id === 
-                      (profile.academician_id || profile.postgraduate_id || profile.undergraduate_id)
-                  )?.email;
-                  if (email) {
-                    navigator.clipboard.writeText(email)
-                      .then(() => alert(`Email ${email} copied to clipboard`))
-                      .catch(() => alert('Failed to copy email'));
-                  } else {
-                    alert("No email provided");
-                  }
-                }}
-                className="text-gray-500 text-sm cursor-pointer hover:text-blue-700" 
-                title="Copy Email"
-              >
-                <FaEnvelope />
-              </button>
+                <Link
+                  href={route('email.compose', { 
+                    to: users.find(
+                      (user) =>
+                        user.unique_id === 
+                        (profile.academician_id || profile.postgraduate_id || profile.undergraduate_id)
+                    )?.email 
+                  })}
+                  className="text-gray-500 text-sm cursor-pointer hover:text-blue-700" 
+                  title="Send Email"
+                >
+                  <FaEnvelope />
+                </Link>
                 <a
                   href={profile.google_scholar}
                   target="_blank"

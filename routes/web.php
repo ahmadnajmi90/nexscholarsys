@@ -45,6 +45,10 @@ use App\Http\Controllers\WelcomeController;
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+    
+    // Email routes
+    Route::get('/email/compose', [EmailController::class, 'compose'])->name('email.compose');
+    Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
 });
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
