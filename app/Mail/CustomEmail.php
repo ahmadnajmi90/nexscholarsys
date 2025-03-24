@@ -15,12 +15,13 @@ class CustomEmail extends Mailable
     private $emailSubject;
     private $replyToAddress;
     public $attachments;
+    private $recipient;
 
-    public function __construct($subject, $messageContent, $replyTo, $attachments = [])
+    public function __construct($to, $subject, $messageContent, $attachments = [])
     {
+        $this->recipient = $to;
         $this->emailSubject = $subject;
         $this->messageContent = $messageContent;
-        $this->replyToAddress = $replyTo;
         $this->attachments = $attachments;
     }
 
@@ -28,18 +29,31 @@ class CustomEmail extends Mailable
     {
         $mail = $this->view('emails.custom')
                     ->subject($this->emailSubject)
-                    ->replyTo($this->replyToAddress)
                     ->with([
                         'messageContent' => $this->messageContent
                     ]);
 
-        // Add attachments if any
-        foreach ($this->attachments as $attachment) {
-            $mail->attach(Storage::disk('public')->path($attachment['path']), [
-                'as' => $attachment['name']
-            ]);
-        }
+        // Set recipient using the correct method
+        $mail->to($this->recipient);
 
         return $mail;
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        $attachmentsList = [];
+        
+        foreach ($this->attachments as $attachment) {
+            if (isset($attachment['file']) && file_exists($attachment['file'])) {
+                $attachmentsList[] = \Illuminate\Mail\Mailables\Attachment::fromPath($attachment['file']);
+            }
+        }
+        
+        return $attachmentsList;
     }
 } 

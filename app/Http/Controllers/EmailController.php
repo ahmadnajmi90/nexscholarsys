@@ -22,130 +22,112 @@ class EmailController extends Controller
 
     public function send(Request $request)
     {
-        Log::info('Raw request data', [
-            'files' => $request->allFiles(),
-            'has_file' => $request->hasFile('attachments'),
-            'content_type' => $request->header('Content-Type'),
-            'request_keys' => $request->keys(),
-            'files_array' => is_array($request->file('attachments')),
+        Log::info('Starting email send process', [
+            'to' => $request->input('to'),
+            'subject' => $request->input('subject'),
+            'has_attachments' => $request->hasFile('attachments')
         ]);
 
-        $request->validate([
+        // Validate the request
+        $validated = $request->validate([
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
-            'attachments' => 'nullable',
-            'attachments.*' => 'file|max:10240', // Max 10MB per file
+            'attachments.*' => 'nullable|file|max:10240', // 10MB max per file
         ]);
 
         try {
-            // Debug request information
-            Log::info('Request details', [
-                'has_files' => $request->hasFile('attachments'),
-                'all_input' => $request->except('attachments'),
-                'files_count' => is_array($request->file('attachments')) ? count($request->file('attachments')) : ($request->hasFile('attachments') ? 1 : 0),
-                'request_files' => $request->allFiles(),
-            ]);
-
-            // Store attachments and get their paths
-            $attachmentPaths = [];
+            $attachments = [];
             
             if ($request->hasFile('attachments')) {
                 $files = $request->file('attachments');
-                Log::info('Processing attachments', [
-                    'files_type' => gettype($files),
-                    'is_array' => is_array($files),
-                    'raw_files' => $files
-                ]);
                 
-                // Ensure we're working with an array of files
+                // Convert single file to array if necessary
                 $files = is_array($files) ? $files : [$files];
-                
-                foreach ($files as $file) {
+
+                foreach ($files as $index => $file) {
                     if (!$file->isValid()) {
                         Log::error('Invalid file upload', [
-                            'error' => $file->getError(),
-                            'error_message' => $file->getErrorMessage()
+                            'index' => $index,
+                            'error' => $file->getError()
                         ]);
                         continue;
                     }
 
-                    try {
-                        $fileName = time() . '_' . $file->getClientOriginalName();
-                        $path = $file->storeAs('email-attachments', $fileName, 'public');
-
-                        if (!$path) {
-                            throw new \Exception('Failed to store file: ' . $fileName);
-                        }
-
-                        Log::info('File stored successfully', [
-                            'original_name' => $file->getClientOriginalName(),
-                            'stored_path' => $path,
-                            'full_path' => Storage::disk('public')->path($path),
-                            'exists' => Storage::disk('public')->exists($path)
-                        ]);
-
-                        $attachmentPaths[] = [
-                            'path' => $path,
-                            'name' => $file->getClientOriginalName()
-                        ];
-                    } catch (\Exception $e) {
-                        Log::error('Error processing file', [
-                            'file' => $file->getClientOriginalName(),
-                            'error' => $e->getMessage()
-                        ]);
-                    }
+                    // Store the file in email-attachments directory to ensure it persists
+                    // through the entire request (temp files might be deleted)
+                    $path = $file->store('email-attachments', 'public');
+                    $fullPath = Storage::disk('public')->path($path);
+                    
+                    // Add to attachments with the full path
+                    $attachments[] = [
+                        'path' => $fullPath,
+                        'name' => $file->getClientOriginalName()
+                    ];
+                    
+                    Log::info("File stored for attachment", [
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_path' => $fullPath
+                    ]);
                 }
             }
 
-            Log::info('Preparing to send email', [
-                'to' => $request->to,
-                'subject' => $request->subject,
-                'attachment_count' => count($attachmentPaths),
-                'attachments' => $attachmentPaths
+            Log::info('Attempting to send email', [
+                'to' => $validated['to'],
+                'attachments_count' => count($attachments)
             ]);
 
-            // Send the email
-            Mail::to($request->to)
-                ->send(new CustomEmail(
-                    $request->subject,
-                    $request->message,
-                    Auth::user()->email,
-                    $attachmentPaths
-                ));
+            // Use the Mail facade directly with a closure instead of a Mailable class
+            Mail::html($validated['message'], function ($message) use ($validated, $attachments) {
+                $message->to($validated['to']);
+                $message->subject($validated['subject']);
+                $message->replyTo(Auth::user()->email, Auth::user()->name ?? 'Nexscholar');
+                
+                // Add attachments if any
+                foreach ($attachments as $attachment) {
+                    if (isset($attachment['path']) && file_exists($attachment['path'])) {
+                        $message->attach($attachment['path'], [
+                            'as' => $attachment['name'] ?? basename($attachment['path'])
+                        ]);
+                    }
+                }
+            });
 
             Log::info('Email sent successfully');
-
-            // Clean up stored attachments
-            foreach ($attachmentPaths as $attachment) {
-                Storage::disk('public')->delete($attachment['path']);
-                Log::info('Cleaned up attachment', [
-                    'path' => $attachment['path']
-                ]);
+            
+            // Clean up stored files
+            foreach ($attachments as $attachment) {
+                if (isset($attachment['path']) && file_exists($attachment['path'])) {
+                    @unlink($attachment['path']);
+                    Log::info('Cleaned up attachment', ['path' => $attachment['path']]);
+                }
             }
 
-            return redirect()->back()->with([
+            return response()->json([
                 'success' => true,
                 'message' => 'Email sent successfully!'
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to send email', [
+            Log::error('Error in email process', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Clean up stored attachments in case of failure
-            foreach ($attachmentPaths ?? [] as $attachment) {
-                Storage::disk('public')->delete($attachment['path']);
-                Log::info('Cleaned up attachment after error', [
-                    'path' => $attachment['path']
-                ]);
+            // Clean up stored files if there was an error
+            if (isset($attachments) && is_array($attachments)) {
+                foreach ($attachments as $attachment) {
+                    if (isset($attachment['path']) && file_exists($attachment['path'])) {
+                        @unlink($attachment['path']);
+                        Log::info('Cleaned up attachment after error', ['path' => $attachment['path']]);
+                    }
+                }
             }
-            
-            return redirect()->back()->with([
-                'error' => true,
+
+            return response()->json([
+                'success' => false,
                 'message' => 'Failed to send email: ' . $e->getMessage()
-            ]);
+            ], 500);
         }
     }
+
 }
