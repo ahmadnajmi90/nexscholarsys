@@ -15,9 +15,9 @@ use App\Models\Undergraduate;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
 
 class WelcomeController extends Controller
@@ -100,6 +100,15 @@ class WelcomeController extends Controller
 
     public function showEvent(PostEvent $event)
     {
+        // Get the current user (authenticated or null) if available
+        $user = Auth::check() ? Auth::user() : null;
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view using our new tracking system
+        $event->recordView($user ? $user->id : null, $ipAddress);
+        
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -116,8 +125,6 @@ class WelcomeController extends Controller
                 }
             }
         }
-
-        $event->increment('total_views');
 
         // Get 3 latest events excluding the current event, ordered by start_date
         $relatedEvents = PostEvent::where('id', '!=', $event->id)
@@ -176,6 +183,15 @@ class WelcomeController extends Controller
 
     public function showProject(PostProject $project)
     {
+        // Get the current user (authenticated or null) if available
+        $user = Auth::check() ? Auth::user() : null;
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view using our new tracking system
+        $project->recordView($user ? $user->id : null, $ipAddress);
+        
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -192,8 +208,6 @@ class WelcomeController extends Controller
                 }
             }
         }
-
-        $project->increment('total_views');
 
         // Get 3 latest projects excluding the current project, ordered by application_deadline
         $relatedProjects = PostProject::where('id', '!=', $project->id)
@@ -253,8 +267,15 @@ class WelcomeController extends Controller
 
     public function showGrant(PostGrant $grant)
     {
-        $grant->increment('total_views');
-
+        // Get the current user (authenticated or null) if available
+        $user = Auth::check() ? Auth::user() : null;
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view using our new tracking system
+        $grant->recordView($user ? $user->id : null, $ipAddress);
+        
         // Get 3 latest grants excluding the current grant, ordered by application_deadline
         $relatedGrants = PostGrant::where('id', '!=', $grant->id)
             ->where('status', 'published')

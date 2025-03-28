@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
+import { trackEvent, trackPageView } from '@/Utils/analytics';
 
 export default function EventContent({ 
   event, 
@@ -42,6 +43,20 @@ export default function EventContent({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Track event view when component mounts
+  useEffect(() => {
+    // Track page view
+    trackPageView(window.location.pathname);
+    
+    // Track event view event
+    trackEvent(
+      'Event', 
+      'view', 
+      event.event_name,
+      event.id
+    );
+  }, [event]);
 
   // Determine author from academicians only.
   const author = (academicians && academicians.find(a => a.academician_id === event.author_id)) || null;

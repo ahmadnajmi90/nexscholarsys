@@ -88,5 +88,61 @@ class PostProject extends Model
     {
         return $this->belongsToMany(User::class, 'project_user_likes', 'project_id', 'user_id')->withTimestamps();
     }
+
+    /**
+     * Get the views for the project.
+     */
+    public function views()
+    {
+        return $this->hasMany(ProjectView::class, 'project_id');
+    }
+
+    /**
+     * Check if a user has viewed this project in the last 24 hours.
+     * 
+     * @param int|null $userId
+     * @param string|null $ipAddress
+     * @return bool
+     */
+    public function hasBeenViewedBy($userId = null, $ipAddress = null)
+    {
+        $query = $this->views();
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } elseif ($ipAddress) {
+            $query->where('ip_address', $ipAddress);
+        } else {
+            return false;
+        }
+        
+        return $query->where('created_at', '>=', now()->subHours(24))->exists();
+    }
+
+    /**
+     * Record a new view for this project.
+     * 
+     * @param int|null $userId
+     * @param string|null $ipAddress
+     * @return \App\Models\ProjectView
+     */
+    public function recordView($userId = null, $ipAddress = null)
+    {
+        // If the project has already been viewed by this user/IP in the last 24 hours, don't record a new view
+        if ($this->hasBeenViewedBy($userId, $ipAddress)) {
+            return null;
+        }
+        
+        // Record the view
+        $view = $this->views()->create([
+            'user_id' => $userId,
+            'ip_address' => $ipAddress,
+        ]);
+        
+        // Increment the total_views count
+        $this->increment('total_views');
+        
+        return $view;
+    }
 }
 

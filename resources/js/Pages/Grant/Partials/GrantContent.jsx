@@ -3,10 +3,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { 
   FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, 
-  FaLink, FaFacebook, FaWhatsapp, FaLinkedin 
+  FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
+import { trackEvent, trackPageView } from '@/Utils/analytics';
 
 export default function GrantContent({ 
   grant, 
@@ -35,6 +36,20 @@ export default function GrantContent({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Track grant view when component mounts
+  useEffect(() => {
+    // Track page view
+    trackPageView(window.location.pathname);
+    
+    // Track grant view event
+    trackEvent(
+      'Grant', 
+      'view', 
+      grant.grant_name,
+      grant.id
+    );
+  }, [grant]);
 
   // Determine the author from academicians.
   const author =

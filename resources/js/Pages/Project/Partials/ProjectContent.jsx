@@ -3,12 +3,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { 
   FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, 
-  FaLink, FaFacebook, FaWhatsapp, FaLinkedin 
+  FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes
 } from 'react-icons/fa';
+import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
+import { trackEvent, trackPageView } from '@/Utils/analytics';
 
 export default function ProjectContent({ project, previous, next, academicians, researchOptions, universities, auth, isWelcome, relatedProjects }) {
+  const { isAcademician } = useRoles();
+
   // State for like/share features.
   const [likes, setLikes] = useState(project.total_likes || 0);
   const [shares, setShares] = useState(project.total_shares || 0);
@@ -26,6 +30,20 @@ export default function ProjectContent({ project, previous, next, academicians, 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Track project view when component mounts
+  useEffect(() => {
+    // Track page view
+    trackPageView(window.location.pathname);
+    
+    // Track project view event
+    trackEvent(
+      'Project', 
+      'view', 
+      project.project_name,
+      project.id
+    );
+  }, [project]);
 
   // Determine the author from academicians.
   const author = (academicians && academicians.find(a => a.academician_id === project.author_id)) || null;

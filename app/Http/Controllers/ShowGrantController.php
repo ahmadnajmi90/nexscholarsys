@@ -33,8 +33,15 @@ class ShowGrantController extends Controller
 
     public function show(PostGrant $grant)
     {
-        $grant->increment('total_views'); // Increment view count
-        $user = auth()->user();
+        // Get the current user (authenticated or null)
+        $user = Auth::user();
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view and automatically increment total_views if needed
+        $grant->recordView($user ? $user->id : null, $ipAddress);
+        
         $grant->liked = $user ? $grant->likedUsers->contains($user->id) : false;
 
         // Get 3 latest grants excluding the current grant, ordered by application_deadline
@@ -82,7 +89,7 @@ class ShowGrantController extends Controller
     public function toggleLike(Request $request, $url)
     {
         $grant = PostGrant::where('url', $url)->firstOrFail();
-        $user = auth()->user();
+        $user = Auth::user();
         
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);

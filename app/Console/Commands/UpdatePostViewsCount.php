@@ -5,6 +5,12 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\CreatePost;
 use App\Models\PostView;
+use App\Models\PostEvent;
+use App\Models\EventView;
+use App\Models\PostProject;
+use App\Models\ProjectView;
+use App\Models\PostGrant;
+use App\Models\GrantView;
 use Illuminate\Support\Facades\DB;
 
 class UpdatePostViewsCount extends Command
@@ -21,35 +27,63 @@ class UpdatePostViewsCount extends Command
      *
      * @var string
      */
-    protected $description = 'Update post total_views based on post_views table';
+    protected $description = 'Update content total_views based on view tables';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Updating post view counts...');
+        $this->info('Updating view counts...');
         
-        // Get counts from post_views table
-        $viewCounts = DB::table('post_views')
-            ->select('post_id', DB::raw('COUNT(*) as view_count'))
-            ->groupBy('post_id')
-            ->get();
-            
-        $updatedCount = 0;
+        // Update posts view counts
+        $this->updateViewCounts('post_views', 'post_id', CreatePost::class);
         
-        foreach ($viewCounts as $viewCount) {
-            $post = CreatePost::find($viewCount->post_id);
-            
-            if ($post) {
-                $post->total_views = $viewCount->view_count;
-                $post->save();
-                $updatedCount++;
-            }
-        }
+        // Update events view counts
+        $this->updateViewCounts('event_views', 'event_id', PostEvent::class);
         
-        $this->info("Updated view counts for {$updatedCount} posts.");
+        // Update projects view counts
+        $this->updateViewCounts('project_views', 'project_id', PostProject::class);
+        
+        // Update grants view counts
+        $this->updateViewCounts('grant_views', 'grant_id', PostGrant::class);
         
         return Command::SUCCESS;
+    }
+    
+    /**
+     * Update the view counts for a specific content type
+     * 
+     * @param string $viewTable The view tracking table name
+     * @param string $foreignKey The foreign key column name in the view table
+     * @param string $modelClass The model class to update
+     */
+    private function updateViewCounts($viewTable, $foreignKey, $modelClass)
+    {
+        try {
+            // Get counts from the view table
+            $viewCounts = DB::table($viewTable)
+                ->select($foreignKey, DB::raw('COUNT(*) as view_count'))
+                ->groupBy($foreignKey)
+                ->get();
+                
+            $updatedCount = 0;
+            
+            foreach ($viewCounts as $viewCount) {
+                $contentId = $viewCount->$foreignKey;
+                $content = $modelClass::find($contentId);
+                
+                if ($content) {
+                    $content->total_views = $viewCount->view_count;
+                    $content->save();
+                    $updatedCount++;
+                }
+            }
+            
+            $contentType = strtolower(class_basename($modelClass));
+            $this->info("Updated view counts for {$updatedCount} {$contentType}s.");
+        } catch (\Exception $e) {
+            $this->error("Error updating view counts for " . class_basename($modelClass) . ": " . $e->getMessage());
+        }
     }
 }

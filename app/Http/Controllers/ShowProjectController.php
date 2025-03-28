@@ -34,6 +34,15 @@ class ShowProjectController extends Controller
 
     public function show(PostProject $project)
     {
+        // Get the current user (authenticated or null)
+        $user = Auth::user();
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view and automatically increment total_views if needed
+        $project->recordView($user ? $user->id : null, $ipAddress);
+        
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -51,8 +60,6 @@ class ShowProjectController extends Controller
             }
         }
 
-        $project->increment('total_views'); // Increment view count
-        $user = auth()->user();
         $project->liked = $user ? $project->likedUsers->contains($user->id) : false;
 
         // Get 3 latest projects excluding the current project, ordered by application_deadline
@@ -102,7 +109,7 @@ class ShowProjectController extends Controller
     public function toggleLike(Request $request, $url)
     {
         $project = PostProject::where('url', $url)->firstOrFail();
-        $user = auth()->user();
+        $user = Auth::user();
         
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);

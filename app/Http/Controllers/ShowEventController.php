@@ -52,6 +52,15 @@ class ShowEventController extends Controller
 
     public function show(PostEvent $event)
     {
+        // Get the current user (authenticated or null)
+        $user = Auth::user();
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view and automatically increment total_views if needed
+        $event->recordView($user ? $user->id : null, $ipAddress);
+        
         // Get 3 latest events excluding the current event, ordered by start_date
         $relatedEvents = PostEvent::where('id', '!=', $event->id)
             ->where('event_status', 'published')
@@ -77,8 +86,6 @@ class ShowEventController extends Controller
             }
         }
 
-        $event->increment('total_views'); // Increment view count
-        $user = auth()->user();
         $event->liked = $user ? $event->likedUsers->contains($user->id) : false;
 
         // Clean description for meta tags
@@ -119,7 +126,7 @@ class ShowEventController extends Controller
     public function toggleLike(Request $request, $url)
     {
         $event = PostEvent::where('url', $url)->firstOrFail();
-        $user = auth()->user();
+        $user = Auth::user();
         
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);

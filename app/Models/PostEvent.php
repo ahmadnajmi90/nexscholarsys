@@ -81,4 +81,60 @@ class PostEvent extends Model
     {
         return $this->belongsToMany(User::class, 'event_user_likes', 'event_id', 'user_id')->withTimestamps();
     }
+
+    /**
+     * Get the views for the event.
+     */
+    public function views()
+    {
+        return $this->hasMany(EventView::class, 'event_id');
+    }
+
+    /**
+     * Check if a user has viewed this event in the last 24 hours.
+     * 
+     * @param int|null $userId
+     * @param string|null $ipAddress
+     * @return bool
+     */
+    public function hasBeenViewedBy($userId = null, $ipAddress = null)
+    {
+        $query = $this->views();
+        
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } elseif ($ipAddress) {
+            $query->where('ip_address', $ipAddress);
+        } else {
+            return false;
+        }
+        
+        return $query->where('created_at', '>=', now()->subHours(24))->exists();
+    }
+
+    /**
+     * Record a new view for this event.
+     * 
+     * @param int|null $userId
+     * @param string|null $ipAddress
+     * @return \App\Models\EventView
+     */
+    public function recordView($userId = null, $ipAddress = null)
+    {
+        // If the event has already been viewed by this user/IP in the last 24 hours, don't record a new view
+        if ($this->hasBeenViewedBy($userId, $ipAddress)) {
+            return null;
+        }
+        
+        // Record the view
+        $view = $this->views()->create([
+            'user_id' => $userId,
+            'ip_address' => $ipAddress,
+        ]);
+        
+        // Increment the total_views count
+        $this->increment('total_views');
+        
+        return $view;
+    }
 }
