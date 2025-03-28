@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Application;
 
 class WelcomeController extends Controller
@@ -62,7 +63,14 @@ class WelcomeController extends Controller
     
     public function showPost(CreatePost $post)
     {
-        $post->increment('total_views');
+        // Get the current user (authenticated or null) if available
+        $user = Auth::check() ? Auth::user() : null;
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view using our new tracking system
+        $post->recordView($user ? $user->id : null, $ipAddress);
 
         // Get the previous and next posts
         $previous = CreatePost::where('created_at', '<', $post->created_at)

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import Carousel from '@/Components/Dashboard/Carousel';
+import { trackEvent, trackPageView } from '@/Utils/analytics';
 
 export default function PostContent({ 
   post, 
@@ -34,6 +35,20 @@ export default function PostContent({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Track post view when component mounts
+  useEffect(() => {
+    // Track page view
+    trackPageView(window.location.pathname);
+    
+    // Track post view event
+    trackEvent(
+      'Post', 
+      'view', 
+      post.title, 
+      post.id
+    );
   }, []);
 
   // Determine author based on the post's author_id.

@@ -30,7 +30,14 @@ class ShowPostController extends Controller
 
     public function show(CreatePost $post)
     {
-        $post->increment('total_views');
+        // Get the current user (authenticated or null)
+        $user = Auth::check() ? Auth::user() : null;
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view and automatically increment total_views if needed
+        $post->recordView($user ? $user->id : null, $ipAddress);
 
         // Get the previous and next posts
         $previous = CreatePost::where('created_at', '<', $post->created_at)
@@ -47,7 +54,6 @@ class ShowPostController extends Controller
             ->take(3)
             ->get();
 
-        $user = auth()->user();
         $post->liked = $user ? $post->likedUsers->contains($user->id) : false;
 
         // Ensure we have a clean description without HTML tags
@@ -90,7 +96,7 @@ class ShowPostController extends Controller
     public function toggleLike(Request $request, $url)
     {
         $post = CreatePost::where('url', $url)->firstOrFail();
-        $user = auth()->user();
+        $user = Auth::user();
         
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
