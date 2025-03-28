@@ -6,6 +6,7 @@ import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 import { Home, Calendar1, User, FileBadge, Briefcase } from 'lucide-react'; // Modern icons
+import { trackPageView } from '../Utils/analytics';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -20,6 +21,11 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         // Save the state to localStorage
         localStorage.setItem('isSidebarOpen', newSidebarState);
     };
+
+    // Track page views when the URL changes
+    useEffect(() => {
+        trackPageView(url);
+    }, [url]);
 
     // Effect to determine screen size for responsiveness
     useEffect(() => {
@@ -112,7 +118,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                             </Link>
 
                             {/* Profile */}
-                            <Link href="/profile" className={`flex flex-col items-center ${isActive('/profile') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/role" className={`flex flex-col items-center ${isActive('/role') ? 'text-blue-500' : 'text-gray-500'}`}>
                                 <User className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Profile</span>
                             </Link>

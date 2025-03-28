@@ -244,12 +244,12 @@ const MobileSidebar = () => {
                             </button>
                             {menuOpen.survey && (
                                 <div className="ml-6">
-                                    <Link href="/survey/free" className="block py-2 hover:bg-gray-100 rounded">
+                                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform" className="block py-2 hover:bg-gray-100 rounded" target="_blank" rel="noopener noreferrer">
                                         Free Survey
-                                    </Link>
-                                    <Link href="/survey/with-token" className="block py-2 hover:bg-gray-100 rounded">
+                                    </a>
+                                    {/* <Link href="/survey/with-token" className="block py-2 hover:bg-gray-100 rounded">
                                         Survey With Token
-                                    </Link>
+                                    </Link> */}
                                 </div>
                             )}
                         </div>
