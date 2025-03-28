@@ -32,9 +32,19 @@ class AcademicianController extends Controller
                 }
             }
         }
+        
+        // Get only academicians with complete profiles
+        $academicians = Academician::where(function($query) {
+            $query->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+                //   ->whereNotNull('bio')
+                //   ->where('bio', '!=', '')
+                  ->whereNotNull('research_expertise')
+                  ->where('research_expertise', '!=', '[]');
+        })->get();
+        
         return Inertia::render('Networking/Academician', [
             // Pass any data you want to the component here
-            'academicians' => Academician::all(),
+            'academicians' => $academicians,
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
             'users' => User::all(),

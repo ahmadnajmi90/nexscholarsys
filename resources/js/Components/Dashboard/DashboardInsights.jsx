@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import QuickActions from "./QuickActions";
 import UpcomingEvents from "./UpcomingEvents";
 import RegisteredUser from "./RegisteredUser";
@@ -8,6 +8,8 @@ import ProfileCard from "../ProfileCard";
 import useRoles from "../../Hooks/useRoles";
 import Carousel from "./Carousel"; // Adjust the import path if needed
 import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
+import { Link } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 
 const DashboardInsight = ({
   totalUsers,
@@ -22,8 +24,17 @@ const DashboardInsight = ({
   faculties,
   users,
   researchOptions,
+  profileIncompleteAlert,
 }) => {
   const { isAdmin, isFacultyAdmin } = useRoles();
+  const [showAlert, setShowAlert] = useState(false);
+  
+  // Effect to track first appearance of the alert
+  useEffect(() => {
+    if (profileIncompleteAlert?.show) {
+      setShowAlert(true);
+    }
+  }, [profileIncompleteAlert]);
 
   // Render functions for each carousel item
   const renderPostItem = (post) => (
@@ -159,6 +170,30 @@ const DashboardInsight = ({
 
   return (
     <div className="p-6 md:py-0 md:px-2 min-h-screen">
+      {/* Profile Incomplete Alert */}
+      <Transition
+        show={showAlert && profileIncompleteAlert?.show}
+        enter="transition-opacity duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity duration-200"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <div className="p-4 mb-4 text-sm text-yellow-800 bg-yellow-100 rounded-lg flex items-center justify-between" role="alert">
+          <div className="flex items-center">
+            {profileIncompleteAlert?.message}
+          </div>
+          <Link 
+            href={route('role.edit')} 
+            className="ml-4 px-4 py-2 bg-white text-yellow-800 border border-yellow-800 rounded-md hover:bg-yellow-50 transition-colors duration-200 flex items-center"
+          >
+            Update Now
+            <span className="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>
+          </Link>
+        </div>
+      </Transition>
+
       {/* Admin Insights */}
       {isAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

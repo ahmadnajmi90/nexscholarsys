@@ -1,15 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Carousel from "./Carousel"; // Adjust the import path as needed
 import QuickLinks from "./QuickActions"; // Adjust the import path as needed
 import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
+import { Link } from '@inertiajs/react';
+import { Transition } from '@headlessui/react';
 
-const Dashboard_M = ({ posts, events, grants, users }) => {
-  // Format today’s date as dd/mm/yyyy
+const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert }) => {
+  // Format today's date as dd/mm/yyyy
   const todayDate = new Date().toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
+  
+  // State to track if alert should be shown with animation
+  const [showAlert, setShowAlert] = useState(false);
+  
+  // Effect to track first appearance of the alert
+  useEffect(() => {
+    if (profileIncompleteAlert?.show) {
+      setShowAlert(true);
+    }
+  }, [profileIncompleteAlert]);
 
   // Render functions for carousel items
   const renderPostItem = (post) => (
@@ -123,6 +135,30 @@ const Dashboard_M = ({ posts, events, grants, users }) => {
         style={{ width: "500px", maxWidth: "100%" }}
       >
         <div className="bg-white w-full px-5 pt-6 pb-4 overflow-y-auto">
+          {/* Profile Incomplete Alert */}
+          <Transition
+            show={showAlert && profileIncompleteAlert?.show}
+            enter="transition-all duration-300 ease-in-out"
+            enterFrom="opacity-0 -translate-y-4"
+            enterTo="opacity-100 translate-y-0"
+            leave="transition-all duration-200"
+            leaveFrom="opacity-100 translate-y-0"
+            leaveTo="opacity-0 -translate-y-4"
+          >
+            <div className="p-4 mb-4 text-sm text-yellow-800 bg-yellow-100 rounded-lg" role="alert">
+              <div className="flex items-center mb-2">
+                {profileIncompleteAlert?.message}
+              </div>
+              <Link 
+                href={route('role.edit')} 
+                className="mt-2 inline-flex items-center px-4 py-2 bg-white text-yellow-800 border border-yellow-800 rounded-md hover:bg-yellow-50 transition-colors duration-200"
+              >
+                Update Now
+                <span className="ml-2 w-2 h-2 bg-red-500 rounded-full"></span>
+              </Link>
+            </div>
+          </Transition>
+          
           {/* Today Section */}
           <div className="mb-3">
             <h1 className="text-3xl font-bold">Today</h1>

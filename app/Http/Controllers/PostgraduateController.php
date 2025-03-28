@@ -32,9 +32,19 @@ class PostgraduateController extends Controller
                 }
             }
         }
+        
+        // Get only postgraduates with complete profiles
+        $postgraduates = Postgraduate::where(function($query) {
+            $query->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+                //   ->whereNotNull('bio')
+                //   ->where('bio', '!=', '')
+                  ->whereNotNull('field_of_research')
+                  ->where('field_of_research', '!=', '[]');
+        })->get();
+        
         return Inertia::render('Networking/Postgraduate', [
             // Pass any data you want to the component here
-            'postgraduates' => Postgraduate::all(),
+            'postgraduates' => $postgraduates,
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
             'users' => User::all(),

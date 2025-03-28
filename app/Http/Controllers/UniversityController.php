@@ -47,7 +47,13 @@ class UniversityController extends Controller
             }
         }
 
-        $academicians = $faculty->academicians; // Assuming a relationship
+        // Get only academicians with complete profiles
+        $academicians = $faculty->academicians()
+            ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+            ->whereNotNull('research_expertise')
+            ->where('research_expertise', '!=', '[]')
+            ->get();
+            
         return inertia('Universities/AcademicianList', 
         ['academicians' => $academicians,
                 'universities' => UniversityList::all(),
@@ -78,8 +84,11 @@ class UniversityController extends Controller
             }
         }
 
-        // Retrieve undergraduates from the faculty model
-        $undergraduates = $faculty->undergraduates; // Ensure the FacultyList model has a 'undergraduates' relationship
+        // Get only undergraduates with complete profiles
+        $undergraduates = $faculty->undergraduates()
+            ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+            ->get();
+            
         return inertia('Universities/UndergraduateList', [
             'undergraduates' => $undergraduates,
             'universities'   => UniversityList::all(),
@@ -111,8 +120,13 @@ class UniversityController extends Controller
             }
         }
 
-        // Retrieve postgraduates from the faculty model
-        $postgraduates = $faculty->postgraduates; // Ensure the FacultyList model has a 'postgraduates' relationship
+        // Get only postgraduates with complete profiles
+        $postgraduates = $faculty->postgraduates()
+            ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+            ->whereNotNull('field_of_research')
+            ->where('field_of_research', '!=', '[]')
+            ->get();
+            
         return inertia('Universities/PostgraduateList', [
             'postgraduates'  => $postgraduates,
             'universities'   => UniversityList::all(),

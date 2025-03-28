@@ -6,6 +6,8 @@ import useRoles from '@/Hooks/useRoles';
 import Dashboard_m from "../Components/Dashboard/Dashboard_m"; // Import the mobile view component
 import { useState, useEffect } from 'react';
 import useIsDesktop from "@/Hooks/useIsDesktop";
+import { Link } from '@inertiajs/react';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 
 const Dashboard = ({
     totalUsers,
@@ -20,12 +22,13 @@ const Dashboard = ({
     faculties,
     users,
     researchOptions,
+    profileIncompleteAlert,
 }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const isDesktop = useIsDesktop();
 
     return (
-            <MainLayout title="Dashboard">
+            <MainLayout title="Dashboard">                
                 {isDesktop ? (
                 <DashboardInsights 
                 totalUsers={totalUsers} 
@@ -40,12 +43,14 @@ const Dashboard = ({
                 faculties={faculties}
                 users={users}
                 researchOptions={researchOptions}
+                profileIncompleteAlert={profileIncompleteAlert}
                 />):
                 (
                     <Dashboard_m 
                     events={events}
                     users={users}
                     grants={grants}
+                    profileIncompleteAlert={profileIncompleteAlert}
                     posts={posts}/>
                 )
                     }

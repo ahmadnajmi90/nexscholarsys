@@ -166,7 +166,7 @@ const ProfileGridWithDualFilter = ({
         </h2>
         <div className="space-y-4">
           <FilterDropdown
-            label={isUndergraduateList ? "Preferred Research Area" : "Research Area"}
+            label={isUndergraduateList ? "Preferred Research Area" : "Field of Research"}
             options={uniqueResearchAreas}
             selectedValues={selectedArea}
             setSelectedValues={setSelectedArea}
@@ -316,9 +316,12 @@ const ProfileGridWithDualFilter = ({
                       })()
                     : "No Field of Research or Expertise"}
                 </p>
-                <p className="text-gray-500 text-sm">
-                  {profile.current_position ? profile.current_position : "No Position"}
-                </p>
+                {/* Only show position for Academicians */}
+                {!isPostgraduateList && !isUndergraduateList && (
+                  <p className="text-gray-500 text-sm">
+                    {profile.current_position ? profile.current_position : "No Position"}
+                  </p>
+                )}
                 <button
                   onClick={() => handleQuickInfoClick(profile)}
                   className="mt-2 bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
@@ -402,19 +405,26 @@ const ProfileGridWithDualFilter = ({
               <div className="space-y-4">
                   <p className="text-gray-600">
                     <span className="font-semibold">University:</span>{" "}
-                    {getUniversityNameById(selectedProfile.university)}
+                    {getUniversityNameById(selectedProfile.university) || "Not Provided"}
                   </p>
                   <p className="text-gray-600">
                     <span className="font-semibold">Faculty:</span>{" "}
-                    {getFacultyNameById(selectedProfile.faculty)}
+                    {getFacultyNameById(selectedProfile.faculty) || "Not Provided"}
                   </p>
                   <p className="text-gray-600">
                     <span className="font-semibold">Bio:</span>{" "}
-                    {selectedProfile.bio || "No bio available."}
+                    {selectedProfile.bio || "Not Provided"}
                   </p>
+                  {/* Only show position for Academicians */}
+                  {!isPostgraduateList && !isUndergraduateList && (
+                    <p className="text-gray-600">
+                      <span className="font-semibold">Position:</span>{" "}
+                      {selectedProfile.current_position || "Not Provided"}
+                    </p>
+                  )}
                   <p className="text-gray-600">
                     <span className="font-semibold">
-                      {isUndergraduateList ? "Preferred Research Area" : "Fields of Research"}:
+                      {isUndergraduateList ? "Preferred Research Area" : "Field of Research"}:
                     </span>{" "}
                     {(() => {
                       const fieldOfResearchNames =
@@ -464,28 +474,33 @@ const ProfileGridWithDualFilter = ({
                         ...researchExpertiseNames,
                         ...researchPreferenceNames,
                       ];
-                      return allNames.length > 0 ? allNames.join(", ") : "    ";
+                      return allNames.length > 0 ? allNames.join(", ") : "Not Provided";
                     })()}
                   </p>
-                  {(isPostgraduateList || isUndergraduateList) &&
-                    selectedProfile.skills &&
-                    Array.isArray(selectedProfile.skills) &&
-                    selectedProfile.skills.length > 0 && (
-                      <p className="text-gray-600">
-                        <span className="font-semibold">Skills:</span>{" "}
-                        {selectedProfile.skills
-                          .map((s) => capitalize(s))
-                          .join(", ")}
-                      </p>
-                    )}
+                  {(isPostgraduateList || isUndergraduateList) && (
+                    <p className="text-gray-600">
+                      <span className="font-semibold">Skills:</span>{" "}
+                      {(() => {
+                        if (!selectedProfile.skills || !Array.isArray(selectedProfile.skills) || selectedProfile.skills.length === 0) {
+                          return "Not Provided";
+                        }
+                        
+                        // Map skill IDs to skill names using the skills from props
+                        return selectedProfile.skills.map(skillId => {
+                          const skillObj = skills?.find(s => s.id === skillId);
+                          return skillObj ? capitalize(skillObj.name) : skillId;
+                        }).join(", ");
+                      })()}
+                    </p>
+                  )}
                   {!isUndergraduateList && (
                     <p className="text-gray-600">
                       {supervisorAvailabilityKey === "availability_as_supervisor" ? (
                         <span className="font-semibold">Available as supervisor:</span>
                       ) : (
                         <span className="font-semibold">Looking for a supervisor:</span>
-                      )}
-                      {selectedProfile[supervisorAvailabilityKey] === 1 ? " Yes" : " No"}
+                      )}{" "}
+                      {selectedProfile[supervisorAvailabilityKey] === 1 ? "Yes" : "No"}
                     </p>
                   )}
                   <p className="text-gray-600">
@@ -496,7 +511,7 @@ const ProfileGridWithDualFilter = ({
                         (selectedProfile.academician_id ||
                           selectedProfile.postgraduate_id ||
                           selectedProfile.undergraduate_id)
-                    )?.email || "No email provided"}
+                    )?.email || "Not Provided"}
                   </p>
                 </div>
                 <div className="mt-6 text-center">
