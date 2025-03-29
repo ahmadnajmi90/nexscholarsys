@@ -3,8 +3,26 @@ import ItemCard from './ItemCard';
 import { Link } from '@inertiajs/react';
 
 export default function WelcomeItems({ items, auth, title, type }) {
+  // Add validation to ensure items is an array
+  const validItems = Array.isArray(items) ? items : [];
   const [currentIndex, setCurrentIndex] = useState(0);
-  const totalItems = items.slice(0, 5); // Only use the first 5 items
+  const totalItems = validItems.slice(0, 5); // Only use the first 5 items
+
+  // If no items are available, display a message
+  if (totalItems.length === 0) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="relative flex justify-center items-center mb-8">
+            <h2 className="text-3xl font-bold text-blue-600">{title}</h2>
+          </div>
+          <div className="text-center py-10">
+            <p className="text-gray-600">No {type}s available at this time.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const handlePrev = () => {
     setCurrentIndex((prevIndex) =>
@@ -41,8 +59,8 @@ export default function WelcomeItems({ items, auth, title, type }) {
 
         {/* Desktop View: Grid with 5 columns */}
         <div className="hidden md:grid md:grid-cols-5 gap-4">
-          {totalItems.map(item => (
-            <ItemCard key={item.id} item={item} auth={auth} type={type} />
+          {totalItems.map((item, index) => (
+            <ItemCard key={item?.id || index} item={item} auth={auth} type={type} />
           ))}
         </div>
 

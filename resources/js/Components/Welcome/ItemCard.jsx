@@ -2,13 +2,28 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 
 export default function ItemCard({ item, auth, type }) {
+  // If item is undefined, return an empty placeholder
+  if (!item) {
+    return (
+      <div className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 w-full">
+        <div className="p-6">
+          <h2 className="text-lg font-semibold text-gray-800">No item data available</h2>
+        </div>
+      </div>
+    );
+  }
+
   // For posts, use content; for others, use description.
-  const title = type === 'event' ? item.event_name : item.title;
-  const content = type === 'post' ? item.content : item.description;
-  const image = type === 'post' ? item.featured_image : item.image;
+  const title = type === 'event' ? item?.event_name : item?.title;
+  const content = type === 'post' ? item?.content : item?.description;
+  const image = type === 'post' ? item?.featured_image : item?.image;
 
   // Determine the correct route based on the type.
   const getRoute = () => {
+    if (!item?.url) {
+      return "#";
+    }
+    
     if (type === 'event') {
       return route("welcome.events.show", item.url);
     } else if (type === 'project') {
@@ -31,13 +46,13 @@ export default function ItemCard({ item, auth, type }) {
     <div className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 w-full">
       <img
         src={image ? `/storage/${image}` : "/storage/default.jpg"}
-        alt={title}
+        alt={title || "Item image"}
         className="w-full h-48 object-cover"
       />
       {/* Content container */}
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-gray-800 truncate" title={title}>
-          {title}
+        <h2 className="text-lg font-semibold text-gray-800 truncate" title={title || ""}>
+          {title || "Untitled"}
         </h2>
         <p
           className="text-gray-600 mt-4 h-12 text-center font-extralight"

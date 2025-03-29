@@ -15,6 +15,7 @@ import {
     FaCog,
     FaBookReader,
     FaBookOpen,
+    FaRobot
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 
@@ -267,6 +268,54 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             </span> */}
                         {/* </Link>
                     </div> */}
+
+                    {/* Workspace Section */}
+                    {/* <div>
+                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Workspace</h3>
+                        {/* <button
+                            onClick={() => toggleMenu('workspace')}
+                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                        >
+                            <FaBookOpen className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Workspace</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.workspace ? '-' : '+'}</span>}
+                        </button>
+                        {menuOpen.workspace && (
+                            <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">View Board</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Manage Board</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Members</Link>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => toggleMenu('journal')}
+                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                        >
+                            <FaBook className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Journal Database</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.journal ? '-' : '+'}</span>}
+                        </button>
+                        {menuOpen.journal && (
+                            <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Discontinued Journal</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Predator Journal</Link>
+                            </div>
+                        )} */}
+                          {/* <button
+                            onClick={() => toggleMenu('survey')}
+                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                        >
+                            <FaPoll className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Survey</span>
+                            {isOpen && <span className="ml-auto">{menuOpen.survey ? '-' : '+'}</span>}
+                        </button>
+                        {menuOpen.survey && (
+                            <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (Free)</Link>
+                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (With Token)</Link>
+                            </div>
+                        )}
+                    </div> */} 
 
                     {/* Survey Section */}
                     <div>

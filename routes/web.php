@@ -208,5 +208,4 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/create-posts/{id}', [CreatePostController::class, 'destroy'])->name('create-posts.destroy');
 });
 
-
 require __DIR__.'/auth.php';
