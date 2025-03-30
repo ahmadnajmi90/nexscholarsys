@@ -322,12 +322,26 @@ const ProfileGridWithDualFilter = ({
                     {profile.current_position ? profile.current_position : "No Position"}
                   </p>
                 )}
-                <button
-                  onClick={() => handleQuickInfoClick(profile)}
-                  className="mt-2 bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
-                >
-                  Quick Info
-                </button>
+                <div className="mt-2 flex justify-center gap-2">
+                  <button
+                    onClick={() => handleQuickInfoClick(profile)}
+                    className="bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
+                  >
+                    Quick Info
+                  </button>
+                  <Link
+                    href={
+                      !isPostgraduateList && !isUndergraduateList
+                        ? route('academicians.show', profile.url)
+                        : isPostgraduateList && !isUndergraduateList
+                        ? route('postgraduates.show', profile.url)
+                        : route('undergraduates.show', profile.url)
+                    }
+                    className="bg-green-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-green-600"
+                  >
+                    Full Profile
+                  </Link>
+                </div>
               </div>
 
               {/* Social Links */}
@@ -402,129 +416,70 @@ const ProfileGridWithDualFilter = ({
               <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
                 {selectedProfile.full_name}
               </h3>
-              <div className="space-y-4">
-                  <p className="text-gray-600">
-                    <span className="font-semibold">University:</span>{" "}
-                    {getUniversityNameById(selectedProfile.university) || "Not Provided"}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Faculty:</span>{" "}
-                    {getFacultyNameById(selectedProfile.faculty) || "Not Provided"}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Bio:</span>{" "}
+              <div className="space-y-6">
+                {/* Research Information */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                    {!isPostgraduateList && !isUndergraduateList 
+                      ? "Research Expertise"
+                      : isPostgraduateList && !isUndergraduateList
+                      ? "Field of Research"
+                      : "Research Preference"}
+                  </h4>
+                  <div className="pl-4 space-y-1">
+                    {(() => {
+                      let researchArray = [];
+                      // For Academicians
+                      if (!isPostgraduateList && !isUndergraduateList) {
+                        researchArray = selectedProfile.research_expertise || [];
+                      }
+                      // For Postgraduates
+                      else if (isPostgraduateList && !isUndergraduateList) {
+                        researchArray = selectedProfile.field_of_research || [];
+                      }
+                      // For Undergraduates
+                      else {
+                        researchArray = selectedProfile.research_preference || [];
+                      }
+
+                      if (Array.isArray(researchArray) && researchArray.length > 0) {
+                        return researchArray.map((id, index) => {
+                          const matchedOption = researchOptions.find(
+                            (option) =>
+                              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                          );
+                          if (!matchedOption) return null;
+                          return (
+                            <p key={index} className="text-gray-600">
+                              {index + 1}. {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
+                            </p>
+                          );
+                        });
+                      }
+                      return <p className="text-gray-600">Not Provided</p>;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">Bio</h4>
+                  <p className="text-gray-600 whitespace-pre-line">
                     {selectedProfile.bio || "Not Provided"}
                   </p>
-                  {/* Only show position for Academicians */}
-                  {!isPostgraduateList && !isUndergraduateList && (
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Position:</span>{" "}
-                      {selectedProfile.current_position || "Not Provided"}
-                    </p>
-                  )}
-                  <p className="text-gray-600">
-                    <span className="font-semibold">
-                      {isUndergraduateList ? "Preferred Research Area" : "Field of Research"}:
-                    </span>{" "}
-                    {(() => {
-                      const fieldOfResearchNames =
-                        Array.isArray(selectedProfile.field_of_research) && selectedProfile.field_of_research.length > 0
-                          ? selectedProfile.field_of_research
-                              .map((id) => {
-                                const matchedOption = researchOptions.find(
-                                  (option) =>
-                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                );
-                                return matchedOption
-                                  ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                  : null;
-                              })
-                              .filter(Boolean)
-                          : [];
-                      const researchExpertiseNames =
-                        Array.isArray(selectedProfile.research_expertise) && selectedProfile.research_expertise.length > 0
-                          ? selectedProfile.research_expertise
-                              .map((id) => {
-                                const matchedOption = researchOptions.find(
-                                  (option) =>
-                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                );
-                                return matchedOption
-                                  ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                  : null;
-                              })
-                              .filter(Boolean)
-                          : [];
-                      const researchPreferenceNames =
-                        Array.isArray(selectedProfile.research_preference) && selectedProfile.research_preference.length > 0
-                          ? selectedProfile.research_preference
-                              .map((id) => {
-                                const matchedOption = researchOptions.find(
-                                  (option) =>
-                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                );
-                                return matchedOption
-                                  ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                  : null;
-                              })
-                              .filter(Boolean)
-                          : [];
-                      const allNames = [
-                        ...fieldOfResearchNames,
-                        ...researchExpertiseNames,
-                        ...researchPreferenceNames,
-                      ];
-                      return allNames.length > 0 ? allNames.join(", ") : "Not Provided";
-                    })()}
-                  </p>
-                  {(isPostgraduateList || isUndergraduateList) && (
-                    <p className="text-gray-600">
-                      <span className="font-semibold">Skills:</span>{" "}
-                      {(() => {
-                        if (!selectedProfile.skills || !Array.isArray(selectedProfile.skills) || selectedProfile.skills.length === 0) {
-                          return "Not Provided";
-                        }
-                        
-                        // Map skill IDs to skill names using the skills from props
-                        return selectedProfile.skills.map(skillId => {
-                          const skillObj = skills?.find(s => s.id === skillId);
-                          return skillObj ? capitalize(skillObj.name) : skillId;
-                        }).join(", ");
-                      })()}
-                    </p>
-                  )}
-                  {!isUndergraduateList && (
-                    <p className="text-gray-600">
-                      {supervisorAvailabilityKey === "availability_as_supervisor" ? (
-                        <span className="font-semibold">Available as supervisor:</span>
-                      ) : (
-                        <span className="font-semibold">Looking for a supervisor:</span>
-                      )}{" "}
-                      {selectedProfile[supervisorAvailabilityKey] === 1 ? "Yes" : "No"}
-                    </p>
-                  )}
-                  <p className="text-gray-600">
-                    <span className="font-semibold">Email:</span>{" "}
-                    {users.find(
-                      (user) =>
-                        user.unique_id ===
-                        (selectedProfile.academician_id ||
-                          selectedProfile.postgraduate_id ||
-                          selectedProfile.undergraduate_id)
-                    )?.email || "Not Provided"}
-                  </p>
-                </div>
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
-                  >
-                    Close
-                  </button>
                 </div>
               </div>
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          )}
+          </div>
+        )}
         </div>
   
         {/* Pagination */}

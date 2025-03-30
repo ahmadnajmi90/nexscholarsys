@@ -10,10 +10,11 @@ const Academician = ( {academicians, universities, faculties, users, researchOpt
         <MainLayout title="Academician" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
             <ProfileCard 
             profilesData={academicians} 
-            supervisorAvailabilityKey="availability_as_supervisor" 
+            supervisorAvailabilityKey="availability_as_supervisor"
             universitiesList={universities} 
             faculties={faculties}
             isPostgraduateList={false}
+            isUndergraduateList={false}
             users={users}
             researchOptions={researchOptions}/>
         </MainLayout>

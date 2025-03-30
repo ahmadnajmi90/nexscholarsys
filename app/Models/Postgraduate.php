@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class Postgraduate extends Model
 {
@@ -41,13 +42,43 @@ class Postgraduate extends Model
         'funding_requirement',
         'current_postgraduate_status',
         'background_image',
-        'skills'
+        'skills',
+        'url'
     ];
 
     protected $casts = [
         'field_of_research' => 'array', // Cast field_of_study as an array
         'skills' => 'array'
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($postgraduate) {
+            if (!$postgraduate->url) {
+                $slug = Str::slug($postgraduate->full_name);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->exists()) {
+                    $slug = $originalSlug . '-' . $count;
+                    $count++;
+                }
+                $postgraduate->url = $slug;
+            }
+        });
+
+        static::updating(function ($postgraduate) {
+            if ($postgraduate->isDirty('full_name') || !$postgraduate->url) {
+                $slug = Str::slug($postgraduate->full_name);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->where('id', '!=', $postgraduate->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count;
+                    $count++;
+                }
+                $postgraduate->url = $slug;
+            }
+        });
+    }
 
     public function user()
     {

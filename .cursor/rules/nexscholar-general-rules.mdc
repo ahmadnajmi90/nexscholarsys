@@ -1,0 +1,92 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Nexscholar - Academic Research Platform Rules
+
+You are assisting with the Nexscholar platform, a modern academic and research platform built with Laravel 11 and React integrated via Inertia.js. Follow these guidelines when generating or modifying code:
+
+## Architecture Overview
+
+- **Backend**: Laravel 11.9 with PHP 8.2
+- **Frontend**: React integrated with Inertia.js, styled with Tailwind CSS
+- **Authentication**: Laravel Sanctum with Bouncer for role-based permissions
+- **Database**: MySQL with Eloquent ORM
+- **AI Integration**: GPT-4o for academic profile generation
+- **File Management**: Custom implementation for handling uploads and attachments
+
+## Laravel Backend Guidelines
+
+### Controller Structure
+- Use resource controllers for CRUD operations
+- Return Inertia responses from controllers: `return Inertia::render('PageName', $data);`
+- Group related routes in `routes/web.php` by middleware or feature
+- Use Form Requests for validation logic
+- Keep controllers focused on request handling, move business logic to services
+
+### Model Pattern
+- Store multi-value attributes (tags, skills, research fields) as JSON fields
+- Define clear relationships between models (User, Academician, Post, etc.)
+- Use Bouncer's `HasRolesAndAbilities` trait for permissions
+- Use consistent naming for foreign keys (e.g., `author_id`, `academician_id`)
+- Use accessors and mutators for data formatting when needed
+
+### Route Organization
+- Group routes by authentication/authorization status
+- Use route model binding for models like Post, Event, Project, Grant
+- Keep route names consistent with controller names
+- Use middleware for role-based access control
+
+### File Management
+- Store uploaded files in appropriate public directories
+- Handle file deletion when records are updated or deleted
+- Validate file types and sizes
+- Use consistent naming patterns for uploaded files
+
+## Inertia.js Integration
+
+- Return Inertia responses from controllers with appropriate props
+- Use shared data for common values like auth user info
+- Handle form submissions with Inertia forms
+- Use Ziggy for named routes in JavaScript: `route('route.name')`
+
+## React Frontend Guidelines
+
+### Page Components
+- Store page components in `resources/js/Pages` directory
+- Use appropriate layouts (MainLayout) for each page
+- Follow naming pattern matching Laravel route names
+- Pass data from controllers as props
+
+### Component Organization
+- Store reusable components in `resources/js/Components`
+- Create feature-specific components in subdirectories (Dashboard/, Welcome/)
+- Implement responsive designs with mobile-specific components when needed
+- Use consistent naming conventions for components
+
+### UI Patterns
+- Use Tailwind CSS utility classes directly in components
+- Implement responsive design using Tailwind breakpoints
+- Use Headless UI components for interactive elements
+- Implement both desktop and mobile views for key interfaces
+
+### State Management
+- Use React Hooks (useState, useEffect) for component state
+- Use custom hooks (like useRoles, useIsDesktop) for shared logic
+- Handle loading states properly for asynchronous operations
+- Implement proper error handling for form submissions
+
+## Database Guidelines
+
+- Use Laravel migrations for schema definitions
+- Follow consistent naming conventions for tables and columns
+- Use JSON columns for flexible attribute storage (tags, skills)
+- Implement proper indexes for frequently queried columns
+
+## User Roles & Permissions
+
+- Use Bouncer for role-based permissions
+- Define clear abilities for different user roles
+- Implement role-specific controllers and views
+- Check permissions in both frontend and backend code

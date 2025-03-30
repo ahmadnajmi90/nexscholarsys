@@ -66,6 +66,15 @@ Route::bind('event', function ($value) {
 Route::bind('project', function ($value) {
     return PostProject::where('url', $value)->firstOrFail();
 });
+Route::bind('academician', function ($value) {
+    return Academician::where('url', $value)->firstOrFail();
+});
+Route::bind('postgraduate', function ($value) {
+    return Postgraduate::where('url', $value)->firstOrFail();
+});
+Route::bind('undergraduate', function ($value) {
+    return Undergraduate::where('url', $value)->firstOrFail();
+});
 
 Route::get('/admin/roles', [RolePermissionController::class, 'index'])->name('roles.index');
 Route::get('/admin/roles/{role}/abilities', [RolePermissionController::class, 'edit'])->name('roles.abilities.edit');
@@ -207,5 +216,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/create-posts/{id}', [CreatePostController::class, 'update'])->name('create-posts.update');
     Route::delete('/create-posts/{id}', [CreatePostController::class, 'destroy'])->name('create-posts.destroy');
 });
+
+// Profile pages with SEO URLs
+Route::get('academicians/{academician}', [AcademicianController::class, 'show'])->name('academicians.show');
+Route::get('postgraduates/{postgraduate}', [PostgraduateController::class, 'show'])->name('postgraduates.show');
+Route::get('undergraduates/{undergraduate}', [UndergraduateController::class, 'show'])->name('undergraduates.show');
 
 require __DIR__.'/auth.php';

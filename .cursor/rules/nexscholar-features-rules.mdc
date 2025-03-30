@@ -1,0 +1,106 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Nexscholar Features and Components Rules
+
+This file contains specific guidelines for implementing and maintaining features in the Nexscholar platform.
+
+## Content Management Features
+
+### Posts, Events, Projects, and Grants
+- Each content type has its own controller, model, and views
+- Follow consistent patterns for CRUD operations across content types
+- Implement toggleLike and share functionality for all content types
+- Store images in public directories with consistent naming patterns
+- Support featured images and gallery modes for content
+- Use rich text editors (React-Quill) for content bodies
+
+### Content Display Components
+- Implement card components for content previews (PostCard, EventCard, etc.)
+- Create detailed view pages with consistent layouts
+- Support pagination for content listings
+- Implement proper image handling with responsive sizes
+
+## User Profile Features
+
+### Role-Specific Profiles
+- Support different profile types: Academician, Postgraduate, Undergraduate, Industry
+- Use custom forms for each role with appropriate fields
+- Store profile images in role-specific directories
+- Implement profile picture and background image upload functionality
+
+### AI-Powered Profile Generation
+- Support generation from Google Search or provided URLs
+- Implement loading indicators during generation process
+- Process and validate AI-generated content before saving
+- Map research expertise to structured format (Field → Area → Domain)
+- Translate non-English content to English when necessary
+
+### CV Generation
+- Support generation of CVs from profile data
+- Use PHPWord for document creation
+- Allow customization of CV format and content
+
+## Dashboard Features
+
+### Insights and Analytics
+- Display key metrics (users, views, likes)
+- Support different visualizations (charts, graphs)
+- Show upcoming events and recent activities
+- Implement responsive layouts for both desktop and mobile
+
+### UI Components
+- Use cards, grids, and flex layouts consistently
+- Implement carousels with auto-slide and dot navigation
+- Support quick actions for common tasks
+- Show alerts for incomplete profiles or important notifications
+
+## Frontend UI Patterns
+
+### Layout Components
+- Use MainLayout for authenticated pages
+- Implement consistent headers and footers
+- Support responsive sidebar navigation
+- Handle mobile layouts with dedicated components
+
+### Interactive Components
+- Use modals for forms and dialogs
+- Implement dropdown filters with search functionality
+- Use consistent button styles and interactions
+- Support loading states for asynchronous operations
+
+### Navigation
+- Use Inertia Link components for navigation
+- Implement role-based sidebar navigation
+- Support breadcrumbs for hierarchical navigation
+- Track page views for analytics
+
+## University and Faculty Features
+
+### University Directory
+- Support listing universities with filtering options
+- Display faculty listings for each university
+- Show academicians, postgraduates, and undergraduates by faculty
+- Implement proper pagination and filtering
+
+### Faculty Administration
+- Support verification of academicians by faculty admins
+- Implement email notifications for verification
+- Display verification status in profiles
+- Allow management of faculty-specific content
+
+## Data Validation and Processing
+
+### Form Validation
+- Use Laravel's validation rules in Form Requests
+- Implement client-side validation with Inertia
+- Display validation errors consistently across forms
+- Validate file uploads for size and type
+
+### Data Processing
+- Process and sanitize user inputs before storage
+- Handle JSON fields with proper serialization/deserialization
+- Format dates consistently using Carbon
+- Implement proper error handling for API operations

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class Undergraduate extends Model
 {
@@ -35,7 +36,8 @@ class Undergraduate extends Model
         'website',
         'linkedin',
         'google_scholar',
-        'researchgate'
+        'researchgate',
+        'url'
     ];
 
     protected $casts = [
@@ -43,6 +45,35 @@ class Undergraduate extends Model
         'skills' => 'array',
         'interested_do_research' => 'boolean'
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($undergraduate) {
+            if (!$undergraduate->url) {
+                $slug = Str::slug($undergraduate->full_name);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->exists()) {
+                    $slug = $originalSlug . '-' . $count;
+                    $count++;
+                }
+                $undergraduate->url = $slug;
+            }
+        });
+
+        static::updating(function ($undergraduate) {
+            if ($undergraduate->isDirty('full_name') || !$undergraduate->url) {
+                $slug = Str::slug($undergraduate->full_name);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->where('id', '!=', $undergraduate->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count;
+                    $count++;
+                }
+                $undergraduate->url = $slug;
+            }
+        });
+    }
 
     public function user()
     {

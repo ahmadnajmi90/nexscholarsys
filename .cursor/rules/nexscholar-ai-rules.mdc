@@ -1,0 +1,93 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Nexscholar AI Integration Rules
+
+This file provides guidelines for implementing and maintaining AI-related features in the Nexscholar platform.
+
+## AI Profile Generation
+
+### OpenAI Integration
+- Use GPT-4o via OpenAI API or Azure OpenAI
+- Structure prompts to generate specific academic profile sections
+- Include clear instructions for required data formats
+- Handle API rate limits and errors gracefully
+- Cache successful responses to minimize API usage
+
+### AI Response Processing
+- Parse JSON responses from the AI model
+- Validate and clean generated content before storage
+- Map research expertise to predefined structured options
+- Handle multilingual responses with translation when needed
+- Log AI-generated content for quality analysis
+
+## Web Scraping Integration
+
+### URL Processing
+- Use GuzzleHTTP for making HTTP requests to external URLs
+- Validate and sanitize user-provided URLs
+- Handle timeouts and errors gracefully
+- Respect robots.txt and implement proper delay between requests
+- Cache successful responses to minimize unnecessary requests
+
+### Content Extraction
+- Use DOMDocument for HTML parsing
+- Extract meta descriptions and relevant content
+- Implement fallback mechanisms when expected content isn't found
+- Filter out irrelevant content and advertisements
+- Sanitize extracted content before storage
+
+## Google Search Integration
+
+### Search API Usage
+- Use Google Custom Search API for web-based AI search
+- Construct search queries based on user information
+- Filter results to academic and professional sources
+- Handle pagination of search results
+- Cache search results to minimize API usage
+
+## Data Mapping & Validation
+
+### Research Expertise Mapping
+- Map extracted or generated terms to Field of Research → Research Area → Niche Domain
+- Implement fuzzy matching for terminology
+- Handle synonyms and related terms
+- Default to broader categories when specific matches aren't found
+- Allow manual correction of mapped values
+
+### Contact Information Validation
+- Validate generated phone numbers for proper format
+- Verify email addresses follow standard patterns
+- Validate website URLs for proper structure and accessibility
+- Format addresses consistently
+- Handle international variants of contact information
+
+## User Experience for AI Features
+
+### Loading Indicators
+- Implement appropriate loading states during AI operations
+- Show progress indicators for multi-step processes
+- Provide estimated completion times when possible
+- Handle interruptions and cancellations gracefully
+
+### User Review & Editing
+- Allow users to review AI-generated content before saving
+- Provide easy-to-use editing interfaces for generated content
+- Highlight potentially inaccurate information
+- Implement version history for generated content
+
+## Security & Privacy Considerations
+
+### Data Protection
+- Limit sensitive information sent to external APIs
+- Store only necessary data from AI responses
+- Implement proper error handling to avoid revealing sensitive information
+- Follow data retention policies for scraped and generated content
+
+### Rate Limiting & Abuse Prevention
+- Implement rate limiting for AI generation features
+- Monitor for abuse patterns
+- Implement CAPTCHA or other verification for public-facing features
+- Log unsuccessful attempts for security analysis

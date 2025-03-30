@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Academician extends Model
 {
@@ -33,11 +34,41 @@ class Academician extends Model
         'availability_for_collaboration',
         'availability_as_supervisor',
         'background_image',
+        'url',
     ];
 
     protected $casts = [
         'research_expertise' => 'array', // Cast research_expertise as an array
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($academician) {
+            if (!$academician->url) {
+                $slug = Str::slug($academician->full_name);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->exists()) {
+                    $slug = $originalSlug . '-' . $count;
+                    $count++;
+                }
+                $academician->url = $slug;
+            }
+        });
+
+        static::updating(function ($academician) {
+            if ($academician->isDirty('full_name') || !$academician->url) {
+                $slug = Str::slug($academician->full_name);
+                $originalSlug = $slug;
+                $count = 2;
+                while (self::where('url', $slug)->where('id', '!=', $academician->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count;
+                    $count++;
+                }
+                $academician->url = $slug;
+            }
+        });
+    }
 
     public function user()
     {
