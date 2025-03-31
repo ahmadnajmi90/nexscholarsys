@@ -23,12 +23,14 @@ const Dashboard = ({
     users,
     researchOptions,
     profileIncompleteAlert,
+    topViewedAcademicians,
+    analyticsData,
 }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const isDesktop = useIsDesktop();
 
     return (
-            <MainLayout title="Dashboard">                
+            <MainLayout>                
                 {isDesktop ? (
                 <DashboardInsights 
                 totalUsers={totalUsers} 
@@ -44,6 +46,8 @@ const Dashboard = ({
                 users={users}
                 researchOptions={researchOptions}
                 profileIncompleteAlert={profileIncompleteAlert}
+                topViewedAcademicians={topViewedAcademicians}
+                analyticsData={analyticsData}
                 />):
                 (
                     <Dashboard_m 
@@ -51,7 +55,10 @@ const Dashboard = ({
                     users={users}
                     grants={grants}
                     profileIncompleteAlert={profileIncompleteAlert}
-                    posts={posts}/>
+                    posts={posts}
+                    totalUsers={totalUsers}
+                    topViewedAcademicians={topViewedAcademicians}
+                    analyticsData={analyticsData}/>
                 )
                     }
                 {/* <RadarChart />

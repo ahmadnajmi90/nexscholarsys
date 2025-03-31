@@ -24,6 +24,7 @@ const DashboardInsight = ({
   researchOptions,
   profileIncompleteAlert,
   topViewedAcademicians,
+  analyticsData,
 }) => {
   const { isAdmin, isFacultyAdmin } = useRoles();
   const [showAlert, setShowAlert] = useState(false);
@@ -243,6 +244,7 @@ const DashboardInsight = ({
           <AdminDashboardComponent 
             totalUsers={totalUsers}
             topViewedAcademicians={topViewedAcademicians}
+            analyticsData={analyticsData}
           />
         </div>
       )}
@@ -260,65 +262,71 @@ const DashboardInsight = ({
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-10 gap-6 mb-[10rem] h-[300px]">
-        {/* First Column: Post Carousel (4/10) */}
-        <div className="md:col-span-4 h-full">
-          <Carousel
-            items={posts.slice(0, 5)}
-            timer={7000}
-            fadeDuration={300}
-            renderItem={renderPostItem}
-            label="Post"
-            seoPrefix="/posts/"
-            label_color="bg-blue-500"
-          />
-        </div>
-
-        {/* Middle Column: Two Rows */}
-        <div className="md:col-span-3 h-full flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-4 h-1/2">
+      {!isAdmin && (
+        <div>
+          <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        <div className="grid grid-cols-1 md:grid-cols-10 gap-6 mb-[10rem] h-[300px]">
+          {/* First Column: Post Carousel (4/10) */}
+          <div className="md:col-span-4 h-full">
             <Carousel
-              items={events.slice(0, 5)}
-              timer={8000}
+              items={posts.slice(0, 5)}
+              timer={7000}
               fadeDuration={300}
-              renderItem={renderEventItem}
-              label="Event"
-              seoPrefix="/events/"
-              label_color="bg-red-500"
-            />
-            <Carousel
-              items={projects.slice(0, 5)}
-              timer={9000}
-              fadeDuration={300}
-              renderItem={renderProjectItem}
-              label="Project"
-              seoPrefix="/projects/"
-              label_color="bg-orange-500"
+              renderItem={renderPostItem}
+              label="Post"
+              seoPrefix="/posts/"
+              label_color="bg-blue-500"
             />
           </div>
-          <div className="h-1/2">
-            <Carousel
-              items={grants.slice(0, 5)}
-              timer={10000}
-              fadeDuration={300}
-              renderItem={renderGrantItem}
-              label="Grant"
-              seoPrefix="/grants/"
-              label_color="bg-green-700"
-            />
+
+          {/* Middle Column: Two Rows */}
+          <div className="md:col-span-3 h-full flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4 h-1/2">
+              <Carousel
+                items={events.slice(0, 5)}
+                timer={8000}
+                fadeDuration={300}
+                renderItem={renderEventItem}
+                label="Event"
+                seoPrefix="/events/"
+                label_color="bg-red-500"
+              />
+              <Carousel
+                items={projects.slice(0, 5)}
+                timer={9000}
+                fadeDuration={300}
+                renderItem={renderProjectItem}
+                label="Project"
+                seoPrefix="/projects/"
+                label_color="bg-orange-500"
+              />
+            </div>
+            <div className="h-1/2">
+              <Carousel
+                items={grants.slice(0, 5)}
+                timer={10000}
+                fadeDuration={300}
+                renderItem={renderGrantItem}
+                label="Grant"
+                seoPrefix="/grants/"
+                label_color="bg-green-700"
+              />
+            </div>
+          </div>
+
+          {/* Third Column: Upcoming Events (3/10) */}
+          <div className="md:col-span-3 h-full">
+            <UpcomingEvents events={events} />
           </div>
         </div>
-
-        {/* Third Column: Upcoming Events (3/10) */}
-        <div className="md:col-span-3 h-full">
-          <UpcomingEvents events={events} />
         </div>
-      </div>
+        )}
 
-      {/* Other Dashboard Content */}
-      <div className="grid grid-cols-1 gap-4">
-        <QuickActions />
-      </div>
+      {!isAdmin && (
+        <div className="grid grid-cols-1 gap-4">
+          <QuickActions />
+        </div>
+      )}
     </div>
   );
 };

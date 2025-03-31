@@ -7,8 +7,11 @@
  * @param {string} path - The current page path
  */
 export const trackPageView = (path) => {
-    if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
-        window.gtag('config', 'G-Q6VXXF3B0T', {
+    if (typeof window !== 'undefined' && 
+        typeof window.gtag !== 'undefined' && 
+        window.location.hostname !== 'localhost' && 
+        window.location.hostname !== '127.0.0.1') {
+        window.gtag('config', 'G-483738680', {
             page_path: path
         });
     }
@@ -22,7 +25,10 @@ export const trackPageView = (path) => {
  * @param {number|null} value - Event value (optional)
  */
 export const trackEvent = (category, action, label = null, value = null) => {
-    if (typeof window !== 'undefined' && typeof window.gtag !== 'undefined') {
+    if (typeof window !== 'undefined' && 
+        typeof window.gtag !== 'undefined' && 
+        window.location.hostname !== 'localhost' && 
+        window.location.hostname !== '127.0.0.1') {
         const eventParams = {
             event_category: category,
         };

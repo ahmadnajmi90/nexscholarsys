@@ -92,13 +92,16 @@
         @inertiaHead
         
         <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q6VXXF3B0T"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-483738680"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
 
-          gtag('config', 'G-Q6VXXF3B0T');
+          // Only track if not on localhost
+          if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            gtag('config', 'G-483738680');
+          }
         </script>
     </head>
     <body class="font-sans antialiased">

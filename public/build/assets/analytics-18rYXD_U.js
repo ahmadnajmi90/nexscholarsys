@@ -1,1 +1,0 @@
-const a=e=>{typeof window<"u"&&typeof window.gtag<"u"&&window.gtag("config","G-Q6VXXF3B0T",{page_path:e})},d=(e,o,t=null,i=null)=>{if(typeof window<"u"&&typeof window.gtag<"u"){const n={event_category:e};t&&(n.event_label=t),i&&(n.value=i),window.gtag("event",o,n)}};export{d as a,a as t};

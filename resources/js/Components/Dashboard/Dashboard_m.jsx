@@ -4,8 +4,10 @@ import QuickLinks from "./QuickActions"; // Adjust the import path as needed
 import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import AdminDashboardComponent_m from "./AdminDashboardComponent_m"; // Import AdminDashboardComponent_m
+import useRoles from '@/Hooks/useRoles';
 
-const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert }) => {
+const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert, totalUsers, topViewedAcademicians, analyticsData }) => {
   // Format today's date as dd/mm/yyyy
   const todayDate = new Date().toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -22,6 +24,9 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert }) =
       setShowAlert(true);
     }
   }, [profileIncompleteAlert]);
+
+  // Get user roles
+  const { isAdmin } = useRoles();
 
   // Render functions for carousel items
   const renderPostItem = (post) => (
@@ -159,15 +164,29 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert }) =
             </div>
           </Transition>
           
+          {/* Admin Dashboard Section (conditionally rendered) */}
+          {isAdmin && (
+            <div className="mb-5">
+              <AdminDashboardComponent_m 
+                totalUsers={totalUsers}
+                topViewedAcademicians={topViewedAcademicians}
+                analyticsData={analyticsData}
+              />
+            </div>
+          )}
+          
           {/* Today Section */}
+          {!isAdmin && (
           <div className="mb-3">
             <h1 className="text-3xl font-bold">Today</h1>
             <p className="text-sm text-gray-500 uppercase font-bold">
               {todayDate}
             </p>
           </div>
+          )}
 
           {/* Carousel Section */}
+          {!isAdmin && (
           <div className="mb-5">
             {/* First Row: Post Carousel (full width, spans both columns) */}
             <div className="mb-4 h-[280px]">
@@ -208,11 +227,14 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert }) =
               </div>
             </div>
           </div>
+          )}
 
           {/* QuickLinks Section */}
+          {!isAdmin && (
           <div className="mb-4">
             <QuickLinks />
           </div>
+          )}
         </div>
       </div>
     </div>
