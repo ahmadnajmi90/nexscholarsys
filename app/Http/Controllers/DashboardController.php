@@ -6,7 +6,6 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Silber\Bouncer\BouncerFacade;
-use App\Models\ClickTracking;
 use App\Models\PostGrant;
 use App\Models\PostProject;
 use App\Models\PostEvent;
@@ -61,14 +60,18 @@ class DashboardController extends Controller
                 }
             }
 
+            // Get top viewed academicians (only for admin dashboard)
+            $topViewedAcademicians = null;
+            if (BouncerFacade::is(auth()->user())->an('admin')) {
+                $topViewedAcademicians = Academician::where('total_views', '>', 0)
+                    ->orderBy('total_views', 'desc')
+                    ->take(10)
+                    ->get();
+            }
 
             return Inertia::render('Dashboard', [
                 'postGrants' => $postGrants,
                 'totalUsers' => User::where('id', '!=', Auth::id())->count(), // Except admin itself
-                'onlineUsers' => User::where('id', '!=', Auth::id())
-                    ->where('last_activity', '>=', now()->subMinutes(5))
-                    ->count(),
-                'clicksByType' => $this->getClickDetails(), // Corrected method call
                 'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date', 'asc')->get(),
                 'posts' => CreatePost::orderBy('created_at', 'desc')->get(),
                 'projects' => PostProject::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
@@ -79,39 +82,9 @@ class DashboardController extends Controller
                 'users' => User::all(),
                 'researchOptions' => $researchOptions ?? null,
                 'profileIncompleteAlert' => $profileIncompleteAlert, // Add the alert to the props
+                'topViewedAcademicians' => $topViewedAcademicians, // Add top viewed academicians
             ]);
         }
-    }
-
-    public function getClickDetails()
-    {
-        $clickDetails = ClickTracking::selectRaw('entity_type, action, entity_id, COUNT(*) as total_clicks')
-            ->groupBy('entity_type', 'action', 'entity_id')
-            ->get()
-            ->map(function ($click) {
-                $entityName = null;
-
-                switch ($click->entity_type) {
-                    case 'grant':
-                        $entityName = PostGrant::where('id', $click->entity_id)->value('title');
-                        break;
-                    case 'project':
-                        $entityName = PostProject::where('id', $click->entity_id)->value('title');
-                        break;
-                    case 'event':
-                        $entityName = PostEvent::where('id', $click->entity_id)->value('event_name');
-                        break;
-                }
-
-                return [
-                    'entity_type' => $click->entity_type,
-                    'entity_name' => $entityName ?? 'Unknown',
-                    'action' => $click->action,
-                    'total_clicks' => $click->total_clicks,
-                ];
-            });
-
-        return $clickDetails;
     }
 
     /**

@@ -48,7 +48,9 @@ class Postgraduate extends Model
 
     protected $casts = [
         'field_of_research' => 'array', // Cast field_of_study as an array
-        'skills' => 'array'
+        'skills' => 'array',
+        'supervisorAvailability' => 'boolean', // Cast to boolean
+        'grantAvailability' => 'boolean' // Cast to boolean
     ];
 
     protected static function booted()

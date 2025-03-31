@@ -21,7 +21,6 @@ use App\Http\Controllers\ShowEventController;
 use App\Http\Controllers\ShowGrantController;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\ClickTrackingController;
 use App\Http\Controllers\FacultyAdminController;
 use App\Http\Controllers\UniversityController;
 use App\Http\Controllers\RolePermissionController;
@@ -96,8 +95,6 @@ Route::get('/universities/{university}/faculties', [UniversityController::class,
 Route::get('/faculties/{faculty}/academicians', [UniversityController::class, 'academicians'])->name('faculties.academicians'); // Academician list
 Route::get('/faculties/{faculty}/undergraduates', [UniversityController::class, 'undergraduates'])->name('faculties.undergraduates');
 Route::get('/faculties/{faculty}/postgraduates', [UniversityController::class, 'postgraduates'])->name('faculties.postgraduates');
-
-Route::post('/click-tracking', [ClickTrackingController::class, 'store'])->name('click-tracking.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/complete-profile', [ProfileCompletionController::class, 'show'])->name('profile.complete');

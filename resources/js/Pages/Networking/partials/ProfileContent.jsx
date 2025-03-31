@@ -41,8 +41,8 @@ const ProfileContent = ({
     const renderAcademicianInfo = () => (
         <>
             {profile.department && (
-                <div className="bg-white shadow sm:rounded-lg p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Department & Supervision</h2>
+                <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold mb-4">Department & Supervision</h2>
                     <div className="space-y-4">
                         <div>
                             <h3 className="text-sm font-medium text-gray-500">Department</h3>
@@ -211,14 +211,14 @@ const ProfileContent = ({
                                 )}
                                 {profile.supervisorAvailability && (
                                     <div>
-                                        <h4 className="text-sm font-medium text-gray-500">Supervisor Status</h4>
-                                        <p className="mt-1">{profile.supervisorAvailability}</p>
+                                        <h4 className="text-sm font-medium text-gray-500">Looking for a Supervisor?</h4>
+                                        <p className="mt-1">{profile.supervisorAvailability ? "Yes" : "No"}</p>
                                     </div>
                                 )}
                                 {profile.grantAvailability && (
                                     <div>
-                                        <h4 className="text-sm font-medium text-gray-500">Grant Availability</h4>
-                                        <p className="mt-1">{profile.grantAvailability}</p>
+                                        <h4 className="text-sm font-medium text-gray-500">Looking for a Grant?</h4>
+                                        <p className="mt-1">{profile.grantAvailability ? "Yes" : "No"}</p>
                                     </div>
                                 )}
                             </div>

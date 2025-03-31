@@ -58,6 +58,8 @@ class RoleProfileUpdateRequest extends FormRequest
                 'english_proficiency_level' => ['nullable', 'string', 'in:Beginner,Elementary,Intermediate,Upper Intermediate,Advanced'], // Validate options
                 'previous_degree' => ['nullable'], // Should be an array
                 'skills' => ['nullable'], // User's skills
+                'supervisorAvailability' => ['nullable'], // Allow any value, we'll convert in the controller
+                'grantAvailability' => ['nullable'], // Allow any value, we'll convert in the controller
             ];
             
         }elseif (BouncerFacade::is(Auth::user())->an('undergraduate')) {

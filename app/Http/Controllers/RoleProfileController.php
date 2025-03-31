@@ -310,6 +310,26 @@ class RoleProfileController extends Controller
                 }
             }
 
+            // Handle supervisorAvailability for postgraduates
+            if ($isPostgraduate && array_key_exists('supervisorAvailability', $validatedData)) {
+                // Use filter_var to properly convert string to boolean
+                $validatedData['supervisorAvailability'] = filter_var(
+                    $validatedData['supervisorAvailability'], 
+                    FILTER_VALIDATE_BOOLEAN
+                );
+                logger()->info('Supervisor Availability:', ['value' => $validatedData['supervisorAvailability']]);
+            }
+
+            // Handle grantAvailability for postgraduates
+            if ($isPostgraduate && array_key_exists('grantAvailability', $validatedData)) {
+                // Use filter_var to properly convert string to boolean
+                $validatedData['grantAvailability'] = filter_var(
+                    $validatedData['grantAvailability'], 
+                    FILTER_VALIDATE_BOOLEAN
+                );
+                logger()->info('Grant Availability:', ['value' => $validatedData['grantAvailability']]);
+            }
+
             logger()->info('Decoded Data:', $validatedData);
 
             if ($isPostgraduate) {

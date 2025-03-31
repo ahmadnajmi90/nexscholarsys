@@ -317,22 +317,4 @@ class PostGrantController extends Controller
             return redirect()->route('post-grants.index')->with('success', 'Post grant deleted successfully.');
         }
     }
-
-    public function track(Request $request)
-    {
-        $validated = $request->validate([
-            'type' => 'required|string|in:grant,project,event',
-            'item_id' => 'required|integer',
-        ]);
-
-        // Log the click
-        DB::table('click_tracking')->insert([
-            'user_id' => Auth::id(),
-            'type' => $validated['type'],
-            'item_id' => $validated['item_id'],
-            'clicked_at' => now(),
-        ]);
-
-        return response()->json(['success' => true]);
-    }
 }

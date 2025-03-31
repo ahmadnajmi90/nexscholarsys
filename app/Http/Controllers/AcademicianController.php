@@ -54,6 +54,15 @@ class AcademicianController extends Controller
 
     public function show(Academician $academician)
     {
+        // Get the current user (authenticated or null)
+        $user = Auth::check() ? Auth::user() : null;
+        
+        // Get the visitor's IP address if not authenticated
+        $ipAddress = !$user ? request()->ip() : null;
+        
+        // Record the view and automatically increment total_views if needed
+        $academician->recordView($user ? $user->id : null, $ipAddress);
+
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {

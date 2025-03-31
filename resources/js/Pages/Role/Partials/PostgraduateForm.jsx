@@ -47,6 +47,10 @@ export default function PostgraduateForm({ universities, faculties, className = 
         background_image: postgraduate?.background_image || '',
         // NEW: skills field as a JSON attribute (storing skill IDs)
         skills: postgraduate?.skills || [],
+        // NEW: supervisorAvailability field as boolean - ensure it's a boolean value
+        supervisorAvailability: postgraduate?.supervisorAvailability === true || postgraduate?.supervisorAvailability === 1 || postgraduate?.supervisorAvailability === "true",
+        // NEW: grantAvailability field as boolean - ensure it's a boolean value
+        grantAvailability: postgraduate?.grantAvailability === true || postgraduate?.grantAvailability === 1 || postgraduate?.grantAvailability === "true",
     });
 
     // Initialize checkbox states based on previous_degree array
@@ -121,6 +125,9 @@ export default function PostgraduateForm({ universities, faculties, className = 
             if (key !== "profile_picture") {
                 if (Array.isArray(data[key])) {
                     formData.append(key, JSON.stringify(data[key]));
+                } else if (key === "supervisorAvailability" || key === "grantAvailability") {
+                    // Send the actual boolean value without converting to string
+                    formData.append(key, data[key]);
                 } else {
                     formData.append(key, data[key]);
                 }
@@ -546,7 +553,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     )}
 
                     {data.current_postgraduate_status === "Registered" && (
-                        <div className="grid grid-cols-1 w-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                             <div>
                                 <InputLabel htmlFor="matric_no" value="Matric No." required />
                                 <TextInput
@@ -559,24 +566,71 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 />
                                 <InputError className="mt-2" message={errors.matric_no} />
                             </div>
+                            <div>
+                                <InputLabel htmlFor="supervisorAvailability" value="Looking for a Supervisor?" />
+                                <select
+                                    id="supervisorAvailability"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                    value={data.supervisorAvailability === true ? "true" : "false"}
+                                    onChange={(e) => setData('supervisorAvailability', e.target.value === "true")}
+                                >
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                                <InputError className="mt-2" message={errors.supervisorAvailability} />
+                            </div>
                         </div>
                     )}
 
-                    {/* Dropdown for suggested research title */}
-                    <div className="w-full">
-                        <InputLabel htmlFor="has_suggested_research_title">
-                            Have own suggested research title?
-                        </InputLabel>
-                        <select
-                            id="has_suggested_research_title"
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                            value={showResearchForm ? "yes" : "no"}
-                            onChange={handleResearchTitleChange}
-                        >
-                            <option value="no">No</option>
-                            <option value="yes">Yes</option>
-                        </select>
-                    </div>
+                    {data.current_postgraduate_status === "Registered" && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                            <div>
+                                <InputLabel htmlFor="grantAvailability" value="Looking for a Grant?" />
+                                <select
+                                    id="grantAvailability"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                    value={data.grantAvailability === true ? "true" : "false"}
+                                    onChange={(e) => setData('grantAvailability', e.target.value === "true")}
+                                >
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                                <InputError className="mt-2" message={errors.grantAvailability} />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="has_suggested_research_title">
+                                    Have own suggested research title?
+                                </InputLabel>
+                                <select
+                                    id="has_suggested_research_title"
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                    value={showResearchForm ? "yes" : "no"}
+                                    onChange={handleResearchTitleChange}
+                                >
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Only show if not inside the grid from above */}
+                    {data.current_postgraduate_status !== "Registered" && (
+                        <div className="w-full">
+                            <InputLabel htmlFor="has_suggested_research_title">
+                                Have own suggested research title?
+                            </InputLabel>
+                            <select
+                                id="has_suggested_research_title"
+                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                                value={showResearchForm ? "yes" : "no"}
+                                onChange={handleResearchTitleChange}
+                            >
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                    )}
 
                     {showResearchForm && (
                         <div className="w-full space-y-4">

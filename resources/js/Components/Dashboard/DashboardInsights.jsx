@@ -2,19 +2,17 @@ import React, { useState, useEffect } from "react";
 import QuickActions from "./QuickActions";
 import UpcomingEvents from "./UpcomingEvents";
 import RegisteredUser from "./RegisteredUser";
-import OnlineUser from "./OnlineUser";
-import ClicksByType from "./ClicksByType";
 import ProfileCard from "../ProfileCard";
 import useRoles from "../../Hooks/useRoles";
 import Carousel from "./Carousel"; // Adjust the import path if needed
-import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
+import { FaEye, FaHeart, FaShareAlt, FaUser } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
+import AdminDashboardComponent from "./AdminDashboardComponent";
 
 const DashboardInsight = ({
   totalUsers,
   onlineUsers,
-  clicksByType,
   posts,
   events,
   projects,
@@ -25,6 +23,7 @@ const DashboardInsight = ({
   users,
   researchOptions,
   profileIncompleteAlert,
+  topViewedAcademicians,
 }) => {
   const { isAdmin, isFacultyAdmin } = useRoles();
   const [showAlert, setShowAlert] = useState(false);
@@ -168,6 +167,50 @@ const DashboardInsight = ({
     </div>
   );
 
+  // Component to display top viewed academicians
+  const TopViewedAcademicians = ({ academicians }) => (
+    <div className="bg-white p-4 rounded-lg shadow relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-3 rounded-bl-lg bg-indigo-500">
+        <FaUser className="text-white text-xl" />
+      </div>
+      <h3 className="text-lg font-bold mb-3">Top Viewed Academicians</h3>
+      <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
+        {academicians && academicians.length > 0 ? (
+          academicians.map((academician) => (
+            <div key={academician.id} className="flex items-center justify-between border-b pb-2">
+              <div className="flex items-center">
+                <div 
+                  className="w-8 h-8 rounded-full bg-cover bg-center mr-2"
+                  style={{
+                    backgroundImage: `url(${encodeURI(
+                      academician.profile_picture 
+                        ? `/storage/${academician.profile_picture}` 
+                        : "/storage/profile_pictures/default.jpg"
+                    )})`
+                  }}
+                ></div>
+                <div>
+                  <p className="font-medium text-sm truncate max-w-[180px]" title={academician.full_name || 'Unknown'}>
+                    {academician.full_name || 'Unknown'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate max-w-[180px]" title={academician.current_position || 'No position'}>
+                    {academician.current_position || 'No position'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <FaEye className="w-3 h-3 text-indigo-500 mr-1" />
+                <span className="text-sm font-medium">{academician.total_views}</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500">No view data available</p>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="p-6 md:py-0 md:px-2 min-h-screen">
       {/* Profile Incomplete Alert */}
@@ -194,12 +237,13 @@ const DashboardInsight = ({
         </div>
       </Transition>
 
-      {/* Admin Insights */}
+      {/* Admin Dashboard - New Component */}
       {isAdmin && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <RegisteredUser totalUsers={totalUsers} />
-          <OnlineUser onlineUsers={onlineUsers} />
-          <ClicksByType clicksByType={clicksByType} />
+        <div className="mb-8">
+          <AdminDashboardComponent 
+            totalUsers={totalUsers}
+            topViewedAcademicians={topViewedAcademicians}
+          />
         </div>
       )}
 
