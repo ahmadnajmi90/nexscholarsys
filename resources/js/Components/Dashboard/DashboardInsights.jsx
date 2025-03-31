@@ -282,24 +282,32 @@ const DashboardInsight = ({
           {/* Middle Column: Two Rows */}
           <div className="md:col-span-3 h-full flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-4 h-1/2">
-              <Carousel
-                items={events.slice(0, 5)}
-                timer={8000}
-                fadeDuration={300}
-                renderItem={renderEventItem}
-                label="Event"
-                seoPrefix="/events/"
-                label_color="bg-red-500"
-              />
-              <Carousel
-                items={projects.slice(0, 5)}
-                timer={9000}
-                fadeDuration={300}
-                renderItem={renderProjectItem}
-                label="Project"
-                seoPrefix="/projects/"
-                label_color="bg-orange-500"
-              />
+              {events.length > 0 && (
+                <div className={`${projects.length === 0 ? 'col-span-2' : ''}`}>
+                  <Carousel
+                    items={events.slice(0, 5)}
+                    timer={8000}
+                    fadeDuration={300}
+                    renderItem={renderEventItem}
+                    label="Event"
+                    seoPrefix="/events/"
+                    label_color="bg-red-500"
+                  />
+                </div>
+              )}
+              {projects.length > 0 && (
+                <div className={`${events.length === 0 ? 'col-span-2' : ''}`}>
+                  <Carousel
+                    items={projects.slice(0, 5)}
+                    timer={9000}
+                    fadeDuration={300}
+                    renderItem={renderProjectItem}
+                    label="Project"
+                    seoPrefix="/projects/"
+                    label_color="bg-orange-500"
+                  />
+                </div>
+              )}
             </div>
             <div className="h-1/2">
               <Carousel
