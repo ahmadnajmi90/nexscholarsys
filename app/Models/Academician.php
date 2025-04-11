@@ -145,4 +145,28 @@ class Academician extends Model
         
         return $view;
     }
+    
+    /**
+     * Get the publications of the academician.
+     */
+    public function publications()
+    {
+        return $this->hasMany(Publication::class, 'academician_id', 'academician_id');
+    }
+    
+    /**
+     * Get the scholar profile of the academician.
+     */
+    public function scholarProfile()
+    {
+        return $this->hasOne(ScholarProfile::class, 'academician_id', 'academician_id');
+    }
+    
+    /**
+     * Get the scraping logs of the academician.
+     */
+    public function scrapingLogs()
+    {
+        return $this->hasMany(ScrapingLog::class, 'academician_id', 'academician_id');
+    }
 }

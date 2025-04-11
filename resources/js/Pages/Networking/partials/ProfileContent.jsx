@@ -41,7 +41,7 @@ const ProfileContent = ({
     const renderAcademicianInfo = () => (
         <>
             {profile.department && (
-                <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+                <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4">
                     <h2 className="text-lg sm:text-xl font-semibold mb-4">Department & Supervision</h2>
                     <div className="space-y-4">
                         <div>
@@ -363,6 +363,79 @@ const ProfileContent = ({
         );
     };
 
+    // Function to render social connect buttons
+    const renderSocialLinks = () => {
+        if (!profile.google_scholar && !profile.website && !profile.linkedin && !profile.researchgate && !user?.email) {
+            return null;
+        }
+
+        return (
+            <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mt-4">
+                <h2 className="text-lg sm:text-xl font-semibold mb-4">Connect</h2>
+                <div className="flex flex-col space-y-3">
+                    {user?.email && (
+                        <Link
+                            href={route('email.compose', { to: user?.email })}
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            title="Send Email"
+                        >
+                            <FaEnvelope className="text-gray-600 hover:text-blue-600" size={20} />
+                            <span className="text-sm font-medium text-gray-700">Email</span>
+                        </Link>
+                    )}
+                    {profile.google_scholar && (
+                        <a
+                            href={profile.google_scholar}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            title="Google Scholar"
+                        >
+                            <FaGoogle className="text-gray-600 hover:text-blue-600" size={20} />
+                            <span className="text-sm font-medium text-gray-700">Google Scholar</span>
+                        </a>
+                    )}
+                    {profile.website && (
+                        <a
+                            href={profile.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            title="Website"
+                        >
+                            <FaGlobe className="text-gray-600 hover:text-green-600" size={20} />
+                            <span className="text-sm font-medium text-gray-700">Personal Website</span>
+                        </a>
+                    )}
+                    {profile.linkedin && (
+                        <a
+                            href={profile.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            title="LinkedIn"
+                        >
+                            <FaLinkedin className="text-gray-600 hover:text-blue-600" size={20} />
+                            <span className="text-sm font-medium text-gray-700">LinkedIn</span>
+                        </a>
+                    )}
+                    {profile.researchgate && (
+                        <a
+                            href={profile.researchgate}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            title="ResearchGate"
+                        >
+                            <FaResearchgate className="text-gray-600 hover:text-blue-600" size={20} />
+                            <span className="text-sm font-medium text-gray-700">ResearchGate</span>
+                        </a>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             {/* Back Button */}
@@ -381,7 +454,7 @@ const ProfileContent = ({
                     <img
                         src={profile.background_image 
                             ? `/storage/${profile.background_image}`
-                            : '/images/default-background.jpg'}
+                            : '/storage/profile_background_images/default.jpg'}
                         alt="Background"
                         className="w-full h-full object-cover"
                     />
@@ -407,10 +480,41 @@ const ProfileContent = ({
                 </div>
             </div>
 
+            {/* Navigation Tabs */}
+            <div className="border-b border-gray-300 mb-6">
+                <div className="flex md:space-x-12 space-x-4 px-4 sm:px-8">
+                    <Link
+                        href={type === 'academician' ? route('academicians.show', profile.url) : '#'}
+                        className="md:text-lg text-base font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
+                    >
+                        Profile
+                    </Link>
+                    <Link
+                        href={type === 'academician' ? route('academicians.publications', profile.url) : '#'}
+                        className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                    >
+                        Publications
+                    </Link>
+                    <Link
+                        href={type === 'academician' ? route('academicians.projects', profile.url) : '#'}
+                        className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                    >
+                        Projects
+                    </Link>
+                    <Link
+                        href="#"
+                        className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                    >
+                        Supervisors
+                    </Link>
+                </div>
+            </div>
+
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                {/* Left Column - Basic Info */}
-                <div className="col-span-1">
+                {/* Left Column - Basic Info and Connect Links */}
+                <div className="col-span-1 space-y-4">
+                    {/* Basic Information */}
                     <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-4">Basic Information</h2>
                         <div className="space-y-4">
@@ -456,14 +560,17 @@ const ProfileContent = ({
                             )}
                         </div>
                     </div>
+
+                    {/* Connect Links - Moved here from the bottom */}
+                    {renderSocialLinks()}
                 </div>
 
-                {/* Middle Column - Role Specific Info & Research */}
+                {/* Middle Column - Research & Role Info */}
                 <div className="col-span-1 lg:col-span-2">
                     {/* Research Information */}
                     {getResearchText() && (
                         <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
-                            <h2 className="text-lg sm:text-xl font-semibold mb-4">Research Information</h2>
+                            <h2 className="text-lg sm:text-xl font-semibold mb-4">Research Expertise</h2>
                             <div className="space-y-2">
                                 {getResearchText().map((text, index) => (
                                     <p key={index} className="text-gray-700 text-sm sm:text-base">{text}</p>
@@ -488,66 +595,6 @@ const ProfileContent = ({
                     )}
                 </div>
             </div>
-
-            {/* Social Links */}
-            {(profile.google_scholar || profile.website || profile.linkedin || profile.researchgate) && (
-                <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mt-4 sm:mt-6">
-                    <h2 className="text-lg sm:text-xl font-semibold mb-4">Connect</h2>
-                    <div className="flex flex-wrap gap-4 sm:gap-6">
-                        <Link
-                            href={route('email.compose', { to: user?.email })}
-                            className="text-gray-600 hover:text-blue-600"
-                            title="Send Email"
-                        >
-                            <FaEnvelope size={20} sm:size={24} />
-                        </Link>
-                        {profile.google_scholar && (
-                            <a
-                                href={profile.google_scholar}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-600 hover:text-red-600"
-                                title="Google Scholar"
-                            >
-                                <FaGoogle size={20} sm:size={24} />
-                            </a>
-                        )}
-                        {profile.website && (
-                            <a
-                                href={profile.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-600 hover:text-green-600"
-                                title="Website"
-                            >
-                                <FaGlobe size={20} sm:size={24} />
-                            </a>
-                        )}
-                        {profile.linkedin && (
-                            <a
-                                href={profile.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-600 hover:text-blue-600"
-                                title="LinkedIn"
-                            >
-                                <FaLinkedin size={20} sm:size={24} />
-                            </a>
-                        )}
-                        {profile.researchgate && (
-                            <a
-                                href={profile.researchgate}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-600 hover:text-blue-600"
-                                title="ResearchGate"
-                            >
-                                <FaResearchgate size={20} sm:size={24} />
-                            </a>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

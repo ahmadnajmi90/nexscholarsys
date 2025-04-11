@@ -216,6 +216,8 @@ Route::middleware(['auth'])->group(function () {
 
 // Profile pages with SEO URLs
 Route::get('academicians/{academician}', [AcademicianController::class, 'show'])->name('academicians.show');
+Route::get('academicians/{academician}/projects', [AcademicianController::class, 'showProjects'])->name('academicians.projects');
+Route::get('academicians/{academician}/publications', [AcademicianController::class, 'showPublications'])->name('academicians.publications');
 Route::get('postgraduates/{postgraduate}', [PostgraduateController::class, 'show'])->name('postgraduates.show');
 Route::get('undergraduates/{undergraduate}', [UndergraduateController::class, 'show'])->name('undergraduates.show');
 

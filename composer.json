@@ -8,6 +8,7 @@
         "php": "^8.2",
         "google/analytics-data": "^0.22.2",
         "google/apiclient": "*",
+        "guzzlehttp/guzzle": "*",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
