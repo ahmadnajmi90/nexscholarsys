@@ -221,4 +221,10 @@ Route::get('academicians/{academician}/publications', [AcademicianController::cl
 Route::get('postgraduates/{postgraduate}', [PostgraduateController::class, 'show'])->name('postgraduates.show');
 Route::get('undergraduates/{undergraduate}', [UndergraduateController::class, 'show'])->name('undergraduates.show');
 
+// Google Scholar endpoints for academician-initiated scraping
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/scholar/status', [App\Http\Controllers\GoogleScholarController::class, 'getScrapingStatus']);
+    Route::post('/api/scholar/scrape', [App\Http\Controllers\GoogleScholarController::class, 'scrapeOwnProfile']);
+});
+
 require __DIR__.'/auth.php';

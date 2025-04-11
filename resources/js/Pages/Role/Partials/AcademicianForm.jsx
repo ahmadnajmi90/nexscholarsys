@@ -4,7 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import CVPreviewModal from './CVPreviewModal';
@@ -44,6 +44,61 @@ export default function AcademicianForm({ className = '', researchOptions }) {
   const [showCVModal, setShowCVModal] = useState(false); // For CV preview
   const [isDownloading, setIsDownloading] = useState(false);
   const [showRequirementModal, setShowRequirementModal] = useState(false); // For reminding users
+
+  // Add new state for Google Scholar scraping
+  const [isScrapingScholar, setIsScrapingScholar] = useState(false);
+  const [scholarStatus, setScholarStatus] = useState(null);
+  const [scholarLastUpdated, setScholarLastUpdated] = useState(null);
+  const [canUpdateScholar, setCanUpdateScholar] = useState(false);
+
+  // Load Google Scholar status on component mount
+  useEffect(() => {
+    if (data.google_scholar) {
+      fetchScholarStatus();
+    }
+  }, [data.google_scholar]);
+
+  // Function to fetch Google Scholar scraping status
+  const fetchScholarStatus = () => {
+    axios.get('/api/scholar/status')
+      .then(response => {
+        if (response.data.success) {
+          setScholarStatus(response.data);
+          setCanUpdateScholar(response.data.can_update);
+          if (response.data.profile) {
+            setScholarLastUpdated(response.data.profile.last_updated_human);
+          }
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching Google Scholar status:", error);
+      });
+  };
+
+  // Function to trigger Google Scholar scraping
+  const handleScholarScrape = () => {
+    if (!data.google_scholar) {
+      alert("Please add your Google Scholar URL first.");
+      return;
+    }
+
+    setIsScrapingScholar(true);
+    axios.post('/api/scholar/scrape')
+      .then(response => {
+        setIsScrapingScholar(false);
+        if (response.data.success) {
+          alert(response.data.message);
+          fetchScholarStatus(); // Refresh status after successful scrape
+        } else {
+          alert(response.data.message || "Failed to update Google Scholar profile.");
+        }
+      })
+      .catch(error => {
+        setIsScrapingScholar(false);
+        console.error("Error scraping Google Scholar:", error);
+        alert(error.response?.data?.message || "An error occurred while updating your Google Scholar profile.");
+      });
+  };
 
   // Handle URL input changes
   const updateUrl = (index, value) => {
@@ -705,14 +760,74 @@ export default function AcademicianForm({ className = '', researchOptions }) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div>
                   <InputLabel htmlFor="google_scholar" value="Google Scholar" />
-                  <TextInput
-                    id="google_scholar"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.google_scholar}
-                    onChange={(e) => setData('google_scholar', e.target.value)}
-                    autoComplete="url"
-                  />
-                  <InputError className="mt-2" message={errors.google_scholar} />
+                  <div className="flex flex-col space-y-2">
+                    <TextInput
+                      id="google_scholar"
+                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                      value={data.google_scholar}
+                      onChange={(e) => setData('google_scholar', e.target.value)}
+                      autoComplete="url"
+                    />
+                    <InputError className="mt-2" message={errors.google_scholar} />
+                    
+                    {/* Add Google Scholar scraping button and status */}
+                    {data.google_scholar && (
+                      <div className="flex flex-col space-y-2 mt-2">
+                        <div className="flex justify-between items-center">
+                          <button
+                            type="button"
+                            onClick={handleScholarScrape}
+                            disabled={isScrapingScholar || !canUpdateScholar}
+                            className={`px-3 py-1 text-sm rounded ${
+                              isScrapingScholar || !canUpdateScholar
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-blue-500 text-white hover:bg-blue-700'
+                            }`}
+                          >
+                            {isScrapingScholar ? (
+                              <span className="flex items-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                Updating...
+                              </span>
+                            ) : "Update Google Scholar Data"
+                            }
+                          </button>
+                          
+                          {scholarStatus && scholarStatus.profile && (
+                            <span className="text-xs text-gray-500">
+                              Last updated: {scholarLastUpdated || 'Never'}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {scholarStatus && scholarStatus.profile && (
+                          <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded">
+                            <div className="font-semibold">Profile Stats:</div>
+                            <div className="grid grid-cols-3 gap-2 mt-1">
+                              <div>Citations: {scholarStatus.profile.citations}</div>
+                              <div>h-index: {scholarStatus.profile.h_index}</div>
+                              <div>i10-index: {scholarStatus.profile.i10_index}</div>
+                            </div>
+                            <div className="mt-1">
+                              Publications: {scholarStatus.publication_count}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {scholarStatus && !scholarStatus.can_update && scholarStatus.latest_scraping && (
+                          <div className="text-xs text-amber-600">
+                            {scholarStatus.latest_scraping.status === 'success'
+                              ? "Profile was recently updated. Please wait before updating again."
+                              : scholarStatus.latest_scraping.message
+                            }
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <InputLabel htmlFor="researchgate" value="ResearchGate" />

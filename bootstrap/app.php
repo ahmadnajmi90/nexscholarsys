@@ -23,18 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule) {
-        // Daily scheduled synchronization at midnight
-        $schedule->command('scholar:sync-scheduled')
-            ->dailyAt('00:00')
-            ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/scholar-sync.log'));
-            
-        // Weekly full batch processing on Sundays at 3:00 AM
-        $schedule->command('scholar:sync-batch --limit=100')
-            ->weekly()
-            ->sundays()
-            ->at('03:00')
-            ->withoutOverlapping()
-            ->appendOutputTo(storage_path('logs/scholar-batch.log'));
+        // Daily scheduled synchronization at midnight is now removed
+        // Weekly full batch processing on Sundays is now removed
+        
+        // Keep any other scheduled tasks that are not related to Google Scholar
     })
     ->create();

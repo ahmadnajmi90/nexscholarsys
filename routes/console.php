@@ -14,7 +14,10 @@ Schedule::command('app:update-post-views-count')->daily();
 // Schedule the academician views sync command to run daily at midnight
 Schedule::command('app:sync-academician-views')->dailyAt('00:00');
 
-// Google Scholar Scraping Commands
+// Google Scholar scraping is now handled by user-initiated actions
+// The scheduled commands have been removed
+
+// Google Scholar Scraping Commands - Keep only the single scraper
 Artisan::command('scholar:scrape-single {academician_id}', function ($academicianId) {
     $academician = \App\Models\Academician::where('academician_id', $academicianId)->first();
     
@@ -43,15 +46,4 @@ Artisan::command('scholar:scrape-single {academician_id}', function ($academicia
     return 0;
 })->purpose('Scrape a single academician Google Scholar profile');
 
-// Schedule the Google Scholar commands
-Schedule::command('scholar:sync-scheduled')
-    ->dailyAt('00:00')
-    ->withoutOverlapping()
-    ->appendOutputTo(storage_path('logs/scholar-sync.log'));
-    
-Schedule::command('scholar:sync-batch --limit=100')
-    ->weekly()
-    ->sundays()
-    ->at('03:00')
-    ->withoutOverlapping()
-    ->appendOutputTo(storage_path('logs/scholar-batch.log'));
+// Scheduled Google Scholar commands have been removed
