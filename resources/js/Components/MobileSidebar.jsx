@@ -12,6 +12,8 @@ import {
     FaBookOpen,
     FaNewspaper,
     FaFilter,
+    FaBookmark,
+    FaSearch
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 
@@ -139,6 +141,20 @@ const MobileSidebar = () => {
                         {/* Features Section */}
                         <div>
                             <h3 className="text-gray-500 uppercase text-xs font-bold">Features</h3>
+                            <Link
+                                href={route('supervisor.find')}
+                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaSearch className="text-gray-600" />
+                                <span className="ml-2">Find Supervisor</span>
+                            </Link>
+                            <Link
+                                href={route('bookmarks.index')}
+                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaBookmark className="text-gray-600" />
+                                <span className="ml-2">My Bookmarks</span>
+                            </Link>
                             <button
                                 onClick={() => toggleMenu('grant')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"

@@ -15,6 +15,7 @@ use App\Models\PostProject;
 use App\Models\PostEvent;
 use App\Models\Undergraduate;
 use App\Models\CreatePost;
+use App\Models\Bookmark;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -123,5 +124,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function likedProjects()
     {
         return $this->belongsToMany(PostProject::class, 'project_user_likes')->withTimestamps();
+    }
+
+    /**
+     * Get all bookmarks belonging to the user.
+     */
+    public function bookmarks()
+    {
+        return $this->hasMany(Bookmark::class);
     }
 }

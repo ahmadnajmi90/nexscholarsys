@@ -144,5 +144,13 @@ class PostProject extends Model
         
         return $view;
     }
+
+    /**
+     * Get all bookmarks for this project.
+     */
+    public function bookmarks()
+    {
+        return $this->morphMany(Bookmark::class, 'bookmarkable');
+    }
 }
 

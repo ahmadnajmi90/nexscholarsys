@@ -211,4 +211,40 @@ class AcademicianController extends Controller
             'metaTags' => $metaTags,
         ]);
     }
+
+    /**
+     * Get quick info about an academician for modal display
+     * 
+     * @param string $academicianId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getQuickInfo($academicianId)
+    {
+        $academician = Academician::where('academician_id', $academicianId)->firstOrFail();
+        
+        // Count projects
+        $projectsCount = PostProject::where('author_id', $academicianId)
+            ->where('project_status', 'published')
+            ->count();
+            
+        // Count grants
+        $grantsCount = \App\Models\PostGrant::where('author_id', $academicianId)
+            ->where('status', 'published')
+            ->count();
+            
+        // Count publications
+        $publicationsCount = Publication::where('academician_id', $academicianId)
+            ->count();
+            
+        // Count supervised students (placeholder - implement actual logic)
+        $supervisedStudentsCount = 0;
+        
+        return response()->json([
+            'academician' => $academician,
+            'projects_count' => $projectsCount,
+            'grants_count' => $grantsCount,
+            'publications_count' => $publicationsCount,
+            'supervised_students_count' => $supervisedStudentsCount
+        ]);
+    }
 }

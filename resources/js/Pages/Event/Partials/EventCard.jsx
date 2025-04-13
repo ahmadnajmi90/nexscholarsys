@@ -2,6 +2,20 @@ import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
 import { FaFilter } from "react-icons/fa";
+import DOMPurify from 'dompurify';
+
+// Plain text truncated content
+const TruncatedText = ({ html, maxLength = 100, className }) => {
+  if (!html) return <p className={className}>No content available</p>;
+  
+  // Strip HTML tags and get plain text
+  const plainText = html.replace(/<[^>]*>/g, '');
+  const truncated = plainText.length > maxLength 
+    ? plainText.substring(0, maxLength) + '...' 
+    : plainText;
+  
+  return <p className={className}>{truncated}</p>;
+};
 
 const EventCard = ({ events, researchOptions }) => {
   const [showFilters, setShowFilters] = useState(false);
@@ -198,10 +212,12 @@ const EventCard = ({ events, researchOptions }) => {
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: "vertical",
                     }}
-                    dangerouslySetInnerHTML={{
-                      __html: event.description || "No description available.",
-                    }}
-                  ></p>
+                  >
+                    <TruncatedText 
+                      html={event.description || "No description available."}
+                      maxLength={100}
+                    />
+                  </p>
                 </div>
                 <Link
                   href={route("events.show", event.url)}

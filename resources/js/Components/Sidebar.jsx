@@ -15,7 +15,8 @@ import {
     FaCog,
     FaBookReader,
     FaBookOpen,
-    FaRobot
+    FaRobot,
+    FaBookmark
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 
@@ -124,6 +125,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     {/*Researeh*/}
                     <div>
                         <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features</h3>
+
+                        <Link href={route('supervisor.find')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                            <FaSearch className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Find Supervisor</span>
+                        </Link>
+
+                        <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                            <FaBookmark className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Bookmarks</span>
+                        </Link>
 
                            <button
                             onClick={() => toggleMenu('grant')}

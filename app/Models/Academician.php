@@ -33,6 +33,7 @@ class Academician extends Model
         'verified',
         'availability_for_collaboration',
         'availability_as_supervisor',
+        'style_of_supervision',
         'background_image',
         'url',
     ];
@@ -168,5 +169,29 @@ class Academician extends Model
     public function scrapingLogs()
     {
         return $this->hasMany(ScrapingLog::class, 'academician_id', 'academician_id');
+    }
+    
+    /**
+     * Get the recommendations for the academician.
+     */
+    public function recommendations()
+    {
+        return $this->hasMany(AcademicianRecommendation::class, 'academician_id', 'academician_id');
+    }
+    
+    /**
+     * Get average recommendation ratings for the academician.
+     */
+    public function getRecommendationRatings()
+    {
+        return AcademicianRecommendation::getAverageRatings($this->academician_id);
+    }
+    
+    /**
+     * Get all bookmarks for this academician.
+     */
+    public function bookmarks()
+    {
+        return $this->morphMany(Bookmark::class, 'bookmarkable');
     }
 }

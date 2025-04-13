@@ -40,6 +40,8 @@ use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\AcademicianRecommendationController;
+use App\Http\Controllers\BookmarkController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
@@ -48,6 +50,13 @@ Route::middleware(['auth'])->group(function () {
     // Email routes
     Route::get('/email/compose', [EmailController::class, 'compose'])->name('email.compose');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
+    
+    // Bookmark routes
+    Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/bookmarks', [BookmarkController::class, 'store'])->name('bookmarks.store');
+    Route::post('/bookmarks/toggle', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
+    Route::get('/bookmarks/check', [BookmarkController::class, 'check'])->name('bookmarks.check');
+    Route::delete('/bookmarks/{id}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
 });
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
@@ -218,13 +227,26 @@ Route::middleware(['auth'])->group(function () {
 Route::get('academicians/{academician}', [AcademicianController::class, 'show'])->name('academicians.show');
 Route::get('academicians/{academician}/projects', [AcademicianController::class, 'showProjects'])->name('academicians.projects');
 Route::get('academicians/{academician}/publications', [AcademicianController::class, 'showPublications'])->name('academicians.publications');
+Route::get('academicians/{academicianId}/quick-info', [AcademicianController::class, 'getQuickInfo'])->name('academicians.quick-info');
 Route::get('postgraduates/{postgraduate}', [PostgraduateController::class, 'show'])->name('postgraduates.show');
 Route::get('undergraduates/{undergraduate}', [UndergraduateController::class, 'show'])->name('undergraduates.show');
+
+// Recommendation routes
+Route::get('academicians/{academicianId}/recommend', [AcademicianRecommendationController::class, 'showForm'])->name('academicians.recommend');
+Route::post('academicians/recommendations', [AcademicianRecommendationController::class, 'store'])->name('academicians.recommendations.store');
+Route::get('academicians/{academicianId}/recommendations', [AcademicianRecommendationController::class, 'getRecommendations'])->name('academicians.recommendations.get');
 
 // Google Scholar endpoints for academician-initiated scraping
 Route::middleware(['auth'])->group(function () {
     Route::get('/api/scholar/status', [App\Http\Controllers\GoogleScholarController::class, 'getScrapingStatus']);
     Route::post('/api/scholar/scrape', [App\Http\Controllers\GoogleScholarController::class, 'scrapeOwnProfile']);
+});
+
+// Supervisor Matching Feature Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/find-supervisor', [App\Http\Controllers\SupervisorMatchingController::class, 'index'])->name('supervisor.find');
+    Route::post('/find-supervisor/search', [App\Http\Controllers\SupervisorMatchingController::class, 'search'])->name('supervisor.search');
+    Route::post('/find-supervisor/insights', [App\Http\Controllers\SupervisorMatchingController::class, 'getInsights'])->name('supervisor.insights');
 });
 
 require __DIR__.'/auth.php';

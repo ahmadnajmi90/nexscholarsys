@@ -16,6 +16,28 @@ import {
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import { trackEvent, trackPageView } from '@/Utils/analytics';
+import BookmarkButton from '@/Components/BookmarkButton';
+import DOMPurify from 'dompurify';
+
+// Helper component for safely rendering HTML content
+const SafeHTML = ({ html, className }) => {
+  const sanitizedHTML = DOMPurify.sanitize(html || '', {
+    ALLOWED_TAGS: ['b', 'i', 'u', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  });
+  
+  // For empty content
+  if (!sanitizedHTML || sanitizedHTML.trim() === '') {
+    return <p className={className}>No content available</p>;
+  }
+  
+  return (
+    <div 
+      className={className} 
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+    />
+  );
+};
 
 export default function EventContent({ 
   event, 
@@ -253,6 +275,14 @@ export default function EventContent({
                 </div>
               )}
             </div>
+            {/* Bookmark Button */}
+            <BookmarkButton
+              bookmarkableType="event"
+              bookmarkableId={event.id}
+              category="Events"
+              iconSize="w-6 h-6"
+              tooltipPosition="top"
+            />
           </div>
           <hr />
         </div>
@@ -270,9 +300,9 @@ export default function EventContent({
         {event.description && (
           <div className="mb-4">
             <h2 className="text-xl font-bold mb-2">Description</h2>
-            <div 
-              className="mb-4 text-gray-700 prose w-full text-justify max-w-none break-words" 
-              dangerouslySetInnerHTML={{ __html: event.description }} 
+            <SafeHTML
+              html={event.description}
+              className="mb-4 text-gray-700 prose w-full text-justify max-w-none break-words"
             />
           </div>
         )}
@@ -400,10 +430,10 @@ export default function EventContent({
                       {relatedEvent.event_name || "Untitled Event"}
                     </h2>
                     {relatedEvent.description && (
-                      <div
+                      <SafeHTML
+                        html={relatedEvent.description}
                         className="text-sm line-clamp-2 mb-2"
-                        dangerouslySetInnerHTML={{ __html: relatedEvent.description }}
-                      ></div>
+                      />
                     )}
                     {/* Date and Statistics Section */}
                     <div className="flex items-center mt-1 space-x-2">

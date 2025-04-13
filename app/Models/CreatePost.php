@@ -147,4 +147,11 @@ class CreatePost extends Model
         return $view;
     }
 
+    /**
+     * Get all bookmarks for this post.
+     */
+    public function bookmarks()
+    {
+        return $this->morphMany(Bookmark::class, 'bookmarkable');
+    }
 }

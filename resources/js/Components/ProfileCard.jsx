@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
-import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter } from "react-icons/fa";
+import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter, FaUserPlus, FaPaperPlane, FaStar, FaHandsHelping, FaLightbulb, FaClock } from "react-icons/fa";
+import axios from "axios";
+import RecommendationModal from "./RecommendationModal";
+import RecommendationDisplay from "./RecommendationDisplay";
+import BookmarkButton from "@/Components/BookmarkButton";
 
 // Helper function to capitalize each skill
 const capitalize = (s) => {
@@ -48,10 +52,38 @@ const ProfileGridWithDualFilter = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const profilesPerPage = 9;
+  const [showRecommendationModal, setShowRecommendationModal] = useState(false);
+  const [recommendingProfile, setRecommendingProfile] = useState(null);
+  const [loadingProfileData, setLoadingProfileData] = useState(false);
+  
+  // Reference to the filter container
+  const filterContainerRef = useRef(null);
+
+  // Function to handle clicks outside the filter container
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterContainerRef.current && !filterContainerRef.current.contains(event.target) && showFilters) {
+        setShowFilters(false);
+      }
+    }
+
+    // Add event listener when showFilters is true
+    if (showFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilters]);
 
   const handleQuickInfoClick = (profile) => {
+    setLoadingProfileData(true);
+    // Set profile for modal display
     setSelectedProfile(profile);
     setIsModalOpen(true);
+    setLoadingProfileData(false);
   };
 
   // Extract unique research areas from profilesData
@@ -142,18 +174,34 @@ const ProfileGridWithDualFilter = ({
     return faculty ? faculty.name : "Unknown University";
   };
 
+  // Function to handle recommendation button click
+  const handleRecommendClick = (profile, e) => {
+    e.preventDefault(); // Prevent navigation
+    setRecommendingProfile(profile);
+    setShowRecommendationModal(true);
+  };
+  
+  // Function to handle successful recommendation submission
+  const handleRecommendationSuccess = () => {
+    setShowRecommendationModal(false);
+    // You could show a success message here if desired
+  };
+
   return (
     <div className="min-h-screen flex">
-      {/* Mobile Filter Toggle Button */}
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
-      >
-        <FaFilter className="text-xl" />
-      </button>
+      {/* Mobile title and Filter Toggle Button */}
+      <div className="fixed top-20 right-4 z-50 flex items-center space-x-4 lg:hidden">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="bg-blue-600 text-white p-2 rounded-full shadow-lg"
+        >
+          <FaFilter className="text-xl" />
+        </button>
+      </div>
 
       {/* Sidebar for Filters */}
       <div
+        ref={filterContainerRef}
         className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
           showFilters ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
@@ -229,22 +277,8 @@ const ProfileGridWithDualFilter = ({
               </div>
 
               {!isUndergraduateList && (
-                <div className="relative group">
-                  {profile.verified === 1 && (
-                    <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] text-purple-700 cursor-pointer">
-                      Verified
-                    </span>
-                  )}
-                  {profile.verified !== 1 && (
-                    <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] text-red-700 cursor-pointer">
-                      Not Verified
-                    </span>
-                  )}
-                  <div className="absolute top-8 right-0 hidden group-hover:flex items-center bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10">
-                    {profile.verified === 1
-                      ? `This account is verified by ${getUniversityNameById(profile.university)}`
-                      : "This account is not verified"}
-                  </div>
+                <div className="relative">
+                  {/* Removed the tooltip from here as it's now part of the verified badge */}
                 </div>
               )}
 
@@ -259,12 +293,28 @@ const ProfileGridWithDualFilter = ({
 
               {/* Profile Image */}
               <div className="flex justify-center -mt-12">
-                <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                  <img
-                    src={profile.profile_picture !== null ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg"}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="relative w-24 h-24">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                    <img
+                      src={profile.profile_picture !== null ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg"}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {/* Move verified badge outside the profile image circle */}
+                  {profile.verified === 1 && (
+                    <div className="absolute bottom-0 right-0 p-1 rounded-full group cursor-pointer">
+                      <div className="flex items-center justify-center w-7 h-7 bg-blue-500 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-8 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10 w-48">
+                        This account is verified by {getUniversityNameById(profile.university)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -292,17 +342,6 @@ const ProfileGridWithDualFilter = ({
                           ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
                           : "Unknown";
                       })()
-                    : Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
-                    ? (() => {
-                        const id = profile.research_expertise[0];
-                        const matchedOption = researchOptions.find(
-                          (option) =>
-                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                        );
-                        return matchedOption
-                          ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                          : "Unknown";
-                      })()
                     : Array.isArray(profile.research_preference) && profile.research_preference.length > 0
                     ? (() => {
                         const id = profile.research_preference[0];
@@ -314,14 +353,8 @@ const ProfileGridWithDualFilter = ({
                           ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
                           : "Unknown";
                       })()
-                    : "No Field of Research or Expertise"}
+                    : "No Field of Research or Preference"}
                 </p>
-                {/* Only show position for Academicians */}
-                {!isPostgraduateList && !isUndergraduateList && (
-                  <p className="text-gray-500 text-sm">
-                    {profile.current_position ? profile.current_position : "No Position"}
-                  </p>
-                )}
                 <div className="mt-2 flex justify-center gap-2">
                   <button
                     onClick={() => handleQuickInfoClick(profile)}
@@ -331,9 +364,7 @@ const ProfileGridWithDualFilter = ({
                   </button>
                   <Link
                     href={
-                      !isPostgraduateList && !isUndergraduateList
-                        ? route('academicians.show', profile.url)
-                        : isPostgraduateList && !isUndergraduateList
+                      isPostgraduateList && !isUndergraduateList
                         ? route('postgraduates.show', profile.url)
                         : route('undergraduates.show', profile.url)
                     }
@@ -344,48 +375,44 @@ const ProfileGridWithDualFilter = ({
                 </div>
               </div>
 
-              {/* Social Links */}
+              {/* Social Action Links - MODIFIED */}
               <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
                 <Link
                   href={route('email.compose', { 
                     to: users.find(
                       (user) =>
                         user.unique_id === 
-                        (profile.academician_id || profile.postgraduate_id || profile.undergraduate_id)
+                        (profile.postgraduate_id || profile.undergraduate_id)
                     )?.email 
                   })}
-                  className="text-gray-500 text-sm cursor-pointer hover:text-blue-700" 
+                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
                   title="Send Email"
                 >
-                  <FaEnvelope />
+                  <FaEnvelope className="text-xl" />
                 </Link>
                 <a
-                  href={profile.google_scholar}
+                  href={profile.linkedin || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-500 text-sm hover:text-red-700"
-                  title="Google Scholar"
-                >
-                  <FaGoogle />
-                </a>
-                <a
-                  href={profile.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-500 text-sm hover:text-green-700"
-                  title="Website"
-                >
-                  <FaGlobe />
-                </a>
-                <a
-                  href={profile.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-500 text-sm hover:text-blue-800"
+                  className="text-gray-500 text-lg hover:text-blue-800"
                   title="LinkedIn"
                 >
-                  <FaLinkedin />
+                  <FaLinkedin className="text-xl" />
                 </a>
+                <a
+                  href="#"
+                  className="text-gray-500 text-lg hover:text-green-700"
+                  title="Share"
+                >
+                  <FaPaperPlane className="text-xl" />
+                </a>
+                <BookmarkButton 
+                  bookmarkableType={isUndergraduateList ? "undergraduate" : isPostgraduateList ? "postgraduate" : "academician"}
+                  bookmarkableId={profile.id}
+                  category={isUndergraduateList ? "Undergraduates" : isPostgraduateList ? "Postgraduates" : "Academicians"}
+                  iconSize="text-xl"
+                  tooltipPosition="top"
+                />
               </div>
             </div>
           ))}
@@ -398,77 +425,124 @@ const ProfileGridWithDualFilter = ({
               className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none"
-                aria-label="Close"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <h3 className="text-xl font-bold mb-4 text-gray-800 text-center">
-                {selectedProfile.full_name}
-              </h3>
-              <div className="space-y-6">
-                {/* Research Information */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    {!isPostgraduateList && !isUndergraduateList 
-                      ? "Research Expertise"
-                      : isPostgraduateList && !isUndergraduateList
-                      ? "Field of Research"
-                      : "Research Preference"}
-                  </h4>
-                  <div className="pl-4 space-y-1">
-                    {(() => {
-                      let researchArray = [];
-                      // For Academicians
-                      if (!isPostgraduateList && !isUndergraduateList) {
-                        researchArray = selectedProfile.research_expertise || [];
-                      }
-                      // For Postgraduates
-                      else if (isPostgraduateList && !isUndergraduateList) {
-                        researchArray = selectedProfile.field_of_research || [];
-                      }
-                      // For Undergraduates
-                      else {
-                        researchArray = selectedProfile.research_preference || [];
-                      }
+              {loadingProfileData ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <svg className="animate-spin h-8 w-8 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <p className="text-gray-600">Loading profile information...</p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-xl font-bold mb-4 text-gray-800 ">
+                    {selectedProfile.full_name}
+                  </h3>
 
-                      if (Array.isArray(researchArray) && researchArray.length > 0) {
-                        return researchArray.map((id, index) => {
-                          const matchedOption = researchOptions.find(
-                            (option) =>
-                              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                          );
-                          if (!matchedOption) return null;
-                          return (
-                            <p key={index} className="text-gray-600">
-                              {index + 1}. {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
-                            </p>
-                          );
-                        });
-                      }
-                      return <p className="text-gray-600">Not Provided</p>;
-                    })()}
+                  <hr className="border-t border-gray-800 mb-4"></hr>
+                  
+                  <div className="space-y-6">
+                    {/* Short Bio */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-2">Short Bio</h4>
+                      <p className="text-gray-600 whitespace-pre-line">
+                        {selectedProfile.bio || "Not Provided"}
+                      </p>
+                    </div>
+                    
+                    {/* Research Interests */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                        {isPostgraduateList && !isUndergraduateList ? "Field of Research" : "Research Interest"}
+                      </h4>
+                      <div className="">
+                        {(() => {
+                          // Get the relevant research data
+                          let researchArray = [];
+                          // For Postgraduates
+                          if (isPostgraduateList && !isUndergraduateList) {
+                            researchArray = selectedProfile.field_of_research || [];
+                          }
+                          // For Undergraduates
+                          else {
+                            researchArray = selectedProfile.research_preference || [];
+                          }
+
+                          if (Array.isArray(researchArray) && researchArray.length > 0) {
+                            // Only show the first research interest
+                            const id = researchArray[0];
+                            const matchedOption = researchOptions.find(
+                              (option) =>
+                                `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                            );
+                            
+                            if (matchedOption) {
+                              return (
+                                <p className="text-gray-600">
+                                  {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
+                                </p>
+                              );
+                            }
+                          }
+                          return <p className="text-gray-600">Not Provided</p>;
+                        })()}
+                      </div>
+                    </div>
+                    
+                    {/* Skills */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
+                          selectedProfile.skills.map((skillId) => {
+                            const skillObj = (Array.isArray(skills) ? skills : []).find(s => s.id === skillId);
+                            return skillObj ? (
+                              <span 
+                                key={skillId} 
+                                className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                              >
+                                {capitalize(skillObj.name)}
+                              </span>
+                            ) : null;
+                          })
+                        ) : (
+                          <p className="text-gray-600">No skills listed</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Connect via */}
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-2">Connect via</h4>
+                      <div className="flex items-center space-x-4">
+                        <Link
+                          href={route('email.compose', { 
+                            to: users.find(
+                              (user) =>
+                                user.unique_id === 
+                                (selectedProfile.postgraduate_id || selectedProfile.undergraduate_id)
+                            )?.email 
+                          })}
+                          className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                          title="Send Email"
+                        >
+                          <FaEnvelope />
+                        </Link>
+                        <a
+                          href={selectedProfile.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-500 text-lg hover:text-blue-800"
+                          title="LinkedIn"
+                        >
+                          <FaLinkedin />
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Bio */}
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">Bio</h4>
-                  <p className="text-gray-600 whitespace-pre-line">
-                    {selectedProfile.bio || "Not Provided"}
-                  </p>
-                </div>
-              </div>
+                </>
+              )}
+              
               <div className="mt-6 text-center">
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -495,6 +569,15 @@ const ProfileGridWithDualFilter = ({
           ))}
         </div>
       </div>
+
+      {/* Recommendation Modal */}
+      {showRecommendationModal && recommendingProfile && (
+        <RecommendationModal
+          academician={recommendingProfile}
+          onClose={() => setShowRecommendationModal(false)}
+          onSuccess={handleRecommendationSuccess}
+        />
+      )}
     </div>
   );
 };

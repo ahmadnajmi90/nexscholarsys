@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Nexscholar Features and Components Rules
 
@@ -10,85 +10,96 @@ This file contains specific guidelines for implementing and maintaining features
 ## Content Management Features
 
 ### Posts, Events, Projects, and Grants
-- Each content type has its own controller, model, and views
+- Each content type has its own controller (CreatePostController, PostProjectController, PostEventController, PostGrantController)
+- Implement specific show controllers (ShowPostController, ShowProjectController, ShowEventController, ShowGrantController)
 - Follow consistent patterns for CRUD operations across content types
 - Implement toggleLike and share functionality for all content types
 - Store images in public directories with consistent naming patterns
 - Support featured images and gallery modes for content
 - Use rich text editors (React-Quill) for content bodies
+- Track views for each content type (PostView, ProjectView, EventView, GrantView)
 
 ### Content Display Components
 - Implement card components for content previews (PostCard, EventCard, etc.)
 - Create detailed view pages with consistent layouts
 - Support pagination for content listings
 - Implement proper image handling with responsive sizes
+- Track page views with PageViewTracker component
 
 ## User Profile Features
 
 ### Role-Specific Profiles
 - Support different profile types: Academician, Postgraduate, Undergraduate, Industry
-- Use custom forms for each role with appropriate fields
+- Use RoleProfileController for handling profile type switching and management
+- Implement role-specific controllers (AcademicianController, PostgraduateController, UndergraduateController)
 - Store profile images in role-specific directories
 - Implement profile picture and background image upload functionality
+- Use ProfileCard component for consistent UI across role types
 
 ### AI-Powered Profile Generation
-- Support generation from Google Search or provided URLs
-- Implement loading indicators during generation process
+- Support Google Scholar integration for academician profiles
+- Support GoogleSearch service for finding academic information
+- Use AIProfileService for profile content generation 
+- Use AICVService for CV generation and formatting
 - Process and validate AI-generated content before saving
-- Map research expertise to structured format (Field → Area → Domain)
-- Translate non-English content to English when necessary
+- Map research expertise to structured format (FieldOfResearch, ResearchArea, NicheDomain models)
+- Log search and scraping operations (ScrapingLog model)
 
 ### CV Generation
 - Support generation of CVs from profile data
-- Use PHPWord for document creation
+- Use AICVService for document creation
 - Allow customization of CV format and content
+- Follow academic CV formatting standards
 
 ## Dashboard Features
 
 ### Insights and Analytics
+- Use GoogleAnalyticsService for metrics integration
 - Display key metrics (users, views, likes)
 - Support different visualizations (charts, graphs)
 - Show upcoming events and recent activities
 - Implement responsive layouts for both desktop and mobile
+- Use Dashboard-specific components for consistent UX
 
 ### UI Components
 - Use cards, grids, and flex layouts consistently
-- Implement carousels with auto-slide and dot navigation
+- Implement RadarChart component for data visualization
 - Support quick actions for common tasks
 - Show alerts for incomplete profiles or important notifications
 
 ## Frontend UI Patterns
 
 ### Layout Components
-- Use MainLayout for authenticated pages
-- Implement consistent headers and footers
-- Support responsive sidebar navigation
-- Handle mobile layouts with dedicated components
+- Use Sidebar and MobileSidebar for navigation
+- Implement consistent TopMenu and NavLink components
+- Support responsive layouts with mobile-specific components
+- Use Modal component for overlays and dialogs
 
 ### Interactive Components
-- Use modals for forms and dialogs
-- Implement dropdown filters with search functionality
-- Use consistent button styles and interactions
+- Use Dropdown component for menus and selections
+- Implement FilterDropdown for search and filtering
+- Use consistent button styles (PrimaryButton, SecondaryButton, DangerButton)
 - Support loading states for asynchronous operations
+- Use TextInput, InputLabel, and InputError for form elements
 
 ### Navigation
 - Use Inertia Link components for navigation
 - Implement role-based sidebar navigation
-- Support breadcrumbs for hierarchical navigation
-- Track page views for analytics
+- Support NavLink and ResponsiveNavLink components
+- Track page views with PageViewTracker component
 
 ## University and Faculty Features
 
 ### University Directory
-- Support listing universities with filtering options
-- Display faculty listings for each university
+- Support UniversityList and FacultyList models
+- Display faculty listings for each university (UniversityController)
 - Show academicians, postgraduates, and undergraduates by faculty
 - Implement proper pagination and filtering
 
 ### Faculty Administration
+- Support FacultyAdmin model for administration
+- Implement FacultyAdminController for management
 - Support verification of academicians by faculty admins
-- Implement email notifications for verification
-- Display verification status in profiles
 - Allow management of faculty-specific content
 
 ## Data Validation and Processing
@@ -96,7 +107,7 @@ This file contains specific guidelines for implementing and maintaining features
 ### Form Validation
 - Use Laravel's validation rules in Form Requests
 - Implement client-side validation with Inertia
-- Display validation errors consistently across forms
+- Display validation errors consistently using InputError component
 - Validate file uploads for size and type
 
 ### Data Processing
@@ -104,3 +115,4 @@ This file contains specific guidelines for implementing and maintaining features
 - Handle JSON fields with proper serialization/deserialization
 - Format dates consistently using Carbon
 - Implement proper error handling for API operations
+- Track user interactions and page views

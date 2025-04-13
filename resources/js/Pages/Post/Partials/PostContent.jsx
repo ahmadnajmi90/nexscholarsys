@@ -5,6 +5,28 @@ import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import Carousel from '@/Components/Dashboard/Carousel';
 import { trackEvent, trackPageView } from '@/Utils/analytics';
+import BookmarkButton from '@/Components/BookmarkButton';
+import DOMPurify from 'dompurify';
+
+// Helper component for safely rendering HTML content
+const SafeHTML = ({ html, className }) => {
+  const sanitizedHTML = DOMPurify.sanitize(html || '', {
+    ALLOWED_TAGS: ['b', 'i', 'u', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  });
+  
+  // For empty content
+  if (!sanitizedHTML || sanitizedHTML.trim() === '') {
+    return <p className={className}>No content available</p>;
+  }
+  
+  return (
+    <div 
+      className={className} 
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+    />
+  );
+};
 
 export default function PostContent({ 
   post, 
@@ -290,6 +312,14 @@ export default function PostContent({
                 </div>
               )}
             </div>
+            {/* Bookmark Button */}
+            <BookmarkButton
+              bookmarkableType="post"
+              bookmarkableId={post.id}
+              category="Posts"
+              iconSize="w-6 h-6"
+              tooltipPosition="top"
+            />
           </div>
           <hr />
         </div>
@@ -304,9 +334,9 @@ export default function PostContent({
         )}
 
         {/* Content */}
-        <div
+        <SafeHTML
+          html={post.content}
           className="mb-4 text-gray-700 prose w-full text-justify max-w-none break-words"
-          dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
         {/* Category */}
@@ -389,10 +419,10 @@ export default function PostContent({
                       {relatedPost.title || "Untitled Post"}
                     </h2>
                     {relatedPost.content && (
-                      <div
+                      <SafeHTML
+                        html={relatedPost.content}
                         className="text-sm line-clamp-2 mb-2"
-                        dangerouslySetInnerHTML={{ __html: relatedPost.content }}
-                      ></div>
+                      />
                     )}
                     {/* Date and Statistics Section */}
                     <div className="flex items-center mt-1 space-x-2">

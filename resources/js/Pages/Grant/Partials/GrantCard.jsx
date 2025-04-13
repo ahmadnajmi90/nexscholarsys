@@ -1,6 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
+import DOMPurify from 'dompurify';
+
+// Plain text truncated content
+const TruncatedText = ({ html, maxLength = 100, className }) => {
+  if (!html) return <p className={className}>No content available</p>;
+  
+  // Strip HTML tags and get plain text
+  const plainText = html.replace(/<[^>]*>/g, '');
+  const truncated = plainText.length > maxLength 
+    ? plainText.substring(0, maxLength) + '...' 
+    : plainText;
+  
+  return <p className={className}>{truncated}</p>;
+};
 
 const GrantCard = ({ grants }) => {
   const [grantTypeFilter, setGrantTypeFilter] = useState([]);
@@ -132,10 +146,12 @@ const GrantCard = ({ grants }) => {
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                   }}
-                  dangerouslySetInnerHTML={{
-                    __html: grant.description || "No description available.",
-                  }}
-                ></p>
+                >
+                  <TruncatedText 
+                    html={grant.description || "No description available."}
+                    maxLength={100}
+                  />
+                </p>
               </div>
               {/* Changed View Details to a Link to grants.show route using the grant's URL */}
               <Link 

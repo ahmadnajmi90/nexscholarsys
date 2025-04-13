@@ -9,6 +9,28 @@ import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import { trackEvent, trackPageView } from '@/Utils/analytics';
+import BookmarkButton from '@/Components/BookmarkButton';
+import DOMPurify from 'dompurify';
+
+// Helper component for safely rendering HTML content
+const SafeHTML = ({ html, className }) => {
+  const sanitizedHTML = DOMPurify.sanitize(html || '', {
+    ALLOWED_TAGS: ['b', 'i', 'u', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+    ALLOWED_ATTR: ['href', 'target', 'rel']
+  });
+  
+  // For empty content
+  if (!sanitizedHTML || sanitizedHTML.trim() === '') {
+    return <p className={className}>No content available</p>;
+  }
+  
+  return (
+    <div 
+      className={className} 
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+    />
+  );
+};
 
 export default function ProjectContent({ project, previous, next, academicians, researchOptions, universities, auth, isWelcome, relatedProjects }) {
   const { isAcademician } = useRoles();
@@ -249,6 +271,14 @@ export default function ProjectContent({ project, previous, next, academicians, 
                 </div>
               )}
             </div>
+            {/* Bookmark Button */}
+            <BookmarkButton
+              bookmarkableType="project"
+              bookmarkableId={project.id}
+              category="Projects"
+              iconSize="w-6 h-6"
+              tooltipPosition="top"
+            />
           </div>
           <hr />
         </div>
@@ -266,9 +296,9 @@ export default function ProjectContent({ project, previous, next, academicians, 
         {project.description && (
           <div className="mb-4">
             <h2 className="text-xl font-bold mb-2">Description</h2>
-            <div 
+            <SafeHTML
+              html={project.description}
               className="mb-4 text-gray-700 prose w-full text-justify max-w-none break-words" 
-              dangerouslySetInnerHTML={{ __html: project.description }} 
             />
           </div>
         )}
@@ -443,10 +473,10 @@ export default function ProjectContent({ project, previous, next, academicians, 
                       {relatedProject.title || "Untitled Project"}
                     </h2>
                     {relatedProject.description && (
-                      <div
+                      <SafeHTML
+                        html={relatedProject.description}
                         className="text-sm line-clamp-2 mb-2"
-                        dangerouslySetInnerHTML={{ __html: relatedProject.description }}
-                      ></div>
+                      />
                     )}
                     {/* Date and Statistics Section */}
                     <div className="flex items-center mt-1 space-x-2">

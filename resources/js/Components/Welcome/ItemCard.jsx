@@ -1,5 +1,19 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
+
+// Plain text truncated content
+const TruncatedText = ({ html, maxLength = 100, className }) => {
+  if (!html) return <p className={className}>No content available</p>;
+  
+  // Strip HTML tags and get plain text
+  const plainText = html.replace(/<[^>]*>/g, '');
+  const truncated = plainText.length > maxLength 
+    ? plainText.substring(0, maxLength) + '...' 
+    : plainText;
+  
+  return <p className={className}>{truncated}</p>;
+};
 
 export default function ItemCard({ item, auth, type }) {
   // If item is undefined, return an empty placeholder
@@ -64,9 +78,12 @@ export default function ItemCard({ item, auth, type }) {
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
           }}
-          // For posts, this renders content; for other types, description.
-          dangerouslySetInnerHTML={{ __html: content || "No content available." }}
-        ></p>
+        >
+          <TruncatedText 
+            html={content || "No content available."}
+            maxLength={100}
+          />
+        </p>
       </div>
       {/* Button container */}
       <div className="px-4">

@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # Nexscholar AI Integration Rules
 
@@ -9,12 +9,14 @@ This file provides guidelines for implementing and maintaining AI-related featur
 
 ## AI Profile Generation
 
-### OpenAI Integration
-- Use GPT-4o via OpenAI API or Azure OpenAI
+### GitHub OpenAI Integration
+- Use GPT-4o via GitHub OpenAI API 
+- Configure token and endpoint in config files
 - Structure prompts to generate specific academic profile sections
-- Include clear instructions for required data formats
 - Handle API rate limits and errors gracefully
 - Cache successful responses to minimize API usage
+- Set temperature to 0.1 for more consistent outputs
+- Use Guzzle HTTP client for API communication
 
 ### AI Response Processing
 - Parse JSON responses from the AI model
@@ -22,6 +24,7 @@ This file provides guidelines for implementing and maintaining AI-related featur
 - Map research expertise to predefined structured options
 - Handle multilingual responses with translation when needed
 - Log AI-generated content for quality analysis
+- Remove markdown code fences from responses if present
 
 ## Web Scraping Integration
 
@@ -29,24 +32,36 @@ This file provides guidelines for implementing and maintaining AI-related featur
 - Use GuzzleHTTP for making HTTP requests to external URLs
 - Validate and sanitize user-provided URLs
 - Handle timeouts and errors gracefully
-- Respect robots.txt and implement proper delay between requests
+- Use random user agents to minimize blocking
+- Implement rate limiting and throttling
+- Log scraping activities for monitoring
 - Cache successful responses to minimize unnecessary requests
 
 ### Content Extraction
-- Use DOMDocument for HTML parsing
-- Extract meta descriptions and relevant content
+- Use DOMDocument and DOMXPath for HTML parsing
+- Extract specific elements using XPath queries
 - Implement fallback mechanisms when expected content isn't found
 - Filter out irrelevant content and advertisements
+- Handle CAPTCHA detection for Google Scholar scraping
 - Sanitize extracted content before storage
 
-## Google Search Integration
+## Google Services Integration
 
 ### Search API Usage
 - Use Google Custom Search API for web-based AI search
+- Configure API key and CX in services config
 - Construct search queries based on user information
-- Filter results to academic and professional sources
-- Handle pagination of search results
+- Log search results for monitoring
+- Handle API errors gracefully
 - Cache search results to minimize API usage
+
+### Analytics Integration
+- Use Google Analytics Data V1beta client
+- Configure property ID and service account credentials
+- Cache analytics data to reduce API calls
+- Track active users, session duration, and page views
+- Generate insights from analytics data for dashboards
+- Log initialization and errors for monitoring
 
 ## Data Mapping & Validation
 

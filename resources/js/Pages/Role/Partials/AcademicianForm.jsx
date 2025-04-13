@@ -33,6 +33,7 @@ export default function AcademicianForm({ className = '', researchOptions }) {
       current_position: academician?.current_position || '',
       department: academician?.department || '',
       availability_as_supervisor: academician?.availability_as_supervisor || false,
+      style_of_supervision: academician?.style_of_supervision || '',
       background_image: academician?.background_image || '',
     });
 
@@ -716,18 +717,37 @@ export default function AcademicianForm({ className = '', researchOptions }) {
                     </div>
                   </div>
 
-                  <div>
-                    <InputLabel htmlFor="availability_as_supervisor" value="Availability as Supervisor" required />
-                    <select
-                      id="availability_as_supervisor"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      value={data.availability_as_supervisor}
-                      onChange={(e) => setData('availability_as_supervisor', e.target.value === 'true')}
-                    >
-                      <option value="true">Available</option>
-                      <option value="false">Not Available</option>
-                    </select>
-                    <InputError className="mt-2" message={errors.availability_as_supervisor} />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                    <div className="w-full">
+                      <InputLabel htmlFor="availability_as_supervisor" value="Availability as Supervisor" required />
+                      <select
+                        id="availability_as_supervisor"
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                        value={data.availability_as_supervisor ? 'true' : 'false'}
+                        onChange={(e) => setData('availability_as_supervisor', e.target.value === 'true')}
+                      >
+                        <option value="true">Available</option>
+                        <option value="false">Not Available</option>
+                      </select>
+                      <InputError className="mt-2" message={errors.availability_as_supervisor} />
+                    </div>
+                    <div className="w-full">
+                      <InputLabel htmlFor="style_of_supervision" value="Style of Supervision" />
+                      <select
+                        id="style_of_supervision"
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                        value={data.style_of_supervision || ''}
+                        onChange={(e) => setData('style_of_supervision', e.target.value)}
+                      >
+                        <option value="">Select Supervision Style</option>
+                        <option value="Independent">Independent</option>
+                        <option value="Collaborative">Collaborative</option>
+                        <option value="Structured">Structured</option>
+                        <option value="Hands-off">Hands-off</option>
+                        <option value="Hands-on">Hands-on</option>
+                      </select>
+                      <InputError className="mt-2" message={errors.style_of_supervision} />
+                    </div>
                   </div>
                 </>
               )}

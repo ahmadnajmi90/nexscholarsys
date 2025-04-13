@@ -102,4 +102,11 @@ class Postgraduate extends Model
         return $this->belongsToMany(Skill::class, 'skills' );
     }
 
+    /**
+     * Get all bookmarks for this postgraduate.
+     */
+    public function bookmarks()
+    {
+        return $this->morphMany(Bookmark::class, 'bookmarkable');
+    }
 }

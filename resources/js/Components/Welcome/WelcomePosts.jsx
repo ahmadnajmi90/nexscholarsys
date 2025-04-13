@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
+
+// Plain text truncated content
+const TruncatedText = ({ html, maxLength = 100, className }) => {
+  if (!html) return <p className={className}>No content available</p>;
+  
+  // Strip HTML tags and get plain text
+  const plainText = html.replace(/<[^>]*>/g, '');
+  const truncated = plainText.length > maxLength 
+    ? plainText.substring(0, maxLength) + '...' 
+    : plainText;
+  
+  return <p className={className}>{truncated}</p>;
+};
 
 const WelcomePosts = ({ posts }) => {
   const totalPosts = posts.slice(0, 5);
@@ -53,8 +67,12 @@ const WelcomePosts = ({ posts }) => {
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
                 }}
-                dangerouslySetInnerHTML={{ __html: post.content || "No content available." }}
-              ></p>
+              >
+                <TruncatedText 
+                  html={post.content}
+                  maxLength={100}
+                />
+              </p>
             </div>
             <div className="px-4">
               <a 
@@ -97,10 +115,12 @@ const WelcomePosts = ({ posts }) => {
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
                   }}
-                  dangerouslySetInnerHTML={{
-                    __html: totalPosts[currentIndex].content.replace(/<[^>]+>/g, '').substring(0, 100) + "..."
-                  }}
-                ></p>
+                >
+                  <TruncatedText 
+                    html={totalPosts[currentIndex].content}
+                    maxLength={100}
+                  />
+                </p>
               </div>
               <div className="px-4 mt-auto pb-4">
                 <Link

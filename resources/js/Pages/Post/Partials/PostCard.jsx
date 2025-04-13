@@ -1,5 +1,19 @@
 import React, { useState } from "react";
 import FilterDropdown from "@/Components/FilterDropdown";
+import DOMPurify from 'dompurify';
+
+// Plain text truncated content
+const TruncatedText = ({ html, maxLength = 100, className }) => {
+  if (!html) return <p className={className}>No content available</p>;
+  
+  // Strip HTML tags and get plain text
+  const plainText = html.replace(/<[^>]*>/g, '');
+  const truncated = plainText.length > maxLength 
+    ? plainText.substring(0, maxLength) + '...' 
+    : plainText;
+  
+  return <p className={className}>{truncated}</p>;
+};
 
 const PostCard = ({ posts }) => {
   const [categoryFilter, setCategoryFilter] = useState([]);
@@ -83,8 +97,12 @@ const PostCard = ({ posts }) => {
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                   }}
-                  dangerouslySetInnerHTML={{ __html: post.content || "No content available." }}
-                ></p>
+                >
+                  <TruncatedText 
+                    html={post.content || "No content available."}
+                    maxLength={100}
+                  />
+                </p>
               </div>
               <div className="px-4">
                 <a 

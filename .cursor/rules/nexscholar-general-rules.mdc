@@ -13,13 +13,17 @@ You are assisting with the Nexscholar platform, a modern academic and research p
 - **Frontend**: React integrated with Inertia.js, styled with Tailwind CSS
 - **Authentication**: Laravel Sanctum with Bouncer for role-based permissions
 - **Database**: MySQL with Eloquent ORM
-- **AI Integration**: GPT-4o for academic profile generation
+- **AI Integration**: GPT-4o via GitHub OpenAI API for academic profile generation
+- **Analytics**: Google Analytics Data API for insights and metrics
+- **Search**: Google Custom Search API for external content discovery
+- **Scholar Integration**: Custom scraping for Google Scholar profiles
 - **File Management**: Custom implementation for handling uploads and attachments
 
 ## Laravel Backend Guidelines
 
 ### Controller Structure
-- Use resource controllers for CRUD operations
+- Use resource controllers for core CRUD operations
+- Implement specific controllers for show operations (ShowPostController, ShowEventController)
 - Return Inertia responses from controllers: `return Inertia::render('PageName', $data);`
 - Group related routes in `routes/web.php` by middleware or feature
 - Use Form Requests for validation logic
@@ -30,7 +34,15 @@ You are assisting with the Nexscholar platform, a modern academic and research p
 - Define clear relationships between models (User, Academician, Post, etc.)
 - Use Bouncer's `HasRolesAndAbilities` trait for permissions
 - Use consistent naming for foreign keys (e.g., `author_id`, `academician_id`)
-- Use accessors and mutators for data formatting when needed
+- Track content views using dedicated models (PostView, ProjectView, etc.)
+- Implement role-specific models (Academician, Postgraduate, Undergraduate)
+
+### Service Pattern
+- Use dedicated service classes for external API integration (GoogleScholarService, AIProfileService)
+- Implement scraping logic in services rather than controllers
+- Handle caching and rate limiting in service classes
+- Log API calls and errors for monitoring
+- Use dependency injection for service instantiation
 
 ### Route Organization
 - Group routes by authentication/authorization status
@@ -50,32 +62,37 @@ You are assisting with the Nexscholar platform, a modern academic and research p
 - Use shared data for common values like auth user info
 - Handle form submissions with Inertia forms
 - Use Ziggy for named routes in JavaScript: `route('route.name')`
+- Implement proper page transitions and loading states
 
 ## React Frontend Guidelines
 
 ### Page Components
 - Store page components in `resources/js/Pages` directory
-- Use appropriate layouts (MainLayout) for each page
+- Use appropriate layouts for each page
 - Follow naming pattern matching Laravel route names
 - Pass data from controllers as props
+- Implement responsive design for both desktop and mobile
 
 ### Component Organization
 - Store reusable components in `resources/js/Components`
-- Create feature-specific components in subdirectories (Dashboard/, Welcome/)
-- Implement responsive designs with mobile-specific components when needed
-- Use consistent naming conventions for components
+- Create feature-specific components in subdirectories
+- Implement Sidebar and MobileSidebar for navigation
+- Use consistent component patterns across the application
+- Keep components focused and reusable
 
 ### UI Patterns
 - Use Tailwind CSS utility classes directly in components
 - Implement responsive design using Tailwind breakpoints
-- Use Headless UI components for interactive elements
-- Implement both desktop and mobile views for key interfaces
+- Use button components (PrimaryButton, SecondaryButton, DangerButton)
+- Implement form components (TextInput, Select, InputLabel, InputError)
+- Use Dropdown and FilterDropdown for menu interactions
 
 ### State Management
 - Use React Hooks (useState, useEffect) for component state
-- Use custom hooks (like useRoles, useIsDesktop) for shared logic
+- Use custom hooks for shared logic
 - Handle loading states properly for asynchronous operations
 - Implement proper error handling for form submissions
+- Track page views using PageViewTracker component
 
 ## Database Guidelines
 
@@ -83,6 +100,7 @@ You are assisting with the Nexscholar platform, a modern academic and research p
 - Follow consistent naming conventions for tables and columns
 - Use JSON columns for flexible attribute storage (tags, skills)
 - Implement proper indexes for frequently queried columns
+- Track content views and interactions (likes, shares)
 
 ## User Roles & Permissions
 
@@ -90,3 +108,14 @@ You are assisting with the Nexscholar platform, a modern academic and research p
 - Define clear abilities for different user roles
 - Implement role-specific controllers and views
 - Check permissions in both frontend and backend code
+- Handle faculty administration and verification workflows
+
+## AI and External Services Integration
+
+- Use AIProfileService for profile generation with GPT-4o
+- Implement AICVService for CV generation
+- Use GoogleScholarService for scraping scholar profiles
+- Integrate GoogleSearchService for external content discovery
+- Implement GoogleAnalyticsService for metrics and insights
+- Handle rate limiting, caching, and error handling in all services
+- Log API calls and responses for debugging and monitoring
