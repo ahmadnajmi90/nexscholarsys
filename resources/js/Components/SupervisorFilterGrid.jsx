@@ -213,21 +213,19 @@ const SupervisorFilterGrid = ({
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-6 space-x-2">
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => handlePageChange(index + 1)}
-                className={`px-4 py-2 border rounded ${
-                  currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex justify-center mt-6 space-x-2">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => handlePageChange(index + 1)}
+              className={`px-4 py-2 border rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
         
         {/* No results message */}
         {displayedProfiles.length === 0 && (

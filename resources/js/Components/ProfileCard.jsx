@@ -377,6 +377,13 @@ const ProfileGridWithDualFilter = ({
 
               {/* Social Action Links - MODIFIED */}
               <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
+                <a
+                  href="#"
+                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                  title="Add Friend"
+                >
+                  <FaUserPlus className="text-lg" />
+                </a>
                 <Link
                   href={route('email.compose', { 
                     to: users.find(
@@ -388,7 +395,7 @@ const ProfileGridWithDualFilter = ({
                   className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
                   title="Send Email"
                 >
-                  <FaEnvelope className="text-xl" />
+                  <FaPaperPlane className="text-lg" />
                 </Link>
                 <a
                   href={profile.linkedin || "#"}
@@ -397,20 +404,13 @@ const ProfileGridWithDualFilter = ({
                   className="text-gray-500 text-lg hover:text-blue-800"
                   title="LinkedIn"
                 >
-                  <FaLinkedin className="text-xl" />
-                </a>
-                <a
-                  href="#"
-                  className="text-gray-500 text-lg hover:text-green-700"
-                  title="Share"
-                >
-                  <FaPaperPlane className="text-xl" />
+                  <FaLinkedin className="text-lg" />
                 </a>
                 <BookmarkButton 
                   bookmarkableType={isUndergraduateList ? "undergraduate" : isPostgraduateList ? "postgraduate" : "academician"}
                   bookmarkableId={profile.id}
                   category={isUndergraduateList ? "Undergraduates" : isPostgraduateList ? "Postgraduates" : "Academicians"}
-                  iconSize="text-xl"
+                  iconSize="text-lg"
                   tooltipPosition="top"
                 />
               </div>
@@ -515,19 +515,6 @@ const ProfileGridWithDualFilter = ({
                     <div>
                       <h4 className="text-lg font-semibold text-gray-800 mb-2">Connect via</h4>
                       <div className="flex items-center space-x-4">
-                        <Link
-                          href={route('email.compose', { 
-                            to: users.find(
-                              (user) =>
-                                user.unique_id === 
-                                (selectedProfile.postgraduate_id || selectedProfile.undergraduate_id)
-                            )?.email 
-                          })}
-                          className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                          title="Send Email"
-                        >
-                          <FaEnvelope />
-                        </Link>
                         <a
                           href={selectedProfile.linkedin}
                           target="_blank"

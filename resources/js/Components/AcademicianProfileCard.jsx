@@ -366,28 +366,34 @@ const AcademicianProfileCard = ({
                   className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
                   title="Add Friend"
                 >
-                  <FaUserPlus className="text-xl" />
+                  <FaUserPlus className="text-lg" />
                 </a>
-                <a
-                  href="#"
-                  className="text-gray-500 text-lg hover:text-green-700"
-                  title="Share"
+                <Link
+                  href={route('email.compose', { 
+                    to: users.find(
+                      (user) =>
+                        user.unique_id === 
+                        (profile.academician_id)
+                    )?.email 
+                  })}
+                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                  title="Send Email"
                 >
-                  <FaPaperPlane className="text-xl" />
-                </a>
+                  <FaPaperPlane className="text-lg" />
+                </Link>
                 <a
                   href="#"
                   onClick={(e) => handleRecommendClick(profile, e)}
                   className="text-gray-500 text-lg hover:text-yellow-500"
                   title="Recommend"
                 >
-                  <FaStar className="text-xl" />
+                  <FaStar className="text-lg" />
                 </a>
                 <BookmarkButton 
                   bookmarkableType="academician" 
                   bookmarkableId={profile.id}
                   category="Academicians" 
-                  iconSize="text-xl"
+                  iconSize="text-lg"
                   tooltipPosition="top"
                 />
               </div>
@@ -396,21 +402,19 @@ const AcademicianProfileCard = ({
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-6 space-x-2">
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => handlePageChange(index + 1)}
-                className={`px-4 py-2 border rounded ${
-                  currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex justify-center mt-6 space-x-2">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => handlePageChange(index + 1)}
+              className={`px-4 py-2 border rounded ${
+                currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
 
         {/* No results message */}
         {displayedProfiles.length === 0 && (
@@ -554,17 +558,6 @@ const AcademicianProfileCard = ({
                     <div>
                       <h4 className="text-lg font-semibold text-gray-800 mb-2">Connect via</h4>
                       <div className="flex items-center space-x-4">
-                        <Link
-                          href={route('email.compose', { 
-                            to: users.find(
-                              (user) => user.unique_id === selectedProfile.academician_id
-                            )?.email 
-                          })}
-                          className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                          title="Send Email"
-                        >
-                          <FaEnvelope />
-                        </Link>
                         <a
                           href={selectedProfile.google_scholar}
                           target="_blank"

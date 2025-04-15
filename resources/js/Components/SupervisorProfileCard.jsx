@@ -209,35 +209,41 @@ const SupervisorProfileCard = ({
 
       {/* Social Action Links */}
       <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-        <a
-          href="#"
-          className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-          title="Add Friend"
-        >
-          <FaUserPlus className="text-xl" />
-        </a>
-        <a
-          href="#"
-          className="text-gray-500 text-lg hover:text-green-700"
-          title="Share"
-        >
-          <FaPaperPlane className="text-xl" />
-        </a>
-        <a
-          href="#"
-          onClick={handleRecommendClick}
-          className="text-gray-500 text-lg hover:text-yellow-500"
-          title="Recommend"
-        >
-          <FaStar className="text-xl" />
-        </a>
-        <BookmarkButton 
-          bookmarkableType="academician"
-          bookmarkableId={profile.id}
-          category="Academicians"
-          iconSize="text-xl"
-          tooltipPosition="top"
-        />
+      <a
+                  href="#"
+                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                  title="Add Friend"
+                >
+                  <FaUserPlus className="text-lg" />
+                </a>
+                <Link
+                  href={route('email.compose', { 
+                    to: users.find(
+                      (user) =>
+                        user.unique_id === 
+                        (profile.academician_id)
+                    )?.email 
+                  })}
+                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                  title="Send Email"
+                >
+                  <FaPaperPlane className="text-lg" />
+                </Link>
+                <a
+                  href="#"
+                  onClick={(e) => handleRecommendClick(profile, e)}
+                  className="text-gray-500 text-lg hover:text-yellow-500"
+                  title="Recommend"
+                >
+                  <FaStar className="text-lg" />
+                </a>
+                <BookmarkButton 
+                  bookmarkableType="academician" 
+                  bookmarkableId={profile.id}
+                  category="Academicians" 
+                  iconSize="text-lg"
+                  tooltipPosition="top"
+                />
       </div>
       
       {/* Modal for detailed profile view */}
@@ -394,17 +400,6 @@ const SupervisorProfileCard = ({
                   <div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">Connect via</h4>
                     <div className="flex items-center space-x-4">
-                      <Link
-                        href={route('email.compose', { 
-                          to: users.find(
-                            (user) => user.unique_id === selectedProfile.academician_id
-                          )?.email 
-                        })}
-                        className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                        title="Send Email"
-                      >
-                        <FaEnvelope />
-                      </Link>
                       <a
                         href={selectedProfile.google_scholar}
                         target="_blank"
