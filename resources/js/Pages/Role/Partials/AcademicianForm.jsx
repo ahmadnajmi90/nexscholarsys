@@ -732,20 +732,58 @@ export default function AcademicianForm({ className = '', researchOptions }) {
                       <InputError className="mt-2" message={errors.availability_as_supervisor} />
                     </div>
                     <div className="w-full">
-                      <InputLabel htmlFor="style_of_supervision" value="Style of Supervision" />
-                      <select
+                      <div className="flex items-center gap-2">
+                        <InputLabel htmlFor="style_of_supervision" value="Style of Supervision" />
+                        <div className="group relative">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500 hover:text-gray-700 cursor-help">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                          </svg>
+                          <div className="absolute left-0 w-80 p-4 bg-gray-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 -translate-x-1/2 translate-y-2">
+                            <div className="space-y-2">
+                              <p><span className="font-semibold">Directive:</span> Structured approach with active guidance and regular monitoring</p>
+                              <p><span className="font-semibold">Facilitative:</span> Supportive approach encouraging student independence</p>
+                              <p><span className="font-semibold">Coaching:</span> Focuses on personal development and academic growth</p>
+                              <p><span className="font-semibold">Adaptive:</span> Flexible support based on student's changing needs</p>
+                              <p><span className="font-semibold">Participatory:</span> Collaborative approach with shared decision-making</p>
+                            </div>
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2">
+                              <div className="border-8 border-transparent border-b-gray-800"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <Select
                         id="style_of_supervision"
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                        value={data.style_of_supervision || ''}
-                        onChange={(e) => setData('style_of_supervision', e.target.value)}
-                      >
-                        <option value="">Select Supervision Style</option>
-                        <option value="Independent">Independent</option>
-                        <option value="Collaborative">Collaborative</option>
-                        <option value="Structured">Structured</option>
-                        <option value="Hands-off">Hands-off</option>
-                        <option value="Hands-on">Hands-on</option>
-                      </select>
+                        isMulti
+                        options={[
+                          { value: 'Directive Supervision', label: 'Directive Supervision' },
+                          { value: 'Facilitative Supervision', label: 'Facilitative Supervision' },
+                          { value: 'Coaching Supervision', label: 'Coaching Supervision' },
+                          { value: 'Adaptive Supervision', label: 'Adaptive Supervision' },
+                          { value: 'Participatory Supervision', label: 'Participatory Supervision' },
+                        ]}
+                        className="mt-1 block w-full"
+                        classNamePrefix="select"
+                        value={
+                          Array.isArray(data.style_of_supervision)
+                            ? data.style_of_supervision.map(style => ({
+                                value: style,
+                                label: style
+                              }))
+                            : []
+                        }
+                        onChange={(selectedOptions) => {
+                          const selectedValues = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                          setData('style_of_supervision', selectedValues);
+                        }}
+                        menuPortalTarget={document.body}
+                        styles={{
+                          menuPortal: (provided) => ({
+                            ...provided,
+                            zIndex: 9999
+                          })
+                        }}
+                      />
                       <InputError className="mt-2" message={errors.style_of_supervision} />
                     </div>
                   </div>

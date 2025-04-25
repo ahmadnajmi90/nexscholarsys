@@ -30,7 +30,7 @@ class RoleProfileUpdateRequest extends FormRequest
                 // 'verified' => ['nullable', 'string', 'max:255'],
                 'availability_for_collaboration' => [],
                 'availability_as_supervisor' => [],
-                'style_of_supervision' => ['nullable', 'string', 'in:Independent,Collaborative,Structured,Hands-off,Hands-on'],
+                'style_of_supervision' => ['nullable', 'array'],
             ];
         } elseif (BouncerFacade::is(Auth::user())->an('postgraduate')) {
             $rules = [

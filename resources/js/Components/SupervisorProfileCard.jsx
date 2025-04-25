@@ -336,14 +336,26 @@ const SupervisorProfileCard = ({
                   {/* Style of Supervision */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">Style of Supervision</h4>
-                    <p className="text-gray-600">
-                      {selectedProfile.style_of_supervision || "Not Specified"}
-                      {selectedProfile.style_of_supervision === 'Independent' && ' - Students work autonomously with minimal guidance.'}
-                      {selectedProfile.style_of_supervision === 'Collaborative' && ' - Supervisor and student work together as partners.'}
-                      {selectedProfile.style_of_supervision === 'Structured' && ' - Clear objectives, regular meetings, and defined milestones.'}
-                      {selectedProfile.style_of_supervision === 'Hands-off' && ' - Limited intervention, student-driven research.'}
-                      {selectedProfile.style_of_supervision === 'Hands-on' && ' - Close guidance and detailed feedback at every stage.'}
-                    </p>
+                    <div className="space-y-2">
+                      {Array.isArray(selectedProfile.style_of_supervision) && selectedProfile.style_of_supervision.length > 0 ? (
+                        <div className="mt-2 text-normal text-gray-600">
+                          {selectedProfile.style_of_supervision.map((style, index) => (
+                            <div key={index} className="mb-2">
+                              <span className="font-medium">{index + 1}. {style}</span>
+                              <div className="ml-4 text-sm">
+                                {style === 'Directive Supervision' && 'Structured approach with active guidance and regular monitoring'}
+                                {style === 'Facilitative Supervision' && 'Supportive approach encouraging student independence'}
+                                {style === 'Coaching Supervision' && 'Focuses on personal development and academic growth'}
+                                {style === 'Adaptive Supervision' && 'Flexible support based on student\'s changing needs'}
+                                {style === 'Participatory Supervision' && 'Collaborative approach with shared decision-making'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-600">Not Specified</p>
+                      )}
+                    </div>
                   </div>
                   
                   {/* Total Supervised Student */}

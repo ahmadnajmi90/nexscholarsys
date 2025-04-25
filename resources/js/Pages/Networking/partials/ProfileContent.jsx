@@ -58,6 +58,26 @@ const ProfileContent = ({
                                 <p className="mt-1">{profile.supervision_areas}</p>
                             </div>
                         )}
+                        {/* Style of Supervision */}
+                        {profile.availability_as_supervisor === 1 && Array.isArray(profile.style_of_supervision) && profile.style_of_supervision.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-medium text-gray-500">Style of Supervision</h3>
+                                <div className="mt-2 space-y-2">
+                                    {profile.style_of_supervision.map((style, index) => (
+                                        <div key={index} className="mb-2">
+                                            <span className="font-medium">{index + 1}. {style}</span>
+                                            <div className="ml-4 text-sm text-gray-600">
+                                                {style === 'Directive Supervision' && 'Structured approach with active guidance and regular monitoring'}
+                                                {style === 'Facilitative Supervision' && 'Supportive approach encouraging student independence'}
+                                                {style === 'Coaching Supervision' && 'Focuses on personal development and academic growth'}
+                                                {style === 'Adaptive Supervision' && 'Flexible support based on student\'s changing needs'}
+                                                {style === 'Participatory Supervision' && 'Collaborative approach with shared decision-making'}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

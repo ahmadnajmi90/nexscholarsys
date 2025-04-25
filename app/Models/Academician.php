@@ -40,6 +40,7 @@ class Academician extends Model
 
     protected $casts = [
         'research_expertise' => 'array', // Cast research_expertise as an array
+        'style_of_supervision' => 'array', // Cast style_of_supervision as an array
     ];
 
     protected static function booted()
