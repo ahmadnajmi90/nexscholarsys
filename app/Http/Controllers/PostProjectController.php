@@ -108,7 +108,8 @@ class PostProjectController extends Controller
                     'email' => 'nullable|email|max:255',
                     'origin_country' => 'nullable|string|max:255',
                     'student_nationality' => 'nullable|string|max:255',
-                    'student_level' => 'nullable|string|max:255',
+                    'student_level' => 'nullable',
+                    'student_mode_study' => 'nullable',
                     'appointment_type' => 'nullable|string|max:255',
                     'purpose_of_collaboration' => 'nullable|string|max:255',
                     'image' => 'nullable|image|max:2048',
@@ -164,6 +165,16 @@ class PostProjectController extends Controller
                 if (isset($validated['purpose']) && is_string($validated['purpose'])) {
                     $validated['purpose'] = json_decode($validated['purpose'], true);
                     logger()->info('Purpose:', $validated['purpose']);
+                }
+
+                if (isset($validated['student_level']) && is_string($validated['student_level'])) {
+                    $validated['student_level'] = json_decode($validated['student_level'], true);
+                    logger()->info('Student Level:', $validated['student_level']);
+                }
+
+                if (isset($validated['student_mode_study']) && is_string($validated['student_mode_study'])) {
+                    $validated['student_mode_study'] = json_decode($validated['student_mode_study'], true);
+                    logger()->info('Student Mode Study:', $validated['student_mode_study']);
                 }
 
                 if (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
@@ -253,7 +264,8 @@ class PostProjectController extends Controller
                     'email' => 'nullable|email|max:255',
                     'origin_country' => 'nullable|string|max:255',
                     'student_nationality' => 'nullable|string|max:255',
-                    'student_level' => 'nullable|string|max:255',
+                    'student_level' => 'nullable',
+                    'student_mode_study' => 'nullable',
                     'appointment_type' => 'nullable|string|max:255',
                     'purpose_of_collaboration' => 'nullable|string|max:255',
                     'amount' => 'nullable|numeric|min:0',
@@ -351,6 +363,16 @@ class PostProjectController extends Controller
                 if (isset($validated['purpose']) && is_string($validated['purpose'])) {
                     $validated['purpose'] = json_decode($validated['purpose'], true);
                     logger()->info('Purpose:', $validated['purpose']);
+                }
+
+                if (isset($validated['student_level']) && is_string($validated['student_level'])) {
+                    $validated['student_level'] = json_decode($validated['student_level'], true);
+                    logger()->info('Student Level:', $validated['student_level']);
+                }
+
+                if (isset($validated['student_mode_study']) && is_string($validated['student_mode_study'])) {
+                    $validated['student_mode_study'] = json_decode($validated['student_mode_study'], true);
+                    logger()->info('Student Mode Study:', $validated['student_mode_study']);
                 }
 
                 if (!array_key_exists('field_of_research', $validated)) {

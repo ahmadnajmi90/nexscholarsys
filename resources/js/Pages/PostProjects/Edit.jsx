@@ -29,7 +29,8 @@ export default function Edit({ postProject, auth, researchOptions, universities 
     email: postProject.email || "",
     origin_country: postProject.origin_country || "",
     student_nationality: postProject.student_nationality || "",
-    student_level: postProject.student_level || "",
+    student_level: postProject.student_level || [],
+    student_mode_study: postProject.student_mode_study || [],
     appointment_type: postProject.appointment_type || "",
     purpose_of_collaboration: postProject.purpose_of_collaboration || "",
     image: postProject.image || "",
@@ -56,19 +57,44 @@ export default function Edit({ postProject, auth, researchOptions, universities 
     };
   }, []);
 
-  const handleCheckboxChange = (value) => {
-    if (value === "For Showcase") {
-      if (!data.purpose.includes("For Showcase")) {
-        setData("purpose", ["For Showcase"]);
-      } else {
-        setData("purpose", []);
-      }
-    } else {
-      const updatedValues = data.purpose.includes(value)
-        ? data.purpose.filter((item) => item !== value)
-        : [...data.purpose.filter((item) => item !== "For Showcase"), value];
-      setData("purpose", updatedValues);
+  const purposeOptions = [
+    { value: 'Seek for Postgraduate', label: 'Seek for Postgraduate' },
+    { value: 'Seek for Undergraduate', label: 'Seek for Undergraduate' },
+    { value: 'Seek for Academician Collaboration', label: 'Seek for Academician Collaboration' },
+    { value: 'Seek for Industrial Collaboration', label: 'Seek for Industrial Collaboration' },
+    { value: 'For Showcase', label: 'For Showcase' }
+  ];
+
+  const handlePurposeChange = (selectedOptions) => {
+    if (!selectedOptions) {
+      setData('purpose', []);
+      return;
     }
+
+    const selectedValues = selectedOptions.map(option => option.value);
+    
+    // If "For Showcase" is selected
+    if (selectedValues.includes('For Showcase')) {
+      setData('purpose', ['For Showcase']);
+      return;
+    }
+
+    // If any other option is selected, remove "For Showcase"
+    const filteredValues = selectedValues.filter(value => value !== 'For Showcase');
+    setData('purpose', filteredValues);
+  };
+
+  // Function to determine if an option should be disabled
+  const isOptionDisabled = (option) => {
+    if (option.value === 'For Showcase') {
+      return data.purpose.some(item =>
+        item === 'Seek for Postgraduate' ||
+        item === 'Seek for Undergraduate' ||
+        item === 'Seek for Academician Collaboration' ||
+        item === 'Seek for Industrial Collaboration'
+      );
+    }
+    return data.purpose.includes('For Showcase');
   };
 
   const [customTag, setCustomTag] = useState("");
@@ -209,109 +235,22 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               <InputLabel>
                 Purpose (Multiselect)
               </InputLabel>
-              <div
-                className={`relative mt-1 w-full rounded-lg border border-gray-200 p-2 px-2.5 cursor-pointer bg-white ${
-                  dropdownOpen ? "shadow-lg" : ""
-                }`}
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                {data.purpose && data.purpose.length > 0 ? data.purpose.join(", ") : "Select Purposes"}
-              </div>
-              {dropdownOpen && (
-                <div className="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg w-full">
-                  <div className="p-2 space-y-2">
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Postgraduate"
-                        checked={data.purpose.includes("Seek for Postgraduate")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Postgraduate
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Undergraduate"
-                        checked={data.purpose.includes("Seek for Undergraduate")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Undergraduate
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Academician Collaboration"
-                        checked={data.purpose.includes("Seek for Academician Collaboration")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Academician Collaboration
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.includes("For Showcase") ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="Seek for Industrial Collaboration"
-                        checked={data.purpose.includes("Seek for Industrial Collaboration")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.includes("For Showcase")}
-                        className="mr-2"
-                      />
-                      Seek for Industrial Collaboration
-                    </InputLabel>
-                    <InputLabel
-                      className={`flex items-center ${
-                        data.purpose.some(
-                          (item) =>
-                            item === "Seek for Postgraduate" ||
-                            item === "Seek for Undergraduate" ||
-                            item === "Seek for Academician Collaboration" ||
-                            item === "Seek for Industrial Collaboration"
-                        )
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value="For Showcase"
-                        checked={data.purpose.includes("For Showcase")}
-                        onChange={(e) => handleCheckboxChange(e.target.value)}
-                        disabled={data.purpose.some(
-                          (item) =>
-                            item === "Seek for Postgraduate" ||
-                            item === "Seek for Undergraduate" ||
-                            item === "Seek for Academician Collaboration" ||
-                            item === "Seek for Industrial Collaboration"
-                        )}
-                        className="mr-2"
-                      />
-                      For Showcase
-                    </InputLabel>
-                  </div>
-                </div>
-              )}
+              <Select
+                isMulti
+                options={purposeOptions}
+                value={purposeOptions.filter(option => data.purpose.includes(option.value))}
+                onChange={handlePurposeChange}
+                isOptionDisabled={isOptionDisabled}
+                className="mt-1 block w-full"
+                classNamePrefix="select"
+                menuPortalTarget={document.body}
+                styles={{
+                  menuPortal: (provided) => ({
+                    ...provided,
+                    zIndex: 9999
+                  })
+                }}
+              />
               {errors.purpose && <p className="text-red-500 text-xs mt-1">{errors.purpose}</p>}
             </div>
           </div>
@@ -557,33 +496,80 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             </div>
           </div>
 
-          {data.purpose.includes("Seek for Postgraduate") && (
+          {(data.purpose.includes("Seek for Postgraduate") || data.purpose.includes("Seek for Undergraduate")) && (
             <>
+              <div className="text-lg font-semibold text-gray-700 mb-4">
+                Please select the criteria for student
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
-                  <NationalityForm title={"Student Nationality"} value={data.student_nationality} isNotSpecify={true} onChange={(value) => setData("student_nationality", value)} />
+                  <NationalityForm
+                    title={"Student Nationality"}
+                    value={data.student_nationality}
+                    isNotSpecify={true}
+                    onChange={(value) => setData("student_nationality", value)}
+                  />
                   {errors.student_nationality && <p className="text-red-500 text-xs mt-1">{errors.student_nationality}</p>}
                 </div>
 
                 <div>
                   <InputLabel>
-                    Level of Study
+                    This project is for?
                   </InputLabel>
-                  <select
-                    value={data.student_level}
-                    onChange={(e) => setData("student_level", e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  >
-                    <option value="" disabled hidden>
-                      Select Level of Study
-                    </option>
-                    <option value="Master">Master</option>
-                    <option value="Ph.D.">Ph.D.</option>
-                  </select>
+                  <Select
+                    isMulti
+                    options={[
+                      ...(data.purpose.includes("Seek for Undergraduate") ? [{ value: 'Undergraduate', label: 'Undergraduate' }] : []),
+                      ...(data.purpose.includes("Seek for Postgraduate") ? [
+                        { value: 'Master', label: 'Master' },
+                        { value: 'Ph.D.', label: 'Ph.D.' }
+                      ] : [])
+                    ]}
+                    value={data.student_level?.map(level => ({ value: level, label: level })) || []}
+                    onChange={(selectedOptions) => {
+                      setData('student_level', selectedOptions.map(option => option.value));
+                    }}
+                    className="mt-1 block w-full"
+                    classNamePrefix="select"
+                  />
                   {errors.student_level && <p className="text-red-500 text-xs mt-1">{errors.student_level}</p>}
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+                <div>
+                  <InputLabel>
+                    Mode of Study
+                  </InputLabel>
+                  <Select
+                    isMulti
+                    options={[
+                      ...(data.purpose.includes("Seek for Undergraduate") ? [
+                        { value: 'No Mode of Study (For Undergraduate)', label: 'No Mode of Study (For Undergraduate)' }
+                      ] : []),
+                      ...(data.purpose.includes("Seek for Postgraduate") ? [
+                        { value: 'Master - Full Research', label: 'Master - Full Research' },
+                        { value: 'Master - Coursework', label: 'Master - Coursework' },
+                        { value: 'Master - Mixed Mode', label: 'Master - Mixed Mode' },
+                        { value: 'Master - Full Research - ODL', label: 'Master - Full Research - ODL' },
+                        { value: 'Master - Coursework - ODL', label: 'Master - Coursework - ODL' },
+                        { value: 'Master - Mixed Mode - ODL', label: 'Master - Mixed Mode - ODL' },
+                        { value: 'PhD - Full Research', label: 'PhD - Full Research' },
+                        { value: 'PhD - Industry', label: 'PhD - Industry' },
+                        { value: 'Doctor of Business Administration', label: 'Doctor of Business Administration' }
+                      ] : [])
+                    ]}
+                    value={data.student_mode_study?.map(mode => ({ value: mode, label: mode })) || []}
+                    onChange={(selectedOptions) => {
+                      setData('student_mode_study', selectedOptions.map(option => option.value));
+                    }}
+                    className="mt-1 block w-full"
+                    classNamePrefix="select"
+                  />
+                  {errors.student_mode_study && <p className="text-red-500 text-xs mt-1">{errors.student_mode_study}</p>}
+                </div>
+
+                {data.purpose.includes("Seek for Postgraduate") && (
               <div>
                 <InputLabel>
                   Appointment Type
@@ -607,11 +593,13 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                   <option value="Intern">Intern</option>
                 </select>
                 {errors.appointment_type && <p className="text-red-500 text-xs mt-1">{errors.appointment_type}</p>}
+                  </div>
+                )}
               </div>
             </>
           )}
 
-          {(data.purpose.includes("Seek for Academician Collaboration") && data.purpose.includes("Seek for Industrial Collaboration")) && (
+          {(data.purpose.includes("Seek for Academician Collaboration") || data.purpose.includes("Seek for Industrial Collaboration")) && (
             <div>
               <InputLabel>
                 Purpose of Collaboration

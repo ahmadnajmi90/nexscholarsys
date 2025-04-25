@@ -397,7 +397,12 @@ export default function ProjectContent({ project, previous, next, academicians, 
           )}
           {project.student_level && (
             <p>
-              <span className="font-semibold">Student Level:</span> {project.student_level}
+              <span className="font-semibold">This project is for:</span> {Array.isArray(project.student_level) ? project.student_level.join(', ') : project.student_level}
+            </p>
+          )}
+          {project.student_mode_study && (
+            <p>
+              <span className="font-semibold">Mode of Study:</span> {Array.isArray(project.student_mode_study) ? project.student_mode_study.join(', ') : project.student_mode_study}
             </p>
           )}
           {project.appointment_type && (

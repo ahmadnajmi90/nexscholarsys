@@ -33,6 +33,7 @@ class PostProject extends Model
         'origin_country',
         'student_nationality',
         'student_level',
+        'student_mode_study',
         'appointment_type',
         'purpose_of_collaboration',
         'image',
@@ -48,6 +49,8 @@ class PostProject extends Model
     protected $casts = [
         'field_of_research' => 'array', // Cast field_of_study as an array
         'purpose' => 'array', // Cast field_of_study as an array
+        'student_level' => 'array',
+        'student_mode_study' => 'array',
     ];
 
     protected static function booted()
