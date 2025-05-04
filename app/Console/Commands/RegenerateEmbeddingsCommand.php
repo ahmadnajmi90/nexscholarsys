@@ -43,10 +43,19 @@ class RegenerateEmbeddingsCommand extends Command
         }
         
         // Get all academicians (or those that need regeneration)
-        $academicians = Academician::all();
+        $academicians = Academician::whereNotNull('research_expertise')
+            ->whereNotNull('field_of_study')
+            ->whereNotNull('academician_id')
+            ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+            ->where(function($query) {
+                $query->where('research_expertise', '!=', '[]')
+                      ->where('research_expertise', '!=', 'null')
+                      ->whereNotNull('research_expertise');
+            })
+            ->get();
             
         $count = $academicians->count();
-        $this->info("Found {$count} academicians for embedding regeneration");
+        $this->info("Found {$count} academicians with complete profiles for embedding regeneration");
         
         $bar = $this->output->createProgressBar($count);
         $bar->start();
@@ -77,6 +86,18 @@ class RegenerateEmbeddingsCommand extends Command
     protected function regenerateEmbedding(Academician $academician, EmbeddingService $embeddingService): bool
     {
         try {
+            // Validate required fields
+            if (empty($academician->research_expertise) ||
+                empty($academician->field_of_study) ||
+                empty($academician->academician_id) ||
+                $academician->profile_picture === 'profile_pictures/default.jpg' ||
+                $academician->research_expertise === '[]' ||
+                $academician->research_expertise === 'null'
+            ) {
+                Log::warning("Skipping embedding generation for academician {$academician->id}: Incomplete profile");
+                return false;
+            }
+            
             // Generate embedding
             $embedding = $embeddingService->generateAcademicianEmbedding($academician);
             
