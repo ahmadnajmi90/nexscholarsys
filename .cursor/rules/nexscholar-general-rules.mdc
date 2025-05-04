@@ -119,3 +119,12 @@ You are assisting with the Nexscholar platform, a modern academic and research p
 - Implement GoogleAnalyticsService for metrics and insights
 - Handle rate limiting, caching, and error handling in all services
 - Log API calls and responses for debugging and monitoring
+
+## Documentation Requirements
+
+- Update README.md whenever a new feature or modification is made to the codebase
+- Document API endpoints, configurations, and usage instructions
+- Include PHPDoc comments for all classes and methods
+- Add JSDoc comments for React components
+- Keep documentation in sync with code changes
+- Follow the guidelines in nexscholar-documentation-rules.mdc

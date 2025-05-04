@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use App\Services\EmbeddingService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -47,3 +48,29 @@ Artisan::command('scholar:scrape-single {academician_id}', function ($academicia
 })->purpose('Scrape a single academician Google Scholar profile');
 
 // Scheduled Google Scholar commands have been removed
+
+// Register the TestEmbeddingsCommand for Laravel 11
+Artisan::command('test:embeddings {text?}', function (EmbeddingService $embeddingService) {
+    $text = $this->argument('text') ?? 'This is a test of the OpenAI embeddings API using the direct API key from Laravel';
+    
+    $this->info("Generating embedding for text: " . $text);
+    
+    $embedding = $embeddingService->generateEmbedding($text);
+    
+    if ($embedding) {
+        $this->info("✓ Success! Embedding generated with " . count($embedding) . " dimensions.");
+        $this->info("Sample of embedding vector: [" . 
+            implode(', ', array_slice($embedding, 0, 5)) . 
+            " ... ]");
+    } else {
+        $this->error("✗ Failed to generate embedding");
+        $this->line("Check the Laravel log for more details.");
+    }
+})->purpose('Test the embeddings service with OpenAI API');
+
+// Register command to clear the supervisor search cache
+Artisan::command('supervisor:clear-cache', function () {
+    $cleared = \Illuminate\Support\Facades\Cache::get('supervisor_match_semantic_*');
+    \Illuminate\Support\Facades\Cache::flush();
+    $this->info("Supervisor search cache cleared.");
+})->purpose('Clear the supervisor search cache');

@@ -1,0 +1,87 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Nexscholar Documentation Rules
+
+This file provides guidelines for maintaining documentation in the Nexscholar platform, ensuring that all aspects of the project are well-documented and the documentation stays up-to-date.
+
+## README.md Maintenance
+
+### Update Requirements
+- README.md **must** be updated whenever a new feature, bug fix, or modification is made to the codebase
+- Updates should occur during the same pull request or commit that introduces the changes
+- Both major and minor updates require documentation updates
+- Continuous integration should verify README.md was modified when significant changes are submitted
+
+### Content Guidelines
+- Each update to README.md should include:
+  - Clear description of the new feature or modification
+  - Instructions on how to use the new functionality
+  - Any configuration or environment setup required
+  - Example use cases or commands where applicable
+  - Links to more detailed documentation if available
+- Use consistent formatting and structure for all updates
+- Maintain a changelog section to track significant changes by date
+- Always maintain a table of contents for easy navigation
+
+### Section Organization
+- Group related features under appropriate headings
+- Use hierarchical organization (h2 for major sections, h3 for subsections)
+- Place configuration instructions before usage examples
+- Include troubleshooting sections for complex features
+- Maintain separate sections for installation, configuration, usage, and API documentation
+
+## Code Documentation
+
+### PHP Docblocks
+- All classes, methods, and properties should have appropriate PHPDoc comments
+- Include `@param`, `@return`, and `@throws` tags where applicable
+- Document expected parameter types and return values
+- Reference related classes and methods when appropriate
+- Include example usage for complex methods
+
+### React Component Documentation
+- Document props with their types and default values
+- Include usage examples for complex components
+- Document component state and side effects
+- Note any performance considerations
+- Add comments for complex logic sections within components
+
+### Inline Comments
+- Add meaningful comments for complex logic
+- Explain "why" rather than "what" the code is doing
+- Keep comments up-to-date when modifying code
+- Use TODO comments for planned improvements (with ticket numbers when available)
+- Remove commented-out code instead of leaving it in the codebase
+
+## API Documentation
+
+### Endpoint Documentation
+- Document all API endpoints with their HTTP methods, parameters, and response formats
+- Include authentication requirements
+- Document possible error responses and status codes
+- Provide example requests and responses
+- Update endpoint documentation when parameters or response structures change
+
+### Swagger/OpenAPI
+- Maintain OpenAPI/Swagger documentation for API endpoints
+- Keep the API spec in sync with the actual implementation
+- Generate up-to-date API documentation for developers
+- Include authorization flows in the documentation
+
+## Documentation Testing
+
+### Verify Examples
+- Ensure all code examples actually work
+- Test documentation examples during CI/CD pipeline
+- Update examples when APIs or interfaces change
+- Check external links periodically to ensure they're still valid
+
+### Review Process
+- Include documentation review as part of the code review process
+- Verify documentation correctness and completeness before merging
+- Encourage team members to identify documentation gaps
+- Schedule regular documentation audits to ensure quality
+

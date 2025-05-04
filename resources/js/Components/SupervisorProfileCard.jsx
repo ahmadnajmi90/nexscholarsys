@@ -171,11 +171,20 @@ const SupervisorProfileCard = ({
           }}
         >
           {Array.isArray(profile.research_expertise) && profile.research_expertise.length > 0
-            ? profile.research_expertise[0]
+            ? (() => {
+                const id = profile.research_expertise[0];
+                const matchedOption = researchOptions.find(
+                  (option) =>
+                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                );
+                return matchedOption
+                  ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                  : "Unknown";
+              })()
             : "No Field of Research or Expertise"}
-        </p>
+          </p>
         <p className="text-gray-500 text-sm">
-          {profile.position ? profile.position : "No Position"}
+          {profile.current_position ? profile.current_position : "No Position"}
         </p>
         
         {/* AI Insights Section */}

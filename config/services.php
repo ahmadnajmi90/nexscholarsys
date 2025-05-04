@@ -48,4 +48,14 @@ return [
         'token'    => env('GITHUB_TOKEN'),
         'endpoint' => env('GITHUB_OPENAI_ENDPOINT'), // base endpoint
     ],
+
+    'openai' => [
+        'key' => env('OPENAI_API_KEY', env('GITHUB_TOKEN')), // Prefer direct OpenAI key if available
+        'endpoint' => env('OPENAI_API_ENDPOINT', 'https://api.openai.com/v1'), // Standard OpenAI API endpoint
+        'embedding_model' => env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small'),
+        'is_azure' => env('OPENAI_USE_AZURE', false), // Set to true for Azure OpenAI
+        'azure_endpoint' => env('AZURE_OPENAI_ENDPOINT'), // Only used if is_azure is true
+        'azure_api_version' => env('AZURE_OPENAI_API_VERSION', '2024-02-01'),
+        'embedding_deployment' => env('AZURE_OPENAI_EMBEDDING_DEPLOYMENT', 'text-embedding-3-small'),
+    ],
 ];
