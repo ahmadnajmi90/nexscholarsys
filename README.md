@@ -44,8 +44,9 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 ### Semantic Supervisor Matching
 - Find research supervisors using AI-powered semantic search
 - Match students with supervisors based on research interests
-- Generate personalized insights about potential matches
+- Generate personalized insights about potential matches using GPT-4o
 - Filter results by university, availability, and research fields
+- Cache and store supervisor-student match insights for analytics
 
 ## System Requirements
 
@@ -122,6 +123,7 @@ GITHUB_OPENAI_ENDPOINT=your_github_openai_endpoint
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_API_ENDPOINT=https://api.openai.com/v1
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+OPENAI_MODEL=gpt-4o
 
 # Google Services
 GOOGLE_SEARCH_API_KEY=your_google_search_api_key
@@ -136,6 +138,10 @@ GOOGLE_ANALYTICS_PROPERTY_ID=your_google_analytics_property_id
 > **Direct OpenAI vs GitHub OpenAI**: It's recommended to use the direct OpenAI API configuration (`OPENAI_API_KEY`) 
 > instead of GitHub OpenAI for better reliability and more consistent performance. The system will automatically
 > use your direct OpenAI API key if configured.
+>
+> **GPT-4o for Insights**: The system uses GPT-4o for generating dynamic supervisor-student match insights.
+> This provides personalized, context-aware explanations of why a supervisor might be a good match for a student's
+> research interests.
 
 ### Database Configuration
 
@@ -200,7 +206,7 @@ php artisan storage:link
 2. Enter your research interest or topic in the search field
 3. Review the semantically matched supervisors based on your query
 4. Filter results by university, research field, or availability
-5. View detailed supervisor profiles and AI-generated match insights
+5. View detailed supervisor profiles and AI-generated match insights created with GPT-4o
 
 ## AI Integration
 
@@ -222,13 +228,23 @@ Generate professional academic CVs from your profile data:
 3. Customize the CV format and content
 4. Download the generated CV
 
+### Supervisor Match Insights
+
+The platform uses GPT-4o to generate personalized insights for supervisor-student matches:
+
+1. When a student searches for supervisors, the system uses vector embeddings to find relevant matches
+2. For each match, GPT-4o generates a personalized insight explaining why the supervisor is a good fit
+3. These insights consider the supervisor's research expertise, position, department, and supervision style
+4. Insights are cached for 30 minutes to improve performance and reduce API costs
+5. Insights are also stored in the database for analytics and future reference
+
 ## Semantic Search
 
 The platform uses OpenAI embeddings to provide semantic search capabilities:
 
 ### Setting Up Embeddings
 
-1. Run the migration to add the vector column:
+1. Run the migration to add the vector columns:
    ```bash
    php artisan migrate
    ```
@@ -237,24 +253,70 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
    ```bash
    php artisan embeddings:generate-academician
    ```
-
-3. To regenerate all embeddings:
+   
+   Additional options:
    ```bash
+   # Process only academicians with complete profiles
+   php artisan embeddings:generate-academician --complete-only
+   
+   # Force regeneration of all embeddings
    php artisan embeddings:generate-academician --force
+   
+   # Process a specific academician by ID
+   php artisan embeddings:generate-academician {academician_id}
    ```
 
-4. To generate embedding for a specific academician:
+3. Generate embeddings for student profiles:
    ```bash
-   php artisan embeddings:generate-academician {academician_id}
+   php artisan embeddings:generate-student
+   ```
+   
+   Additional options:
+   ```bash
+   # Process only specific student type
+   php artisan embeddings:generate-student --type=postgraduate
+   php artisan embeddings:generate-student --type=undergraduate
+   
+   # Process a specific student by ID
+   php artisan embeddings:generate-student {student_id} --type=postgraduate
+   ```
+
+4. To clear the supervisor search cache:
+   ```bash
+   php artisan supervisor:clear-cache
    ```
 
 ### How It Works
 
 1. When an academician profile is created or updated, an embedding is automatically generated
-2. Student search queries are converted to embeddings
-3. PHP-based vector similarity calculations find the most semantically relevant supervisors
-4. Results are ranked by semantic relevance, not just keyword matching
-5. AI-generated insights explain why each supervisor is a good match
+2. When a student updates their research fields, an embedding is generated from their profile
+3. Student search queries are converted to embeddings
+4. When students search with specific queries, results combine:
+   - 60% weight from query-supervisor semantic matching
+   - 40% weight from student profile-supervisor matching
+5. Students can search with "Find supervisor suitable for me" to use only their profile for matching
+6. PHP-based vector similarity calculations find the most semantically relevant supervisors
+7. Results are ranked by semantic relevance, not just keyword matching
+8. GPT-4o generates insights explaining why each supervisor is a good match for:
+   - The student's search query
+   - The student's research profile (if available)
+
+### Student Profile Embeddings
+
+The system generates embeddings for both postgraduate and undergraduate students:
+
+- For postgraduates, embeddings are based on their `field_of_research` attribute
+- For undergraduates, embeddings are based on their `research_preference` attribute
+- If no research data is present, the system safely skips embedding generation
+- Personalized matching works even with vague queries if the student's profile is complete
+- The system uses the most appropriate matching strategy based on available data
+
+### Insight Generation
+
+1. Supervisor match insights are personalized when student profile data is available
+2. Insights consider both the search query and student's research background
+3. The system degrades gracefully if student profile data is unavailable
+4. Insights are cached for 30 minutes to improve performance and reduce API costs
 
 ## Google Services
 
@@ -299,9 +361,15 @@ The platform integrates with Google Analytics to provide insights:
 
 ## Changelog
 
+### [1.2.0] - 2025-05-06
+- Integrated GPT-4o for dynamic supervisor-student match insights
+- Created database storage for supervisor insights with efficient indexing
+- Implemented caching system for faster response times and reduced API costs
+- Enhanced prompt engineering for more relevant and personalized insights
+- Added fallback mechanisms for API errors to ensure system reliability
+
 ### [1.1.0] - 2025-05-04
 - Added semantic search for supervisor matching using OpenAI embeddings
-- Integrated pgvector with Supabase for efficient vector similarity search
 - Implemented automatic embedding generation for academician profiles
 - Enhanced AI-generated insights for supervisor matches
 - Fixed bug limiting the number of supervisor search results

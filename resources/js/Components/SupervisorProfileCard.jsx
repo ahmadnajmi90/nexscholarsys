@@ -5,6 +5,7 @@ import axios from "axios";
 import RecommendationModal from "./RecommendationModal";
 import RecommendationDisplay from "./RecommendationDisplay";
 import BookmarkButton from "@/Components/BookmarkButton";
+import MatchIndicator from "@/Components/MatchIndicator";
 
 const SupervisorProfileCard = ({ 
   profile, 
@@ -21,6 +22,7 @@ const SupervisorProfileCard = ({
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [detailedInsights, setDetailedInsights] = useState(aiInsights);
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [showFullInsight, setShowFullInsight] = useState(false);
 
   const handleQuickInfoClick = () => {
     setLoadingProfileData(true);
@@ -114,12 +116,21 @@ const SupervisorProfileCard = ({
         {universitiesList.find((u) => u.id === profile.university)?.short_name || "Unknown University"}
       </div>
 
+      {/* Match Score Badge - NEW */}
+      {profile.match_score && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">
+            {Math.round(profile.match_score * 100)}% Match
+          </div>
+        </div>
+      )}
+
       {/* Verified Badge */}
-      <div className="relative group">
+      {/* <div className="relative group">
         <span className="absolute top-2 right-2 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] text-red-700 cursor-pointer">
           AI Recommendation
         </span>
-      </div>
+      </div> */}
 
       {/* Profile Banner */}
       <div className="h-32">
@@ -159,7 +170,7 @@ const SupervisorProfileCard = ({
 
       {/* Profile Info */}
       <div className="text-center mt-4">
-        <h2 className="text-lg font-semibold truncate px-6">{profile.name}</h2>
+        <h2 className="text-lg font-semibold truncate px-6">{profile.full_name}</h2>
         <p
           className="text-gray-500 text-sm px-6"
           style={{
@@ -187,14 +198,29 @@ const SupervisorProfileCard = ({
           {profile.current_position ? profile.current_position : "No Position"}
         </p>
         
+        {/* Match Indicator - NEW */}
+        {profile.match_score && (
+          <div className="mt-3 px-4">
+            <MatchIndicator score={profile.match_score} showDetails={false} />
+          </div>
+        )}
+        
         {/* AI Insights Section */}
         {aiInsights && (
           <div className="mt-3 px-4 py-2 bg-blue-50 mx-4 rounded-md">
-            <div className="flex items-center mb-1">
-              <FaLightbulb className="text-yellow-500 mr-2" />
-              <span className="text-xs font-semibold text-blue-700">AI Match Insights</span>
+            <div className="flex items-center mb-1 justify-between">
+              <span className="text-xs font-semibold text-blue-700 flex items-center">
+                <FaLightbulb className="text-yellow-500 mr-2" />
+                AI Match Insights
+              </span>
+              <button 
+                onClick={() => setShowFullInsight(!showFullInsight)}
+                className="text-blue-600 text-xs hover:underline"
+              >
+                {showFullInsight ? 'Show less' : 'Show more'}
+              </button>
             </div>
-            <p className="text-xs text-gray-700 text-left h-16 overflow-y-auto pr-1">
+            <p className={`text-xs text-gray-700 text-left ${showFullInsight ? 'h-auto' : 'h-16 overflow-y-auto'} pr-1`}>
               {aiInsights}
             </p>
           </div>

@@ -4,6 +4,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use App\Services\EmbeddingService;
+use Illuminate\Console\Command;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -74,3 +75,4 @@ Artisan::command('supervisor:clear-cache', function () {
     \Illuminate\Support\Facades\Cache::flush();
     $this->info("Supervisor search cache cleared.");
 })->purpose('Clear the supervisor search cache');
+

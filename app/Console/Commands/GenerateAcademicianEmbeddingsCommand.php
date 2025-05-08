@@ -14,14 +14,18 @@ class GenerateAcademicianEmbeddingsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'embeddings:generate-academician {academician_id? : The ID of a specific academician} {--force : Force regeneration even if already embedded} {--batch-size=20 : Number of academicians to process per batch}';
+    protected $signature = 'embeddings:generate-academician 
+                           {academician_id? : The ID of a specific academician} 
+                           {--force : Force regeneration even if already embedded} 
+                           {--batch-size=20 : Number of academicians to process per batch}
+                           {--complete-only : Only process academicians with complete profiles}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate embeddings for academicians for semantic search';
+    protected $description = 'Generate or regenerate embeddings for academicians for semantic search';
 
     protected $embeddingService;
 
@@ -42,11 +46,12 @@ class GenerateAcademicianEmbeddingsCommand extends Command
         $academicianId = $this->argument('academician_id');
         $force = $this->option('force');
         $batchSize = (int)$this->option('batch-size');
+        $completeOnly = $this->option('complete-only');
         
         if ($academicianId) {
-            $this->processSpecificAcademician($academicianId, $force);
+            $this->processSpecificAcademician($academicianId, $force, $completeOnly);
         } else {
-            $this->processAllAcademicians($force, $batchSize);
+            $this->processAllAcademicians($force, $batchSize, $completeOnly);
         }
         
         return Command::SUCCESS;
@@ -55,7 +60,7 @@ class GenerateAcademicianEmbeddingsCommand extends Command
     /**
      * Process a specific academician
      */
-    private function processSpecificAcademician($academicianId, $force)
+    public function processSpecificAcademician($academicianId, $force, $completeOnly = false)
     {
         $academician = Academician::find($academicianId);
         
@@ -66,6 +71,12 @@ class GenerateAcademicianEmbeddingsCommand extends Command
         
         if ($academician->has_embedding && !$force) {
             $this->info("Academician already has an embedding. Use --force to regenerate.");
+            return;
+        }
+        
+        // Check if complete profile is required
+        if ($completeOnly && !$this->hasCompleteProfile($academician)) {
+            $this->warn("Academician {$academician->full_name} (ID: {$academicianId}) has an incomplete profile. Skipping.");
             return;
         }
         
@@ -82,7 +93,7 @@ class GenerateAcademicianEmbeddingsCommand extends Command
     /**
      * Process all academicians
      */
-    private function processAllAcademicians($force, $batchSize)
+    public function processAllAcademicians($force, $batchSize, $completeOnly = false)
     {
         if ($force) {
             // For force, mark all as needing regeneration
@@ -97,10 +108,27 @@ class GenerateAcademicianEmbeddingsCommand extends Command
                 ->orWhereNull('embedding_updated_at');
         });
         
+        // Add complete profile filters if requested
+        if ($completeOnly) {
+            $query->whereNotNull('research_expertise')
+                ->whereNotNull('field_of_study')
+                ->whereNotNull('academician_id')
+                ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+                ->where(function($q) {
+                    $q->where('research_expertise', '!=', '[]')
+                      ->where('research_expertise', '!=', 'null')
+                      ->whereNotNull('research_expertise');
+                });
+            
+            $this->info("Filtering for academicians with complete profiles only");
+        }
+        
         $count = $query->count();
         
         if ($count === 0) {
-            $this->info("No academicians need embedding generation. Use --force to regenerate all.");
+            $this->info($completeOnly 
+                ? "No academicians with complete profiles need embedding generation. Use --force to regenerate all." 
+                : "No academicians need embedding generation. Use --force to regenerate all.");
             return;
         }
         
@@ -114,36 +142,60 @@ class GenerateAcademicianEmbeddingsCommand extends Command
         // Process academicians in chunks
         $processedCount = 0;
         $failedCount = 0;
+        $skippedCount = 0;
         
         $progressBar = $this->output->createProgressBar($count);
         $progressBar->start();
         
-        // Process in chunks to avoid memory issues
-        Academician::where(function($query) {
+        // Build the base query
+        $baseQuery = Academician::where(function($query) {
             $query->where('has_embedding', false)
                 ->orWhereNull('has_embedding')
                 ->orWhereNull('embedding_updated_at');
-        })
-        ->orderBy('verified', 'desc') // Prioritize verified academics
-        ->orderBy('availability_as_supervisor', 'desc') // Prioritize available supervisors
-        ->chunk($batchSize, function($academicians) use (&$processedCount, &$failedCount, $progressBar) {
-            foreach ($academicians as $academician) {
-                $result = $this->processAcademician($academician);
-                
-                if ($result) {
-                    $processedCount++;
-                } else {
-                    $failedCount++;
-                }
-                
-                $progressBar->advance();
-            }
         });
+        
+        // Add complete profile filters if requested
+        if ($completeOnly) {
+            $baseQuery->whereNotNull('research_expertise')
+                ->whereNotNull('field_of_study')
+                ->whereNotNull('academician_id')
+                ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+                ->where(function($q) {
+                    $q->where('research_expertise', '!=', '[]')
+                      ->where('research_expertise', '!=', 'null')
+                      ->whereNotNull('research_expertise');
+                });
+        }
+        
+        // Process in chunks to avoid memory issues
+        $baseQuery->orderBy('verified', 'desc') // Prioritize verified academics
+            ->orderBy('availability_as_supervisor', 'desc') // Prioritize available supervisors
+            ->chunk($batchSize, function($academicians) use (&$processedCount, &$failedCount, &$skippedCount, $progressBar, $completeOnly) {
+                foreach ($academicians as $academician) {
+                    // Skip if complete profile is required but missing
+                    if ($completeOnly && !$this->hasCompleteProfile($academician)) {
+                        $skippedCount++;
+                        $progressBar->advance();
+                        continue;
+                    }
+                    
+                    $result = $this->processAcademician($academician);
+                    
+                    if ($result) {
+                        $processedCount++;
+                    } else {
+                        $failedCount++;
+                    }
+                    
+                    $progressBar->advance();
+                }
+            });
         
         $progressBar->finish();
         $this->newLine();
         
-        $this->info("Completed embedding generation: {$processedCount} successful, {$failedCount} failed");
+        $this->info("Completed embedding generation: {$processedCount} successful, {$failedCount} failed" . 
+                    ($skippedCount > 0 ? ", {$skippedCount} skipped (incomplete profiles)" : ""));
     }
     
     /**
@@ -152,6 +204,12 @@ class GenerateAcademicianEmbeddingsCommand extends Command
     protected function processAcademician(Academician $academician): bool
     {
         try {
+            // If checking for complete profiles, make sure the academician has required fields
+            if (!$this->hasMinimumRequiredFields($academician)) {
+                Log::warning("Skipping embedding generation for academician {$academician->id}: Missing minimum required fields");
+                return false;
+            }
+            
             // Generate embedding
             $embedding = $this->embeddingService->generateAcademicianEmbedding($academician);
             
@@ -172,5 +230,30 @@ class GenerateAcademicianEmbeddingsCommand extends Command
             $this->error("Error: " . $e->getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Check if an academician has all fields for a complete profile
+     */
+    protected function hasCompleteProfile(Academician $academician): bool
+    {
+        return !empty($academician->research_expertise) &&
+               !empty($academician->field_of_study) &&
+               !empty($academician->academician_id) &&
+               $academician->profile_picture !== 'profile_pictures/default.jpg' &&
+               $academician->research_expertise !== '[]' &&
+               $academician->research_expertise !== 'null';
+    }
+    
+    /**
+     * Check if an academician has minimum required fields for embedding
+     */
+    protected function hasMinimumRequiredFields(Academician $academician): bool
+    {
+        // For embedding, we at least need some text about their research
+        return (!empty($academician->research_expertise) && $academician->research_expertise !== '[]' && $academician->research_expertise !== 'null') || 
+               !empty($academician->research_interests) ||
+               !empty($academician->bio) ||
+               !empty($academician->field_of_study);
     }
 }

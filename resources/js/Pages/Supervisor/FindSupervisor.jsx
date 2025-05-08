@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import SupervisorFilterGrid from '@/Components/SupervisorFilterGrid';
-import { FaSearch, FaLightbulb } from 'react-icons/fa';
+import GuidedSearchInterface from '@/Components/GuidedSearchInterface';
+import ProgressiveLoadingResults from '@/Components/ProgressiveLoadingResults';
+import FilterDropdown from '@/Components/FilterDropdown';
+import { FaFilter } from 'react-icons/fa';
 import axios from 'axios';
 import useRoles from '@/Hooks/useRoles';
 
@@ -12,28 +15,43 @@ export default function FindSupervisor({ auth, universities, faculties, users, r
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   const [error, setError] = useState(null);
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const [page, setPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Filter states
+  const [selectedArea, setSelectedArea] = useState([]);
+  const [selectedUniversity, setSelectedUniversity] = useState([]);
+  const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Handle search submission from the guided interface
+  const handleSearch = async (query) => {
+    // Skip if already searching or query is empty
+    if (isSearching || !query || query.trim() === '') return;
     
-    if (searchQuery.trim().length < 3) {
-      setError('Please enter at least 3 characters to search');
-      return;
-    }
-    
+    setSearchQuery(query);
     setIsSearching(true);
     setError(null);
+    setPage(1); // Reset to first page
     
     try {
-      const response = await axios.post(route('supervisor.search'), { query: searchQuery });
+      const response = await axios.post(route('supervisor.search'), { query });
       
-      // Log for debugging
-      if (response.data && response.data.matches && response.data.matches.length > 0) {
-        console.log('Sample profile data:', response.data.matches[0].academician);
-        console.log('Research options:', researchOptions);
+      // Process results
+      if (response.data && response.data.matches) {
+        console.log('Search results:', response.data);
+        // Add match_score to each result if not present
+        const processedResults = {
+          ...response.data,
+          matches: response.data.matches.map(match => ({
+            ...match,
+            score: match.score || 0.5, // Default score if none provided
+          }))
+        };
+        setSearchResults(processedResults);
+      } else {
+        setError('Received invalid search results');
       }
-      
-      setSearchResults(response.data);
     } catch (error) {
       console.error('Search error:', error);
       setError('Failed to perform search. Please try again later.');
@@ -42,127 +60,250 @@ export default function FindSupervisor({ auth, universities, faculties, users, r
     }
   };
   
+  // Load more results (pagination)
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !searchResults || !searchResults.has_more) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    
+    try {
+      const response = await axios.post(route('supervisor.search'), { 
+        query: searchQuery,
+        page: nextPage
+      });
+      
+      if (response.data && response.data.matches) {
+        // Merge new results with existing ones
+        setSearchResults(prevResults => ({
+          ...response.data,
+          matches: [
+            ...prevResults.matches,
+            ...response.data.matches
+          ]
+        }));
+        setPage(nextPage);
+      }
+    } catch (error) {
+      console.error('Error loading more results:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+  
+  // Handle filtered results
+  const getFilteredResults = () => {
+    if (!searchResults || !searchResults.matches) return [];
+    
+    return searchResults.matches.filter(match => {
+      const profile = match.academician;
+      
+      // Research expertise filter
+      const hasSelectedArea = selectedArea.length === 0 || 
+        (Array.isArray(profile.research_expertise) && 
+          profile.research_expertise.some(area => selectedArea.includes(area)));
+      
+      // University filter
+      const profileUniversity = profile.university ? profile.university.toString() : "";
+      const hasSelectedUniversity = selectedUniversity.length === 0 || 
+        selectedUniversity.includes(profileUniversity);
+      
+      // Supervisor availability filter
+      let hasSelectedAvailability = true;
+      if (selectedSupervisorAvailability !== "") {
+        const availVal = profile.availability_as_supervisor;
+        const normalizedAvail = availVal === true || availVal === "1" || availVal === 1 ? "1" : "0";
+        hasSelectedAvailability = normalizedAvail === selectedSupervisorAvailability;
+      }
+      
+      return hasSelectedArea && hasSelectedUniversity && hasSelectedAvailability;
+    });
+  };
+  
+  // Prepare filter options from search results
+  const getFilterOptions = () => {
+    if (!searchResults || !searchResults.matches) {
+      return {
+        researchAreas: [],
+        universities: []
+      };
+    }
+    
+    // Extract unique research expertise IDs
+    const uniqueResearchIds = new Set();
+    searchResults.matches.forEach(match => {
+      if (Array.isArray(match.academician.research_expertise)) {
+        match.academician.research_expertise.forEach(expertise => {
+          uniqueResearchIds.add(expertise);
+        });
+      }
+    });
+    
+    // Create research options with labels
+    const researchAreas = Array.from(uniqueResearchIds).map(areaId => {
+      const matchedOption = researchOptions.find(
+        option => `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === areaId
+      );
+      
+      if (matchedOption) {
+        return {
+          value: areaId,
+          label: `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+        };
+      } else {
+        return {
+          value: areaId,
+          label: `${areaId}`
+        };
+      }
+    });
+    
+    // Extract unique university IDs
+    const uniqueUniversityIds = new Set();
+    searchResults.matches.forEach(match => {
+      if (match.academician.university) {
+        uniqueUniversityIds.add(match.academician.university.toString());
+      }
+    });
+    
+    // Create university options with labels
+    const universityOptions = Array.from(uniqueUniversityIds).map(id => {
+      const uni = universities.find(u => u.id.toString() === id);
+      return {
+        value: id,
+        label: uni ? uni.short_name : "Unknown University"
+      };
+    });
+    
+    return {
+      researchAreas,
+      universities: universityOptions
+    };
+  };
+  
+  const filterOptions = getFilterOptions();
+  const filteredResults = searchResults ? {
+    ...searchResults,
+    matches: getFilteredResults(),
+    total: getFilteredResults().length
+  } : null;
+  
   return (
     <MainLayout title="Find a Supervisor" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
-      <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-        <div className="p-6">
-          <div className="mb-8 text-center max-w-3xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Find Your Perfect Research Supervisor</h1>
-            <p className="text-gray-600">
-              Enter your research interest, topic, or field of study below and we'll match you 
-              with supervisors who have relevant expertise.
-            </p>
-          </div>
+      <Head>
+        <title>Find a Supervisor - Nexscholar</title>
+        <meta name="description" content="Search for academic supervisors based on your research interests" />
+      </Head>
+      
+      <div className="bg-white overflow-hidden shadow-sm rounded-lg">
+        <div className="p-6 pb-16">
+          {/* Guided Search Interface */}
+          <GuidedSearchInterface
+            onSearch={handleSearch}
+            researchOptions={researchOptions}
+            isSearching={isSearching}
+            initialQuery={searchQuery}
+          />
           
-          {/* Search Form */}
-          <form onSubmit={handleSearch} className="max-w-3xl mx-auto mb-8">
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-              <input
-                type="text"
-                placeholder="e.g., Artificial Intelligence in Healthcare, Design Science Research..."
-                className="flex-grow px-4 py-3 outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                minLength={3}
-              />
-              <button
-                type="submit"
-                className={`bg-blue-600 text-white px-6 py-3 flex items-center ${isSearching ? 'opacity-70' : 'hover:bg-blue-700'}`}
-                disabled={isSearching}
-              >
-                {isSearching ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <FaSearch className="mr-2" />
-                    Search
-                  </>
-                )}
-              </button>
-            </div>
-            {error && (
-              <p className="text-red-500 mt-2 text-center">{error}</p>
-            )}
-          </form>
+          {/* Mobile Filter Toggle Button */}
+          {searchResults && searchResults.total > 0 && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="fixed bottom-8 right-4 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg lg:hidden"
+            >
+              <FaFilter className="text-xl" />
+            </button>
+          )}
           
-          {/* Search Results Area */}
-          {searchResults && (
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <FaLightbulb className="text-yellow-500 mr-2" />
-                  Supervisor Matches for "{searchResults.query}"
-                </h2>
-                <span className="text-gray-500">
-                  {searchResults.total} match{searchResults.total !== 1 ? 'es' : ''} found
-                </span>
-              </div>
+          {/* Results and Filters */}
+          {(searchResults || isSearching) && (
+            <div className="mt-10 flex flex-col lg:flex-row gap-6">
+              {/* Sidebar Filters - Desktop */}
+              {searchResults && searchResults.total > 0 && (
+                <div className={`lg:block lg:w-1/4 bg-gray-50 p-4 rounded-lg shadow-sm ${
+                  showFilters ? 'block fixed inset-0 z-50 bg-white overflow-auto p-6' : 'hidden'
+                }`}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-semibold">Refine Results</h2>
+                    <button 
+                      onClick={() => setShowFilters(false)}
+                      className="text-gray-500 hover:text-gray-700 lg:hidden"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <FilterDropdown
+                      label="Field of Research"
+                      options={filterOptions.researchAreas}
+                      selectedValues={selectedArea}
+                      setSelectedValues={setSelectedArea}
+                    />
+                    
+                    <FilterDropdown
+                      label="University"
+                      options={filterOptions.universities}
+                      selectedValues={selectedUniversity}
+                      setSelectedValues={setSelectedUniversity}
+                    />
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mt-4 mb-2">
+                        Available As Supervisor
+                      </label>
+                      <select
+                        className="w-full p-2 border border-gray-300 rounded"
+                        value={selectedSupervisorAvailability}
+                        onChange={(e) => setSelectedSupervisorAvailability(e.target.value)}
+                      >
+                        <option value="">All</option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                      </select>
+                    </div>
+                    
+                    <div className="pt-4 lg:hidden">
+                      <button
+                        onClick={() => setShowFilters(false)}
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg"
+                      >
+                        Apply Filters
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               
-              {searchResults.total > 0 ? (
-                <SupervisorFilterGrid 
-                  profilesData={searchResults.matches.map(match => {
-                    // Ensure we have required fields in the correct format
-                    return {
-                      ...match.academician,
-                      ai_insight: match.ai_insights,
-                      // Make sure research_expertise is an array
-                      research_expertise: Array.isArray(match.academician.research_expertise) 
-                        ? match.academician.research_expertise 
-                        : [],
-                      // Ensure availability_as_supervisor is present
-                      availability_as_supervisor: match.academician.availability_as_supervisor || 0
-                    };
-                  })}
+              {/* Search Results */}
+              <div className={`${searchResults && searchResults.total > 0 ? 'lg:w-3/4' : 'w-full'}`}>
+                <ProgressiveLoadingResults
+                  searchResults={filteredResults || searchResults}
                   universitiesList={universities}
                   faculties={faculties}
                   users={users}
                   researchOptions={researchOptions}
-                  searchQuery={searchResults.query}
+                  searchQuery={searchQuery}
+                  isSearching={isSearching}
+                  isLoadingMore={isLoadingMore}
+                  onLoadMore={handleLoadMore}
                 />
-              ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <FaSearch className="text-gray-400 text-5xl mx-auto mb-4" />
-                  <h3 className="text-xl font-medium text-gray-700 mb-2">No matching supervisors found</h3>
-                  <p className="text-gray-500 max-w-md mx-auto">
-                    Try broadening your search terms or exploring different research areas.
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           )}
           
-          {/* Initial State - Guidance */}
-          {!searchResults && !isSearching && (
-            <div className="border-t border-gray-200 pt-8 mt-8">
-              <div className="max-w-3xl mx-auto">
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
-                  <FaLightbulb className="text-yellow-500 mr-2" />
-                  Tips for finding the right supervisor
-                </h3>
-                <ul className="space-y-3 text-gray-600">
-                  <li className="flex items-start">
-                    <span className="bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1 flex-shrink-0">1</span>
-                    <span>Be specific about your research area (e.g., "Machine Learning for Medical Imaging" rather than just "AI")</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1 flex-shrink-0">2</span>
-                    <span>Include methodologies or theoretical frameworks you're interested in</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1 flex-shrink-0">3</span>
-                    <span>Consider mentioning interdisciplinary interests if applicable</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1 flex-shrink-0">4</span>
-                    <span>Check supervisor profiles for their supervision style, current projects, and publication record</span>
-                  </li>
-                </ul>
+          {/* Error message */}
+          {error && !isSearching && (
+            <div className="mt-6 bg-red-50 border-l-4 border-red-500 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
               </div>
             </div>
           )}

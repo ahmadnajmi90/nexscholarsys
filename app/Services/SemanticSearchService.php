@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Log;
 class SemanticSearchService
 {
     protected $embeddingService;
+    protected $openaiCompletionService;
 
-    public function __construct(EmbeddingService $embeddingService)
+    public function __construct(EmbeddingService $embeddingService, OpenAICompletionService $openaiCompletionService)
     {
         $this->embeddingService = $embeddingService;
+        $this->openaiCompletionService = $openaiCompletionService;
     }
 
     /**
@@ -20,21 +22,46 @@ class SemanticSearchService
      * @param string $query The search query
      * @param int $limit Maximum number of results to return
      * @param float $threshold Minimum similarity threshold (0-1)
+     * @param int|null $studentId Student ID for personalized search
+     * @param string|null $studentType Student type (postgraduate/undergraduate)
      * @return array Array of academicians with similarity scores
      */
-    public function findSimilarAcademicians(string $query, int $limit = 10, float $threshold = 0.7): array
+    public function findSimilarAcademicians(string $query, int $limit = 10, float $threshold = 0.3, int $studentId = null, string $studentType = null): array
     {
         try {
-            // Generate embedding for the query
+            // Check if the query is vague and we should prioritize student profile
+            $isVagueQuery = $this->isVagueQuery($query);
+            $studentEmbedding = null;
+            
+            // If we have student info, try to get their embedding
+            if ($studentId && $studentType) {
+                $studentEmbedding = $this->getStudentEmbedding($studentId, $studentType);
+                
+                // If query is vague but we have student embedding, log this usage
+                if ($isVagueQuery && $studentEmbedding) {
+                    Log::info("Using student profile embedding for search due to vague query", [
+                        'student_id' => $studentId,
+                        'student_type' => $studentType,
+                        'query' => $query
+                    ]);
+                }
+            }
+            
+            // Generate embedding for the query (if not vague or if student embedding is missing)
+            $queryEmbedding = null;
+            if (!$isVagueQuery || !$studentEmbedding) {
             $queryEmbedding = $this->embeddingService->generateEmbedding($query);
             
             if (!$queryEmbedding) {
                 Log::error('Failed to generate embedding for query: ' . $query);
-                return [];
+                    if (!$studentEmbedding) {
+                        return []; // No embeddings at all, return empty results
+                    }
+                }
             }
             
             // Use MySQL with PHP-based vector similarity
-            return $this->searchUsingMySQL($queryEmbedding, $limit, $threshold);
+            return $this->searchUsingMySQL($queryEmbedding, $studentEmbedding, $isVagueQuery, $limit, $threshold, $studentId, $studentType);
         } catch (\Exception $e) {
             Log::error('Error in semantic search: ' . $e->getMessage());
             return [];
@@ -44,17 +71,38 @@ class SemanticSearchService
     /**
      * Search using MySQL with PHP-based vector similarity
      */
-    protected function searchUsingMySQL(array $queryEmbedding, int $limit, float $threshold): array
+    protected function searchUsingMySQL(array $queryEmbedding = null, array $studentEmbedding = null, bool $isVagueQuery = false, int $limit = 10, float $threshold = 0.3, int $studentId = null, string $studentType = null): array
     {
         // For MySQL databases, use PHP to calculate similarity
-        Log::info('Performing semantic search using MySQL and PHP vector calculations');
+        Log::info('Performing semantic search using MySQL and PHP vector calculations', [
+            'is_vague_query' => $isVagueQuery,
+            'initial_threshold' => $threshold,
+            'has_query_embedding' => !empty($queryEmbedding),
+            'has_student_embedding' => !empty($studentEmbedding),
+        ]);
+        
+        // Adjust threshold for vague queries - use a lower threshold when matching student profiles
+        // This helps ensure we get sufficient matches for queries like "Supervisor suitable for me"
+        if ($isVagueQuery && $studentEmbedding) {
+            $threshold = min($threshold, 0.3); // Use a significantly lower threshold
+            Log::info("Using lower threshold for vague query with student profile", [
+                'threshold' => $threshold,
+                'student_type' => $studentType
+            ]);
+        }
         
         // Fetch academicians that have embeddings
         $academicians = Academician::where('has_embedding', true)
             ->get();
         
+        Log::info("Found " . $academicians->count() . " academicians with embeddings");
+        
         // Calculate similarity scores in PHP (less efficient but works for any DB)
         $results = [];
+        $lowSimilarityCount = 0;
+        $highestSimilarity = 0;
+        $lowestSimilarity = 1;
+        
         foreach ($academicians as $academician) {
             $academicianEmbedding = $academician->embedding_vector;
             
@@ -71,20 +119,64 @@ class SemanticSearchService
                 }
             }
             
-            // Calculate cosine similarity
-            $similarity = $this->cosineSimilarity($queryEmbedding, $academicianEmbedding);
+            // Calculate similarity based on query, student profile, or both
+            $similarity = 0;
             
-            if ($similarity >= $threshold) {
-                $academicianArray = $academician->toArray();
-                $academicianArray['match_score'] = $similarity;
-                $results[] = $academicianArray;
+            if ($isVagueQuery && $studentEmbedding) {
+                // If query is vague (e.g., "Find supervisor for me") and we have student embedding,
+                // use only the student profile embedding
+                $similarity = $this->cosineSimilarity($studentEmbedding, $academicianEmbedding);
+            } elseif ($queryEmbedding && $studentEmbedding) {
+                // If we have both query and student embeddings, use a weighted combination
+                $querySimilarity = $this->cosineSimilarity($queryEmbedding, $academicianEmbedding);
+                $profileSimilarity = $this->cosineSimilarity($studentEmbedding, $academicianEmbedding);
+                
+                // Weighted score: 60% query, 40% profile
+                $similarity = (0.6 * $querySimilarity) + (0.4 * $profileSimilarity);
+            } elseif ($queryEmbedding) {
+                // If only query embedding is available
+                $similarity = $this->cosineSimilarity($queryEmbedding, $academicianEmbedding);
+            } elseif ($studentEmbedding) {
+                // If only student embedding is available
+                $similarity = $this->cosineSimilarity($studentEmbedding, $academicianEmbedding);
+            } else {
+                // This case shouldn't happen, as we check earlier, but just to be safe
+                continue;
             }
+            
+            // Track statistics
+            $highestSimilarity = max($highestSimilarity, $similarity);
+            $lowestSimilarity = min($lowestSimilarity, $similarity);
+            
+            if ($similarity < $threshold) {
+                $lowSimilarityCount++;
+                continue;
+            }
+            
+            $academicianArray = $academician->toArray();
+            $academicianArray['match_score'] = $similarity;
+            $results[] = $academicianArray;
         }
         
         // Sort by similarity (highest first)
         usort($results, function ($a, $b) {
             return $b['match_score'] <=> $a['match_score'];
         });
+        
+        // Log results statistics
+        Log::info("Search results statistics", [
+            'found_count' => count($results),
+            'below_threshold_count' => $lowSimilarityCount,
+            'highest_similarity' => $highestSimilarity,
+            'lowest_similarity' => $lowestSimilarity,
+            'used_threshold' => $threshold
+        ]);
+        
+        // If no results, try with a lower threshold as fallback
+        if (count($results) === 0 && $threshold > 0.2 && !$isVagueQuery) {
+            Log::info("No results found with threshold {$threshold}, trying with lower threshold 0.2");
+            return $this->searchUsingMySQL($queryEmbedding, $studentEmbedding, $isVagueQuery, $limit, 0.2, $studentId, $studentType);
+        }
         
         // Limit results
         return array_slice($results, 0, $limit);
@@ -95,15 +187,22 @@ class SemanticSearchService
      *
      * @param array $academicians Array of academicians with match scores
      * @param string $query The original search query
+     * @param int|null $studentId Student ID for personalized insights
+     * @param string|null $studentType Student type (postgraduate/undergraduate)
      * @return array Updated array with AI insights
      */
-    public function generateAcademicianInsights(array $academicians, string $query): array
+    public function generateAcademicianInsights(array $academicians, string $query, int $studentId = null, string $studentType = null): array
     {
         $results = [];
         
         foreach ($academicians as $academician) {
-            // Generate a personalized insight based on the academician's profile and the query
-            $insight = $this->generateInsight($academician, $query, $academician['match_score'] ?? 0);
+            // Generate a personalized insight using the OpenAI Completion Service
+            $insight = $this->openaiCompletionService->generateSupervisorInsight(
+                $academician, 
+                $query, 
+                $studentId, 
+                $studentType
+            );
             
             // Add the insight to the academician data
             $academician['ai_insights'] = $insight;
@@ -141,81 +240,130 @@ class SemanticSearchService
         
         return $dotProduct / ($magnitude1 * $magnitude2);
     }
-    
+
     /**
-     * Generate insight for why an academician is a good match for the query
+     * Determines if a query is vague and should use student profile instead
      *
-     * @param array $academician The academician data
      * @param string $query The search query
-     * @param float $score The match score
-     * @return string Generated insight
+     * @return bool True if query is vague
      */
-    protected function generateInsight(array $academician, string $query, float $score): string
+    protected function isVagueQuery(string $query): bool
     {
-        // Base insights on the match score
-        $matchQuality = "";
-        if ($score > 0.95) {
-            $matchQuality = "excellent match";
-        } elseif ($score > 0.85) {
-            $matchQuality = "very good match";
-        } elseif ($score > 0.75) {
-            $matchQuality = "good match";
-        } else {
-            $matchQuality = "potential match";
+        $query = strtolower(trim($query));
+        
+        // List of vague queries that indicate the student wants to use their profile
+        $vagueQueries = [
+            'find supervisor for me',
+            'find me a supervisor',
+            'find supervisor suitable for me', 
+            'supervisor for me',
+            'for me',
+            'suitable for me',
+            'match me',
+            'recommend',
+            'recommend supervisor',
+            'based on my profile',
+            'my research',
+            'my interests',
+            'my profile'
+        ];
+        
+        // Common academic fields that shouldn't be treated as vague (even if short)
+        $academicFields = [
+            'education',
+            'biology',
+            'chemistry',
+            'physics',
+            'mathematics',
+            'math',
+            'computer science',
+            'engineering',
+            'medicine',
+            'psychology',
+            'sociology',
+            'history',
+            'economics',
+            'law',
+            'business',
+            'arts',
+            'literature',
+            'language',
+            'linguistics',
+            'philosophy',
+            'theology',
+            'agriculture',
+            'science',
+            'technology',
+            'health',
+            'nursing',
+            'ai',
+            'ml',
+            'data science'
+        ];
+        
+        // Check for exact matches with academic fields
+        if (in_array($query, $academicFields)) {
+            Log::info("Query matched common academic field: {$query}, not treating as vague");
+            return false;
         }
         
-        // Format research expertise for display
-        $expertise = [];
-        if (!empty($academician['research_expertise']) && is_array($academician['research_expertise'])) {
-            // Get the actual text of research expertise items
-            foreach ($academician['research_expertise'] as $expertiseItem) {
-                // If it's in the format field_id-area_id-domain_id, extract IDs
-                if (strpos($expertiseItem, '-') !== false) {
-                    $ids = explode('-', $expertiseItem);
-                    if (count($ids) == 3) {
-                        $fieldId = $ids[0];
-                        $areaId = $ids[1];
-                        $domainId = $ids[2];
-                        
-                        $field = \App\Models\FieldOfResearch::find($fieldId);
-                        $area = \App\Models\ResearchArea::find($areaId);
-                        $domain = \App\Models\NicheDomain::find($domainId);
-                        
-                        if ($field && $area && $domain) {
-                            $expertise[] = "{$field->name}, focusing on {$area->name} and specifically {$domain->name}";
-                        }
-                    }
-                } else {
-                    // Use the text directly
-                    $expertise[] = $expertiseItem;
-                }
+        foreach ($vagueQueries as $vague) {
+            if (strpos($query, $vague) !== false) {
+                Log::info("Query contains vague pattern: {$vague}");
+                return true;
             }
         }
         
-        // Generate the insight
-        $name = $academician['full_name'] ?? $academician['name'] ?? 'This supervisor';
-        $position = $academician['current_position'] ?? 'researcher';
-        $department = $academician['department'] ?? 'their department';
-        
-        $insight = "{$name} is an {$matchQuality} for your research interest in \"{$query}\".";
-        
-        if (!empty($expertise)) {
-            $insight .= " They have expertise in " . implode(" and ", array_slice($expertise, 0, 2)) . ".";
-        }
-        
-        $insight .= " As a {$position} in {$department}";
-        
-        // Add supervision style if available
-        if (!empty($academician['style_of_supervision'])) {
-            $style = is_array($academician['style_of_supervision']) 
-                ? $academician['style_of_supervision'][0] 
-                : $academician['style_of_supervision'];
+        // Also consider very short queries as vague, but exclude common academic fields
+        if (str_word_count($query) <= 2 && strlen($query) < 15) {
+            // Check if the query contains any academic field terms before classifying as vague
+            foreach ($academicFields as $field) {
+                if (strpos($query, $field) !== false) {
+                    Log::info("Short query contains academic field: {$field}, not treating as vague");
+                    return false;
+                }
+            }
             
-            $insight .= ", they employ a {$style} supervision approach";
+            Log::info("Query is short and doesn't contain academic fields: {$query}, treating as vague");
+            return true;
         }
         
-        $insight .= ".";
+        return false;
+    }
+
+    /**
+     * Get student embedding from the database
+     *
+     * @param int $studentId Student ID
+     * @param string $studentType Student type
+     * @return array|null Student embedding or null if not found
+     */
+    protected function getStudentEmbedding(int $studentId, string $studentType): ?array
+    {
+        try {
+            if ($studentType === 'postgraduate') {
+                $student = \App\Models\Postgraduate::find($studentId);
+                if ($student && $student->has_embedding) {
+                    $embedding = $student->research_embedding;
+                    if (is_string($embedding)) {
+                        $embedding = json_decode($embedding, true);
+                    }
+                    return $embedding;
+                }
+            } elseif ($studentType === 'undergraduate') {
+                $student = \App\Models\Undergraduate::find($studentId);
+                if ($student && $student->has_embedding) {
+                    $embedding = $student->research_embedding;
+                    if (is_string($embedding)) {
+                        $embedding = json_decode($embedding, true);
+                    }
+                    return $embedding;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Error getting student embedding: " . $e->getMessage());
+        }
         
-        return $insight;
+        return null;
     }
 } 
