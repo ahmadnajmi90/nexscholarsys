@@ -58,4 +58,25 @@ return [
         'azure_api_version' => env('AZURE_OPENAI_API_VERSION', '2024-02-01'),
         'embedding_deployment' => env('AZURE_OPENAI_EMBEDDING_DEPLOYMENT', 'text-embedding-3-small'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Qdrant Vector Database Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This section provides configuration for the Qdrant vector database service
+    | used for semantic search functionality. Qdrant is initially disabled by
+    | default during the migration process.
+    |
+    */
+   
+    'qdrant' => [
+        'url' => env('QDRANT_URL', 'your_qdrant_cloud_cluster_url'),
+        'api_key' => env('QDRANT_API_KEY', 'your_qdrant_cloud_api_key'),
+        'academicians_collection' => env('QDRANT_COLLECTION_ACADEMICIAN', 'nexscholar_academicians'),
+        'students_collection' => env('QDRANT_COLLECTION_STUDENT', 'nexscholar_students'),
+        'vector_size' => env('QDRANT_VECTOR_SIZE', 1536),
+        'enabled' => env('QDRANT_ENABLED', false),
+        'percentage' => env('QDRANT_ROLLOUT_PERCENTAGE', 0), // Percentage of traffic to route to Qdrant (0-100)
+    ],
 ];

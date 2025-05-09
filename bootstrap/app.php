@@ -17,7 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        // Register the QdrantRolloutMiddleware as a global middleware
+        $middleware->append(\App\Http\Middleware\QdrantRolloutMiddleware::class);
+        
+        // Optionally create a named middleware alias
+        $middleware->alias([
+            'qdrant.rollout' => \App\Http\Middleware\QdrantRolloutMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

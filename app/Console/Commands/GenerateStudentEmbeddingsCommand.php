@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use App\Services\EmbeddingService;
+use App\Services\QdrantService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -29,14 +30,16 @@ class GenerateStudentEmbeddingsCommand extends Command
     protected $description = 'Generate embeddings for students (postgraduates and undergraduates) for semantic search';
 
     protected $embeddingService;
+    protected $qdrantService;
 
     /**
      * Create a new command instance.
      */
-    public function __construct(EmbeddingService $embeddingService)
+    public function __construct(EmbeddingService $embeddingService, QdrantService $qdrantService)
     {
         parent::__construct();
         $this->embeddingService = $embeddingService;
+        $this->qdrantService = $qdrantService;
     }
 
     /**
@@ -64,45 +67,55 @@ class GenerateStudentEmbeddingsCommand extends Command
     }
     
     /**
-     * Process a specific student
+     * Process a specific student by ID
      */
-    public function processSpecificStudent($studentId, $type, $force)
+    protected function processSpecificStudent($studentId, $type, $force)
     {
-        $processed = false;
-        
         if ($type === 'postgraduate' || $type === 'both') {
-            $student = Postgraduate::find($studentId);
-            if ($student) {
-                $processed = true;
-                $this->processPostgraduate($student, $force);
+            $postgraduate = Postgraduate::find($studentId);
+            if ($postgraduate) {
+                $this->info("Processing postgraduate: {$postgraduate->full_name}");
+                $result = $this->processPostgraduate($postgraduate, $force, true);
+                if ($result === true) {
+                    $this->info("Successfully generated embedding for postgraduate ID {$studentId}");
+                } elseif ($result === null) {
+                    $this->warn("Skipped postgraduate ID {$studentId}: No research data available");
+                } else {
+                    $this->error("Failed to generate embedding for postgraduate ID {$studentId}");
+                }
+            } else if ($type === 'postgraduate') {
+                $this->error("Postgraduate with ID {$studentId} not found");
             }
         }
         
         if ($type === 'undergraduate' || $type === 'both') {
-            $student = Undergraduate::find($studentId);
-            if ($student) {
-                $processed = true;
-                $this->processUndergraduate($student, $force);
+            $undergraduate = Undergraduate::find($studentId);
+            if ($undergraduate) {
+                $this->info("Processing undergraduate: {$undergraduate->full_name}");
+                $result = $this->processUndergraduate($undergraduate, $force, true);
+                if ($result === true) {
+                    $this->info("Successfully generated embedding for undergraduate ID {$studentId}");
+                } elseif ($result === null) {
+                    $this->warn("Skipped undergraduate ID {$studentId}: No research preference data available");
+                } else {
+                    $this->error("Failed to generate embedding for undergraduate ID {$studentId}");
+                }
+            } else if ($type === 'undergraduate') {
+                $this->error("Undergraduate with ID {$studentId} not found");
             }
-        }
-        
-        if (!$processed) {
-            $this->error("Student with ID {$studentId} not found for specified type(s)");
         }
     }
     
     /**
-     * Process all students
+     * Process all students of the specified type
      */
-    public function processAllStudents($type, $force, $batchSize)
+    protected function processAllStudents($type, $force, $batchSize)
     {
         if ($type === 'postgraduate' || $type === 'both') {
-            $this->info('Processing postgraduates...');
             $this->processAllPostgraduates($force, $batchSize);
         }
         
         if ($type === 'undergraduate' || $type === 'both') {
-            $this->info('Processing undergraduates...');
             $this->processAllUndergraduates($force, $batchSize);
         }
     }
@@ -110,19 +123,20 @@ class GenerateStudentEmbeddingsCommand extends Command
     /**
      * Process all postgraduates
      */
-    private function processAllPostgraduates($force, $batchSize)
+    protected function processAllPostgraduates($force, $batchSize)
     {
         if ($force) {
-            // For force, mark all as needing regeneration
-            Postgraduate::query()->update(['has_embedding' => false]);
+            // Reset migration flags for force regeneration
+            Postgraduate::query()->update(['qdrant_migrated' => false, 'qdrant_migrated_at' => null]);
             $this->info("Marked all postgraduates for embedding regeneration");
         }
         
         // Get count of postgraduates needing embedding
         $query = Postgraduate::where(function($query) {
-            $query->where('has_embedding', false)
-                ->orWhereNull('has_embedding')
-                ->orWhereNull('embedding_updated_at');
+            $query->where('qdrant_migrated', false)
+                ->orWhereNull('qdrant_migrated')
+                ->orWhereNull('qdrant_migrated_at')
+                ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         });
         
         $count = $query->count();
@@ -144,9 +158,10 @@ class GenerateStudentEmbeddingsCommand extends Command
         
         // Process in chunks to avoid memory issues
         Postgraduate::where(function($query) {
-            $query->where('has_embedding', false)
-                ->orWhereNull('has_embedding')
-                ->orWhereNull('embedding_updated_at');
+            $query->where('qdrant_migrated', false)
+                ->orWhereNull('qdrant_migrated')
+                ->orWhereNull('qdrant_migrated_at')
+                ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         })
         ->chunk($batchSize, function($postgraduates) use (&$processedCount, &$failedCount, &$skipCount, $progressBar) {
             foreach ($postgraduates as $postgraduate) {
@@ -167,25 +182,26 @@ class GenerateStudentEmbeddingsCommand extends Command
         $progressBar->finish();
         $this->newLine();
         
-        $this->info("Completed postgraduate embedding generation: {$processedCount} successful, {$skipCount} skipped (no research data), {$failedCount} failed");
+        $this->info("Completed postgraduate embedding generation: {$processedCount} successful, {$failedCount} failed, {$skipCount} skipped (no research data)");
     }
     
     /**
      * Process all undergraduates
      */
-    private function processAllUndergraduates($force, $batchSize)
+    protected function processAllUndergraduates($force, $batchSize)
     {
         if ($force) {
-            // For force, mark all as needing regeneration
-            Undergraduate::query()->update(['has_embedding' => false]);
+            // Reset migration flags for force regeneration
+            Undergraduate::query()->update(['qdrant_migrated' => false, 'qdrant_migrated_at' => null]);
             $this->info("Marked all undergraduates for embedding regeneration");
         }
         
         // Get count of undergraduates needing embedding
         $query = Undergraduate::where(function($query) {
-            $query->where('has_embedding', false)
-                ->orWhereNull('has_embedding')
-                ->orWhereNull('embedding_updated_at');
+            $query->where('qdrant_migrated', false)
+                ->orWhereNull('qdrant_migrated')
+                ->orWhereNull('qdrant_migrated_at')
+                ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         });
         
         $count = $query->count();
@@ -207,9 +223,10 @@ class GenerateStudentEmbeddingsCommand extends Command
         
         // Process in chunks to avoid memory issues
         Undergraduate::where(function($query) {
-            $query->where('has_embedding', false)
-                ->orWhereNull('has_embedding')
-                ->orWhereNull('embedding_updated_at');
+            $query->where('qdrant_migrated', false)
+                ->orWhereNull('qdrant_migrated')
+                ->orWhereNull('qdrant_migrated_at')
+                ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         })
         ->chunk($batchSize, function($undergraduates) use (&$processedCount, &$failedCount, &$skipCount, $progressBar) {
             foreach ($undergraduates as $undergraduate) {
@@ -230,20 +247,20 @@ class GenerateStudentEmbeddingsCommand extends Command
         $progressBar->finish();
         $this->newLine();
         
-        $this->info("Completed undergraduate embedding generation: {$processedCount} successful, {$skipCount} skipped (no research data), {$failedCount} failed");
+        $this->info("Completed undergraduate embedding generation: {$processedCount} successful, {$failedCount} failed, {$skipCount} skipped (no research data)");
     }
     
     /**
      * Process a single postgraduate record
      * 
-     * @return bool|null True if successful, false if error, null if skipped
+     * @return bool|null True if successful, false if failed, null if skipped
      */
-    protected function processPostgraduate(Postgraduate $postgraduate, $force = false, $verbose = true): ?bool
+    protected function processPostgraduate(Postgraduate $postgraduate, $force = false, $verbose = false)
     {
         try {
-            if ($postgraduate->has_embedding && !$force) {
+            if (!$force && $postgraduate->qdrant_migrated && $postgraduate->qdrant_migrated_at && $postgraduate->qdrant_migrated_at->isAfter(now()->subMonth())) {
                 if ($verbose) {
-                    $this->info("Postgraduate already has an embedding. Use --force to regenerate.");
+                    $this->info("Postgraduate already has a recent embedding in Qdrant. Use --force to regenerate.");
                 }
                 return true;
             }
@@ -258,8 +275,8 @@ class GenerateStudentEmbeddingsCommand extends Command
                 }
                 
                 // Mark as processed but no embedding
-                $postgraduate->has_embedding = false;
-                $postgraduate->embedding_updated_at = now();
+                $postgraduate->qdrant_migrated = false;
+                $postgraduate->qdrant_migrated_at = now();
                 $postgraduate->save();
                 
                 return null; // Skipped
@@ -279,17 +296,48 @@ class GenerateStudentEmbeddingsCommand extends Command
                 return false;
             }
             
-            // Store embedding
-            $postgraduate->research_embedding = $embedding;
-            $postgraduate->has_embedding = true;
-            $postgraduate->embedding_updated_at = now();
-            $postgraduate->save();
+            // Prepare additional payload
+            $payload = [
+                'full_name' => $postgraduate->full_name,
+                'has_embedding' => true
+            ];
             
-            if ($verbose) {
-                $this->info("Successfully generated embedding for postgraduate ID {$postgraduate->id}");
+            // Add additional payload fields if available
+            if (!empty($postgraduate->university_id)) {
+                $payload['university_id'] = $postgraduate->university_id;
             }
             
-            return true;
+            if (!empty($postgraduate->faculty_id)) {
+                $payload['faculty_id'] = $postgraduate->faculty_id;
+            }
+            
+            // Upsert to Qdrant
+            $result = $this->qdrantService->upsertStudentEmbedding(
+                'postgraduate',
+                $postgraduate->id,
+                $postgraduate->id,
+                $embedding,
+                $payload
+            );
+            
+            if ($result) {
+                // Update only the Qdrant status in MySQL
+                $postgraduate->qdrant_migrated = true;
+                $postgraduate->qdrant_migrated_at = now();
+                $postgraduate->save();
+                
+                Log::info("Successfully stored embedding in Qdrant for postgraduate {$postgraduate->id}");
+                
+                if ($verbose) {
+                    $this->info("Successfully generated embedding for postgraduate ID {$postgraduate->id}");
+                }
+                
+                return true;
+            } else {
+                Log::error("Failed to store embedding in Qdrant for postgraduate {$postgraduate->id}");
+                return false;
+            }
+            
         } catch (\Exception $e) {
             Log::error("Error generating embedding for postgraduate {$postgraduate->id}: " . $e->getMessage());
             if ($verbose) {
@@ -302,14 +350,14 @@ class GenerateStudentEmbeddingsCommand extends Command
     /**
      * Process a single undergraduate record
      * 
-     * @return bool|null True if successful, false if error, null if skipped
+     * @return bool|null True if successful, false if failed, null if skipped
      */
-    protected function processUndergraduate(Undergraduate $undergraduate, $force = false, $verbose = true): ?bool
+    protected function processUndergraduate(Undergraduate $undergraduate, $force = false, $verbose = false)
     {
         try {
-            if ($undergraduate->has_embedding && !$force) {
+            if (!$force && $undergraduate->qdrant_migrated && $undergraduate->qdrant_migrated_at && $undergraduate->qdrant_migrated_at->isAfter(now()->subMonth())) {
                 if ($verbose) {
-                    $this->info("Undergraduate already has an embedding. Use --force to regenerate.");
+                    $this->info("Undergraduate already has a recent embedding in Qdrant. Use --force to regenerate.");
                 }
                 return true;
             }
@@ -324,8 +372,8 @@ class GenerateStudentEmbeddingsCommand extends Command
                 }
                 
                 // Mark as processed but no embedding
-                $undergraduate->has_embedding = false;
-                $undergraduate->embedding_updated_at = now();
+                $undergraduate->qdrant_migrated = false;
+                $undergraduate->qdrant_migrated_at = now();
                 $undergraduate->save();
                 
                 return null; // Skipped
@@ -345,17 +393,48 @@ class GenerateStudentEmbeddingsCommand extends Command
                 return false;
             }
             
-            // Store embedding
-            $undergraduate->research_embedding = $embedding;
-            $undergraduate->has_embedding = true;
-            $undergraduate->embedding_updated_at = now();
-            $undergraduate->save();
+            // Prepare additional payload
+            $payload = [
+                'full_name' => $undergraduate->full_name,
+                'has_embedding' => true
+            ];
             
-            if ($verbose) {
-                $this->info("Successfully generated embedding for undergraduate ID {$undergraduate->id}");
+            // Add additional payload fields if available
+            if (!empty($undergraduate->university_id)) {
+                $payload['university_id'] = $undergraduate->university_id;
             }
             
-            return true;
+            if (!empty($undergraduate->faculty_id)) {
+                $payload['faculty_id'] = $undergraduate->faculty_id;
+            }
+            
+            // Upsert to Qdrant
+            $result = $this->qdrantService->upsertStudentEmbedding(
+                'undergraduate',
+                $undergraduate->id,
+                $undergraduate->id,
+                $embedding,
+                $payload
+            );
+            
+            if ($result) {
+                // Update only the Qdrant status in MySQL
+                $undergraduate->qdrant_migrated = true;
+                $undergraduate->qdrant_migrated_at = now();
+                $undergraduate->save();
+                
+                Log::info("Successfully stored embedding in Qdrant for undergraduate {$undergraduate->id}");
+                
+                if ($verbose) {
+                    $this->info("Successfully generated embedding for undergraduate ID {$undergraduate->id}");
+                }
+                
+                return true;
+            } else {
+                Log::error("Failed to store embedding in Qdrant for undergraduate {$undergraduate->id}");
+                return false;
+            }
+            
         } catch (\Exception $e) {
             Log::error("Error generating embedding for undergraduate {$undergraduate->id}: " . $e->getMessage());
             if ($verbose) {

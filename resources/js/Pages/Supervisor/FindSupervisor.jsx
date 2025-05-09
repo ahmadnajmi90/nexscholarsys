@@ -120,6 +120,42 @@ export default function FindSupervisor({ auth, universities, faculties, users, r
     });
   };
   
+  // Debug info for developers and admins
+  const renderDebugInfo = () => {
+    if (!isAdmin && !isFacultyAdmin) return null;
+    if (!searchResults) return null;
+    
+    return (
+      <div className="mt-2 p-2 text-xs bg-gray-100 dark:bg-gray-800 rounded">
+        <details>
+          <summary className="cursor-pointer">Search Debug Info</summary>
+          <div className="mt-1 space-y-1">
+            <div><span className="font-semibold">Search Method:</span> {searchResults.search_method === 'qdrant' ? 'Qdrant Vector DB' : 'MySQL'}</div>
+            <div><span className="font-semibold">Total Results:</span> {searchResults.total}</div>
+            <div><span className="font-semibold">Profile Used:</span> {searchResults.profile_used ? 'Yes' : 'No'}</div>
+            <div><span className="font-semibold">Page:</span> {searchResults.current_page} of {Math.ceil(searchResults.total / searchResults.per_page)}</div>
+            <div className="text-xs mt-2">
+              <a href={`${window.location.pathname}?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), nocache: 'true'})}`} 
+                className="text-blue-500 hover:text-blue-700">
+                Clear Cache
+              </a>
+              {' | '}
+              <a href={`${window.location.pathname}?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), use_qdrant: 'true'})}`} 
+                className="text-blue-500 hover:text-blue-700">
+                Force Qdrant
+              </a>
+              {' | '}
+              <a href={`${window.location.pathname}?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(window.location.search)), use_qdrant: 'false'})}`} 
+                className="text-blue-500 hover:text-blue-700">
+                Force MySQL
+              </a>
+            </div>
+          </div>
+        </details>
+      </div>
+    );
+  };
+  
   // Prepare filter options from search results
   const getFilterOptions = () => {
     if (!searchResults || !searchResults.matches) {
@@ -307,6 +343,9 @@ export default function FindSupervisor({ auth, universities, faculties, users, r
               </div>
             </div>
           )}
+          
+          {/* Debug info */}
+          {renderDebugInfo()}
         </div>
       </div>
     </MainLayout>

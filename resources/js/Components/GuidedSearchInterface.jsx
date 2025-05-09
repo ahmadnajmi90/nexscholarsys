@@ -178,7 +178,7 @@ const GuidedSearchInterface = ({
       </form>
       
       {/* Search guidance - redesigned to match the image */}
-      <div className="mt-8 border-t border-gray-200 pt-6">
+      <div className="mt-8 border-t border-gray-200 pt-10">
         <div className="flex items-center mb-4">
           <FaLightbulb className="text-yellow-500 mr-2" />
           <h3 className="text-lg font-semibold">Tips for finding the right supervisor</h3>
@@ -186,20 +186,16 @@ const GuidedSearchInterface = ({
         
         <ol className="space-y-3 text-gray-600 list-decimal list-inside">
           <li className="flex items-start">
-            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1">1</div>
+            <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">1</span>
             <span>Be specific about your research area (e.g., "Machine Learning for Medical Imaging" rather than just "AI")</span>
           </li>
           <li className="flex items-start">
-            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1">2</div>
-            <span>Include methodologies or theoretical frameworks you're interested in</span>
+            <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">2</span>
+            <span>You can also use vague queries like "recommend supervisors for me" to get results based on your profile</span>
           </li>
           <li className="flex items-start">
-            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1">3</div>
-            <span>Consider mentioning interdisciplinary interests if applicable</span>
-          </li>
-          <li className="flex items-start">
-            <div className="flex-shrink-0 bg-blue-100 text-blue-700 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-1">4</div>
-            <span>Check supervisor profiles for their supervision style, current projects, and publication record</span>
+            <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">3</span>
+            <span>Click on suggested research terms to quickly add them to your search</span>
           </li>
         </ol>
       </div>

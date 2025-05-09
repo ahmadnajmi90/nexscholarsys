@@ -3,11 +3,15 @@
 namespace App\Observers;
 
 use App\Models\Academician;
-use App\Jobs\GenerateAcademicianEmbeddings;
+use App\Services\EmbeddingService;
+use App\Services\QdrantService;
 use Illuminate\Support\Facades\Log;
 
 class AcademicianObserver
 {
+    protected $qdrantService;
+    protected $embeddingService;
+
     /**
      * Fields that affect the semantic meaning of an academician profile
      */
@@ -21,11 +25,20 @@ class AcademicianObserver
     ];
     
     /**
+     * Create a new observer instance.
+     */
+    public function __construct(QdrantService $qdrantService, EmbeddingService $embeddingService)
+    {
+        $this->qdrantService = $qdrantService;
+        $this->embeddingService = $embeddingService;
+    }
+
+    /**
      * Handle the Academician "created" event.
      */
     public function created(Academician $academician): void
     {
-        $this->scheduleEmbeddingGeneration($academician);
+        $this->generateAndStoreEmbedding($academician);
     }
 
     /**
@@ -42,9 +55,9 @@ class AcademicianObserver
             }
         }
         
-        // If any relevant field was updated, schedule embedding regeneration
+        // If any relevant field was updated, regenerate embedding
         if ($dirty) {
-            $this->scheduleEmbeddingGeneration($academician);
+            $this->generateAndStoreEmbedding($academician);
         }
     }
 
@@ -53,7 +66,13 @@ class AcademicianObserver
      */
     public function deleted(Academician $academician): void
     {
-        // Nothing to do - embeddings will be deleted along with the record
+        // Delete embedding from Qdrant
+        try {
+            $this->qdrantService->deleteAcademicianEmbedding($academician->academician_id);
+            Log::info("Deleted embedding from Qdrant for academician {$academician->id}");
+        } catch (\Exception $e) {
+            Log::error("Failed to delete embedding from Qdrant for academician {$academician->id}: " . $e->getMessage());
+        }
     }
 
     /**
@@ -61,7 +80,7 @@ class AcademicianObserver
      */
     public function restored(Academician $academician): void
     {
-        $this->scheduleEmbeddingGeneration($academician);
+        $this->generateAndStoreEmbedding($academician);
     }
 
     /**
@@ -69,28 +88,87 @@ class AcademicianObserver
      */
     public function forceDeleted(Academician $academician): void
     {
-        // Nothing to do - embeddings will be deleted along with the record
+        // Same as soft delete - remove from Qdrant
+        try {
+            $this->qdrantService->deleteAcademicianEmbedding($academician->academician_id);
+            Log::info("Deleted embedding from Qdrant for academician {$academician->id} (force deleted)");
+        } catch (\Exception $e) {
+            Log::error("Failed to delete embedding from Qdrant for academician {$academician->id} (force deleted): " . $e->getMessage());
+        }
     }
     
     /**
-     * Schedule embedding generation for an academician
+     * Generate and store embedding for an academician directly in Qdrant
      */
-    protected function scheduleEmbeddingGeneration(Academician $academician): void
+    protected function generateAndStoreEmbedding(Academician $academician): void
     {
+        // Skip if we don't have enough data to generate a meaningful embedding
+        if (!$this->hasMinimumRequiredFields($academician)) {
+            Log::info("Skipping embedding generation for academician {$academician->id}: Insufficient data");
+            return;
+        }
+        
         try {
-            // For verified academicians, generate immediately, otherwise delay
-            if ($academician->verified && $academician->availability_as_supervisor) {
-                GenerateAcademicianEmbeddings::dispatch($academician->id)->onQueue('embedding');
-                Log::info("Scheduled immediate embedding generation for academician {$academician->id}");
+            // Generate embedding
+            $embeddingVector = $this->embeddingService->generateAcademicianEmbedding($academician);
+            
+            if (!$embeddingVector) {
+                Log::error("Failed to generate embedding for academician {$academician->id}");
+                return;
+            }
+            
+            // Prepare additional payload
+            $payload = [
+                'full_name' => $academician->full_name,
+                'university_id' => $academician->university,
+                'has_embedding' => true
+            ];
+            
+            // Add additional payload fields if available
+            if (!empty($academician->department)) {
+                $payload['department'] = $academician->department;
+            }
+            
+            if (!empty($academician->field_of_study)) {
+                $payload['field_of_study'] = $academician->field_of_study;
+            }
+            
+            if (!empty($academician->current_position)) {
+                $payload['current_position'] = $academician->current_position;
+            }
+            
+            // Upsert to Qdrant
+            $result = $this->qdrantService->upsertAcademicianEmbedding(
+                $academician->academician_id,
+                $academician->id,
+                $embeddingVector,
+                $payload
+            );
+            
+            if ($result) {
+                // Update Qdrant status in MySQL for tracking
+                $academician->qdrant_migrated = true;
+                $academician->qdrant_migrated_at = now();
+                $academician->save();
+                
+                Log::info("Successfully stored embedding in Qdrant for academician {$academician->id}");
             } else {
-                // Lower priority for non-supervisors
-                GenerateAcademicianEmbeddings::dispatch($academician->id)
-                    ->onQueue('embedding')
-                    ->delay(now()->addMinutes(30));
-                Log::info("Scheduled delayed embedding generation for academician {$academician->id}");
+                Log::error("Failed to store embedding in Qdrant for academician {$academician->id}");
             }
         } catch (\Exception $e) {
-            Log::error("Failed to schedule embedding generation for academician {$academician->id}: " . $e->getMessage());
+            Log::error("Error handling embedding for academician {$academician->id}: " . $e->getMessage());
         }
+    }
+    
+    /**
+     * Check if an academician has minimum required fields for embedding
+     */
+    protected function hasMinimumRequiredFields(Academician $academician): bool
+    {
+        // For embedding, we at least need some text about their research
+        return (!empty($academician->research_expertise) && $academician->research_expertise !== '[]' && $academician->research_expertise !== 'null') || 
+               !empty($academician->research_interests) ||
+               !empty($academician->bio) ||
+               !empty($academician->field_of_study);
     }
 }

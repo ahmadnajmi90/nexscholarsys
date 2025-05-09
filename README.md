@@ -244,12 +244,23 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
 
 ### Setting Up Embeddings
 
-1. Run the migration to add the vector columns:
-   ```bash
-   php artisan migrate
+1. Configure Qdrant in your `.env` file:
+   ```
+   QDRANT_URL=your_qdrant_cloud_cluster_url
+   QDRANT_API_KEY=your_qdrant_cloud_api_key
+   QDRANT_COLLECTION_ACADEMICIAN=nexscholar_academicians
+   QDRANT_COLLECTION_STUDENT=nexscholar_students
+   QDRANT_VECTOR_SIZE=1536
+   QDRANT_ENABLED=true
+   QDRANT_ROLLOUT_PERCENTAGE=100
    ```
 
-2. Generate embeddings for existing academician profiles:
+2. Create the required collections:
+   ```bash
+   php artisan qdrant:setup
+   ```
+
+3. Generate embeddings for academician profiles:
    ```bash
    php artisan embeddings:generate-academician
    ```
@@ -266,7 +277,7 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
    php artisan embeddings:generate-academician {academician_id}
    ```
 
-3. Generate embeddings for student profiles:
+4. Generate embeddings for student profiles:
    ```bash
    php artisan embeddings:generate-student
    ```
@@ -281,25 +292,43 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
    php artisan embeddings:generate-student {student_id} --type=postgraduate
    ```
 
-4. To clear the supervisor search cache:
+5. To clear the supervisor search cache:
    ```bash
    php artisan supervisor:clear-cache
    ```
 
 ### How It Works
 
-1. When an academician profile is created or updated, an embedding is automatically generated
-2. When a student updates their research fields, an embedding is generated from their profile
+1. When an academician profile is created or updated, an embedding is automatically generated and stored in Qdrant
+2. When a student updates their research fields, an embedding is generated from their profile and stored in Qdrant
 3. Student search queries are converted to embeddings
 4. When students search with specific queries, results combine:
    - 60% weight from query-supervisor semantic matching
    - 40% weight from student profile-supervisor matching
 5. Students can search with "Find supervisor suitable for me" to use only their profile for matching
-6. PHP-based vector similarity calculations find the most semantically relevant supervisors
-7. Results are ranked by semantic relevance, not just keyword matching
-8. GPT-4o generates insights explaining why each supervisor is a good match for:
+6. Results are ranked by semantic relevance, not just keyword matching
+7. GPT-4o generates insights explaining why each supervisor is a good match for:
    - The student's search query
    - The student's research profile (if available)
+
+### Qdrant Vector Database Integration
+
+The platform uses Qdrant, a vector database optimized for similarity search:
+
+1. **High-Performance Vector Search**: 
+   - All embeddings are stored directly in Qdrant for optimal search performance
+   - Complex searches complete in milliseconds
+   - The system supports efficient filtering by university, faculty, and other metadata
+
+2. **Vector Storage Architecture**:
+   - Each academician and student embedding is stored with structured metadata
+   - Embedding points use consistent ID format for reliable lookups
+   - Additional payload data enables rich filtering options
+
+3. **UUID Conversion**:
+   - String IDs are automatically converted to UUID format for Qdrant compatibility
+   - Original IDs are preserved in the payload for reference and debugging
+   - Deterministic UUID generation ensures consistent IDs across operations
 
 ### Student Profile Embeddings
 
@@ -317,6 +346,7 @@ The system generates embeddings for both postgraduate and undergraduate students
 2. Insights consider both the search query and student's research background
 3. The system degrades gracefully if student profile data is unavailable
 4. Insights are cached for 30 minutes to improve performance and reduce API costs
+5. Insights are also stored in the database for analytics and future reference
 
 ## Google Services
 
@@ -360,6 +390,15 @@ The platform integrates with Google Analytics to provide insights:
 - Update documentation for any changes
 
 ## Changelog
+
+### [1.3.0] - 2025-05-10
+- Implemented hybrid vector search with Qdrant integration
+- Added seamless transition between MySQL and Qdrant vector storage
+- Created UUID-based point ID system for Qdrant vector database
+- Implemented gradual rollout mechanism for testing vector search
+- Added dual-write capability for zero-downtime migration
+- Set up comprehensive monitoring and logging for vector operations
+- Enhanced supervisor matching with Qdrant's faster semantic search
 
 ### [1.2.0] - 2025-05-06
 - Integrated GPT-4o for dynamic supervisor-student match insights

@@ -97,8 +97,21 @@ class SupervisorMatchingController extends Controller
             ]);
         }
         
-        // Cache key for this search query + student
-        $baseKey = 'supervisor_match_semantic_' . md5($searchQuery . '_' . $studentId . '_' . $studentType);
+        // Check if we should use Qdrant for this request (set by middleware)
+        $useQdrant = config('services.qdrant.use_for_request', false);
+        
+        // For debug/admin users, allow explicit override via query parameter
+        if ($request->has('use_qdrant') && $user && BouncerFacade::allows('debug_features', $user)) {
+            $useQdrant = filter_var($request->input('use_qdrant'), FILTER_VALIDATE_BOOLEAN);
+            Log::info("Explicit Qdrant search override", [
+                'user_id' => $user->id,
+                'use_qdrant' => $useQdrant
+            ]);
+        }
+        
+        // Cache key for this search query + student + search method
+        $searchMethod = $useQdrant ? 'qdrant' : 'mysql';
+        $baseKey = 'supervisor_match_' . $searchMethod . '_' . md5($searchQuery . '_' . $studentId . '_' . $studentType);
         $cacheKey = $baseKey . '_page_' . $page;
         
         // Clear cache for debugging if needed
@@ -113,21 +126,33 @@ class SupervisorMatchingController extends Controller
         
         // Try to get cached results
         if (Cache::has($cacheKey)) {
-            Log::info("Using cached results for query", ['query' => $searchQuery, 'page' => $page]);
+            Log::info("Using cached results for query", [
+                'query' => $searchQuery, 
+                'page' => $page,
+                'search_method' => $searchMethod
+            ]);
             return response()->json(Cache::get($cacheKey));
         }
         
         // Determine if this is a vague query
         $isVagueQuery = $this->isVagueQuery($searchQuery);
         
+        // Determine if this is a specific query that should use a higher threshold
+        $isSpecificQuery = $this->isSpecificQuery($searchQuery);
+        
         // Use an appropriate threshold based on query type
-        // 1. Student profile with vague query: 0.3 (lowest, most permissive)
-        // 2. Academic field query: 0.3 (still quite permissive)
-        // 3. Default for specific queries: 0.3
+        // 1. Specific detailed queries: 0.5 (highest, most strict)
+        // 2. Student profile with vague query: 0.3 (more permissive)
+        // 3. Academic field query: 0.3 (still quite permissive)
+        // 4. Default for other queries: 0.3
         $threshold = 0.3; // Default threshold
         
-        if ($isVagueQuery && $studentId !== null) {
-            // Use lowest threshold for vague queries with student profile
+        if ($isSpecificQuery) {
+            // Use higher threshold for specific detailed queries
+            $threshold = 0.5;
+            Log::info("Using higher threshold for specific detailed query");
+        } elseif ($isVagueQuery && $studentId !== null) {
+            // Use lower threshold for vague queries with student profile
             $threshold = 0.3;
             Log::info("Using low threshold for vague query with student profile");
         }
@@ -136,11 +161,13 @@ class SupervisorMatchingController extends Controller
             'query' => $searchQuery,
             'page' => $page,
             'is_vague_query' => $isVagueQuery,
+            'is_specific_query' => $isSpecificQuery,
             'threshold' => $threshold,
             'limit' => 50, // Increased limit to support pagination
             'student_id' => $studentId,
             'student_type' => $studentType,
-            'will_use_student_profile' => ($isVagueQuery && $studentId !== null)
+            'will_use_student_profile' => ($isVagueQuery && $studentId !== null),
+            'search_method' => $searchMethod
         ]);
         
         // Find similar academicians using semantic search - get more results to support pagination
@@ -149,7 +176,8 @@ class SupervisorMatchingController extends Controller
             50,                  // Get up to 50 matches to support pagination
             $threshold,          // Adaptive threshold based on query type
             $studentId,          // Pass student ID for personalized search
-            $studentType         // Pass student type for personalized search
+            $studentType,        // Pass student type for personalized search
+            $useQdrant           // Explicitly pass the Qdrant flag
         );
         
         // Total results count for pagination
@@ -157,7 +185,8 @@ class SupervisorMatchingController extends Controller
         
         Log::info("Search results count", [
             'query' => $searchQuery,
-            'total_matches_found' => $totalResults
+            'total_matches_found' => $totalResults,
+            'search_method' => $searchMethod
         ]);
         
         // Calculate pagination
@@ -191,11 +220,12 @@ class SupervisorMatchingController extends Controller
             'profile_used' => ($studentId !== null),
             'current_page' => $page,
             'per_page' => $perPage,
-            'has_more' => $hasMore
+            'has_more' => $hasMore,
+            'search_method' => $searchMethod // Include the search method used
         ];
         
         // Cache the results (for 30 minutes)
-        Cache::put($cacheKey, $response, 1800);
+        Cache::put($cacheKey, $response, now()->addMinutes(30));
         
         return response()->json($response);
     }
@@ -285,6 +315,53 @@ class SupervisorMatchingController extends Controller
             }
             
             Log::info("Query is short and doesn't contain academic fields: {$query}, treating as vague");
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Determines if a query is specific enough to use a higher threshold
+     *
+     * @param string $query The search query
+     * @return bool True if query is specific
+     */
+    protected function isSpecificQuery(string $query): bool
+    {
+        $query = strtolower(trim($query));
+        
+        // Patterns that indicate a specific, detailed query
+        $specificPatterns = [
+            'machine learning for', 
+            'deep learning in',
+            'artificial intelligence for',
+            'data science in',
+            'research on',
+            'expertise in',
+            'specialized in', 
+            'applications of',
+            'implementation of',
+            'methodology for',
+            'framework for',
+            'approach to',
+            'technique for',
+            'analysis of',
+            'modeling of',
+            'design of'
+        ];
+        
+        // Check if the query contains specific patterns
+        foreach ($specificPatterns as $pattern) {
+            if (strpos($query, $pattern) !== false) {
+                Log::info("Query contains specific pattern: {$pattern}");
+                return true;
+            }
+        }
+        
+        // Check if query is long and detailed (over 5 words, over 30 chars)
+        if (str_word_count($query) > 5 && strlen($query) > 30) {
+            Log::info("Query is long and detailed, treating as specific");
             return true;
         }
         

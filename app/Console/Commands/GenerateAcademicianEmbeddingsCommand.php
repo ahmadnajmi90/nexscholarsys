@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Academician;
 use App\Services\EmbeddingService;
+use App\Services\QdrantService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -28,14 +29,16 @@ class GenerateAcademicianEmbeddingsCommand extends Command
     protected $description = 'Generate or regenerate embeddings for academicians for semantic search';
 
     protected $embeddingService;
+    protected $qdrantService;
 
     /**
      * Create a new command instance.
      */
-    public function __construct(EmbeddingService $embeddingService)
+    public function __construct(EmbeddingService $embeddingService, QdrantService $qdrantService)
     {
         parent::__construct();
         $this->embeddingService = $embeddingService;
+        $this->qdrantService = $qdrantService;
     }
 
     /**
@@ -69,8 +72,8 @@ class GenerateAcademicianEmbeddingsCommand extends Command
             return;
         }
         
-        if ($academician->has_embedding && !$force) {
-            $this->info("Academician already has an embedding. Use --force to regenerate.");
+        if (!$force && $academician->qdrant_migrated && $academician->qdrant_migrated_at && $academician->qdrant_migrated_at->isAfter(now()->subMonth())) {
+            $this->info("Academician already has a recent embedding in Qdrant. Use --force to regenerate.");
             return;
         }
         
@@ -96,16 +99,17 @@ class GenerateAcademicianEmbeddingsCommand extends Command
     public function processAllAcademicians($force, $batchSize, $completeOnly = false)
     {
         if ($force) {
-            // For force, mark all as needing regeneration
-            Academician::query()->update(['has_embedding' => false]);
+            // Reset migration flags for force regeneration
+            Academician::query()->update(['qdrant_migrated' => false, 'qdrant_migrated_at' => null]);
             $this->info("Marked all academicians for embedding regeneration");
         }
         
         // Get count of academicians needing embedding
         $query = Academician::where(function($query) {
-            $query->where('has_embedding', false)
-                ->orWhereNull('has_embedding')
-                ->orWhereNull('embedding_updated_at');
+            $query->where('qdrant_migrated', false)
+                ->orWhereNull('qdrant_migrated')
+                ->orWhereNull('qdrant_migrated_at')
+                ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         });
         
         // Add complete profile filters if requested
@@ -149,9 +153,10 @@ class GenerateAcademicianEmbeddingsCommand extends Command
         
         // Build the base query
         $baseQuery = Academician::where(function($query) {
-            $query->where('has_embedding', false)
-                ->orWhereNull('has_embedding')
-                ->orWhereNull('embedding_updated_at');
+            $query->where('qdrant_migrated', false)
+                ->orWhereNull('qdrant_migrated')
+                ->orWhereNull('qdrant_migrated_at')
+                ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         });
         
         // Add complete profile filters if requested
@@ -218,13 +223,46 @@ class GenerateAcademicianEmbeddingsCommand extends Command
                 return false;
             }
             
-            // Store only in MySQL
-            $academician->embedding_vector = $embedding;
-            $academician->has_embedding = true;
-            $academician->embedding_updated_at = now();
-            $academician->save();
+            // Store directly in Qdrant only
+            $payload = [
+                'full_name' => $academician->full_name,
+                'university_id' => $academician->university,
+                'has_embedding' => true
+            ];
             
-            return true;
+            // Add additional payload fields if available
+            if (!empty($academician->department)) {
+                $payload['department'] = $academician->department;
+            }
+            
+            if (!empty($academician->field_of_study)) {
+                $payload['field_of_study'] = $academician->field_of_study;
+            }
+            
+            if (!empty($academician->current_position)) {
+                $payload['current_position'] = $academician->current_position;
+            }
+            
+            // Upsert to Qdrant
+            $result = $this->qdrantService->upsertAcademicianEmbedding(
+                $academician->academician_id,
+                $academician->id,
+                $embedding,
+                $payload
+            );
+            
+            if ($result) {
+                // Update only the Qdrant status in MySQL
+                $academician->qdrant_migrated = true;
+                $academician->qdrant_migrated_at = now();
+                $academician->save();
+                
+                Log::info("Successfully stored embedding in Qdrant for academician {$academician->id}");
+                return true;
+            } else {
+                Log::error("Failed to store embedding in Qdrant for academician {$academician->id}");
+                return false;
+            }
         } catch (\Exception $e) {
             Log::error("Error generating embedding for academician {$academician->id}: " . $e->getMessage());
             $this->error("Error: " . $e->getMessage());
