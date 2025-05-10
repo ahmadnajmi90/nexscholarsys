@@ -42,6 +42,8 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\AcademicianRecommendationController;
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\UserMotivationController;
+use App\Http\Controllers\AIGenerationController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
@@ -249,6 +251,26 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/find-supervisor/insights', [App\Http\Controllers\SupervisorMatchingController::class, 'getInsights'])->name('supervisor.insights');
     Route::get('/find-supervisor/clear-cache', [App\Http\Controllers\SupervisorMatchingController::class, 'clearInsightsCache'])->name('supervisor.clear-cache');
     Route::get('/find-supervisor/diagnostics', [App\Http\Controllers\SupervisorMatchingController::class, 'diagnostics'])->name('supervisor.diagnostics');
+});
+
+// User motivation routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/why-nexscholar', [UserMotivationController::class, 'showForm'])
+        ->name('why-nexscholar.show');
+    Route::post('/why-nexscholar', [UserMotivationController::class, 'storeReason'])
+        ->name('why-nexscholar.store');
+});
+
+// AI Profile Generation Routes for Academicians
+Route::middleware(['auth'])->group(function () {
+    Route::get('/ai/profile', [App\Http\Controllers\RoleProfileController::class, 'showAIProfileGeneration'])
+        ->name('ai.profile.show');
+    Route::post('/ai/generate/automatic', [App\Http\Controllers\RoleProfileController::class, 'triggerAutomaticGeneration'])
+        ->name('ai.generate.automatic');
+    Route::post('/ai/urls/save', [App\Http\Controllers\RoleProfileController::class, 'saveProfileURLs'])
+        ->name('ai.urls.save');
+    Route::get('/ai/status', [App\Http\Controllers\RoleProfileController::class, 'checkGenerationStatus'])
+        ->name('ai.status');
 });
 
 require __DIR__.'/auth.php';

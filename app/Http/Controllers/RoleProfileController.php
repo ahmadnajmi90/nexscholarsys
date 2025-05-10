@@ -24,6 +24,7 @@ use PhpOffice\PhpWord\IOFactory;
 use Illuminate\Support\Facades\Log;
 use App\Services\AICVService;
 use Symfony\Component\DomCrawler\Crawler;
+use App\Services\GoogleSearchService;
 
 class RoleProfileController extends Controller
 {
@@ -51,6 +52,33 @@ class RoleProfileController extends Controller
             }
         }
 
+        // Check for AI generation status
+        $aiGenerationInProgress = session('ai_profile_generation_in_progress', false);
+        $aiGenerationMethod = session('ai_profile_generation_method', null);
+        
+        // Check if we have a cached profile ready
+        $generatedProfileData = null;
+        if ($aiGenerationInProgress && $isAcademician) {
+            $cacheKey = 'academician_profile_' . Auth::id();
+            $cachedProfile = \Illuminate\Support\Facades\Cache::get($cacheKey);
+            
+            if ($cachedProfile) {
+                // We have generated profile data, include it in the response
+                $generatedProfileData = $cachedProfile;
+                
+                // Clear the session flags as we've successfully retrieved the profile
+                session()->forget(['ai_profile_generation_in_progress', 'ai_profile_generation_method']);
+            }
+        }
+
+        // Log the parameters for debugging
+        Log::info('AI Generation Parameters:', [
+            'aiGenerationInProgress' => $aiGenerationInProgress,
+            'aiGenerationMethod' => $aiGenerationMethod,
+            'generatedProfileData' => $generatedProfileData ? 'Available' : 'Not Available',
+            'query_params' => request()->query(),
+        ]);
+
         return Inertia::render('Role/Edit', [
             'postgraduate' => $isPostgraduate ? Auth::user()->postgraduate : null,
             'academician' => $isAcademician ? Auth::user()->academician : null,
@@ -59,6 +87,9 @@ class RoleProfileController extends Controller
             'faculties' => FacultyList::all(),
             'researchOptions' => $researchOptions,
             'skills' => \App\Models\Skill::all(),
+            'aiGenerationInProgress' => $aiGenerationInProgress,
+            'aiGenerationMethod' => $aiGenerationMethod,
+            'generatedProfileData' => $generatedProfileData,
         ]);
     }
 
@@ -380,7 +411,7 @@ class RoleProfileController extends Controller
             return filter_var($url, FILTER_VALIDATE_URL) !== false;
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
         if (!BouncerFacade::is($user)->an('academician')) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -535,6 +566,10 @@ class RoleProfileController extends Controller
                 }
                 $generatedProfile['research_expertise'] = $matchedExpertise;
             }
+            
+            // Cache the generated profile for retrieval in checkGenerationStatus
+            $cacheKey = 'academician_profile_' . $user->id;
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $generatedProfile, now()->addHours(1));
         
             return response()->json($generatedProfile);
         }
@@ -756,5 +791,245 @@ class RoleProfileController extends Controller
                 ($pub['year'] ?: 'No Year') . ".\n";
         }
         return $formatted;
+    }
+
+    /**
+     * Show the AI Profile Generation options page
+     */
+    public function showAIProfileGeneration()
+    {
+        $user = Auth::user();
+        
+        if (!BouncerFacade::is($user)->an('academician')) {
+            return redirect()->route('dashboard');
+        }
+        
+        return Inertia::render('Auth/AIProfileGeneration');
+    }
+
+    /**
+     * Trigger automatic AI profile generation using Google Search
+     */
+    public function triggerAutomaticGeneration(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!BouncerFacade::is($user)->an('academician')) {
+            return response()->json(['error' => 'User is not an academician'], 403);
+        }
+
+        $academician = $user->academician()->with(['universityDetails', 'faculty', 'user'])->first();
+        
+        if (!$academician) {
+            return response()->json(['error' => 'Academician profile not found'], 404);
+        }
+
+        // Set a generation flag in the session to indicate generation is in progress
+        session(['ai_profile_generation_in_progress' => true]);
+        session(['ai_profile_generation_method' => 'automatic']);
+        
+        // Prepare for generation
+        $data = [
+            'full_name'  => $academician->full_name,
+            'university' => optional($academician->universityDetails)->full_name,
+            'faculty'    => data_get($academician->toArray(), 'faculty.name'),
+            'email'      => optional($academician->user)->email,
+        ];
+        
+        // Actually initiate the generation process here
+        try {
+            // Create a new request with the automatic mode
+            $generationRequest = new Request();
+            $generationRequest->merge([
+                'mode' => 'auto',
+                'urls' => []
+            ]);
+            
+            // Call the existing generateProfile method asynchronously
+            // We don't need to wait for the result, as we'll fetch it later
+            $this->generateProfile($generationRequest);
+            
+            // Store generated profile in the session or cache for later retrieval
+            // This is optional and depends on your implementation
+            
+            // Generate a status message to return to the user
+            $statusMessage = "Automatic profile generation initiated for {$data['full_name']}";
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => $statusMessage,
+                'generation_initiated' => true
+            ]);
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error initiating automatic profile generation: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to initiate profile generation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Save URLs provided by the user for profile generation
+     */
+    public function saveProfileURLs(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!BouncerFacade::is($user)->an('academician')) {
+            return response()->json(['error' => 'User is not an academician'], 403);
+        }
+
+        $academician = $user->academician()->first();
+        
+        if (!$academician) {
+            return response()->json(['error' => 'Academician profile not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'personalWebsite' => 'nullable|url',
+            'institutionalWebsite' => 'nullable|url',
+            'linkedinProfile' => 'nullable|url',
+            'scholarProfile' => 'nullable|url',
+            'researchgateProfile' => 'nullable|url',
+        ]);
+
+        // Ensure at least one URL is provided
+        $hasAtLeastOneUrl = false;
+        foreach ($validated as $url) {
+            if (!empty($url)) {
+                $hasAtLeastOneUrl = true;
+                break;
+            }
+        }
+
+        if (!$hasAtLeastOneUrl) {
+            return response()->json(['error' => 'At least one URL must be provided'], 422);
+        }
+
+        // Map the form fields to database fields
+        if (!empty($validated['personalWebsite'])) {
+            $academician->website = $validated['personalWebsite'];
+        }
+        
+        if (!empty($validated['linkedinProfile'])) {
+            $academician->linkedin = $validated['linkedinProfile'];
+        }
+        
+        // Update Google Scholar URL directly
+        if (!empty($validated['scholarProfile'])) {
+            $academician->google_scholar = $validated['scholarProfile'];
+        }
+        
+        // Update ResearchGate URL directly
+        if (!empty($validated['researchgateProfile'])) {
+            $academician->researchgate = $validated['researchgateProfile'];
+        }
+        
+        // Store institutional website in the session for later use
+        if (!empty($validated['institutionalWebsite'])) {
+            session(['institutional_website' => $validated['institutionalWebsite']]);
+        }
+        
+        $academician->save();
+        
+        // Set a generation flag in the session to indicate generation is in progress
+        session(['ai_profile_generation_in_progress' => true]);
+        session(['ai_profile_generation_method' => 'url']);
+        
+        // Actually initiate the generation process here
+        try {
+            // Collect all URLs for processing
+            $urls = [];
+            if ($academician->website) $urls[] = $academician->website;
+            if ($academician->linkedin) $urls[] = $academician->linkedin;
+            if ($academician->google_scholar) $urls[] = $academician->google_scholar;
+            if ($academician->researchgate) $urls[] = $academician->researchgate;
+            if (session('institutional_website')) $urls[] = session('institutional_website');
+            
+            // Create a new request with the URL mode
+            $generationRequest = new Request();
+            $generationRequest->merge([
+                'mode' => 'url',
+                'urls' => $urls
+            ]);
+            
+            // Call the existing generateProfile method
+            // We don't need to wait for the result, as we'll fetch it later
+            $this->generateProfile($generationRequest);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'URLs saved successfully. Profile generation initiated.',
+                'generation_initiated' => true
+            ]);
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Error initiating URL-based profile generation: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to initiate profile generation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check the generation status and retrieve the generated profile if available
+     */
+    public function checkGenerationStatus(Request $request)
+    {
+        $user = Auth::user();
+        
+        if (!BouncerFacade::is($user)->an('academician')) {
+            return response()->json(['error' => 'User is not an academician'], 403);
+        }
+
+        $academician = $user->academician()->first();
+        
+        if (!$academician) {
+            return response()->json(['error' => 'Academician profile not found'], 404);
+        }
+
+        $generationInProgress = session('ai_profile_generation_in_progress', false);
+        $generationMethod = session('ai_profile_generation_method', null);
+
+        // Check if we already have cached results
+        $cacheKey = 'academician_profile_' . $user->id;
+        $cachedProfile = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        
+        if ($cachedProfile) {
+            // Clear the session flags once generation is complete
+            session()->forget(['ai_profile_generation_in_progress', 'ai_profile_generation_method']);
+            
+            // Return the cached profile data
+            return response()->json($cachedProfile);
+        }
+        
+        // For manual testing, we'll simulate completed generation when requested
+        $isCompleted = $request->has('simulate_completed') ? true : false;
+
+        if ($isCompleted) {
+            // Clear the session flags once generation is complete
+            session()->forget(['ai_profile_generation_in_progress', 'ai_profile_generation_method']);
+            
+            // Generate the profile using the existing generateProfile method
+            // This approach reuses your existing implementation
+            $generationRequest = new Request();
+            $generationRequest->merge([
+                'mode' => $generationMethod,
+                'urls' => session('institutional_website') ? [$academician->website, $academician->linkedin, $academician->google_scholar, $academician->researchgate, session('institutional_website')] : []
+            ]);
+            
+            // Call the existing method
+            return $this->generateProfile($generationRequest);
+        }
+        
+        return response()->json([
+            'status' => 'in_progress',
+            'method' => $generationMethod,
+        ]);
     }
 }

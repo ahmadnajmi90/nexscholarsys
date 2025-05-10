@@ -78,6 +78,9 @@ class ProfileCompletionController extends Controller
                 ]
             );
 
+            // Redirect to AI Profile Generation page for Academicians
+            return redirect()->route('ai.profile.show');
+
         } elseif ($request->role === 'Industry') {
             $request->validate([
                 'industry' => 'required|string|max:255',

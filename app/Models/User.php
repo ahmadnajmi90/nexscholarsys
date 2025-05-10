@@ -16,6 +16,7 @@ use App\Models\PostEvent;
 use App\Models\Undergraduate;
 use App\Models\CreatePost;
 use App\Models\Bookmark;
+use App\Models\UserMotivation;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -132,5 +133,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function bookmarks()
     {
         return $this->hasMany(Bookmark::class);
+    }
+
+    /**
+     * Get the user's motivation.
+     */
+    public function motivation()
+    {
+        return $this->hasOne(UserMotivation::class);
     }
 }

@@ -3,17 +3,20 @@ import AcademicianForm from './AcademicianForm';
 import PostgraduateForm from './PostgraduateForm';
 import UndergraduateForm from './UndergraduateForm';
 import useRoles from '@/Hooks/useRoles';
+import { usePage } from '@inertiajs/react';
 
-export default function UpdateRoleInformationForm_m({
+export default function UpdateProfileInformation_M({
     universities,
     faculties,
-    postgraduate,
-    academician,
-    undergraduate,
+    className = '',
     researchOptions,
     skills
 }) {
-    const { isPostgraduate, isUndergraduate, isAcademician } = useRoles();
+    const academician = usePage().props.academician; // Related academician data
+    const postgraduate = usePage().props.postgraduate; // Related postgraduate data
+    const undergraduate = usePage().props.undergraduate; // Related undergraduate data
+    const { aiGenerationInProgress, aiGenerationMethod, generatedProfileData } = usePage().props; // Get AI generation parameters
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
     return (
         <div className="p-4 bg-white shadow sm:rounded-lg">
@@ -21,6 +24,9 @@ export default function UpdateRoleInformationForm_m({
                 <AcademicianForm
                     academician={academician}
                     researchOptions={researchOptions}
+                    aiGenerationInProgress={aiGenerationInProgress}
+                    aiGenerationMethod={aiGenerationMethod}
+                    generatedProfileData={generatedProfileData}
                 />
             )}
             {isPostgraduate && (

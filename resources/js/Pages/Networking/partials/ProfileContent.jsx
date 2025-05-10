@@ -525,7 +525,7 @@ const ProfileContent = ({
                         href="#"
                         className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
                     >
-                        Supervisors
+                        Supervision
                     </Link>
                 </div>
             </div>

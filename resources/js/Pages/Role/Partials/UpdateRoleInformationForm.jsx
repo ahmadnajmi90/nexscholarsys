@@ -20,11 +20,20 @@ export default function UpdateProfileInformation({
     const academician = usePage().props.academician; // Related academician data
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
     const undergraduate = usePage().props.undergraduate; // Related undergraduate data
+    const { aiGenerationInProgress, aiGenerationMethod, generatedProfileData } = usePage().props; // Get AI generation parameters
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
 
     return (
         <>
-            {academician && (<AcademicianForm academician={academician} researchOptions={researchOptions}/> )}
+            {academician && (
+                <AcademicianForm 
+                    academician={academician} 
+                    researchOptions={researchOptions}
+                    aiGenerationInProgress={aiGenerationInProgress}
+                    aiGenerationMethod={aiGenerationMethod}
+                    generatedProfileData={generatedProfileData}
+                /> 
+            )}
             {postgraduate && (<PostgraduateForm postgraduate={postgraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} skills={skills}/> )}
             {undergraduate && (<UndergraduateForm undergraduate={undergraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} skills={skills} /> )}
         </>

@@ -29,6 +29,10 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - AI-powered profile generation using Google Scholar data
 - CV generation with customizable formatting
 - Research expertise mapping to structured format
+- User motivation collection during registration and profile completion
+- Two-step AI profile generation for Academicians:
+  - Automatic web search-based generation
+  - URL-based generation using personal/institutional websites
 
 ### University Directory
 - Browse universities and their faculties
@@ -181,11 +185,41 @@ php artisan storage:link
 
 ## Usage
 
-### User Registration
+### User Registration & Profile Completion Flow
 
-1. Register a new account on the platform
-2. Select your role: Academician, Postgraduate, Undergraduate, or Industry
-3. Complete your profile manually or use AI-assisted profile generation
+1. **Initial Registration**
+   - New users register with basic information (name, email, password)
+   - Upon registration, a verification email is sent to the user's email address
+   - The `is_profile_complete` flag is set to `false` at this stage
+
+2. **Email Verification**
+   - Users must verify their email address by clicking the link in the verification email
+   - This is enforced by Laravel's built-in `MustVerifyEmail` interface
+   - Only verified users can proceed to the profile completion step
+
+3. **Role Selection & Profile Completion**
+   - After email verification, users are automatically redirected to the `complete-profile` page
+   - Users must select their role (Academician, Postgraduate, Undergraduate)
+   - Based on the selected role, users provide:
+     - Full name (all roles)
+     - University and faculty (required for Academicians, optional for students)
+     - Current enrollment status (for Postgraduate and Undergraduate)
+   - The system assigns a unique ID with role-specific prefix (e.g., ACAD-, PG-, UG-)
+   - The `is_profile_complete` flag is set to `true` upon completion
+   - Users are granted role-specific permissions via Bouncer
+
+4. **Role-Specific Profile Creation**
+   - Based on the selected role, an entry is created in the appropriate table
+   - Each role has its own table with role-specific data
+   - Default profile pictures and background images are assigned
+
+5. **Dashboard Access**
+   - Once profile completion is successful, users are redirected to the dashboard
+   - The system checks the `is_profile_complete` flag before allowing dashboard access
+   - Incomplete profiles are redirected back to the profile completion page
+   - Users are shown profile completion alerts if key profile information is missing
+
+This workflow ensures that all users have verified emails and role-specific profiles before they can interact with the platform's features.
 
 ### Content Creation
 
@@ -212,12 +246,49 @@ php artisan storage:link
 
 ### Profile Generation
 
-The platform uses GPT-4o for generating academic profiles:
+The platform uses GPT-4o for generating academic profiles through two methods:
 
-1. Enter your Google Scholar profile URL or other academic information
-2. The system will process your data and generate a structured profile
-3. Review and edit the generated content before saving
-4. The system will map research expertise to structured categories
+#### Automatic Search Method
+- System performs online search to find academic information
+- Uses Google Custom Search API to gather relevant information
+- AI processes the search results to extract structured data
+- Information is validated and mapped to appropriate profile fields
+- This method works best for academics with established online presence
+
+#### URL-based Method
+- Users provide specific URLs for extraction:
+  - Personal or institutional website
+  - LinkedIn profile
+  - Google Scholar profile (dedicated field)
+  - ResearchGate profile (dedicated field)
+- The system extracts relevant information from each source
+- AI processes the extracted content to populate profile fields
+- Provides more accurate results when users have specific websites they want to use
+
+#### Optimized Generation Flow
+- The system ensures generation is triggered exactly once per request
+- Server-side caching of generated profiles for reliable retrieval
+- Asynchronous generation process that doesn't block the user interface
+- Status checking with automatic polling until completion
+- Progress indicators during generation
+- Proper error handling with user-friendly messages
+- Deduplication of success alerts and notifications
+- Consistent user experience across different generation methods
+
+#### Google Scholar Integration
+- Dedicated scraping functionality for Google Scholar profiles
+- Extracts publication data, citation metrics (h-index, i10-index), and research interests
+- Updates statistics and tracks citation counts over time
+- Enforces rate limiting to prevent overuse
+- Shows last update time and current profile statistics
+
+After generation, users can review and edit the AI-generated content before saving, including:
+- Personal information (name, position, department)
+- Academic background (degrees, field of study)
+- Research expertise mapped to structured categories
+- Professional bio and achievements
+
+The profile generation feature significantly reduces the time needed to create comprehensive academic profiles, particularly for established researchers with online presence.
 
 ### CV Generation
 
@@ -390,6 +461,28 @@ The platform integrates with Google Analytics to provide insights:
 - Update documentation for any changes
 
 ## Changelog
+
+### [1.4.0] - 2025-05-15
+- Added user motivation collection during registration and profile completion
+- Implemented two-step AI profile generation for Academicians:
+  - Automatic web search-based generation using Google Custom Search
+  - URL-based generation using personal/institutional websites
+- Enhanced profile generation with support for multiple academic URLs:
+  - Personal website integration
+  - Institutional website integration
+  - LinkedIn profile integration
+  - Google Scholar profile integration (separate dedicated field)
+  - ResearchGate profile integration (separate dedicated field)
+- Added real-time profile generation status tracking
+- Improved error handling and validation for URL inputs
+- Enhanced user experience with clear progress indicators
+- Optimized AI profile generation flow:
+  - Ensured generation is triggered exactly once on the backend
+  - Implemented asynchronous status checking
+  - Added server-side caching for generated profiles
+  - Improved UI with loading indicators and clear status messages
+  - Fixed duplicate alerts during generation process
+  - Enhanced error recovery and reporting
 
 ### [1.3.0] - 2025-05-10
 - Implemented hybrid vector search with Qdrant integration

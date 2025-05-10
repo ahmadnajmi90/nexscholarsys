@@ -341,27 +341,33 @@ const SupervisorProfileCard = ({
                   
                   {/* Research Interests */}
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-800 mb-2">Research Interest</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-2">Research Expertise</h4>
                     <div className="">
                       {(() => {
                         // Get the research expertise data
                         let researchArray = selectedProfile.research_expertise || [];
 
                         if (Array.isArray(researchArray) && researchArray.length > 0) {
-                          // Only show the first research interest
-                          const id = researchArray[0];
-                          const matchedOption = researchOptions.find(
-                            (option) =>
-                              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                          // Show all research interests with numbering
+                          return (
+                            <div className="space-y-2">
+                              {researchArray.map((id, index) => {
+                                const matchedOption = researchOptions.find(
+                                  (option) =>
+                                    `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                );
+                                
+                                if (matchedOption) {
+                                  return (
+                                    <p key={index} className="text-gray-600">
+                                      {index + 1}. {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
+                                    </p>
+                                  );
+                                }
+                                return null;
+                              })}
+                            </div>
                           );
-                          
-                          if (matchedOption) {
-                            return (
-                              <p className="text-gray-600">
-                                {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
-                              </p>
-                            );
-                          }
                         }
                         return <p className="text-gray-600">Not Provided</p>;
                       })()}

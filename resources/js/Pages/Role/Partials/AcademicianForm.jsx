@@ -4,12 +4,12 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import CVPreviewModal from './CVPreviewModal';
 
-export default function AcademicianForm({ className = '', researchOptions }) {
+export default function AcademicianForm({ className = '', researchOptions, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   const academician = usePage().props.academician; // Related academician data
 
   const { data, setData, post, errors, processing, recentlySuccessful } =
@@ -51,6 +51,114 @@ export default function AcademicianForm({ className = '', researchOptions }) {
   const [scholarStatus, setScholarStatus] = useState(null);
   const [scholarLastUpdated, setScholarLastUpdated] = useState(null);
   const [canUpdateScholar, setCanUpdateScholar] = useState(false);
+
+  // Create a ref to track if generation has been triggered
+  const generationTriggeredRef = useRef(false);
+  
+  // Effect to apply generated profile data if available
+  useEffect(() => {
+    if (generatedProfileData && !generationTriggeredRef.current) {
+      console.log("Applying generated profile data:", generatedProfileData);
+      
+      // Update the form data with the generated profile
+      setData((prevData) => ({
+        ...prevData,
+        full_name: data.full_name, // Keep existing name
+        phone_number: generatedProfileData.phone_number || prevData.phone_number,
+        bio: generatedProfileData.bio || prevData.bio,
+        current_position: generatedProfileData.current_position || prevData.current_position,
+        department: generatedProfileData.department || prevData.department,
+        highest_degree: generatedProfileData.highest_degree || prevData.highest_degree,
+        field_of_study: generatedProfileData.field_of_study || prevData.field_of_study,
+        research_expertise: generatedProfileData.research_expertise || prevData.research_expertise,
+      }));
+      
+      // Mark as triggered to prevent double processing
+      generationTriggeredRef.current = true;
+      
+      // Show success message to the user - only when the data comes directly from the server (not from status check)
+      if (!window._profileSuccessShown) {
+        window._profileSuccessShown = true;
+        alert("Profile successfully generated! Please review and save the changes.");
+      }
+    }
+  }, [generatedProfileData]);
+
+  // Effect to trigger automatic generation if URL params are present
+  useEffect(() => {
+    console.log("Checking if automatic generation should be triggered:", {
+      aiGenerationInProgress,
+      aiGenerationMethod,
+      generationTriggeredRef: generationTriggeredRef.current,
+      isGenerating,
+      generatedProfileData: !!generatedProfileData,
+      location: window.location.href
+    });
+    
+    // If we already have generated data, no need to trigger generation
+    if (generatedProfileData) {
+      console.log("Generated profile data already available, skipping generation");
+      return;
+    }
+    
+    // If generation is already in progress, check status
+    if (aiGenerationInProgress && !generationTriggeredRef.current && !isGenerating) {
+      console.log("Generation in progress, checking status");
+      checkGenerationStatus();
+      return;
+    }
+  }, [aiGenerationInProgress, aiGenerationMethod, isGenerating, generatedProfileData]);
+
+  // Function to check the generation status
+  const checkGenerationStatus = () => {
+    if (generationTriggeredRef.current) {
+      return; // Don't check if already triggered
+    }
+    
+    setIsGenerating(true);
+    axios.get(route('ai.status'))
+      .then(response => {
+        if (response.data.status === 'in_progress') {
+          // Still in progress, check again after delay
+          setTimeout(checkGenerationStatus, 3000);
+        } else if (response.data.status === 'error') {
+          // Error occurred
+          setIsGenerating(false);
+          alert("Profile generation failed: " + response.data.message);
+        } else {
+          // Generation completed
+          setIsGenerating(false);
+          if (response.data) {
+            // Apply the generated profile data
+            setData((prevData) => ({
+              ...prevData,
+              full_name: data.full_name, // Keep existing name
+              phone_number: response.data.phone_number || prevData.phone_number,
+              bio: response.data.bio || prevData.bio,
+              current_position: response.data.current_position || prevData.current_position,
+              department: response.data.department || prevData.department,
+              highest_degree: response.data.highest_degree || prevData.highest_degree,
+              field_of_study: response.data.field_of_study || prevData.field_of_study,
+              research_expertise: response.data.research_expertise || prevData.research_expertise,
+            }));
+            
+            // Mark as triggered to prevent double processing
+            generationTriggeredRef.current = true;
+            
+            // Track that we've shown a success message to avoid duplicate alerts
+            if (!window._profileSuccessShown) {
+              window._profileSuccessShown = true;
+              // Show success message to the user
+              alert("Profile successfully generated! Please review and save the changes.");
+            }
+          }
+        }
+      })
+      .catch(error => {
+        console.error("Error checking generation status:", error);
+        setIsGenerating(false);
+      });
+  };
 
   // Load Google Scholar status on component mount
   useEffect(() => {
@@ -114,14 +222,47 @@ export default function AcademicianForm({ className = '', researchOptions }) {
 
   // Function to initiate profile generation (existing functionality)
   const handleGenerateProfile = () => {
+    // Prevent duplicate calls
+    if (isGenerating) {
+      console.log("Generation already in progress", { isGenerating });
+      return;
+    }
+    
+    // Check if the generation has already been completed
+    if (generationTriggeredRef.current) {
+      console.log("Generation has already been triggered and completed");
+      return;
+    }
+    
+    console.log("Starting profile generation with mode:", genMode);
+    
+    // Mark as triggered
+    generationTriggeredRef.current = true;
+    
     setShowMethodModal(false);
     setIsGenerating(true);
+    
+    // Reset success message flag when starting a new generation
+    window._profileSuccessShown = false;
+    
+    // Get URLs from fields if we're using 'url' method and no custom URLs are provided
+    const urlsToSend = genMode === 'url' ? 
+      // If we have custom URLs, use those; otherwise, use the URLs from our profile fields
+      (providedUrls.filter(url => url.trim() !== '').length > 0 ? 
+        providedUrls : 
+        [data.website, data.linkedin, data.google_scholar, data.researchgate].filter(url => url && url.trim() !== '')
+      ) : 
+      [];
+    
+    console.log("Sending profile generation request with:", { mode: genMode, urls: urlsToSend });
+    
     axios
       .post(route('academician.generateProfile'), {
         mode: genMode,
-        urls: genMode === 'url' ? providedUrls : [],
+        urls: urlsToSend,
       })
       .then((response) => {
+        console.log("Profile generation successful:", response.data);
         const generatedData = response.data;
         setData((prevData) => ({
           ...prevData,
@@ -139,11 +280,20 @@ export default function AcademicianForm({ className = '', researchOptions }) {
           researchgate: data.researchgate,
         }));
         setIsGenerating(false);
+        
+        // Track that we've shown a success message to avoid duplicate alerts
+        if (!window._profileSuccessShown) {
+          window._profileSuccessShown = true;
+          // Show success message to the user
+          alert("Profile successfully generated! Please review and save the changes.");
+        }
       })
       .catch((error) => {
-        console.error("Profile generation failed:", error);
+        console.error("Profile generation failed:", error.response?.data || error.message || error);
         alert("Profile generation failed, please try again.");
         setIsGenerating(false);
+        // Reset the generation flag on error to allow retrying
+        generationTriggeredRef.current = false;
       });
   };
 
@@ -273,6 +423,17 @@ export default function AcademicianForm({ className = '', researchOptions }) {
   const proceedToCVPreview = () => {
     setShowRequirementModal(false);
     setShowCVModal(true);
+  };
+
+  // Reset generation flag to allow re-generation
+  const resetGenerationFlag = () => {
+    generationTriggeredRef.current = false;
+  };
+
+  // Handle showing the method selection modal
+  const showAIGenerationModal = () => {
+    resetGenerationFlag();
+    setShowMethodModal(true);
   };
 
   return (
@@ -522,7 +683,7 @@ export default function AcademicianForm({ className = '', researchOptions }) {
               <div className="hidden sm:flex space-x-2 absolute top-0 right-0 mt-2 mr-2">
                 <button 
                   type="button" 
-                  onClick={() => setShowMethodModal(true)}
+                  onClick={showAIGenerationModal}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
                 >
                   AI Generated Profile
@@ -540,7 +701,7 @@ export default function AcademicianForm({ className = '', researchOptions }) {
               <div className="sm:hidden mt-4">
                 <button 
                   type="button" 
-                  onClick={() => setShowMethodModal(true)}
+                  onClick={showAIGenerationModal}
                   className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
                 >
                   AI Generated Profile
@@ -993,3 +1154,4 @@ export default function AcademicianForm({ className = '', researchOptions }) {
     </div>
   );
 }
+

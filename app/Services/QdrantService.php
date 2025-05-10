@@ -30,12 +30,12 @@ class QdrantService
         ])->baseUrl($this->apiUrl);
         
         // Log configuration for debugging
-        Log::debug('QdrantService initialized', [
-            'url' => $this->apiUrl,
-            'academicians_collection' => $this->academiciansCollection,
-            'students_collection' => $this->studentsCollection,
-            'vector_size' => $this->vectorSize
-        ]);
+        // Log::debug('QdrantService initialized', [
+        //     'url' => $this->apiUrl,
+        //     'academicians_collection' => $this->academiciansCollection,
+        //     'students_collection' => $this->studentsCollection,
+        //     'vector_size' => $this->vectorSize
+        // ]);
     }
 
     /**
