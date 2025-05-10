@@ -1043,4 +1043,58 @@ class RoleProfileController extends Controller
             'method' => $generationMethod,
         ]);
     }
+
+    /**
+     * Show Google Scholar publications for the authenticated academician
+     * 
+     * @return \Inertia\Response
+     */
+    public function showPublications()
+    {
+        $user = Auth::user();
+        
+        if (!BouncerFacade::is($user)->an('academician')) {
+            return redirect()->route('dashboard');
+        }
+        
+        $academician = $user->academician;
+        
+        // Get the scholar profile to check if it exists
+        $scholarProfile = $academician->scholarProfile;
+        
+        // Get publications for this academician, ordered by year (desc) and citations (desc)
+        $publications = $academician->publications()
+            ->orderBy('year', 'desc')
+            ->orderBy('citations', 'desc')
+            ->get();
+            
+        // Get research options for consistency with other views
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+        
+        return Inertia::render('Role/GoogleScholar', [
+            'academician' => $academician,
+            'university' => UniversityList::find($academician->university),
+            'faculty' => FacultyList::find($academician->faculty),
+            'user' => $user,
+            'publications' => $publications,
+            'scholarProfile' => $scholarProfile,
+            'researchOptions' => $researchOptions,
+            'isEditing' => true, // Flag to indicate this is the edit view
+        ]);
+    }
 }

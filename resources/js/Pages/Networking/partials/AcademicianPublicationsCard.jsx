@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "@inertiajs/react";
-import { FaArrowLeft, FaExternalLinkAlt, FaQuoteLeft, FaListAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaArrowLeft, FaExternalLinkAlt, FaQuoteLeft, FaListAlt, FaChevronDown, FaChevronUp, FaSync } from "react-icons/fa";
+import axios from "axios";
 
 const AcademicianPublicationsCard = ({ 
     academician, 
@@ -9,10 +10,16 @@ const AcademicianPublicationsCard = ({
     user, 
     publications, 
     scholarProfile,
-    researchOptions 
+    researchOptions,
+    isEditing = false,
+    hideNavigation = false,
+    hideProfile = false 
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedAbstracts, setExpandedAbstracts] = useState({});
+  const [isScrapingScholar, setIsScrapingScholar] = useState(false);
+  const [scholarStatus, setScholarStatus] = useState(null);
+  const [canUpdateScholar, setCanUpdateScholar] = useState(false);
   const itemsPerPage = 10;
 
   const totalPages = Math.ceil(publications.length / itemsPerPage);
@@ -43,83 +50,137 @@ const AcademicianPublicationsCard = ({
       [id]: !prev[id]
     }));
   };
+  
+  // Fetch Google Scholar status when in editing mode
+  useEffect(() => {
+    if (isEditing && academician?.google_scholar) {
+      fetchScholarStatus();
+    }
+  }, [isEditing, academician?.google_scholar]);
+
+  // Function to fetch Google Scholar scraping status
+  const fetchScholarStatus = () => {
+    axios.get('/api/scholar/status')
+      .then(response => {
+        if (response.data.success) {
+          setScholarStatus(response.data);
+          setCanUpdateScholar(response.data.can_update);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching Google Scholar status:", error);
+      });
+  };
+
+  // Function to trigger Google Scholar scraping
+  const handleScholarScrape = () => {
+    if (!academician.google_scholar) {
+      alert("Please add your Google Scholar URL first in your profile settings.");
+      return;
+    }
+
+    setIsScrapingScholar(true);
+    axios.post('/api/scholar/scrape')
+      .then(response => {
+        setIsScrapingScholar(false);
+        if (response.data.success) {
+          alert(response.data.message);
+          fetchScholarStatus(); // Refresh status after successful scrape
+          // Reload the page to show updated publications
+          window.location.reload();
+        } else {
+          alert(response.data.message || "Failed to update Google Scholar profile.");
+        }
+      })
+      .catch(error => {
+        setIsScrapingScholar(false);
+        console.error("Error scraping Google Scholar:", error);
+        alert(error.response?.data?.message || "An error occurred while updating your Google Scholar profile.");
+      });
+  };
 
   return (
-    <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
-      {/* Back Button */}
-      <div className="absolute top-[2rem] left-6 md:top-[3rem] md:left-[20.2rem] z-10">
-        <Link 
-          onClick={() => window.history.back()}
-          className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
-        >
-          <FaArrowLeft className="text-xl" />
-        </Link>
-      </div>
+    <div className={`${hideProfile ? '' : 'max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8'}`}>
+      {/* Back Button - only shown when not hidden */}
+      {!hideNavigation && (
+        <div className="absolute top-[2rem] left-6 md:top-[3rem] md:left-[20.2rem] z-10">
+          <Link 
+            onClick={() => window.history.back()}
+            className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
+          >
+            <FaArrowLeft className="text-xl" />
+          </Link>
+        </div>
+      )}
 
-      {/* Profile Header */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-4 sm:mb-6">
-        <div className="relative h-48 sm:h-64">
-          <img
-            src={academician.background_image 
-              ? `/storage/${academician.background_image}`
-              : '/storage/profile_background_images/default.jpg'}
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute -bottom-16 left-4 sm:left-8">
+      {/* Profile Header - only shown when not hidden */}
+      {!hideProfile && (
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-4 sm:mb-6">
+          <div className="relative h-48 sm:h-64">
             <img
-              src={academician.profile_picture 
-                ? `/storage/${academician.profile_picture}`
-                : '/images/default-avatar.jpg'}
-              alt={academician.full_name}
-              className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg object-cover"
+              src={academician.background_image 
+                ? `/storage/${academician.background_image}`
+                : '/storage/profile_background_images/default.jpg'}
+              alt="Background"
+              className="w-full h-full object-cover"
             />
+            <div className="absolute -bottom-16 left-4 sm:left-8">
+              <img
+                src={academician.profile_picture 
+                  ? `/storage/${academician.profile_picture}`
+                  : '/images/default-avatar.jpg'}
+                alt={academician.full_name}
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-lg object-cover"
+              />
+            </div>
+          </div>
+          
+          <div className="px-4 sm:px-8 pt-20 pb-4 sm:pb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{academician.full_name}</h1>
+            {academician.current_position && (
+              <p className="text-base sm:text-lg text-gray-600 mt-1">{academician.current_position}</p>
+            )}
+            <div className="mt-2 flex flex-wrap items-center text-gray-500">
+              <p className="text-sm sm:text-base">{university?.full_name} - {faculty?.name}</p>
+            </div>
           </div>
         </div>
-        
-        <div className="px-4 sm:px-8 pt-20 pb-4 sm:pb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{academician.full_name}</h1>
-          {academician.current_position && (
-            <p className="text-base sm:text-lg text-gray-600 mt-1">{academician.current_position}</p>
-          )}
-          <div className="mt-2 flex flex-wrap items-center text-gray-500">
-            <p className="text-sm sm:text-base">{university?.full_name} - {faculty?.name}</p>
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-gray-300 mb-6">
-        <div className="flex md:space-x-12 space-x-4 px-4 sm:px-8">
-          <Link
-            href={route('academicians.show', academician.url)}
-            className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
-          >
-            Profile
-          </Link>
-          <Link
-            href={route('academicians.publications', academician.url)}
-            className="md:text-lg text-base font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
-          >
-            Publications
-          </Link>
-          <Link
-            href={route('academicians.projects', academician.url)}
-            className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
-          >
-            Projects
-          </Link>
-          <Link
-            href="#"
-            className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
-          >
-            Supervisors
-          </Link>
+      {/* Navigation Tabs - only shown when not hidden */}
+      {!hideNavigation && (
+        <div className="border-b border-gray-300 mb-6">
+          <div className="flex md:space-x-12 space-x-4 px-4 sm:px-8">
+            <Link
+              href={route('academicians.show', academician.url)}
+              className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
+            >
+              Profile
+            </Link>
+            <Link
+              href={route('academicians.publications', academician.url)}
+              className="md:text-lg text-base font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
+            >
+              Publications
+            </Link>
+            <Link
+              href={route('academicians.projects', academician.url)}
+              className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
+            >
+              Projects
+            </Link>
+            <Link
+              href="#"
+              className="md:text-lg text-base font-semibold text-gray-600 hover:text-blue-600 pb-2"
+            >
+              Supervisors
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Publications Content */}
-      <div className="min-h-screen">
+      <div className={hideProfile ? '' : 'min-h-screen'}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - Scholar Stats */}
           <div className="lg:col-span-1">
@@ -148,11 +209,55 @@ const AcademicianPublicationsCard = ({
                         : 'Not available'}
                     </p>
                   </div>
+                  
+                  {/* Update Google Scholar Button - only shown in editing mode */}
+                  {isEditing && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={handleScholarScrape}
+                        disabled={isScrapingScholar || !canUpdateScholar}
+                        className={`w-full flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium 
+                          ${isScrapingScholar || !canUpdateScholar
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                          } transition-colors`}
+                      >
+                        <FaSync className={`mr-2 ${isScrapingScholar ? 'animate-spin' : ''}`} />
+                        {isScrapingScholar ? 'Updating...' : 'Update Google Scholar Data'}
+                      </button>
+                      
+                      {scholarStatus && !canUpdateScholar && scholarStatus.latest_scraping && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          Profile was recently updated. Next update available {scholarStatus.latest_scraping.created_at_human}.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
-                <p className="text-gray-500">
-                  Scholar profile information not available
-                </p>
+                <>
+                  <p className="text-gray-500 mb-4">
+                    Scholar profile information not available
+                  </p>
+                  
+                  {/* Update Google Scholar Button for new profiles - only in editing mode */}
+                  {isEditing && academician.google_scholar && (
+                    <button
+                      type="button"
+                      onClick={handleScholarScrape}
+                      disabled={isScrapingScholar}
+                      className={`w-full flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium 
+                        ${isScrapingScholar 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                        } transition-colors`}
+                    >
+                      <FaSync className={`mr-2 ${isScrapingScholar ? 'animate-spin' : ''}`} />
+                      {isScrapingScholar ? 'Updating...' : 'Import Google Scholar Data'}
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
@@ -197,7 +302,11 @@ const AcademicianPublicationsCard = ({
               {publications.length === 0 ? (
                 <div className="text-center py-10">
                   <h3 className="text-xl font-medium text-gray-700 mb-2">No Publications Found</h3>
-                  <p className="text-gray-500">This academician has no recorded publications yet.</p>
+                  <p className="text-gray-500">
+                    {isEditing 
+                      ? "You don't have any recorded publications yet. Add your Google Scholar URL in the profile tab and click the Update button to import your publications."
+                      : "This academician has no recorded publications yet."}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-8">
@@ -256,50 +365,48 @@ const AcademicianPublicationsCard = ({
                         )}
                       </div>
                       
-                      {/* Publication Abstract - Expandable */}
-                      {publication.abstract && expandedAbstracts[publication.id] && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded-md text-sm text-gray-700">
-                          <h4 className="font-semibold mb-2">Abstract</h4>
-                          <p>{publication.abstract}</p>
+                      {expandedAbstracts[publication.id] && publication.abstract && (
+                        <div className="mt-4 p-4 bg-gray-50 rounded text-sm text-gray-700">
+                          {publication.abstract}
                         </div>
                       )}
                     </div>
                   ))}
-                </div>
-              )}
-
-              {/* Pagination - only show if we have more than one page */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-8 space-x-2 items-center">
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    ◄
-                  </button>
-                  {Array.from({ length: totalPages }, (_, index) => index + 1)
-                    .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-                    .map((page, index, arr) => (
-                      <React.Fragment key={page}>
-                        {index > 0 && page - arr[index - 1] > 1 && <span className="px-2">...</span>}
+                  
+                  {/* Pagination */}
+                  {publications.length > itemsPerPage && (
+                    <div className="flex justify-center mt-8">
+                      <nav className="flex items-center" aria-label="Pagination">
                         <button
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-4 py-2 border rounded ${
-                            currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className={`px-3 py-1 rounded-md mr-2 ${
+                            currentPage === 1
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
-                          {page}
+                          Previous
                         </button>
-                      </React.Fragment>
-                    ))}
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    ►
-                  </button>
+                        
+                        <span className="text-gray-700 mx-2">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                          className={`px-3 py-1 rounded-md ml-2 ${
+                            currentPage === totalPages
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          Next
+                        </button>
+                      </nav>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -556,17 +556,23 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
       {/* Tabs Section */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-8xl mx-auto flex space-x-8 px-4 sm:px-6">
+        <div className="max-w-8xl mx-auto flex md:space-x-12 space-x-4 px-4 sm:px-8">
           {/* {['Profiles', 'Projects', 'Works', 'Teams', 'Network', 'Activity', 'More'].map((tab) => ( */}
-          {['Profiles'].map((tab) => (
+          {['Profiles', 'Publications'].map((tab) => (
             <button
               key={tab}
-              className={`py-4 px-3 font-medium text-sm ${
+              className={`py-4 px-3 md:text-lg text-base font-semibold ${
                 activeTab.toLowerCase() === tab.toLowerCase()
                   ? 'border-b-2 border-blue-500 text-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
-              onClick={() => setActiveTab(tab.toLowerCase())}
+              onClick={() => {
+                if (tab.toLowerCase() === 'publications') {
+                  window.location.href = route('role.publications');
+                } else {
+                  setActiveTab(tab.toLowerCase());
+                }
+              }}
             >
               {tab}
             </button>
@@ -1001,64 +1007,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                       autoComplete="url"
                     />
                     <InputError className="mt-2" message={errors.google_scholar} />
-                    
-                    {/* Add Google Scholar scraping button and status */}
-                    {data.google_scholar && (
-                      <div className="flex flex-col space-y-2 mt-2">
-                        <div className="flex justify-between items-center">
-                          <button
-                            type="button"
-                            onClick={handleScholarScrape}
-                            disabled={isScrapingScholar || !canUpdateScholar}
-                            className={`px-3 py-1 text-sm rounded ${
-                              isScrapingScholar || !canUpdateScholar
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-blue-500 text-white hover:bg-blue-700'
-                            }`}
-                          >
-                            {isScrapingScholar ? (
-                              <span className="flex items-center">
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
-                                Updating...
-                              </span>
-                            ) : "Update Google Scholar Data"
-                            }
-                          </button>
-                          
-                          {scholarStatus && scholarStatus.profile && (
-                            <span className="text-xs text-gray-500">
-                              Last updated: {scholarLastUpdated || 'Never'}
-                            </span>
-                          )}
-                        </div>
-                        
-                        {scholarStatus && scholarStatus.profile && (
-                          <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded">
-                            <div className="font-semibold">Profile Stats:</div>
-                            <div className="grid grid-cols-3 gap-2 mt-1">
-                              <div>Citations: {scholarStatus.profile.citations}</div>
-                              <div>h-index: {scholarStatus.profile.h_index}</div>
-                              <div>i10-index: {scholarStatus.profile.i10_index}</div>
-                            </div>
-                            <div className="mt-1">
-                              Publications: {scholarStatus.publication_count}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {scholarStatus && !scholarStatus.can_update && scholarStatus.latest_scraping && (
-                          <div className="text-xs text-amber-600">
-                            {scholarStatus.latest_scraping.status === 'success'
-                              ? "Profile was recently updated. Please wait before updating again."
-                              : scholarStatus.latest_scraping.message
-                            }
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div>

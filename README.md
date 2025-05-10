@@ -59,6 +59,8 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - MySQL 8.0+ or PostgreSQL 14+ with pgvector extension
 - Composer 2.0+
 - NPM 8.0+
+- Python 3.7+ (for Google Scholar scraping)
+- Playwright (for Google Scholar scraping)
 
 ## Laravel 11 Notes
 
@@ -107,7 +109,13 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
    npm run build
    ```
 
-8. Start the development server:
+8. Install Python dependencies for Google Scholar scraping:
+   ```bash
+   pip install -r scripts/requirements.txt
+   python -m playwright install
+   ```
+
+9. Start the development server:
    ```bash
    php artisan serve
    ```
@@ -277,11 +285,16 @@ The platform uses GPT-4o for generating academic profiles through two methods:
 - Consistent user experience across different generation methods
 
 #### Google Scholar Integration
-- Dedicated scraping functionality for Google Scholar profiles
+- Dedicated scraping functionality for Google Scholar profiles using Python with Playwright
 - Extracts publication data, citation metrics (h-index, i10-index), and research interests
 - Updates statistics and tracks citation counts over time
 - Enforces rate limiting to prevent overuse
 - Shows last update time and current profile statistics
+- Integrated directly into profile editor via dedicated "Publications" tab
+- Clean, intuitive interface for viewing and updating Google Scholar data
+- Conditional "Update" button that only appears when editing your own profile
+- Interactive publication listing with pagination and abstract viewing
+- Support for loading all publications by automatically clicking "Show more" buttons
 
 After generation, users can review and edit the AI-generated content before saving, including:
 - Personal information (name, position, department)
@@ -424,9 +437,35 @@ The system generates embeddings for both postgraduate and undergraduate students
 
 ### Google Scholar Integration
 
-1. Enter your Google Scholar profile URL
-2. The system will extract publication data, citation metrics, and research interests
-3. This data will be structured and saved to your profile
+The platform provides robust Google Scholar profile integration:
+
+1. **Python-based Scraping with Playwright**
+   - Uses Playwright for browser automation to handle dynamic content
+   - Automatically clicks "Show more" button to load all publications
+   - Handles CAPTCHA detection and rate limiting gracefully
+   - Extracts comprehensive publication data, citation metrics, and profile information
+   - Stores structured data in the database for easy access
+
+2. **Integrated Management Interface**
+   - Enter your Google Scholar profile URL in your profile settings
+   - Click "Update Google Scholar Data" to import/refresh your publications
+   - View all your publications with detailed information (title, authors, venue, year, citations)
+   - Interactive publication cards with expandable abstracts
+   - Clean visualization of citation metrics (h-index, i10-index)
+   - Cool-down period of 6 hours between updates to prevent abuse
+
+3. **Command-line Management**
+   - Use Artisan commands for administrative tasks:
+   ```bash
+   # Scrape a specific academician's Google Scholar profile
+   php artisan scholar:scrape academician_id
+   
+   # Scrape all academicians with Google Scholar URLs
+   php artisan scholar:scrape --all
+   
+   # Test scraping with a specific URL (for debugging)
+   php artisan scholar:scrape --url="https://scholar.google.com/citations?user=..."
+   ```
 
 ### Google Search Integration
 
@@ -462,6 +501,32 @@ The platform integrates with Google Analytics to provide insights:
 - Update documentation for any changes
 
 ## Changelog
+
+### [1.6.0] - 2025-06-01
+- Replaced PHP-based Google Scholar scraping with Python-Playwright implementation
+- Added ability to automatically click "Show more" buttons to load all publications
+- Improved robustness against CAPTCHA and rate limiting
+- Added comprehensive logging for better debugging
+- Created Artisan command for Google Scholar profile management
+- Enhanced error handling and recovery mechanism for scraping failures
+- Added detailed documentation for Google Scholar scraping setup and usage
+
+### [1.5.1] - 2025-05-20
+- Enhanced Google Scholar integration with tabbed interface in profile editing
+- Added dedicated "Publications" tab in academician profile editor for Google Scholar data
+- Improved user experience by consolidating Google Scholar management in one place
+- Removed duplicate Google Scholar update buttons from the main profile form
+- Implemented conditional rendering of Google Scholar update button based on context
+- Reused existing backend functionality with no changes to GoogleScholarController
+- Maintained consistent UI between profile editing tabs
+
+### [1.5.0] - 2025-05-12
+- Separated website field into personal_website and institution_website for clearer organization
+- Added backward compatibility to preserve existing website data
+- Enhanced URL-based profile generation to use both personal and institutional websites
+- Improved profile URL management with dedicated fields for each source
+- Updated validation rules for URL fields
+- Enhanced CV generation to extract data from both personal and institutional websites
 
 ### [1.4.0] - 2025-05-15
 - Added user motivation collection during registration and profile completion
@@ -512,14 +577,6 @@ The platform integrates with Google Analytics to provide insights:
 - User roles and profile management
 - Content creation and management
 - University and faculty directory
-
-### [1.5.0] - 2025-05-12
-- Separated website field into personal_website and institution_website for clearer organization
-- Added backward compatibility to preserve existing website data
-- Enhanced URL-based profile generation to use both personal and institutional websites
-- Improved profile URL management with dedicated fields for each source
-- Updated validation rules for URL fields
-- Enhanced CV generation to extract data from both personal and institutional websites
 
 ## License
 

@@ -145,6 +145,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/role/updateProfilePicture', [RoleProfileController::class, 'updateProfilePicture'])->name('role.updateProfilePicture');
     Route::post('/role/updateBackgroundImage', [RoleProfileController::class, 'updateBackgroundImage'])->name('role.updateBackgroundImage');
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
+    Route::get('/role/publications', [RoleProfileController::class, 'showPublications'])->name('role.publications');
 });
 
 Route::post('/academician/generate-profile', [RoleProfileController::class, 'generateProfile'])
