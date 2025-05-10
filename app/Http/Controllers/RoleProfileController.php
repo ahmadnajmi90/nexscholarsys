@@ -425,7 +425,8 @@ class RoleProfileController extends Controller
             'faculty'    => data_get($academician->toArray(), 'faculty.name'),
             'email'      => optional($academician->user)->email,
             // User provided URL fields:
-            'website'       => $academician->website,
+            'personal_website'  => $academician->personal_website ?: $academician->website, // Fallback to website if personal_website is empty
+            'institution_website' => $academician->institution_website,
             'linkedin'      => $academician->linkedin,
             'google_scholar'=> $academician->google_scholar,
             'researchgate'  => $academician->researchgate,
@@ -587,11 +588,13 @@ class RoleProfileController extends Controller
         }
 
         // Fetch data from various sources
-        $websiteUrl       = $academicianProfile->website;
+        $personalWebsite   = $academicianProfile->personal_website ?: $academicianProfile->website; // Fallback to website if needed
+        $institutionWebsite = $academicianProfile->institution_website;
         $googleScholarUrl = $academicianProfile->google_scholar;
 
-        $websiteContent      = $this->fetchWebsiteContent($websiteUrl);
-        $scholarContent      = $this->fetchScholarContent($googleScholarUrl);
+        $personalWebContent = $this->fetchWebsiteContent($personalWebsite);
+        $institutionWebContent = $this->fetchWebsiteContent($institutionWebsite);
+        $scholarContent = $this->fetchScholarContent($googleScholarUrl);
 
         // Extract publications from Google Scholar using Guzzle + DomCrawler
         $publications = $this->extractPublicationsFromScholar($googleScholarUrl);
@@ -599,8 +602,11 @@ class RoleProfileController extends Controller
 
         // Combine additional context for the prompt
         $additionalContext = "";
-        if ($websiteContent) {
-            $additionalContext .= "Website Content:\n" . $websiteContent . "\n";
+        if ($personalWebContent) {
+            $additionalContext .= "Personal Website Content:\n" . $personalWebContent . "\n";
+        }
+        if ($institutionWebContent) {
+            $additionalContext .= "Institutional Website Content:\n" . $institutionWebContent . "\n";
         }
 
         // Format research expertise
@@ -620,10 +626,10 @@ class RoleProfileController extends Controller
         - Department: {$academicianProfile->department}
 
         Education:
-        " . ($websiteContent ? "Extract from Website Content:\n" . $websiteContent : "Not Provided") . "
+        " . ($personalWebContent ? "Extract from Personal Website Content:\n" . $personalWebContent : "Not Provided") . "
 
         Research Experience:
-        " . (($websiteContent || $scholarContent) ? "Extract from sources:\n" . $websiteContent . "\n" . $scholarContent : "Not Provided") . "
+        " . (($personalWebContent || $scholarContent) ? "Extract from sources:\n" . $personalWebContent . "\n" . $scholarContent : "Not Provided") . "
 
         Publications:
         " . ($publicationsText ? $publicationsText : "Not Provided") . "
@@ -911,7 +917,11 @@ class RoleProfileController extends Controller
 
         // Map the form fields to database fields
         if (!empty($validated['personalWebsite'])) {
-            $academician->website = $validated['personalWebsite'];
+            $academician->personal_website = $validated['personalWebsite'];
+        }
+        
+        if (!empty($validated['institutionalWebsite'])) {
+            $academician->institution_website = $validated['institutionalWebsite'];
         }
         
         if (!empty($validated['linkedinProfile'])) {
@@ -941,9 +951,10 @@ class RoleProfileController extends Controller
         
         // Actually initiate the generation process here
         try {
-            // Collect all URLs for processing
+            // Collect all URLs for processing (include the new institution_website)
             $urls = [];
-            if ($academician->website) $urls[] = $academician->website;
+            if ($academician->personal_website) $urls[] = $academician->personal_website;
+            if ($academician->institution_website) $urls[] = $academician->institution_website;
             if ($academician->linkedin) $urls[] = $academician->linkedin;
             if ($academician->google_scholar) $urls[] = $academician->google_scholar;
             if ($academician->researchgate) $urls[] = $academician->researchgate;

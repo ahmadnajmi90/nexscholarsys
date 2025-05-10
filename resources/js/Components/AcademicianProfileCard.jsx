@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, usePage } from "@inertiajs/react";
-import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaUserPlus, FaPaperPlane, FaStar, FaFilter } from "react-icons/fa";
+import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaUserPlus, FaPaperPlane, FaStar, FaFilter, FaHome, FaUniversity } from "react-icons/fa";
 import axios from "axios";
 import RecommendationModal from "./RecommendationModal";
 import RecommendationDisplay from "./RecommendationDisplay";
@@ -585,15 +585,28 @@ const AcademicianProfileCard = ({
                         >
                           <FaGoogle />
                         </a>
-                        <a
-                          href={selectedProfile.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-gray-500 text-lg hover:text-green-700"
-                          title="Website"
-                        >
-                          <FaGlobe />
-                        </a>
+                        {selectedProfile.personal_website && (
+                          <a
+                            href={selectedProfile.personal_website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 text-lg hover:text-green-700"
+                            title="Personal Website"
+                          >
+                            <FaHome />
+                          </a>
+                        )}
+                        {selectedProfile.institution_website && (
+                          <a
+                            href={selectedProfile.institution_website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 text-lg hover:text-blue-700"
+                            title="Institutional Website"
+                          >
+                            <FaUniversity />
+                          </a>
+                        )}
                         <a
                           href={selectedProfile.linkedin}
                           target="_blank"

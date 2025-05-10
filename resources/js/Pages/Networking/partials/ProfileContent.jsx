@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
-import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaResearchgate, FaDownload, FaArrowLeft } from 'react-icons/fa';
+import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaResearchgate, FaDownload, FaArrowLeft, FaHome, FaUniversity } from 'react-icons/fa';
 
 const ProfileContent = ({ 
     profile, 
@@ -385,7 +385,7 @@ const ProfileContent = ({
 
     // Function to render social connect buttons
     const renderSocialLinks = () => {
-        if (!profile.google_scholar && !profile.website && !profile.linkedin && !profile.researchgate && !user?.email) {
+        if (!profile.google_scholar && !profile.personal_website && !profile.institution_website && !profile.linkedin && !profile.researchgate && !user?.email) {
             return null;
         }
 
@@ -415,16 +415,28 @@ const ProfileContent = ({
                             <span className="text-sm font-medium text-gray-700">Google Scholar</span>
                         </a>
                     )}
-                    {profile.website && (
+                    {profile.personal_website && (
                         <a
-                            href={profile.website}
+                            href={profile.personal_website}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
-                            title="Website"
+                            title="Personal Website"
                         >
-                            <FaGlobe className="text-gray-600 hover:text-green-600" size={20} />
+                            <FaHome className="text-gray-600 hover:text-green-600" size={20} />
                             <span className="text-sm font-medium text-gray-700">Personal Website</span>
+                        </a>
+                    )}
+                    {profile.institution_website && (
+                        <a
+                            href={profile.institution_website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            title="Institutional Website"
+                        >
+                            <FaUniversity className="text-gray-600 hover:text-blue-600" size={20} />
+                            <span className="text-sm font-medium text-gray-700">Institutional Website</span>
                         </a>
                     )}
                     {profile.linkedin && (

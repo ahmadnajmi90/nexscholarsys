@@ -24,7 +24,8 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
           : academician?.research_expertise,
       field_of_study: academician?.field_of_study || '',
       highest_degree: academician?.highest_degree || '',
-      website: academician?.website || '',
+      personal_website: academician?.personal_website || academician?.website || '', // Fallback to website for backward compatibility
+      institution_website: academician?.institution_website || '',
       linkedin: academician?.linkedin || '',
       google_scholar: academician?.google_scholar || '',
       researchgate: academician?.researchgate || '',
@@ -250,7 +251,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       // If we have custom URLs, use those; otherwise, use the URLs from our profile fields
       (providedUrls.filter(url => url.trim() !== '').length > 0 ? 
         providedUrls : 
-        [data.website, data.linkedin, data.google_scholar, data.researchgate].filter(url => url && url.trim() !== '')
+        [data.personal_website, data.institution_website, data.linkedin, data.google_scholar, data.researchgate].filter(url => url && url.trim() !== '')
       ) : 
       [];
     
@@ -274,7 +275,8 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
           field_of_study: generatedData.field_of_study || prevData.field_of_study,
           research_expertise: generatedData.research_expertise || prevData.research_expertise,
           // The 4 URL fields are already provided by users in their profile.
-          website: data.website,
+          personal_website: data.personal_website,
+          institution_website: data.institution_website,
           linkedin: data.linkedin,
           google_scholar: data.google_scholar,
           researchgate: data.researchgate,
@@ -953,16 +955,30 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div>
-                  <InputLabel htmlFor="website" value="Website (Personal or Work)" />
+                  <InputLabel htmlFor="personal_website" value="Personal Website" />
                   <TextInput
-                    id="website"
+                    id="personal_website"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    value={data.website}
-                    onChange={(e) => setData('website', e.target.value)}
+                    value={data.personal_website}
+                    onChange={(e) => setData('personal_website', e.target.value)}
                     autoComplete="url"
                   />
-                  <InputError className="mt-2" message={errors.website} />
+                  <InputError className="mt-2" message={errors.personal_website} />
                 </div>
+                <div>
+                  <InputLabel htmlFor="institution_website" value="Institutional Website" />
+                  <TextInput
+                    id="institution_website"
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    value={data.institution_website}
+                    onChange={(e) => setData('institution_website', e.target.value)}
+                    autoComplete="url"
+                  />
+                  <InputError className="mt-2" message={errors.institution_website} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div>
                   <InputLabel htmlFor="linkedin" value="LinkedIn" />
                   <TextInput
@@ -974,9 +990,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   />
                   <InputError className="mt-2" message={errors.linkedin} />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div>
                   <InputLabel htmlFor="google_scholar" value="Google Scholar" />
                   <div className="flex flex-col space-y-2">

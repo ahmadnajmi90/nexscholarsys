@@ -257,7 +257,8 @@ The platform uses GPT-4o for generating academic profiles through two methods:
 
 #### URL-based Method
 - Users provide specific URLs for extraction:
-  - Personal or institutional website
+  - Personal website (dedicated field)
+  - Institutional website (dedicated field)
   - LinkedIn profile
   - Google Scholar profile (dedicated field)
   - ResearchGate profile (dedicated field)
@@ -511,6 +512,14 @@ The platform integrates with Google Analytics to provide insights:
 - User roles and profile management
 - Content creation and management
 - University and faculty directory
+
+### [1.5.0] - 2025-05-12
+- Separated website field into personal_website and institution_website for clearer organization
+- Added backward compatibility to preserve existing website data
+- Enhanced URL-based profile generation to use both personal and institutional websites
+- Improved profile URL management with dedicated fields for each source
+- Updated validation rules for URL fields
+- Enhanced CV generation to extract data from both personal and institutional websites
 
 ## License
 
