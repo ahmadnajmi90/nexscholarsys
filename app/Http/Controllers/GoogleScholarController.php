@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Academician;
 use App\Services\GoogleScholarService;
+use App\Services\GoogleScholarPythonService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -12,10 +13,12 @@ use Illuminate\Support\Facades\Log;
 class GoogleScholarController extends Controller
 {
     protected $scholarService;
+    protected $pythonScholarService;
 
-    public function __construct(GoogleScholarService $scholarService)
+    public function __construct(GoogleScholarService $scholarService, GoogleScholarPythonService $pythonScholarService)
     {
         $this->scholarService = $scholarService;
+        $this->pythonScholarService = $pythonScholarService;
     }
 
     /**
@@ -63,9 +66,9 @@ class GoogleScholarController extends Controller
             ]);
         }
         
-        // Perform the scraping
+        // Perform the scraping using the Python service
         Log::info('Manual scraping initiated by user: ' . $user->id);
-        $result = $this->scholarService->scrapeProfile($academician);
+        $result = $this->pythonScholarService->scrapeProfile($academician);
         
         if ($result) {
             return response()->json([

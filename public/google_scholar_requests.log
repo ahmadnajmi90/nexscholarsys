@@ -1,0 +1,15 @@
+2025-05-10 21:56:56,138 - GoogleScholarRequests - INFO - Connecting to database nexscholarsys_db on 127.0.0.1
+2025-05-10 21:56:56,179 - GoogleScholarRequests - ERROR - Database connection error: 2004 (HY000): Can't create TCP/IP socket (10106)
+2025-05-10 21:56:56,179 - GoogleScholarRequests - ERROR - Error scraping Google Scholar: 2004 (HY000): Can't create TCP/IP socket (10106)
+2025-05-10 21:59:24,750 - GoogleScholarRequests - INFO - Connecting to database nexscholarsys_db on 127.0.0.1
+2025-05-10 21:59:24,805 - GoogleScholarRequests - ERROR - Database connection error: 2004 (HY000): Can't create TCP/IP socket (10106)
+2025-05-10 21:59:24,806 - GoogleScholarRequests - ERROR - Error scraping Google Scholar: 2004 (HY000): Can't create TCP/IP socket (10106)
+2025-05-10 22:06:58,209 - db_utils - INFO - Connecting to MySQL database nexscholarsys_db on 127.0.0.1
+2025-05-10 22:06:58,237 - db_utils - WARNING - MySQL database connection error: 2004 (HY000): Can't create TCP/IP socket (10106)
+2025-05-10 22:06:58,239 - db_utils - INFO - Falling back to SQLite database
+2025-05-10 22:06:58,239 - db_utils - INFO - Connecting to SQLite database at C:\laragon\www\nexscholarsys\scripts\sqlite\scholar_data.db
+2025-05-10 22:06:58,278 - db_utils - INFO - SQLite database connection established
+2025-05-10 22:06:58,278 - GoogleScholarRequests - INFO - Starting simple scraping for Google Scholar URL: https://scholar.google.com.my/citations?user=OqqLu6MAAAAJ&hl=en
+2025-05-10 22:06:58,286 - GoogleScholarRequests - INFO - Making HTTP request to: https://scholar.google.com.my/citations?user=OqqLu6MAAAAJ&hl=en
+2025-05-10 22:06:58,294 - GoogleScholarRequests - ERROR - Error scraping Google Scholar: HTTPSConnectionPool(host='scholar.google.com.my', port=443): Max retries exceeded with url: /citations?user=OqqLu6MAAAAJ&hl=en (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000020A0B4A3450>: Failed to resolve 'scholar.google.com.my' ([Errno 11001] getaddrinfo failed)"))
+2025-05-10 22:06:58,301 - db_utils - INFO - Database connection closed

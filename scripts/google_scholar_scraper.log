@@ -1,0 +1,22 @@
+2025-05-10 22:21:03,733 - GoogleScholarScraper - INFO - Connecting to database nexscholarsys_db on 127.0.0.1
+2025-05-10 22:21:03,801 - GoogleScholarScraper - INFO - Database connection established
+2025-05-10 22:21:03,802 - GoogleScholarScraper - INFO - Starting scraping for Google Scholar URL: https://scholar.google.com.my/citations?user=OqqLu6MAAAAJ&hl=en
+2025-05-10 22:21:03,803 - GoogleScholarScraper - ERROR - Error logging scraping operation: 1265 (01000): Data truncated for column 'status' at row 1
+2025-05-10 22:21:40,842 - GoogleScholarScraper - INFO - Clicking 'Show more' button
+2025-05-10 22:21:43,078 - GoogleScholarScraper - INFO - Clicking 'Show more' button
+2025-05-10 22:21:45,475 - GoogleScholarScraper - INFO - No more 'Show more' button found or button is disabled
+2025-05-10 22:21:45,655 - GoogleScholarScraper - INFO - Saved profile data for academician ACAD-faaz7qSL
+2025-05-10 22:21:45,792 - GoogleScholarScraper - INFO - Saved 131 publications for academician ACAD-faaz7qSL
+2025-05-10 22:21:45,863 - GoogleScholarScraper - INFO - Successfully scraped profile for academician ACAD-faaz7qSL
+2025-05-10 22:21:45,886 - GoogleScholarScraper - INFO - Database connection closed
+2025-05-10 22:27:00,451 - GoogleScholarScraper - INFO - Connecting to database nexscholarsys_db on 127.0.0.1
+2025-05-10 22:27:00,500 - GoogleScholarScraper - INFO - Database connection established
+2025-05-10 22:27:00,500 - GoogleScholarScraper - INFO - Starting scraping for Google Scholar URL: https://scholar.google.com.my/citations?user=OqqLu6MAAAAJ&hl=en
+2025-05-10 22:27:00,502 - GoogleScholarScraper - ERROR - Error logging scraping operation: 1265 (01000): Data truncated for column 'status' at row 1
+2025-05-10 22:27:11,098 - GoogleScholarScraper - INFO - Clicking 'Show more' button
+2025-05-10 22:27:13,713 - GoogleScholarScraper - INFO - Clicking 'Show more' button
+2025-05-10 22:27:15,782 - GoogleScholarScraper - INFO - No more 'Show more' button found or button is disabled
+2025-05-10 22:27:15,942 - GoogleScholarScraper - INFO - Saved profile data for academician ACAD-faaz7qSL
+2025-05-10 22:27:16,135 - GoogleScholarScraper - INFO - Saved 131 publications for academician ACAD-faaz7qSL
+2025-05-10 22:27:16,606 - GoogleScholarScraper - INFO - Successfully scraped profile for academician ACAD-faaz7qSL
+2025-05-10 22:27:16,628 - GoogleScholarScraper - INFO - Database connection closed
