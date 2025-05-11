@@ -479,4 +479,226 @@ class OpenAICompletionService
         
         return implode("; ", $textParts);
     }
+
+    /**
+     * Generate a personalized match insight using GPT-4o
+     *
+     * @param array $data Contextual data for the insight generation
+     * @return string The generated insight text
+     */
+    public function generateMatchInsight(array $data): string
+    {
+        try {
+            $matchType = $data['match_type'] ?? 'unknown';
+            $query = $data['query'] ?? '';
+            $matchScore = $data['match_score'] ?? 0.5;
+            
+            // Build prompt based on match type
+            $prompt = '';
+            
+            if ($matchType === 'academician_to_student') {
+                $prompt = $this->buildAcademicianToStudentPrompt($data, $query, $matchScore);
+            } elseif ($matchType === 'academician_to_academician') {
+                $prompt = $this->buildAcademicianToAcademicianPrompt($data, $query, $matchScore);
+            } else {
+                Log::error("Unknown match type for insight generation", [
+                    'match_type' => $matchType
+                ]);
+                return "No insight available for this match type.";
+            }
+            
+            // Call the OpenAI API
+            $insight = $this->generateCompletion($prompt);
+            
+            // Clean up the response
+            $insight = trim($insight);
+            
+            // Log successful completion
+            Log::info("Generated match insight", [
+                'match_type' => $matchType,
+                'query' => $query,
+                'insight_length' => strlen($insight)
+            ]);
+            
+            return $insight;
+            
+        } catch (\Exception $e) {
+            Log::error("Error generating match insight", [
+                'error' => $e->getMessage()
+            ]);
+            
+            return "No insight available at this time.";
+        }
+    }
+    
+    /**
+     * Build a prompt for academician-to-student insights
+     */
+    protected function buildAcademicianToStudentPrompt(array $data, string $query, float $matchScore): string
+    {
+        // Extract student data
+        $student = $data['student'] ?? [];
+        $studentName = $student['name'] ?? 'Unknown';
+        $studentType = $student['type'] ?? 'student';
+        $studentResearchField = $student['research_field'] ?? '[]';
+        $studentBio = $student['bio'] ?? '';
+        $studentStatus = $student['current_status'] ?? '';
+        
+        // Extract academician data
+        $academician = $data['academician'] ?? [];
+        $academicianName = $academician['name'] ?? 'Unknown';
+        $academicianPosition = $academician['position'] ?? '';
+        $academicianDepartment = $academician['department'] ?? '';
+        $academicianExpertise = $academician['research_expertise'] ?? '[]';
+        $academicianSupervisionStyle = $academician['supervision_style'] ?? '[]';
+        
+        // Create a formatted prompt
+        $prompt = <<<EOT
+You are an academic advisor with expertise in matching academics with students. 
+Your task is to generate a personalized, insightful explanation as to why a specific $studentType student may be a good match for an academician based on their research profiles and the search query.
+
+Search Query: "$query"
+
+ACADEMICIAN INFORMATION:
+- Name: $academicianName
+- Position: $academicianPosition
+- Department: $academicianDepartment
+- Research Expertise: $academicianExpertise
+- Supervision Style: $academicianSupervisionStyle
+
+STUDENT INFORMATION:
+- Name: $studentName
+- Type: $studentType
+- Research Field/Interest: $studentResearchField
+- Bio: $studentBio
+- Current Status: $studentStatus
+
+Match Score: {$matchScore} (on a scale of 0-1)
+
+Provide 3-5 sentences that explain why this student might be relevant to the academician's research interests, especially considering:
+1. Alignment between the academician's expertise and the student's research field
+2. Potential collaborative opportunities or projects
+3. How the student's profile matches the academician's search query
+4. Why the student might benefit from the academician's supervision or collaboration
+
+Use a professional, helpful tone but maintain a concise explanatory style focused on academic relevance.
+EOT;
+
+        return $prompt;
+    }
+    
+    /**
+     * Build a prompt for academician-to-academician insights
+     */
+    protected function buildAcademicianToAcademicianPrompt(array $data, string $query, float $matchScore): string
+    {
+        // Extract searcher data
+        $searcher = $data['searcher'] ?? [];
+        $searcherName = $searcher['name'] ?? 'Unknown';
+        $searcherPosition = $searcher['position'] ?? '';
+        $searcherDepartment = $searcher['department'] ?? '';
+        $searcherExpertise = $searcher['research_expertise'] ?? '[]';
+        
+        // Extract collaborator data
+        $collaborator = $data['collaborator'] ?? [];
+        $collaboratorName = $collaborator['name'] ?? 'Unknown';
+        $collaboratorPosition = $collaborator['position'] ?? '';
+        $collaboratorDepartment = $collaborator['department'] ?? '';
+        $collaboratorExpertise = $collaborator['research_expertise'] ?? '[]';
+        $collaboratorBio = $collaborator['bio'] ?? '';
+        
+        // Create a formatted prompt
+        $prompt = <<<EOT
+You are an academic collaboration advisor with expertise in identifying potential research partnerships between academics.
+Your task is to generate a personalized, insightful explanation as to why two academics may be good research collaborators based on their research profiles and a search query.
+
+Search Query: "$query"
+
+SEARCHING ACADEMICIAN:
+- Name: $searcherName
+- Position: $searcherPosition
+- Department: $searcherDepartment
+- Research Expertise: $searcherExpertise
+
+POTENTIAL COLLABORATOR:
+- Name: $collaboratorName
+- Position: $collaboratorPosition
+- Department: $collaboratorDepartment
+- Research Expertise: $collaboratorExpertise
+- Bio: $collaboratorBio
+
+Match Score: {$matchScore} (on a scale of 0-1)
+
+Provide 3-5 sentences that explain why these two academics might make good research collaborators, especially considering:
+1. Complementary aspects of their research expertise
+2. Potential interdisciplinary research opportunities
+3. How the potential collaborator's profile matches the searching academician's query
+4. Specific research topics they might explore together
+5. Possible synergies between their departments or specializations
+
+Use a professional, helpful tone but maintain a concise explanatory style focused on academic collaboration opportunities.
+EOT;
+
+        return $prompt;
+    }
+
+    /**
+     * Generate completion using the OpenAI API based on a prompt
+     *
+     * @param string $prompt The prompt to generate completion for
+     * @param float $temperature Temperature for generation (0-1)
+     * @param int $maxTokens Maximum tokens to generate
+     * @return string The generated completion text
+     */
+    public function generateCompletion(string $prompt, float $temperature = 0.1, int $maxTokens = 300): string
+    {
+        try {
+            // Create message array for the API
+            $messages = [
+                ['role' => 'user', 'content' => $prompt]
+            ];
+            
+            // Set up headers
+            $headers = [
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ];
+            
+            // For Azure OpenAI, use api-key header instead of Authorization
+            if (config('services.openai.is_azure', false)) {
+                $headers = [
+                    'api-key' => $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ];
+            }
+            
+            // Create payload
+            $payload = [
+                'messages' => $messages,
+                'temperature' => $temperature,
+                'max_tokens' => $maxTokens
+            ];
+            
+            // Add model only if not using Azure (for Azure, it's in the URL)
+            if ($this->model) {
+                $payload['model'] = $this->model;
+            }
+            
+            // Make the API call
+            $response = Http::withHeaders($headers)
+                ->timeout(15) // 15 second timeout
+                ->post($this->apiEndpoint, $payload);
+            
+            if ($response->successful()) {
+                return $response->json('choices.0.message.content', '');
+            } else {
+                $error = $response->body();
+                Log::error('OpenAI Completion API error: ' . $error);
+                return '';
+            }
+        } catch (\Exception $e) {
+            Log::error('Error generating completion: ' . $e->getMessage());
+            return '';
+        }
+    }
 } 

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Academician;
+use App\Models\Postgraduate;
+use App\Models\Undergraduate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -590,5 +592,376 @@ class SemanticSearchService
             Log::error("Error getting student embedding: " . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Find similar students based on a query using semantic search
+     *
+     * @param string $query The search query
+     * @param int $limit Maximum number of results to return
+     * @param float $threshold Minimum similarity threshold (0-1)
+     * @param int|null $academicianId Academician ID for personalized search
+     * @param bool $includeBothTypes Whether to include both postgraduate and undergraduate students
+     * @param string|null $specificType Limit to a specific student type (postgraduate/undergraduate)
+     * @param bool|null $forceUseQdrant Override default Qdrant setting
+     * @return array Array of students with similarity scores
+     */
+    public function findSimilarStudents(
+        string $query, 
+        int $limit = 10, 
+        float $threshold = 0.3, 
+        int $academicianId = null, 
+        bool $includeBothTypes = true,
+        string $specificType = null,
+        bool $forceUseQdrant = null
+    ): array
+    {
+        try {
+            // Determine if we should use Qdrant or MySQL
+            $useQdrant = $forceUseQdrant ?? $this->useQdrant;
+            
+            // Log the search strategy
+            Log::info('Student semantic search strategy', [
+                'query' => $query,
+                'use_qdrant' => $useQdrant,
+                'limit' => $limit,
+                'threshold' => $threshold,
+                'academician_id' => $academicianId,
+                'include_both_types' => $includeBothTypes,
+                'specific_type' => $specificType
+            ]);
+            
+            // Generate embedding for the query
+            $queryEmbedding = $this->embeddingService->generateEmbedding($query);
+            
+            if (!$queryEmbedding) {
+                Log::error('Failed to generate embedding for query: ' . $query);
+                return [];
+            }
+            
+            // Get academician embedding for personalized matching if available
+            $academicianEmbedding = null;
+            if ($academicianId) {
+                $academician = Academician::find($academicianId);
+                if ($academician && !empty($academician->embedding_vector)) {
+                    $academicianEmbedding = is_string($academician->embedding_vector) 
+                        ? json_decode($academician->embedding_vector, true) 
+                        : $academician->embedding_vector;
+                }
+            }
+            
+            // Choose search strategy based on configuration
+            if ($useQdrant) {
+                return $this->searchStudentsUsingQdrant(
+                    $queryEmbedding, 
+                    $academicianEmbedding, 
+                    $limit, 
+                    $threshold, 
+                    $includeBothTypes, 
+                    $specificType
+                );
+            } else {
+                return $this->searchStudentsUsingMySQL(
+                    $queryEmbedding, 
+                    $academicianEmbedding, 
+                    $limit, 
+                    $threshold, 
+                    $includeBothTypes, 
+                    $specificType
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error('Error in student semantic search: ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Search for students using Qdrant vector database
+     */
+    protected function searchStudentsUsingQdrant(
+        array $queryEmbedding, 
+        ?array $academicianEmbedding = null, 
+        int $limit = 10, 
+        float $threshold = 0.3, 
+        bool $includeBothTypes = true, 
+        ?string $specificType = null
+    ): array
+    {
+        // If we have both query and academician embeddings, use a combination search
+        if ($queryEmbedding && $academicianEmbedding) {
+            // Search with query embedding (60% weight)
+            $queryResults = $this->qdrantService->findSimilarStudents($queryEmbedding, $limit * 2, $threshold);
+            
+            // Search with academician embedding (40% weight)
+            $academicianResults = $this->qdrantService->findSimilarStudents($academicianEmbedding, $limit * 2, $threshold);
+            
+            // Combine and reweight results
+            $combinedResults = $this->combineStudentSearchResults($queryResults, $academicianResults, 0.6, 0.4);
+            
+            // Convert to expected format
+            return $this->loadStudentsFromIds(array_slice($combinedResults, 0, $limit), $includeBothTypes, $specificType);
+        } else {
+            // Single embedding search (either query only or academician only)
+            $searchEmbedding = $queryEmbedding ?: $academicianEmbedding;
+            
+            if (!$searchEmbedding) {
+                Log::warning('No valid embeddings for student search');
+                return [];
+            }
+            
+            // Search in Qdrant
+            $qdrantResults = $this->qdrantService->findSimilarStudents($searchEmbedding, $limit, $threshold);
+            
+            // Get full student records from MySQL using IDs
+            return $this->loadStudentsFromIds($qdrantResults, $includeBothTypes, $specificType);
+        }
+    }
+    
+    /**
+     * Search for students using MySQL with PHP-based vector similarity
+     */
+    protected function searchStudentsUsingMySQL(
+        array $queryEmbedding, 
+        ?array $academicianEmbedding = null, 
+        int $limit = 10, 
+        float $threshold = 0.3, 
+        bool $includeBothTypes = true, 
+        ?string $specificType = null
+    ): array
+    {
+        $results = [];
+        $lowSimilarityCount = 0;
+        $highestSimilarity = 0;
+        $lowestSimilarity = 1;
+        
+        // Determine which student types to include
+        $includePostgraduates = $includeBothTypes || $specificType === 'postgraduate';
+        $includeUndergraduates = $includeBothTypes || $specificType === 'undergraduate';
+        
+        // Process postgraduates if included
+        if ($includePostgraduates) {
+            $postgraduates = Postgraduate::where('has_embedding', true)->get();
+            
+            foreach ($postgraduates as $postgraduate) {
+                $embedding = $postgraduate->research_embedding;
+                
+                if (empty($embedding)) {
+                    continue;
+                }
+                
+                // Ensure the embedding vector is an array
+                if (is_string($embedding)) {
+                    $embedding = json_decode($embedding, true);
+                    if (json_last_error() !== JSON_ERROR_NONE || !is_array($embedding)) {
+                        continue;
+                    }
+                }
+                
+                // Calculate similarity with query and/or academician embeddings
+                $similarity = $this->calculateStudentSimilarity($queryEmbedding, $academicianEmbedding, $embedding);
+                
+                // Track statistics
+                $highestSimilarity = max($highestSimilarity, $similarity);
+                $lowestSimilarity = min($lowestSimilarity, $similarity);
+                
+                if ($similarity < $threshold) {
+                    $lowSimilarityCount++;
+                    continue;
+                }
+                
+                // Add to results
+                $studentArray = $postgraduate->toArray();
+                $studentArray['match_score'] = $similarity;
+                $studentArray['student_type'] = 'postgraduate';
+                $results[] = $studentArray;
+            }
+        }
+        
+        // Process undergraduates if included
+        if ($includeUndergraduates) {
+            $undergraduates = Undergraduate::where('has_embedding', true)->get();
+            
+            foreach ($undergraduates as $undergraduate) {
+                $embedding = $undergraduate->research_embedding;
+                
+                if (empty($embedding)) {
+                    continue;
+                }
+                
+                // Ensure the embedding vector is an array
+                if (is_string($embedding)) {
+                    $embedding = json_decode($embedding, true);
+                    if (json_last_error() !== JSON_ERROR_NONE || !is_array($embedding)) {
+                        continue;
+                    }
+                }
+                
+                // Calculate similarity with query and/or academician embeddings
+                $similarity = $this->calculateStudentSimilarity($queryEmbedding, $academicianEmbedding, $embedding);
+                
+                // Track statistics
+                $highestSimilarity = max($highestSimilarity, $similarity);
+                $lowestSimilarity = min($lowestSimilarity, $similarity);
+                
+                if ($similarity < $threshold) {
+                    $lowSimilarityCount++;
+                    continue;
+                }
+                
+                // Add to results
+                $studentArray = $undergraduate->toArray();
+                $studentArray['match_score'] = $similarity;
+                $studentArray['student_type'] = 'undergraduate';
+                $results[] = $studentArray;
+            }
+        }
+        
+        // Sort by similarity (highest first)
+        usort($results, function ($a, $b) {
+            return $b['match_score'] <=> $a['match_score'];
+        });
+        
+        // Log results statistics
+        Log::info("Student search results statistics", [
+            'found_count' => count($results),
+            'below_threshold_count' => $lowSimilarityCount,
+            'highest_similarity' => $highestSimilarity,
+            'lowest_similarity' => $lowestSimilarity,
+            'used_threshold' => $threshold
+        ]);
+        
+        // Limit results
+        return array_slice($results, 0, $limit);
+    }
+    
+    /**
+     * Calculate weighted similarity score between student embedding and query/academician embeddings
+     */
+    protected function calculateStudentSimilarity(array $queryEmbedding, ?array $academicianEmbedding, array $studentEmbedding): float
+    {
+        // If we have both query and academician embeddings, use weighted combination
+        if ($queryEmbedding && $academicianEmbedding) {
+            $querySimilarity = $this->cosineSimilarity($queryEmbedding, $studentEmbedding);
+            $academicianSimilarity = $this->cosineSimilarity($academicianEmbedding, $studentEmbedding);
+            
+            // Weighted score: 60% query, 40% academician profile
+            return (0.6 * $querySimilarity) + (0.4 * $academicianSimilarity);
+        } 
+        // If only query embedding is available
+        elseif ($queryEmbedding) {
+            return $this->cosineSimilarity($queryEmbedding, $studentEmbedding);
+        }
+        // If only academician embedding is available
+        elseif ($academicianEmbedding) {
+            return $this->cosineSimilarity($academicianEmbedding, $studentEmbedding);
+        }
+        
+        // This case shouldn't happen, but return 0 just in case
+        return 0;
+    }
+    
+    /**
+     * Combine and reweight student search results from two separate Qdrant searches
+     */
+    protected function combineStudentSearchResults(array $queryResults, array $academicianResults, float $queryWeight = 0.6, float $academicianWeight = 0.4): array
+    {
+        $combined = [];
+        $scoredIds = [];
+        
+        // Process query results
+        foreach ($queryResults as $result) {
+            $id = $result['mysql_id'];
+            $scoredIds[$id] = [
+                'score' => ($result['score'] * $queryWeight),
+                'student_type' => $result['student_type']
+            ];
+        }
+        
+        // Process and combine academician results
+        foreach ($academicianResults as $result) {
+            $id = $result['mysql_id'];
+            if (isset($scoredIds[$id])) {
+                // Add weighted academician score to existing query score
+                $scoredIds[$id]['score'] += ($result['score'] * $academicianWeight);
+            } else {
+                // This is only in academician results
+                $scoredIds[$id] = [
+                    'score' => ($result['score'] * $academicianWeight),
+                    'student_type' => $result['student_type']
+                ];
+            }
+        }
+        
+        // Convert to format expected by loadStudentsFromIds
+        foreach ($scoredIds as $id => $data) {
+            $combined[] = [
+                'mysql_id' => $id,
+                'score' => $data['score'],
+                'student_type' => $data['student_type']
+            ];
+        }
+        
+        // Sort by combined score (highest first)
+        usort($combined, function ($a, $b) {
+            return $b['score'] <=> $a['score'];
+        });
+        
+        return $combined;
+    }
+    
+    /**
+     * Load full student records from MySQL using IDs from Qdrant
+     */
+    protected function loadStudentsFromIds(array $qdrantResults, bool $includeBothTypes = true, ?string $specificType = null): array
+    {
+        if (empty($qdrantResults)) {
+            return [];
+        }
+        
+        $results = [];
+        
+        // Separate IDs by student type
+        $postgraduateIds = [];
+        $undergraduateIds = [];
+        
+        foreach ($qdrantResults as $result) {
+            if ($result['student_type'] === 'postgraduate') {
+                $postgraduateIds[$result['mysql_id']] = $result['score'];
+            } else if ($result['student_type'] === 'undergraduate') {
+                $undergraduateIds[$result['mysql_id']] = $result['score'];
+            }
+        }
+        
+        // Load postgraduates if needed
+        if (($includeBothTypes || $specificType === 'postgraduate') && !empty($postgraduateIds)) {
+            $postgraduates = Postgraduate::whereIn('id', array_keys($postgraduateIds))->get();
+            
+            foreach ($postgraduates as $postgraduate) {
+                $postgraduateArray = $postgraduate->toArray();
+                $postgraduateArray['match_score'] = $postgraduateIds[$postgraduate->id] ?? 0;
+                $postgraduateArray['student_type'] = 'postgraduate';
+                $results[] = $postgraduateArray;
+            }
+        }
+        
+        // Load undergraduates if needed
+        if (($includeBothTypes || $specificType === 'undergraduate') && !empty($undergraduateIds)) {
+            $undergraduates = Undergraduate::whereIn('id', array_keys($undergraduateIds))->get();
+            
+            foreach ($undergraduates as $undergraduate) {
+                $undergraduateArray = $undergraduate->toArray();
+                $undergraduateArray['match_score'] = $undergraduateIds[$undergraduate->id] ?? 0;
+                $undergraduateArray['student_type'] = 'undergraduate';
+                $results[] = $undergraduateArray;
+            }
+        }
+        
+        // Sort by score (highest first)
+        usort($results, function ($a, $b) {
+            return $b['match_score'] <=> $a['match_score'];
+        });
+        
+        return $results;
     }
 } 

@@ -44,6 +44,7 @@ use App\Http\Controllers\AcademicianRecommendationController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\UserMotivationController;
 use App\Http\Controllers\AIGenerationController;
+use App\Http\Controllers\AIMatchingController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
@@ -272,6 +273,24 @@ Route::middleware(['auth'])->group(function () {
         ->name('ai.urls.save');
     Route::get('/ai/status', [App\Http\Controllers\RoleProfileController::class, 'checkGenerationStatus'])
         ->name('ai.status');
+});
+
+// AI Matching Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/ai-matching', [\App\Http\Controllers\AIMatchingController::class, 'index'])
+        ->name('ai.matching.index');
+    
+    Route::post('/ai-matching/search', [\App\Http\Controllers\AIMatchingController::class, 'search'])
+        ->name('ai.matching.search');
+    
+    Route::post('/ai-matching/insights', [\App\Http\Controllers\AIMatchingController::class, 'getInsights'])
+        ->name('ai.matching.insights');
+    
+    Route::get('/ai-matching/clear-cache', [\App\Http\Controllers\AIMatchingController::class, 'clearInsightsCache'])
+        ->name('ai.matching.clear-cache');
+    
+    Route::get('/ai-matching/diagnostics', [\App\Http\Controllers\AIMatchingController::class, 'diagnostics'])
+        ->name('ai.matching.diagnostics');
 });
 
 require __DIR__.'/auth.php';

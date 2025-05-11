@@ -427,10 +427,47 @@ class QdrantService
     }
 
     /**
+     * Find similar students based on a query vector
+     *
+     * @param array $vector The query vector
+     * @param int $limit Maximum number of results to return
+     * @param float $threshold Minimum similarity threshold (0-1)
+     * @return array Array of student MySQL IDs with similarity scores and types
+     */
+    public function findSimilarStudents(array $vector, int $limit = 10, float $threshold = 0.3): array
+    {
+        $results = $this->searchVectors($this->studentsCollection, $vector, $limit, $threshold);
+        
+        // Transform to simple array of MySQL IDs with scores and student type
+        $students = [];
+        foreach ($results as $result) {
+            // Get MySQL ID from payload (primary identifier for database queries)
+            $mysqlId = $result['payload']['mysql_id'] ?? null;
+            
+            // Get student type from payload
+            $studentType = $result['payload']['student_type'] ?? 'unknown';
+            
+            // Original string ID (may be useful for debugging)
+            $originalId = $result['payload']['original_id'] ?? null;
+            
+            if ($mysqlId) {
+                $students[] = [
+                    'mysql_id' => $mysqlId,
+                    'original_id' => $originalId,
+                    'student_type' => $studentType,
+                    'score' => $result['score']
+                ];
+            }
+        }
+        
+        return $students;
+    }
+
+    /**
      * Delete a student's embedding
      *
      * @param string $studentType The student type (postgraduate/undergraduate)
-     * @param int $studentId The student ID
+     * @param int $studentId The student's ID
      * @return bool True if successful, false otherwise
      */
     public function deleteStudentEmbedding(string $studentType, int $studentId): bool

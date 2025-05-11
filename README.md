@@ -64,12 +64,12 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 
 ## Laravel 11 Notes
 
-> **Important**: Nexscholar uses Laravel 11 which has several key architectural changes from previous versions:
-> - No more Kernel class - applications are bootstrapped directly through the `$app->boot()` method
-> - Simplified application structure with less boilerplate
-> - Streamlined service providers and middleware registration
-> - No more console Kernel, console commands are registered in the application
-> - Direct registration of event listeners without using providers
+**Important**: Nexscholar uses Laravel 11 which has several key architectural changes from previous versions:
+- No more Kernel class - applications are bootstrapped directly through the `$app->boot()` method
+- Simplified application structure with less boilerplate
+- Streamlined service providers and middleware registration
+- No more console Kernel, console commands are registered in the application
+- Direct registration of event listeners without using providers
 
 ## Installation
 
@@ -377,9 +377,11 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
    php artisan embeddings:generate-student {student_id} --type=postgraduate
    ```
 
-5. To clear the supervisor search cache:
+5. To clear the search cache:
    ```bash
    php artisan supervisor:clear-cache
+   # Or for AI matching
+   php artisan ai:matching:clear-cache
    ```
 
 ### How It Works
@@ -395,6 +397,46 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
 7. GPT-4o generates insights explaining why each supervisor is a good match for:
    - The student's search query
    - The student's research profile (if available)
+
+### AI Matching Feature
+
+The AI Matching feature extends the semantic search capabilities with a more comprehensive matching system:
+
+1. **Multiple Search Types:**
+   - **Supervisor Search:** For students to find potential research supervisors
+   - **Student Search:** For academicians to find potential students to supervise
+   - **Collaborator Search:** For academicians to find potential research collaborators
+
+2. **Role-Based Access Control:**
+   - Only academicians can search for students and collaborators
+   - Students (postgraduates and undergraduates) can search for supervisors
+   - The interface dynamically adjusts based on user role
+
+3. **Advanced Filtering:**
+   - Filter by research expertise/field
+   - Filter by university affiliation
+   - Filter by availability status
+
+4. **Search Experience:**
+   - Type-specific search tabs for switching between search modes
+   - Guided search interface with suggestions
+   - Responsive grid layout for results
+   - Progressive loading for better performance
+   - AI-generated insights for each match
+
+5. **Technical Implementation:**
+   - Uses the same embedding infrastructure as supervisor matching
+   - Optimized threshold values for different query types
+   - Role-specific matching logic
+   - Comprehensive caching for performance
+   - Detailed logging for diagnostics
+
+To use the AI Matching feature:
+1. Navigate to the "AI Matching" page
+2. Select your desired search type (Supervisors, Students, or Collaborators)
+3. Enter your search query
+4. Apply any desired filters
+5. View detailed matches with AI-generated insights
 
 ### Qdrant Vector Database Integration
 
@@ -502,14 +544,6 @@ The platform integrates with Google Analytics to provide insights:
 
 ## Changelog
 
-### [1.6.0] - 2025-06-01
-- Replaced PHP-based Google Scholar scraping with Python-Playwright implementation
-- Added ability to automatically click "Show more" buttons to load all publications
-- Improved robustness against CAPTCHA and rate limiting
-- Added comprehensive logging for better debugging
-- Created Artisan command for Google Scholar profile management
-- Enhanced error handling and recovery mechanism for scraping failures
-- Added detailed documentation for Google Scholar scraping setup and usage
 
 ### [1.5.1] - 2025-05-20
 - Enhanced Google Scholar integration with tabbed interface in profile editing
