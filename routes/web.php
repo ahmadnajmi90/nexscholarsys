@@ -246,15 +246,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/scholar/scrape', [App\Http\Controllers\GoogleScholarController::class, 'scrapeOwnProfile']);
 });
 
-// Supervisor Matching Feature Routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/find-supervisor', [App\Http\Controllers\SupervisorMatchingController::class, 'index'])->name('supervisor.find');
-    Route::post('/find-supervisor/search', [App\Http\Controllers\SupervisorMatchingController::class, 'search'])->name('supervisor.search');
-    Route::post('/find-supervisor/insights', [App\Http\Controllers\SupervisorMatchingController::class, 'getInsights'])->name('supervisor.insights');
-    Route::get('/find-supervisor/clear-cache', [App\Http\Controllers\SupervisorMatchingController::class, 'clearInsightsCache'])->name('supervisor.clear-cache');
-    Route::get('/find-supervisor/diagnostics', [App\Http\Controllers\SupervisorMatchingController::class, 'diagnostics'])->name('supervisor.diagnostics');
-});
-
 // User motivation routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/why-nexscholar', [UserMotivationController::class, 'showForm'])

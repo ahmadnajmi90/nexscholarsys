@@ -11,7 +11,9 @@ const ProgressiveLoadingResults = ({
   searchQuery,
   isSearching,
   isLoadingMore = false,
-  onLoadMore = () => {}
+  onLoadMore = () => {},
+  showHeader = true,
+  visibleCount = 6
 }) => {
   const [loadedProfiles, setLoadedProfiles] = useState([]);
   const [isIntersecting, setIsIntersecting] = useState(false);
@@ -80,7 +82,7 @@ const ProgressiveLoadingResults = ({
   if (isSearching && (!searchResults || !searchResults.matches)) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-        {renderSkeletons(6)}
+        {renderSkeletons(visibleCount)}
       </div>
     );
   }
@@ -89,14 +91,16 @@ const ProgressiveLoadingResults = ({
   if (searchResults && searchResults.matches) {
     return (
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">
-            Supervisor Matches for "{searchResults.query}"
-          </h2>
-          <span className="text-gray-500">
-            {searchResults.total} match{searchResults.total !== 1 ? 'es' : ''} found
-          </span>
-        </div>
+        {showHeader && (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">
+              Supervisor Matches for "{searchResults.query}"
+            </h2>
+            <span className="text-gray-500">
+              {searchResults.total} match{searchResults.total !== 1 ? 'es' : ''} found
+            </span>
+          </div>
+        )}
         
         {/* Results Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">

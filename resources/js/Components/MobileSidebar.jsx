@@ -142,7 +142,7 @@ const MobileSidebar = () => {
                         <div>
                             <h3 className="text-gray-500 uppercase text-xs font-bold">Features</h3>
                             <Link
-                                href={route('supervisor.find')}
+                                href={route('ai.matching.index')}
                                 className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
                             >
                                 <FaSearch className="text-gray-600" />

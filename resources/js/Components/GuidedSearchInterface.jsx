@@ -6,12 +6,18 @@ const GuidedSearchInterface = ({
   onSearch, 
   researchOptions,
   isSearching = false,
-  initialQuery = ''
+  initialQuery = '',
+  pageTitle = 'Find Your Perfect Research Supervisor',
+  searchDescription = 'Enter your research interest, topic, or field of study below and we\'ll match you with supervisors who have relevant expertise.',
+  placeholder = 'e.g., Artificial Intelligence in Healthcare, Design Science Research...',
+  tips = [],
+  error = null,
+  children // Add children prop for search type selector
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [recentSearches, setRecentSearches] = useState([]);
   const [showRecent, setShowRecent] = useState(false);
-  const [error, setError] = useState(null);
+  const [localError, setLocalError] = useState(null);
   const recentSearchesRef = useRef(null);
   
   // Handle clicks outside the recent searches dropdown
@@ -60,19 +66,15 @@ const GuidedSearchInterface = ({
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     
-    if (searchQuery.trim().length < 3) {
-      setError('Please enter at least 3 characters to search');
-      return;
-    }
     
-    setError(null);
+    setLocalError(null);
     saveSearchToRecent(searchQuery);
     onSearch(searchQuery);
   };
   
   const handleQueryChange = (newQuery) => {
     setSearchQuery(newQuery);
-    setError(null);
+    setLocalError(null);
   };
   
   const handleRecentSearch = (query) => {
@@ -84,11 +86,11 @@ const GuidedSearchInterface = ({
   // Handle Enter key press from NaturalLanguageQueryBuilder
   const handleEnterPress = () => {
     if (searchQuery.trim().length < 3) {
-      setError('Please enter at least 3 characters to search');
+      setLocalError('Please enter at least 3 characters to search');
       return;
     }
     
-    setError(null);
+    setLocalError(null);
     saveSearchToRecent(searchQuery);
     onSearch(searchQuery);
   };
@@ -96,9 +98,9 @@ const GuidedSearchInterface = ({
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">Find Your Perfect Research Supervisor</h1>
+        <h1 className="text-2xl font-bold mb-4">{pageTitle}</h1>
         <p className="text-gray-600 mb-6">
-          Enter your research interest, topic, or field of study below and we'll match you with supervisors who have relevant expertise.
+          {searchDescription}
         </p>
       </div>
       
@@ -110,7 +112,7 @@ const GuidedSearchInterface = ({
               initialQuery={searchQuery}
               researchOptions={researchOptions}
               onEnterPress={handleEnterPress}
-              placeholder="e.g., Artificial Intelligence in Healthcare, Design Science Research..."
+              placeholder={placeholder}
             />
           </div>
           
@@ -172,31 +174,32 @@ const GuidedSearchInterface = ({
           )}
         </div>
         
-        {error && (
-          <p className="text-red-500 mt-2 text-center">{error}</p>
+        {(localError || error) && (
+          <p className="text-red-500 mt-2 text-center">{localError || error}</p>
         )}
+        
+        {/* Search Type Selector - Render children below the search input */}
+        <div className="mt-4 text-center">
+          {children}
+        </div>
       </form>
       
       {/* Search guidance - redesigned to match the image */}
       <div className="mt-8 border-t border-gray-200 pt-10">
         <div className="flex items-center mb-4">
           <FaLightbulb className="text-yellow-500 mr-2" />
-          <h3 className="text-lg font-semibold">Tips for finding the right supervisor</h3>
+          <h3 className="text-lg font-semibold">Tips for better searching</h3>
         </div>
         
         <ol className="space-y-3 text-gray-600 list-decimal list-inside">
-          <li className="flex items-start">
-            <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">1</span>
-            <span>Be specific about your research area (e.g., "Machine Learning for Medical Imaging" rather than just "AI")</span>
-          </li>
-          <li className="flex items-start">
-            <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">2</span>
-            <span>You can also use vague queries like "recommend supervisors for me" to get results based on your profile</span>
-          </li>
-          <li className="flex items-start">
-            <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">3</span>
-            <span>Click on suggested research terms to quickly add them to your search</span>
-          </li>
+          {tips.map((tip, index) => (
+            <li key={index} className="flex items-start">
+              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
+                {index + 1}
+              </span>
+              <span>{tip}</span>
+            </li>
+          ))}
         </ol>
       </div>
     </div>

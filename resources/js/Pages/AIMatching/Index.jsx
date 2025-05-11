@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import GuidedSearchInterface from '@/Components/GuidedSearchInterface';
 import ResultsGrid from './Components/ResultsGrid';
-import SearchTypeTabs from './Components/SearchTypeTabs';
+import SearchTypeSelector from './Components/SearchTypeSelector';
 import FilterPanel from './Components/FilterPanel';
 import { FaFilter } from 'react-icons/fa';
 import axios from 'axios';
@@ -179,14 +179,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
       
       <div className="bg-white overflow-hidden shadow-sm rounded-lg">
         <div className="p-6 pb-16">
-          {/* Search Type Selection */}
-          <SearchTypeTabs
-            currentType={searchType}
-            onTypeChange={handleSearchTypeChange}
-            isAcademician={isAcademician}
-          />
-          
-          {/* Guided Search Interface */}
+          {/* Guided Search Interface with Search Type Selector inside */}
           <GuidedSearchInterface
             onSearch={handleSearch}
             researchOptions={researchOptions}
@@ -196,14 +189,15 @@ export default function Index({ auth, universities, faculties, users, researchOp
             searchDescription={getSearchDescription()}
             placeholder={getPlaceholderText()}
             tips={getSearchTips()}
-          />
-          
-          {/* Error message */}
-          {error && (
-            <div className="mt-4 px-4 py-3 rounded-md bg-red-100 text-red-700 text-center">
-              {error}
-            </div>
-          )}
+            error={error}
+          >
+            {/* Search Type Selection */}
+            <SearchTypeSelector
+              currentType={searchType}
+              onTypeChange={handleSearchTypeChange}
+              isAcademician={isAcademician}
+            />
+          </GuidedSearchInterface>
           
           {/* Mobile Filter Toggle Button */}
           {searchResults && searchResults.matches && searchResults.matches.length > 0 && (
