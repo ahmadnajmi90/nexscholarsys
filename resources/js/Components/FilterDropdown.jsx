@@ -6,8 +6,8 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues, pla
   const value = options.filter((option) => selectedValues.includes(option.value));
 
   return (
-    <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 mt-4">{label}</label>
+    <div className="mb-5">
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <Select
         isMulti
         options={options}
@@ -16,9 +16,10 @@ const FilterDropdown = ({ label, options, selectedValues, setSelectedValues, pla
           const newValues = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
           setSelectedValues(newValues);
         }}
-        placeholder={placeholder || `Select ${label}...`}
-        className="mt-1"
+        placeholder={placeholder || `Filter by ${label.toLowerCase()}...`}
+        className="basic-multi-select"
         classNamePrefix="select"
+        isSearchable={true}
       />
     </div>
   );

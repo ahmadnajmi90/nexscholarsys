@@ -16,14 +16,16 @@ export default function SearchTypeSelector({ currentType, onTypeChange, isAcadem
       label: 'Students',
       icon: <FaUserGraduate className="mr-2" />,
       description: 'Find postgraduates and undergraduates for your research projects',
-      available: isAcademician // Only available to academicians
+      available: true // Available to all users
+      // available: isAcademician // Only available to academicians
     },
     {
       id: 'collaborators',
       label: 'Collaborators',
       icon: <FaUsers className="mr-2" />,
       description: 'Find potential research collaborators (academicians and students)',
-      available: isAcademician // Only available to academicians
+      available: true // Available to all users
+      // available: isAcademician // Only available to academicians
     }
   ];
 

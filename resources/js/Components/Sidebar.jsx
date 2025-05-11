@@ -83,26 +83,46 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     {/* Admin Features Section */}
                     {isAdmin && (
                         <div>
-                            <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Admin Features</h3>
-                            {/* {canCreateFacultyAdmin && ( */}
-                            <Link href={route('faculty-admins.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                                <FaTachometerAlt className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Create Faculty Admin</span>
-                            </Link>
-                            {/* )} */}
-
-                            {/* {canAssignAbilities && ( */}
-                            <Link href={route('roles.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                                <FaTachometerAlt className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Assign Abilities</span>
-                            </Link>
-                            {/* )} */}
+                            <h3 className="text-gray-500 uppercase text-xs font-bold mt-5">Admin</h3>
+                            <div className={`group relative ${!isOpen ? "w-12" : ""}`}>
+                                <Link href={route('roles.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
+                                    <FaCog className="text-gray-600" />
+                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Roles & Permissions</span>
+                                </Link>
+                                <Link href={route('faculty-admins.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
+                                    <FaUniversity className="text-gray-600" />
+                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Faculty Admin</span>
+                                </Link>
+                                <Link href={route('admin.profiles.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
+                                    <FaUsers className="text-gray-600" />
+                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Profile Management</span>
+                                </Link>
+                                {!isOpen && (
+                                    <div className="hidden group-hover:block absolute left-full top-0 ml-2 bg-white shadow-md rounded p-2 whitespace-nowrap z-10">
+                                        <div className="py-1">Roles & Permissions</div>
+                                        <div className="py-1">Faculty Admin</div>
+                                        <div className="py-1">Profile Management</div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    {/* Networking Section */}
+                    {/*Researeh*/}
                     <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Networking</h3>
+                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features</h3>
+
+                        <Link href={route('ai.matching.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                            <FaRobot className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>AI Matching</span>
+                        </Link>
+
+                        <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                            <FaBookmark className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Bookmarks</span>
+                        </Link>
+
+                        
                         <button
                             onClick={() => toggleMenu('networking')}
                             className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
@@ -120,23 +140,15 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                 {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Industry</Link> */}
                             </div>
                         )}
+
+                           
+
                     </div>
 
-                    {/*Researeh*/}
+                    {/* Manage Section */}
                     <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features</h3>
-
-                        <Link href={route('ai.matching.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaSearch className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Find Supervisor</span>
-                        </Link>
-
-                        <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaBookmark className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Bookmarks</span>
-                        </Link>
-
-                           <button
+                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Manage</h3>
+                        <button
                             onClick={() => toggleMenu('grant')}
                             className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
                         >
@@ -209,7 +221,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                 <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
                             </div>
                         )}
-
                     </div>
 
                        {/* Features In Development */}
@@ -344,10 +355,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             {menuOpen.profile && (
                                 <div className={`${!isOpen && 'hidden'} ml-6`}>
                                     <Link href={route('profile.edit')} className="block py-2 hover:bg-gray-100 rounded">
-                                        My Account
+                                        General Account Setting
                                     </Link>
                                     <Link href={route('role.edit')} className="block py-2 hover:bg-gray-100 rounded">
-                                       Profile
+                                       Personal Information
                                     </Link>
                                 </div>
                             )}

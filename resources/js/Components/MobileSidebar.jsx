@@ -13,7 +13,8 @@ import {
     FaNewspaper,
     FaFilter,
     FaBookmark,
-    FaSearch
+    FaSearch,
+    FaRobot
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 
@@ -27,6 +28,7 @@ const MobileSidebar = () => {
         event: false,
         survey: false,
         profile: false,
+        admin: false,
     });
 
     const toggleSidebar = () => {
@@ -109,9 +111,52 @@ const MobileSidebar = () => {
                             </div>
                         )}
 
-                        {/* Networking Section */}
+                        {/* Admin Section */}
+                        {isAdmin && (
+                            <div>
+                                <h3 className="text-gray-500 uppercase text-xs font-bold">Admin</h3>
+                                <button
+                                    onClick={() => toggleMenu('admin')}
+                                    className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                                >
+                                    <FaCog className="text-gray-600" />
+                                    <span className="ml-2">Admin Tools</span>
+                                    <span className="ml-auto">{menuOpen.admin ? '-' : '+'}</span>
+                                </button>
+                                {menuOpen.admin && (
+                                    <div className="ml-6">
+                                        <Link href={route('roles.index')} className="block py-2 hover:bg-gray-100 rounded">
+                                            Roles & Permissions
+                                        </Link>
+                                        <Link href={route('faculty-admins.index')} className="block py-2 hover:bg-gray-100 rounded">
+                                            Faculty Admin
+                                        </Link>
+                                        <Link href={route('admin.profiles.index')} className="block py-2 hover:bg-gray-100 rounded">
+                                            Profile Management
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Features Section */}
                         <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Networking</h3>
+                            <h3 className="text-gray-500 uppercase text-xs font-bold">Features</h3>
+                            <Link
+                                href={route('ai.matching.index')}
+                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaRobot className="text-gray-600" />
+                                <span className="ml-2">AI Matching</span>
+                            </Link>
+                            <Link
+                                href={route('bookmarks.index')}
+                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaBookmark className="text-gray-600" />
+                                <span className="ml-2">My Bookmarks</span>
+                            </Link>
+                            
                             <button
                                 onClick={() => toggleMenu('networking')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
@@ -136,25 +181,12 @@ const MobileSidebar = () => {
                                     </Link>
                                 </div>
                             )}
+                            
                         </div>
 
-                        {/* Features Section */}
+                        {/* Manage Section */}
                         <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Features</h3>
-                            <Link
-                                href={route('ai.matching.index')}
-                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaSearch className="text-gray-600" />
-                                <span className="ml-2">Find Supervisor</span>
-                            </Link>
-                            <Link
-                                href={route('bookmarks.index')}
-                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaBookmark className="text-gray-600" />
-                                <span className="ml-2">My Bookmarks</span>
-                            </Link>
+                            <h3 className="text-gray-500 uppercase text-xs font-bold">Manage</h3>
                             <button
                                 onClick={() => toggleMenu('grant')}
                                 className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"

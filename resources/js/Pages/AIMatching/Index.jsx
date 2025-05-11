@@ -199,16 +199,6 @@ export default function Index({ auth, universities, faculties, users, researchOp
             />
           </GuidedSearchInterface>
           
-          {/* Mobile Filter Toggle Button */}
-          {searchResults && searchResults.matches && searchResults.matches.length > 0 && (
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="fixed bottom-8 right-4 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg lg:hidden"
-            >
-              <FaFilter className="text-xl" />
-            </button>
-          )}
-          
           {/* Results and Filters */}
           {searchResults && searchResults.matches && (
             <div className="mt-8 flex flex-col lg:flex-row gap-6">
@@ -229,25 +219,24 @@ export default function Index({ auth, universities, faculties, users, researchOp
                 />
               </div>
               
-              {/* Filters - Mobile (Top, conditional) */}
-              {showFilters && (
-                <div className="lg:hidden w-full">
-                  <FilterPanel
-                    searchType={searchType}
-                    searchResults={searchResults}
-                    universities={universities}
-                    faculties={faculties}
-                    researchOptions={researchOptions}
-                    selectedArea={selectedArea}
-                    setSelectedArea={setSelectedArea}
-                    selectedUniversity={selectedUniversity}
-                    setSelectedUniversity={setSelectedUniversity}
-                    selectedAvailability={selectedAvailability}
-                    setSelectedAvailability={setSelectedAvailability}
-                    onClose={() => setShowFilters(false)}
-                  />
-                </div>
-              )}
+              {/* Filters - Mobile */}
+              <div className="lg:hidden">
+                <FilterPanel
+                  searchType={searchType}
+                  searchResults={searchResults}
+                  universities={universities}
+                  faculties={faculties}
+                  researchOptions={researchOptions}
+                  selectedArea={selectedArea}
+                  setSelectedArea={setSelectedArea}
+                  selectedUniversity={selectedUniversity}
+                  setSelectedUniversity={setSelectedUniversity}
+                  selectedAvailability={selectedAvailability}
+                  setSelectedAvailability={setSelectedAvailability}
+                  isOpen={showFilters}
+                  toggleOpen={setShowFilters}
+                />
+              </div>
               
               {/* Results */}
               <div className="w-full lg:w-3/4 xl:w-4/5">

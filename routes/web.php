@@ -284,4 +284,9 @@ Route::middleware(['auth'])->group(function () {
         ->name('ai.matching.diagnostics');
 });
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
+    Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
+});
+
 require __DIR__.'/auth.php';

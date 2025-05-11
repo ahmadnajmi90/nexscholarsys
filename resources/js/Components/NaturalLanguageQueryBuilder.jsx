@@ -79,7 +79,7 @@ const NaturalLanguageQueryBuilder = ({
           onChange={handleQueryChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-4 pr-14 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
           onFocus={() => setShowSuggestions(true)}
         />
         

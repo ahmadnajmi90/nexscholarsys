@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Select from 'react-select';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaFilter } from 'react-icons/fa';
 
 export default function FilterPanel({
   searchType,
@@ -14,8 +14,35 @@ export default function FilterPanel({
   setSelectedUniversity,
   selectedAvailability,
   setSelectedAvailability,
-  onClose = null // For mobile close button
+  onClose = null, // For mobile close button
+  isOpen = true,  // Control visibility on mobile
+  toggleOpen = null // Function to toggle sidebar visibility
 }) {
+  const [showFilters, setShowFilters] = useState(isOpen);
+  const filterContainerRef = useRef(null);
+
+  // Handle clicks outside the filter panel on mobile
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (filterContainerRef.current && 
+          !filterContainerRef.current.contains(event.target) &&
+          window.innerWidth < 1024) {
+        setShowFilters(false);
+        if (toggleOpen) toggleOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [toggleOpen]);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setShowFilters(isOpen);
+  }, [isOpen]);
+
   // Extract filter options from search results
   const getFilterOptions = () => {
     if (!searchResults || !searchResults.matches) {
@@ -122,99 +149,136 @@ export default function FilterPanel({
     return 'availability';
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow p-5 mb-6">
-      {/* Mobile Close Button */}
-      {onClose && (
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Filters</h3>
-          <button 
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <FaTimes />
-          </button>
-        </div>
-      )}
-      
-      {/* Desktop Title */}
-      {!onClose && (
-        <h3 className="text-lg font-semibold mb-4">Filters</h3>
-      )}
-      
-      {/* Research Area Filter */}
-      <div className="mb-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Research Area
-        </label>
-        <Select
-          isMulti
-          name="researchAreas"
-          options={filterOptions.researchAreas}
-          value={filterOptions.researchAreas.filter(option => selectedArea.includes(option.value))}
-          onChange={(selected) => 
-            setSelectedArea(selected ? selected.map(option => option.value) : [])
-          }
-          placeholder="Filter by research area..."
-          className="basic-multi-select"
-          classNamePrefix="select"
-          isSearchable={true}
-        />
-      </div>
-      
-      {/* University Filter */}
-      <div className="mb-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          University
-        </label>
-        <Select
-          isMulti
-          name="universities"
-          options={filterOptions.universities}
-          value={filterOptions.universities.filter(option => selectedUniversity.includes(option.value))}
-          onChange={(selected) => 
-            setSelectedUniversity(selected ? selected.map(option => option.value) : [])
-          }
-          placeholder="Filter by university..."
-          className="basic-multi-select"
-          classNamePrefix="select"
-          isSearchable={true}
-        />
-      </div>
-      
-      {/* Availability Filter - Hide for collaborators */}
-      {searchType !== 'collaborators' && (
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {getAvailabilityLabel()}
-          </label>
-          <select
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 
-                      focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm 
-                      rounded-md"
-            value={selectedAvailability}
-            onChange={(e) => setSelectedAvailability(e.target.value)}
-          >
-            <option value="">All</option>
-            <option value="1">Yes</option>
-            <option value="0">No</option>
-          </select>
-        </div>
-      )}
-      
-      {/* Reset Filters Button */}
+  // Mobile toggle button for filters
+  const filterToggleButton = (
+    <div className="fixed top-20 right-4 z-50 flex items-center space-x-4 lg:hidden">
       <button
-        className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm 
-                font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none 
-                focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         onClick={() => {
-          setSelectedArea([]);
-          setSelectedUniversity([]);
-          setSelectedAvailability("");
+          setShowFilters(!showFilters);
+          if (toggleOpen) toggleOpen(!showFilters);
         }}
+        className="bg-blue-600 text-white p-2 rounded-full shadow-lg"
       >
-        Reset All Filters
+        <FaFilter className="text-xl" />
       </button>
     </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Filter Toggle Button */}
+      {filterToggleButton}
+      
+      {/* Filter Panel Container */}
+      <div
+        ref={filterContainerRef}
+        className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-white rounded-lg shadow-lg transition-transform duration-300 z-50 ${
+          showFilters ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 overflow-auto pb-20 lg:pb-0`}
+      >
+        <div className="p-5">
+          {/* Mobile Close Button Header */}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Filters</h3>
+            <button 
+              onClick={() => {
+                setShowFilters(false);
+                if (toggleOpen) toggleOpen(false);
+                if (onClose) onClose();
+              }}
+              className="text-gray-500 hover:text-gray-700 lg:hidden"
+            >
+              <FaTimes />
+            </button>
+          </div>
+          
+          {/* Research Area Filter */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Research Area
+            </label>
+            <Select
+              isMulti
+              name="researchAreas"
+              options={filterOptions.researchAreas}
+              value={filterOptions.researchAreas.filter(option => selectedArea.includes(option.value))}
+              onChange={(selected) => 
+                setSelectedArea(selected ? selected.map(option => option.value) : [])
+              }
+              placeholder="Filter by research area..."
+              className="basic-multi-select"
+              classNamePrefix="select"
+              isSearchable={true}
+            />
+          </div>
+          
+          {/* University Filter */}
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              University
+            </label>
+            <Select
+              isMulti
+              name="universities"
+              options={filterOptions.universities}
+              value={filterOptions.universities.filter(option => selectedUniversity.includes(option.value))}
+              onChange={(selected) => 
+                setSelectedUniversity(selected ? selected.map(option => option.value) : [])
+              }
+              placeholder="Filter by university..."
+              className="basic-multi-select"
+              classNamePrefix="select"
+              isSearchable={true}
+            />
+          </div>
+          
+          {/* Availability Filter - Hide for collaborators */}
+          {searchType !== 'collaborators' && (
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {getAvailabilityLabel()}
+              </label>
+              <select
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 
+                          focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm 
+                          rounded-md"
+                value={selectedAvailability}
+                onChange={(e) => setSelectedAvailability(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+          )}
+          
+          {/* Reset Filters Button */}
+          <button
+            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm 
+                    font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none 
+                    focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={() => {
+              setSelectedArea([]);
+              setSelectedUniversity([]);
+              setSelectedAvailability("");
+            }}
+          >
+            Reset All Filters
+          </button>
+        </div>
+      </div>
+      
+      {/* Overlay for Mobile */}
+      {showFilters && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => {
+            setShowFilters(false);
+            if (toggleOpen) toggleOpen(false);
+            if (onClose) onClose();
+          }}
+        ></div>
+      )}
+    </>
   );
 } 

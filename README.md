@@ -34,6 +34,12 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
   - Automatic web search-based generation
   - URL-based generation using personal/institutional websites
 
+### Admin Management
+- Role and permission management for all user types
+- Faculty administration assignment and management
+- User profile management with email reminders
+- Dashboard for monitoring platform metrics and user activity
+
 ### University Directory
 - Browse universities and their faculties
 - View academicians, postgraduates, and undergraduates by faculty
@@ -241,6 +247,19 @@ This workflow ensures that all users have verified emails and role-specific prof
 1. Admins can add new universities and faculties
 2. Faculty admins can verify academicians belonging to their faculty
 3. Users can browse universities and faculties to find relevant connections
+
+### Admin Profile Management
+
+1. Admins can access the Profile Management page from the admin menu in the sidebar
+2. The page displays three separate role-specific tables for Academicians, Postgraduates, and Undergraduates
+3. Each table shows user profile information most relevant to their role:
+   - Academicians: Position, research expertise, and faculty details
+   - Postgraduates: Degree information, research fields
+   - Undergraduates: Degree information, research interests
+4. Each table supports pagination (10 users per page) that can be navigated independently
+5. Admins can send email reminders to users to update or complete their profiles
+6. The system provides immediate feedback when reminders are sent with loading indicators and success confirmations
+7. Email reminders include role-specific suggestions of what information to update
 
 ### Semantic Supervisor Search
 
@@ -544,73 +563,25 @@ The platform integrates with Google Analytics to provide insights:
 
 ## Changelog
 
+### 2024-07-15
+- Created a new email notification system for profile updates 
+- Implemented tables for displaying users by role categories (Academician, Postgraduate, Undergraduate)
+- Added responsive pagination controls for each user table
+- Built UI components with loading states for reminder actions
+- Added success indicators for completed email operations
 
-### [1.5.1] - 2025-05-20
-- Enhanced Google Scholar integration with tabbed interface in profile editing
-- Added dedicated "Publications" tab in academician profile editor for Google Scholar data
-- Improved user experience by consolidating Google Scholar management in one place
-- Removed duplicate Google Scholar update buttons from the main profile form
-- Implemented conditional rendering of Google Scholar update button based on context
-- Reused existing backend functionality with no changes to GoogleScholarController
-- Maintained consistent UI between profile editing tabs
+### 2024-07-01
+- Added admin profile management feature with email reminders
+- Integrated email functionality for user notifications
+- Added UI tables for viewing users by role categories
+- Enhanced admin sidebar with new profile management section
 
-### [1.5.0] - 2025-05-12
-- Separated website field into personal_website and institution_website for clearer organization
-- Added backward compatibility to preserve existing website data
-- Enhanced URL-based profile generation to use both personal and institutional websites
-- Improved profile URL management with dedicated fields for each source
-- Updated validation rules for URL fields
-- Enhanced CV generation to extract data from both personal and institutional websites
-
-### [1.4.0] - 2025-05-15
-- Added user motivation collection during registration and profile completion
-- Implemented two-step AI profile generation for Academicians:
-  - Automatic web search-based generation using Google Custom Search
-  - URL-based generation using personal/institutional websites
-- Enhanced profile generation with support for multiple academic URLs:
-  - Personal website integration
-  - Institutional website integration
-  - LinkedIn profile integration
-  - Google Scholar profile integration (separate dedicated field)
-  - ResearchGate profile integration (separate dedicated field)
-- Added real-time profile generation status tracking
-- Improved error handling and validation for URL inputs
-- Enhanced user experience with clear progress indicators
-- Optimized AI profile generation flow:
-  - Ensured generation is triggered exactly once on the backend
-  - Implemented asynchronous status checking
-  - Added server-side caching for generated profiles
-  - Improved UI with loading indicators and clear status messages
-  - Fixed duplicate alerts during generation process
-  - Enhanced error recovery and reporting
-
-### [1.3.0] - 2025-05-10
-- Implemented hybrid vector search with Qdrant integration
-- Added seamless transition between MySQL and Qdrant vector storage
-- Created UUID-based point ID system for Qdrant vector database
-- Implemented gradual rollout mechanism for testing vector search
-- Added dual-write capability for zero-downtime migration
-- Set up comprehensive monitoring and logging for vector operations
-- Enhanced supervisor matching with Qdrant's faster semantic search
-
-### [1.2.0] - 2025-05-06
-- Integrated GPT-4o for dynamic supervisor-student match insights
-- Created database storage for supervisor insights with efficient indexing
-- Implemented caching system for faster response times and reduced API costs
-- Enhanced prompt engineering for more relevant and personalized insights
-- Added fallback mechanisms for API errors to ensure system reliability
-
-### [1.1.0] - 2025-05-04
-- Added semantic search for supervisor matching using OpenAI embeddings
-- Implemented automatic embedding generation for academician profiles
-- Enhanced AI-generated insights for supervisor matches
-- Fixed bug limiting the number of supervisor search results
-
-### [1.0.0] - YYYY-MM-DD
-- Initial release with core features
-- User roles and profile management
-- Content creation and management
-- University and faculty directory
+### Previous Updates
+- Initial release with basic user management and content features
+- Added AI profile generation for academicians
+- Implemented semantic supervisor matching
+- Added university and faculty directory browsing
+- Added role-based permissions using Bouncer
 
 ## License
 
