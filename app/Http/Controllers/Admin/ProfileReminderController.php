@@ -10,6 +10,9 @@ use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use App\Models\UniversityList;
 use App\Models\FacultyList;
+use App\Models\FieldOfResearch;
+use App\Models\ResearchArea;
+use App\Models\NicheDomain;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Silber\Bouncer\BouncerFacade;
@@ -42,11 +45,11 @@ class ProfileReminderController extends Controller
      */
     public function index(Request $request)
     {
-        // Get universities and faculties for reference
-        $universities = UniversityList::all()->keyBy('id');
-        $faculties = FacultyList::all()->keyBy('id');
+        // Get universities and faculties for dropdowns
+        $universities = UniversityList::pluck('full_name', 'id')->all();
+        $faculties = FacultyList::pluck('name', 'id')->all();
         
-        // Get paginated academicians with their user data
+        // Academicians with pagination
         $academiciansPaginated = User::whereIs('academician')
             ->with('academician.universityDetails', 'academician.faculty')
             ->paginate(self::ITEMS_PER_PAGE, ['*'], 'academicians_page');
@@ -61,8 +64,8 @@ class ProfileReminderController extends Controller
             'total' => $academiciansPaginated->total(),
             'per_page' => $academiciansPaginated->perPage(),
         ];
-            
-        // Get paginated postgraduates with their user data
+        
+        // Postgraduates with pagination
         $postgraduatesPaginated = User::whereIs('postgraduate')
             ->with('postgraduate.universityDetails', 'postgraduate.faculty')
             ->paginate(self::ITEMS_PER_PAGE, ['*'], 'postgraduates_page');
@@ -77,8 +80,8 @@ class ProfileReminderController extends Controller
             'total' => $postgraduatesPaginated->total(),
             'per_page' => $postgraduatesPaginated->perPage(),
         ];
-            
-        // Get paginated undergraduates with their user data
+        
+        // Undergraduates with pagination
         $undergraduatesPaginated = User::whereIs('undergraduate')
             ->with('undergraduate.universityDetails', 'undergraduate.faculty')
             ->paginate(self::ITEMS_PER_PAGE, ['*'], 'undergraduates_page');
@@ -94,12 +97,31 @@ class ProfileReminderController extends Controller
             'per_page' => $undergraduatesPaginated->perPage(),
         ];
         
+        // Prepare research options in the same format as in FacultyAdminController
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+        
         return Inertia::render('Admin/ProfileReminder', [
             'academicians' => $academicians,
             'postgraduates' => $postgraduates,
             'undergraduates' => $undergraduates,
             'universities' => $universities,
             'faculties' => $faculties,
+            'researchOptions' => $researchOptions,
         ]);
     }
     
@@ -120,4 +142,29 @@ class ProfileReminderController extends Controller
         
         return response()->json(['success' => true, 'message' => 'Reminder sent successfully']);
     }
-} 
+    
+    /**
+     * Send profile update reminder emails to multiple users
+     */
+    public function sendBatchReminder(Request $request)
+    {
+        $request->validate([
+            'userIds' => 'required|array',
+            'userIds.*' => 'integer|exists:users,id',
+            'role' => 'required|string|in:academician,postgraduate,undergraduate',
+        ]);
+        
+        $users = User::whereIn('id', $request->userIds)->get();
+        
+        foreach ($users as $user) {
+            // Send email reminder
+            Mail::to($user->email)->send(new ProfileUpdateReminder($user, $request->role));
+        }
+        
+        return response()->json([
+            'success' => true, 
+            'message' => 'Batch reminders sent successfully',
+            'count' => count($users)
+        ]);
+    }
+}

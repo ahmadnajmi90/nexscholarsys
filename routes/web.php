@@ -131,6 +131,7 @@ Route::get('/confirm-faculty-admin/{id}', [FacultyAdminController::class, 'confi
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/faculty-admin/academicians', [FacultyAdminController::class, 'listAcademicians'])->name('faculty-admin.academicians');
     Route::post('/faculty-admin/verify-academician/{id}', [FacultyAdminController::class, 'verifyAcademician'])->name('faculty-admin.verify-academician');
+    Route::post('/faculty-admin/verify-academicians-batch', [FacultyAdminController::class, 'verifyAcademiciansBatch'])->name('faculty-admin.verify-academicians-batch');
 });
 
 
@@ -287,6 +288,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
     Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
+    Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
 });
 
 require __DIR__.'/auth.php';

@@ -40,6 +40,15 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - User profile management with email reminders
 - Dashboard for monitoring platform metrics and user activity
 
+### Faculty Admin System
+- Dedicated role for managing faculty-specific academicians
+- Admin-controlled faculty admin creation and invitation workflow
+- Faculty admins can verify academicians within their faculty
+- Each faculty admin is associated with specific university and faculty
+- Faculty-specific dashboard for viewing unverified academicians
+- Secure verification process with proper authorization checks
+- Email-based invitation system with temporary credentials
+
 ### University Directory
 - Browse universities and their faculties
 - View academicians, postgraduates, and undergraduates by faculty
@@ -257,9 +266,41 @@ This workflow ensures that all users have verified emails and role-specific prof
    - Postgraduates: Degree information, research fields
    - Undergraduates: Degree information, research interests
 4. Each table supports pagination (10 users per page) that can be navigated independently
-5. Admins can send email reminders to users to update or complete their profiles
-6. The system provides immediate feedback when reminders are sent with loading indicators and success confirmations
+5. Admins can send email reminders to users to update or complete their profiles:
+   - Individual reminders can be sent using the button in each user's row
+   - Batch reminders can be sent to multiple selected users of the same role
+   - Selection controls include "Select All" checkbox in the table header
+   - A counter displays the number of currently selected users
+6. The system provides immediate feedback with:
+   - Loading indicators during sending operations
+   - Success confirmations when reminders are sent
+   - Automatic deselection after successful batch sending
 7. Email reminders include role-specific suggestions of what information to update
+
+### Faculty Admin Management
+
+1. Platform administrators can create faculty admin accounts through a dedicated interface
+2. The faculty admin creation process includes:
+   - Selecting the specific university and faculty to manage
+   - Providing the admin's email address and optional worker ID
+   - System generates a secure unique ID with "FA-" prefix
+   - Temporary password is set and emailed to the new faculty admin
+3. Email invitations are sent to newly created faculty admins with:
+   - Login credentials (email and temporary password)
+   - A secure verification link to activate their account
+   - Instructions to change their password upon first login
+4. Faculty admins have a specialized dashboard that shows:
+   - Unverified academicians within their faculty
+   - Details about each academician including position, department, and contact information
+5. Verification workflow for academicians:
+   - Academicians register and select their faculty but start as "unverified"
+   - Faculty admins review academician profiles for their faculty
+   - Only authorized faculty admins can verify academicians in their own faculty
+   - Once verified, academicians gain full platform privileges
+6. Security measures:
+   - Faculty admins can only access and verify academicians in their assigned faculty
+   - Role-based authorization checks prevent unauthorized verification
+   - Secure email verification process for faculty admin accounts
 
 ### Semantic Supervisor Search
 
@@ -569,6 +610,7 @@ The platform integrates with Google Analytics to provide insights:
 - Added responsive pagination controls for each user table
 - Built UI components with loading states for reminder actions
 - Added success indicators for completed email operations
+- Implemented batch selection and sending of profile update reminders to multiple users
 
 ### 2024-07-01
 - Added admin profile management feature with email reminders

@@ -13,8 +13,12 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use App\Models\Academician;
+use App\Models\FieldOfResearch;
+use App\Models\ResearchArea;
+use App\Models\NicheDomain;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class FacultyAdminController extends Controller
 {
@@ -97,26 +101,50 @@ class FacultyAdminController extends Controller
 
     public function listAcademicians(Request $request)
     {
-        $isFacultyAdmin = BouncerFacade::is(auth()->user())->an('faculty_admin'); // Assuming you have a method to check if the user is a faculty admin
+        $isFacultyAdmin = BouncerFacade::is(Auth::user())->an('faculty_admin');
         if(!$isFacultyAdmin) {
             abort(403, 'You do not have permission to view this page.');
         }
         else{
-            $facultyAdmin = auth()->user(); // Assuming the faculty admin is logged in
-            $facultyId = $facultyAdmin->facultyAdmin->faculty; // Assuming `faculty_admin` relationship exists
-            $universities = UniversityList::all(); // Assuming a University model
-            $faculties = FacultyList::all(); // Assuming a University model
+            // Get the faculty admin record for the authenticated user
+            $facultyAdmin = FacultyAdmin::where('faculty_admin_id', Auth::user()->unique_id)->first();
+            if (!$facultyAdmin) {
+                abort(403, 'Faculty admin record not found.');
+            }
+            
+            $facultyId = $facultyAdmin->faculty; // Get the faculty ID
+            $universities = UniversityList::all();
+            $faculties = FacultyList::all();
 
             // Fetch unverified academicians in the same faculty
             $academicians = Academician::where('faculty', $facultyId)
-            ->where('verified', false)
-            ->with('user') // Assuming you want user details too
-            ->get();
+                ->where('verified', false)
+                ->with('user')
+                ->get();
+            
+            // Prepare research options in the same format as AcademicianController
+            $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+            $researchOptions = [];
+            foreach ($fieldOfResearches as $field) {
+                foreach ($field->researchAreas as $area) {
+                    foreach ($area->nicheDomains as $domain) {
+                        $researchOptions[] = [
+                            'field_of_research_id' => $field->id,
+                            'field_of_research_name' => $field->name,
+                            'research_area_id' => $area->id,
+                            'research_area_name' => $area->name,
+                            'niche_domain_id' => $domain->id,
+                            'niche_domain_name' => $domain->name,
+                        ];
+                    }
+                }
+            }
 
             return inertia('FacultyAdmin/AcademiciansList', [
                 'academicians' => $academicians,
                 'universities' => $universities,
                 'faculties' => $faculties,
+                'researchOptions' => $researchOptions,
             ]);
         }
     }
@@ -124,15 +152,21 @@ class FacultyAdminController extends Controller
     // Verify an academician
     public function verifyAcademician($id)
     {
-        $isFacultyAdmin = BouncerFacade::is(auth()->user())->an('faculty_admin'); // Assuming you have a method to check if the user is a faculty admin
+        $isFacultyAdmin = BouncerFacade::is(Auth::user())->an('faculty_admin');
         if(!$isFacultyAdmin) {
             abort(403, 'You do not have permission to view this page.');
         }
         else{
             $academician = Academician::findOrFail($id);
+            
+            // Get the faculty admin record for the authenticated user
+            $facultyAdmin = FacultyAdmin::where('faculty_admin_id', Auth::user()->unique_id)->first();
+            if (!$facultyAdmin) {
+                abort(403, 'Faculty admin record not found.');
+            }
 
             // Check if the faculty admin has permission to verify this academician
-            if (auth()->user()->facultyAdmin->faculty !== $academician->faculty) {
+            if ($facultyAdmin->faculty !== $academician->faculty) {
                 abort(403, 'You do not have permission to verify this academician.');
             }
 
@@ -141,5 +175,135 @@ class FacultyAdminController extends Controller
 
             return back()->with('success', 'Academician verified successfully.');
         }
+    }
+    
+    // Verify multiple academicians in batch
+    public function verifyAcademiciansBatch(Request $request)
+    {
+        // Enhanced logging for CSRF debugging
+        Log::info('Batch verification request headers', [
+            'csrf_token' => $request->header('X-CSRF-TOKEN'),
+            'x_xsrf_token' => $request->header('X-XSRF-TOKEN'),
+            'x_inertia' => $request->header('X-Inertia'),
+            'all_headers' => $request->header()
+        ]);
+        
+        // Log raw request data for debugging
+        Log::info('Batch verification raw request', [
+            'request_all' => $request->all(),
+            'request_input' => $request->input(),
+            'content_type' => $request->header('Content-Type'),
+            'academician_ids_direct' => $request->input('academician_ids'),
+            'method' => $request->method(),
+            'user_id' => Auth::id(),
+            'user_unique_id' => Auth::user()->unique_id ?? 'unknown'
+        ]);
+        
+        // Simplified validation approach - directly validate the request
+        try {
+            $validated = $request->validate([
+                'academician_ids' => 'required|array',
+                'academician_ids.*' => 'required|integer|exists:academicians,id',
+            ]);
+            
+            Log::info('Validation passed', [
+                'validated_data' => $validated
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Validation failed for batch verification', [
+                'errors' => $e->errors()
+            ]);
+            return back()->withErrors($e->errors());
+        }
+        
+        $isFacultyAdmin = BouncerFacade::is(Auth::user())->an('faculty_admin');
+        if(!$isFacultyAdmin) {
+            Log::warning('Non-faculty admin attempted batch verification', [
+                'user_id' => Auth::id()
+            ]);
+            abort(403, 'You do not have permission to view this page.');
+        }
+        
+        // Get the faculty admin record for the authenticated user
+        $facultyAdmin = FacultyAdmin::where('faculty_admin_id', Auth::user()->unique_id)->first();
+        if (!$facultyAdmin) {
+            Log::warning('Faculty admin record not found', [
+                'user_id' => Auth::id(),
+                'unique_id' => Auth::user()->unique_id
+            ]);
+            abort(403, 'Faculty admin record not found.');
+        }
+        
+        $facultyId = $facultyAdmin->faculty;
+        $successCount = 0;
+        $unauthorizedCount = 0;
+        $errorCount = 0;
+        
+        Log::info('Processing academician IDs', [
+            'faculty_id' => $facultyId,
+            'count' => count($validated['academician_ids'])
+        ]);
+        
+        // Process each academician ID
+        foreach ($validated['academician_ids'] as $academicianId) {
+            try {
+                $academician = Academician::findOrFail($academicianId);
+                
+                // Check if the faculty admin has permission to verify this academician
+                if ($academician->faculty !== $facultyId) {
+                    $unauthorizedCount++;
+                    Log::warning('Unauthorized verification attempt', [
+                        'faculty_admin_id' => Auth::user()->unique_id,
+                        'academician_id' => $academicianId,
+                        'admin_faculty' => $facultyId,
+                        'academician_faculty' => $academician->faculty
+                    ]);
+                    continue; // Skip this academician
+                }
+                
+                // Only verify if not already verified
+                if (!$academician->verified) {
+                    $academician->update(['verified' => true]);
+                    $successCount++;
+                    Log::info('Academician verified', [
+                        'academician_id' => $academicianId,
+                        'faculty_id' => $facultyId
+                    ]);
+                } else {
+                    Log::info('Academician already verified', [
+                        'academician_id' => $academicianId
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error('Error verifying academician', [
+                    'academician_id' => $academicianId,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        }
+        
+        $message = "{$successCount} academician(s) verified successfully.";
+        
+        if ($unauthorizedCount > 0 || $errorCount > 0) {
+            $message .= " However, ";
+            
+            if ($unauthorizedCount > 0) {
+                $message .= "{$unauthorizedCount} academician(s) could not be verified due to permission issues.";
+            }
+            
+            if ($errorCount > 0) {
+                $message .= " {$errorCount} academician(s) could not be verified due to an error.";
+            }
+        }
+        
+        Log::info('Batch verification completed', [
+            'success_count' => $successCount,
+            'unauthorized_count' => $unauthorizedCount,
+            'error_count' => $errorCount
+        ]);
+        
+        return back()->with('success', $message);
     }
 }
