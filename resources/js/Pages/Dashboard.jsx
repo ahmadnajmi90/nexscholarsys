@@ -25,6 +25,7 @@ const Dashboard = ({
     profileIncompleteAlert,
     topViewedAcademicians,
     analyticsData,
+    facultyAdminDashboardData,
 }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
     const isDesktop = useIsDesktop();
@@ -48,6 +49,7 @@ const Dashboard = ({
                 profileIncompleteAlert={profileIncompleteAlert}
                 topViewedAcademicians={topViewedAcademicians}
                 analyticsData={analyticsData}
+                facultyAdminDashboardData={facultyAdminDashboardData}
                 />):
                 (
                     <Dashboard_m 
@@ -58,7 +60,13 @@ const Dashboard = ({
                     posts={posts}
                     totalUsers={totalUsers}
                     topViewedAcademicians={topViewedAcademicians}
-                    analyticsData={analyticsData}/>
+                    analyticsData={analyticsData}
+                    facultyAdminDashboardData={facultyAdminDashboardData}
+                    academicians={academicians}
+                    universities={universities}
+                    faculties={faculties}
+                    researchOptions={researchOptions}
+                    />
                 )
                     }
                 {/* <RadarChart />

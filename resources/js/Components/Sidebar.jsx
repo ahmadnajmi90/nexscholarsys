@@ -16,7 +16,8 @@ import {
     FaBookReader,
     FaBookOpen,
     FaRobot,
-    FaBookmark
+    FaBookmark,
+    FaUserShield
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 
@@ -71,14 +72,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <FaTachometerAlt className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Dashboard</span>
                         </Link>
+                    </div>
 
-                        {isFacultyAdmin && (
+                    {/* Faculty Admin Section */}
+                    {isFacultyAdmin && (
+                        <div>
+                            <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Faculty Admin</h3>
                             <Link href={route('faculty-admin.academicians')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                                <FaTachometerAlt className="text-gray-600" />
+                                <FaUserShield className="text-gray-600" />
                                 <span className={`ml-2 ${!isOpen && 'hidden'}`}>Verify Academicians</span>
                             </Link>
-                        )}
-                    </div>
+                            <Link href={route('faculty-admin.directory')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                                <FaUsers className="text-gray-600" />
+                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Academicians Directory</span>
+                            </Link>
+                        </div>
+                    )}
 
                     {/* Admin Features Section */}
                     {isAdmin && (

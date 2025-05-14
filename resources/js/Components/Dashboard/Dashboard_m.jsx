@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from "react";
 import Carousel from "./Carousel"; // Adjust the import path as needed
 import QuickLinks from "./QuickActions"; // Adjust the import path as needed
-import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
+import { FaEye, FaHeart, FaShareAlt, FaUserShield, FaUsers } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 import AdminDashboardComponent_m from "./AdminDashboardComponent_m"; // Import AdminDashboardComponent_m
+import FacultyAdminDashboardComponent_m from "./FacultyAdminDashboardComponent_m"; // Import FacultyAdminDashboardComponent_m
 import useRoles from '@/Hooks/useRoles';
 
-const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert, totalUsers, topViewedAcademicians, analyticsData }) => {
+const Dashboard_M = ({ 
+  posts, 
+  events, 
+  grants, 
+  users, 
+  profileIncompleteAlert, 
+  totalUsers, 
+  topViewedAcademicians, 
+  analyticsData,
+  facultyAdminDashboardData,
+  academicians,
+  universities,
+  faculties,
+  researchOptions
+}) => {
   // Format today's date as dd/mm/yyyy
   const todayDate = new Date().toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -26,7 +41,7 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert, tot
   }, [profileIncompleteAlert]);
 
   // Get user roles
-  const { isAdmin } = useRoles();
+  const { isAdmin, isFacultyAdmin } = useRoles();
 
   // Render functions for carousel items
   const renderPostItem = (post) => (
@@ -175,8 +190,46 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert, tot
             </div>
           )}
           
-          {/* Today Section */}
-          {!isAdmin && (
+          {/* Faculty Admin Dashboard Section (conditionally rendered) */}
+          {isFacultyAdmin && (
+            <div className="mb-5">
+              <FacultyAdminDashboardComponent_m 
+                dashboardData={facultyAdminDashboardData}
+              />
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h2 className="text-base font-semibold mb-3">Faculty Administration</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 p-3 rounded-lg text-sm text-center">
+                    <div className="bg-blue-100 p-2 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+                      <FaUserShield className="text-blue-700" />
+                    </div>
+                    <p className="font-medium mb-2">Verify Academicians</p>
+                    <Link
+                      href={route('faculty-admin.academicians')}
+                      className="mt-1 inline-flex items-center justify-center px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors w-full text-xs"
+                    >
+                      Go to Verification
+                    </Link>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-lg text-sm text-center">
+                    <div className="bg-indigo-100 p-2 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+                      <FaUsers className="text-indigo-700" />
+                    </div>
+                    <p className="font-medium mb-2">Academicians Directory</p>
+                    <Link
+                      href={route('faculty-admin.directory')}
+                      className="mt-1 inline-flex items-center justify-center px-3 py-1.5 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors w-full text-xs"
+                    >
+                      View Directory
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Today Section - Only show for students and academicians */}
+          {!isAdmin && !isFacultyAdmin && (
           <div className="mb-3">
             <h1 className="text-3xl font-bold">Today</h1>
             <p className="text-sm text-gray-500 uppercase font-bold">
@@ -186,7 +239,7 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert, tot
           )}
 
           {/* Carousel Section */}
-          {!isAdmin && (
+          {!isAdmin && !isFacultyAdmin && (
           <div className="mb-5">
             {/* First Row: Post Carousel (full width, spans both columns) */}
             <div className="mb-4 h-[280px]">
@@ -230,7 +283,7 @@ const Dashboard_M = ({ posts, events, grants, users, profileIncompleteAlert, tot
           )}
 
           {/* QuickLinks Section */}
-          {!isAdmin && (
+          {!isAdmin && !isFacultyAdmin && (
           <div className="mb-4">
             <QuickLinks />
           </div>

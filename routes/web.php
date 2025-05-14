@@ -130,6 +130,7 @@ Route::get('/confirm-faculty-admin/{id}', [FacultyAdminController::class, 'confi
 // routes/web.php
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/faculty-admin/academicians', [FacultyAdminController::class, 'listAcademicians'])->name('faculty-admin.academicians');
+    Route::get('/faculty-admin/directory', [FacultyAdminController::class, 'listAllAcademicians'])->name('faculty-admin.directory');
     Route::post('/faculty-admin/verify-academician/{id}', [FacultyAdminController::class, 'verifyAcademician'])->name('faculty-admin.verify-academician');
     Route::post('/faculty-admin/verify-academicians-batch', [FacultyAdminController::class, 'verifyAcademiciansBatch'])->name('faculty-admin.verify-academicians-batch');
 });

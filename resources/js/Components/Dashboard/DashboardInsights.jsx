@@ -5,10 +5,11 @@ import RegisteredUser from "./RegisteredUser";
 import ProfileCard from "../ProfileCard";
 import useRoles from "../../Hooks/useRoles";
 import Carousel from "./Carousel"; // Adjust the import path if needed
-import { FaEye, FaHeart, FaShareAlt, FaUser } from 'react-icons/fa';
+import { FaEye, FaHeart, FaShareAlt, FaUser, FaUserShield, FaUsers } from 'react-icons/fa';
 import { Link } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
 import AdminDashboardComponent from "./AdminDashboardComponent";
+import FacultyAdminDashboardComponent from "./FacultyAdminDashboardComponent";
 
 const DashboardInsight = ({
   totalUsers,
@@ -25,8 +26,19 @@ const DashboardInsight = ({
   profileIncompleteAlert,
   topViewedAcademicians,
   analyticsData,
+  facultyAdminDashboardData,
 }) => {
-  const { isAdmin, isFacultyAdmin } = useRoles();
+  // Format today's date as dd/mm/yyyy
+  const todayDate = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  // Detect user roles
+  const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
+  
+  // State to track if alert should be shown with animation
   const [showAlert, setShowAlert] = useState(false);
   
   // Effect to track first appearance of the alert
@@ -249,20 +261,49 @@ const DashboardInsight = ({
         </div>
       )}
 
+      {/* Faculty Admin Dashboard - Display both the new dashboard component and the existing ProfileCard */}
       {isFacultyAdmin && (
-        <ProfileCard
-          profilesData={academicians}
-          supervisorAvailabilityKey="availability_as_supervisor"
-          universitiesList={universities}
-          faculties={faculties}
-          isPostgraduateList={false}
-          isFacultyAdminDashboard={true}
-          users={users}
-          researchOptions={researchOptions}
-        />
+        <div className="space-y-8">
+          <FacultyAdminDashboardComponent dashboardData={facultyAdminDashboardData} />
+          
+          <div className="border-t pt-8">
+            <h2 className="text-xl font-semibold mb-4">Faculty Administration</h2>
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-blue-50 rounded-lg p-6 flex flex-col items-center text-center">
+                  <div className="bg-blue-100 p-4 rounded-full mb-4">
+                    <FaUserShield className="text-blue-700 text-2xl" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Verify Academicians</h3>
+                  <p className="text-gray-600 mb-4">Review and verify unverified academicians in your faculty.</p>
+                  <Link 
+                    href={route('faculty-admin.academicians')}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Go to Verification
+                  </Link>
+                </div>
+                
+                <div className="bg-indigo-50 rounded-lg p-6 flex flex-col items-center text-center">
+                  <div className="bg-indigo-100 p-4 rounded-full mb-4">
+                    <FaUsers className="text-indigo-700 text-2xl" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Academicians Directory</h3>
+                  <p className="text-gray-600 mb-4">View and manage all academicians in your faculty.</p>
+                  <Link 
+                    href={route('faculty-admin.directory')}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    View Directory
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {!isAdmin && (
+      {!isAdmin && !isFacultyAdmin && (
         <div>
           <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <div className="grid grid-cols-1 md:grid-cols-10 gap-6 mb-[10rem] h-[300px]">
@@ -330,7 +371,7 @@ const DashboardInsight = ({
         </div>
         )}
 
-      {!isAdmin && (
+      {!isAdmin && !isFacultyAdmin && (
         <div className="grid grid-cols-1 gap-4">
           <QuickActions />
         </div>

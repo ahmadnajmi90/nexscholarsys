@@ -73,52 +73,30 @@ class DashboardController extends Controller
             $analyticsData = null;
             
             if (BouncerFacade::is(auth()->user())->an('admin')) {
-                $topViewedAcademicians = Academician::where('total_views', '>', 0)
-                    ->orderBy('total_views', 'desc')
-                    ->take(10)
+                // Top 10 viewed academicians (global)
+                $topViewedAcademicians = Academician::orderBy('total_views', 'desc')
+                    ->limit(10)
                     ->get();
-                    
-                // Get Google Analytics data for admin dashboard
+                
+                // Get analytics data if the service is available
                 try {
+                    $analyticsService = app(\App\Services\GoogleAnalyticsService::class);
                     $analyticsData = [
-                        'activeUsers' => $this->googleAnalyticsService->getActiveUsers(),
-                        'avgSessionDuration' => $this->googleAnalyticsService->getAverageSessionDuration(),
-                        'topPages' => $this->googleAnalyticsService->getTopPages(5),
-                        'pageViewsOverTime' => $this->googleAnalyticsService->getPageViewsOverTime(30),
+                        'activeUsers' => $analyticsService->getActiveUsers(),
+                        'avgSessionDuration' => $analyticsService->getAverageSessionDuration(),
+                        'topPages' => $analyticsService->getTopPages(5),
+                        'pageViewsOverTime' => $analyticsService->getPageViewsOverTime(30),
                     ];
                 } catch (\Exception $e) {
-                    Log::error('Google Analytics error: ' . $e->getMessage());
-                    
-                    // Provide mock data as fallback
-                    $analyticsData = [
-                        'activeUsers' => rand(3, 15),
-                        'avgSessionDuration' => rand(60, 180),
-                        'topPages' => [
-                            [
-                                'path' => '/',
-                                'title' => 'Home Page',
-                                'views' => rand(50, 200)
-                            ],
-                            [
-                                'path' => '/login',
-                                'title' => 'Login',
-                                'views' => rand(30, 100)
-                            ],
-                            [
-                                'path' => '/academicians',
-                                'title' => 'Academicians',
-                                'views' => rand(20, 80)
-                            ],
-                        ],
-                        'pageViewsOverTime' => collect(range(1, 30))->map(function($day) {
-                            $date = now()->subDays(30 - $day)->format('Y-m-d');
-                            return [
-                                'date' => $date,
-                                'views' => rand(10, 100)
-                            ];
-                        })->toArray(),
-                    ];
+                    // Analytics service not available or error
+                    Log::error('Error loading Google Analytics data: ' . $e->getMessage());
                 }
+            }
+            
+            // Get faculty admin dashboard data
+            $facultyAdminDashboardData = null;
+            if($isFacultyAdmin) {
+                $facultyAdminDashboardData = $this->getFacultyAdminDashboardData($user);
             }
 
             return Inertia::render('Dashboard', [
@@ -136,6 +114,7 @@ class DashboardController extends Controller
                 'profileIncompleteAlert' => $profileIncompleteAlert, // Add the alert to the props
                 'topViewedAcademicians' => $topViewedAcademicians, // Add top viewed academicians
                 'analyticsData' => $analyticsData, // Add Google Analytics data
+                'facultyAdminDashboardData' => $facultyAdminDashboardData,
             ]);
         }
     }
@@ -204,6 +183,56 @@ class DashboardController extends Controller
         return [
             'show' => false,
             'message' => ''
+        ];
+    }
+
+    /**
+     * Get dashboard data for faculty admin
+     * 
+     * @param \App\Models\User $user
+     * @return array
+     */
+    private function getFacultyAdminDashboardData($user)
+    {
+        // Get faculty ID from faculty admin
+        $facultyId = $user->facultyAdmin->faculty;
+        
+        // Get faculty and university details
+        $faculty = FacultyList::with('university')->find($facultyId);
+        
+        // Count academicians in this faculty
+        $academiciansCount = Academician::where('faculty', $facultyId)->count();
+        
+        // Count postgraduates and undergraduates in this faculty
+        $postgraduatesCount = \App\Models\Postgraduate::where('faculty', $facultyId)->count();
+        $undergraduatesCount = \App\Models\Undergraduate::where('faculty', $facultyId)->count();
+        $studentsCount = $postgraduatesCount + $undergraduatesCount;
+        
+        // Get projects linked to academicians in this faculty
+        $academicianIds = Academician::where('faculty', $facultyId)
+            ->pluck('academician_id')
+            ->toArray();
+            
+        $projectsCount = \App\Models\PostProject::whereIn('author_id', $academicianIds)
+            ->where('project_status', 'published')
+            ->count();
+        
+        // Get top viewed academicians from this faculty
+        $topViewedAcademicians = Academician::where('faculty', $facultyId)
+            ->orderBy('total_views', 'desc')
+            ->limit(5)
+            ->get();
+            
+        return [
+            'faculty' => $faculty,
+            'academiciansCount' => $academiciansCount,
+            'studentsCount' => $studentsCount,
+            'studentsBreakdown' => [
+                'postgraduates' => $postgraduatesCount,
+                'undergraduates' => $undergraduatesCount,
+            ],
+            'projectsCount' => $projectsCount,
+            'topViewedAcademicians' => $topViewedAcademicians,
         ];
     }
 }

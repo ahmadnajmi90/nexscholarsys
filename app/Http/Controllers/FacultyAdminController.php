@@ -139,7 +139,7 @@ class FacultyAdminController extends Controller
                     }
                 }
             }
-
+            
             return inertia('FacultyAdmin/AcademiciansList', [
                 'academicians' => $academicians,
                 'universities' => $universities,
@@ -147,6 +147,62 @@ class FacultyAdminController extends Controller
                 'researchOptions' => $researchOptions,
             ]);
         }
+    }
+    
+    /**
+     * List all academicians in the faculty admin's faculty
+     */
+    public function listAllAcademicians(Request $request)
+    {
+        // Check if user is a faculty admin
+        $isFacultyAdmin = BouncerFacade::is(Auth::user())->an('faculty_admin');
+        if(!$isFacultyAdmin) {
+            abort(403, 'You do not have permission to view this page.');
+        }
+        
+        // Get the faculty admin record for the authenticated user
+        $facultyAdmin = FacultyAdmin::where('faculty_admin_id', Auth::user()->unique_id)->first();
+        if (!$facultyAdmin) {
+            abort(403, 'Faculty admin record not found.');
+        }
+        
+        $facultyId = $facultyAdmin->faculty; // Get the faculty ID
+        $faculty = FacultyList::with('university')->find($facultyId);
+        
+        // Get all academicians in the same faculty
+        $academicians = Academician::where('faculty', $facultyId)
+            ->with('user')
+            ->orderBy('verified', 'asc') // Show unverified first
+            ->orderBy('full_name', 'asc') // Then sort by name
+            ->get();
+        
+        // Prepare research options for filtering
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+        
+        // Return the view with academicians and supporting data
+        return inertia('FacultyAdmin/AcademicianDirectory', [
+            'academicians' => $academicians,
+            'universities' => UniversityList::all(),
+            'faculties' => FacultyList::all(),
+            'faculty' => $faculty,
+            'researchOptions' => $researchOptions,
+            'users' => User::all(),
+        ]);
     }
 
     // Verify an academician
