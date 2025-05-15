@@ -133,6 +133,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/faculty-admin/directory', [FacultyAdminController::class, 'listAllAcademicians'])->name('faculty-admin.directory');
     Route::post('/faculty-admin/verify-academician/{id}', [FacultyAdminController::class, 'verifyAcademician'])->name('faculty-admin.verify-academician');
     Route::post('/faculty-admin/verify-academicians-batch', [FacultyAdminController::class, 'verifyAcademiciansBatch'])->name('faculty-admin.verify-academicians-batch');
+    Route::post('/faculty-admin/export/excel', [FacultyAdminController::class, 'exportExcel'])->name('faculty-admin.export.excel');
 });
 
 

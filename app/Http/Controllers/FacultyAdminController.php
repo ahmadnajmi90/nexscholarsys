@@ -19,6 +19,14 @@ use App\Models\NicheDomain;
 use Silber\Bouncer\BouncerFacade;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\View;
+use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Models\Postgraduate;
+use App\Models\Undergraduate;
 
 class FacultyAdminController extends Controller
 {
@@ -361,5 +369,316 @@ class FacultyAdminController extends Controller
         ]);
         
         return back()->with('success', $message);
+    }
+
+    /**
+     * Export academicians list to Excel format
+     * 
+     * @param Request $request The request object containing filter data
+     * @return BinaryFileResponse Excel file download response
+     */
+    public function exportExcel(Request $request)
+    {
+        // Check if user is a faculty admin
+        $isFacultyAdmin = BouncerFacade::is(Auth::user())->an('faculty_admin');
+        if (!$isFacultyAdmin) {
+            abort(403, 'You do not have permission to export academicians.');
+        }
+        
+        // Get the faculty admin's faculty ID
+        $facultyAdmin = FacultyAdmin::where('faculty_admin_id', Auth::user()->unique_id)->first();
+        if (!$facultyAdmin) {
+            abort(403, 'Faculty admin record not found.');
+        }
+        
+        // Get filter data from request
+        $researchAreas = $request->input('researchAreas', []);
+        $verificationStatus = $request->input('verificationStatus', 'all');
+        
+        // Build the academicians query
+        $query = Academician::with('user')
+            ->where('faculty', $facultyAdmin->faculty);
+            
+        // Apply verification status filter if not 'all'
+        if ($verificationStatus !== 'all') {
+            $verified = $verificationStatus === 'verified';
+            $query->where('verified', $verified);
+        }
+        
+        // Get the academicians
+        $academicians = $query->get();
+        
+        // Apply research areas filter manually (since it's a JSON field)
+        if (!empty($researchAreas)) {
+            $academicians = $academicians->filter(function($academician) use ($researchAreas) {
+                if (!is_array($academician->research_expertise)) {
+                    return false;
+                }
+                return count(array_intersect($academician->research_expertise, $researchAreas)) > 0;
+            });
+        }
+        
+        // Get the research options for displaying names
+        $researchOptions = DB::table('field_of_research')
+            ->select('field_of_research.id as field_of_research_id', 'field_of_research.name as field_of_research_name',
+                'research_area.id as research_area_id', 'research_area.name as research_area_name',
+                'niche_domain.id as niche_domain_id', 'niche_domain.name as niche_domain_name')
+            ->join('research_area', 'field_of_research.id', '=', 'research_area.field_of_research_id')
+            ->join('niche_domain', 'research_area.id', '=', 'niche_domain.research_area_id')
+            ->get();
+        
+        // Create new spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Set the faculty info in the header
+        $faculty = FacultyList::find($facultyAdmin->faculty);
+        $sheet->setCellValue('A1', $faculty ? $faculty->name . ' - Academicians Directory' : 'Academicians Directory');
+        $sheet->setCellValue('A2', 'Generated on: ' . now()->format('Y-m-d H:i:s'));
+        
+        // Add filters info
+        if ($verificationStatus !== 'all') {
+            $statusText = $verificationStatus === 'verified' ? 'Verified' : 'Unverified';
+            $sheet->setCellValue('A3', 'Filtered by status: ' . $statusText);
+        } else {
+            $sheet->setCellValue('A3', 'All verification statuses');
+        }
+        
+        if (!empty($researchAreas)) {
+            $sheet->setCellValue('A4', 'Filtered by research areas: ' . count($researchAreas) . ' area(s)');
+        }
+        
+        // Set header row
+        $sheet->setCellValue('A6', 'Name');
+        $sheet->setCellValue('B6', 'Email');
+        $sheet->setCellValue('C6', 'Department');
+        $sheet->setCellValue('D6', 'Position');
+        $sheet->setCellValue('E6', 'Research Expertise');
+        $sheet->setCellValue('F6', 'Status');
+        
+        // Style header row
+        $sheet->getStyle('A6:F6')->getFont()->setBold(true);
+        $sheet->getStyle('A1')->getFont()->setBold(true);
+        $sheet->getStyle('A1')->getFont()->setSize(14);
+        
+        // Fill data rows
+        $row = 7;
+        foreach ($academicians as $academician) {
+            $sheet->setCellValue('A' . $row, $academician->full_name ?? 'N/A');
+            $sheet->setCellValue('B' . $row, $academician->user->email ?? 'N/A');
+            $sheet->setCellValue('C' . $row, $academician->department ?? 'N/A');
+            $sheet->setCellValue('D' . $row, $academician->current_position ?? 'N/A');
+            
+            // Handle research expertise
+            $expertiseText = '';
+            if (is_array($academician->research_expertise) && !empty($academician->research_expertise)) {
+                $expertiseList = [];
+                foreach ($academician->research_expertise as $index => $expertiseId) {
+                    $matchedOption = $researchOptions->first(function ($option) use ($expertiseId) {
+                        $compositeId = $option->field_of_research_id . '-' . $option->research_area_id . '-' . $option->niche_domain_id;
+                        return $compositeId === $expertiseId;
+                    });
+                    
+                    if ($matchedOption) {
+                        $expertiseList[] = ($index + 1) . '. ' . $matchedOption->field_of_research_name . ' - ' . 
+                            $matchedOption->research_area_name . ' - ' . $matchedOption->niche_domain_name;
+                    } else {
+                        $expertiseList[] = ($index + 1) . '. Unknown expertise (ID: ' . $expertiseId . ')';
+                    }
+                }
+                $expertiseText = implode("\n", $expertiseList);
+            } else {
+                $expertiseText = 'No research expertise specified';
+            }
+            
+            $sheet->setCellValue('E' . $row, $expertiseText);
+            
+            // Format the cell for line breaks
+            $sheet->getStyle('E' . $row)->getAlignment()->setWrapText(true);
+            
+            // Set verification status
+            $sheet->setCellValue('F' . $row, $academician->verified ? 'Verified' : 'Unverified');
+            
+            $row++;
+        }
+        
+        // Auto-size columns
+        foreach (range('A', 'F') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        
+        // Create writer and save to temporary file
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'academicians_' . Str::slug($faculty->name ?? 'faculty') . '_' . now()->format('Ymd_His') . '.xlsx';
+        $tempFilePath = storage_path('app/public/temp/' . $filename);
+        
+        // Ensure the directory exists
+        if (!file_exists(dirname($tempFilePath))) {
+            mkdir(dirname($tempFilePath), 0755, true);
+        }
+        
+        // Save file
+        $writer->save($tempFilePath);
+        
+        // Return the file as a download
+        return response()->download($tempFilePath, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+    
+    /**
+     * Export academicians list to PDF format
+     * 
+     * @param Request $request The request object containing filter data
+     * @return BinaryFileResponse PDF file download response
+     */
+    public function exportPDF(Request $request)
+    {
+        // Check if user is a faculty admin
+        $isFacultyAdmin = BouncerFacade::is(Auth::user())->an('faculty_admin');
+        if (!$isFacultyAdmin) {
+            abort(403, 'You do not have permission to export academicians.');
+        }
+        
+        // Get the faculty admin's faculty ID
+        $facultyAdmin = FacultyAdmin::where('faculty_admin_id', Auth::user()->unique_id)->first();
+        if (!$facultyAdmin) {
+            abort(403, 'Faculty admin record not found.');
+        }
+        
+        // Get filter data from request
+        $researchAreas = $request->input('researchAreas', []);
+        $verificationStatus = $request->input('verificationStatus', 'all');
+        
+        // Build the academicians query
+        $query = Academician::with('user')
+            ->where('faculty', $facultyAdmin->faculty);
+            
+        // Apply verification status filter if not 'all'
+        if ($verificationStatus !== 'all') {
+            $verified = $verificationStatus === 'verified';
+            $query->where('verified', $verified);
+        }
+        
+        // Get the academicians
+        $academicians = $query->get();
+        
+        // Apply research areas filter manually (since it's a JSON field)
+        if (!empty($researchAreas)) {
+            $academicians = $academicians->filter(function($academician) use ($researchAreas) {
+                if (!is_array($academician->research_expertise)) {
+                    return false;
+                }
+                return count(array_intersect($academician->research_expertise, $researchAreas)) > 0;
+            });
+        }
+        
+        // Get the research options for displaying names
+        $researchOptions = DB::table('field_of_research')
+            ->select('field_of_research.id as field_of_research_id', 'field_of_research.name as field_of_research_name',
+                'research_area.id as research_area_id', 'research_area.name as research_area_name',
+                'niche_domain.id as niche_domain_id', 'niche_domain.name as niche_domain_name')
+            ->join('research_area', 'field_of_research.id', '=', 'research_area.field_of_research_id')
+            ->join('niche_domain', 'research_area.id', '=', 'niche_domain.research_area_id')
+            ->get();
+        
+        // Due to issues with DomPDF, we'll use the Excel export as a workaround
+        // Create new spreadsheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Set the faculty info in the header
+        $faculty = FacultyList::find($facultyAdmin->faculty);
+        $sheet->setCellValue('A1', $faculty ? $faculty->name . ' - Academicians Directory (PDF Format)' : 'Academicians Directory (PDF Format)');
+        $sheet->setCellValue('A2', 'Generated on: ' . now()->format('Y-m-d H:i:s'));
+        
+        // Add filters info
+        if ($verificationStatus !== 'all') {
+            $statusText = $verificationStatus === 'verified' ? 'Verified' : 'Unverified';
+            $sheet->setCellValue('A3', 'Filtered by status: ' . $statusText);
+        } else {
+            $sheet->setCellValue('A3', 'All verification statuses');
+        }
+        
+        if (!empty($researchAreas)) {
+            $sheet->setCellValue('A4', 'Filtered by research areas: ' . count($researchAreas) . ' area(s)');
+        }
+        
+        // Set header row
+        $sheet->setCellValue('A6', 'Name');
+        $sheet->setCellValue('B6', 'Email');
+        $sheet->setCellValue('C6', 'Department');
+        $sheet->setCellValue('D6', 'Position');
+        $sheet->setCellValue('E6', 'Research Expertise');
+        $sheet->setCellValue('F6', 'Status');
+        
+        // Style header row
+        $sheet->getStyle('A6:F6')->getFont()->setBold(true);
+        $sheet->getStyle('A1')->getFont()->setBold(true);
+        $sheet->getStyle('A1')->getFont()->setSize(14);
+        
+        // Fill data rows
+        $row = 7;
+        foreach ($academicians as $academician) {
+            $sheet->setCellValue('A' . $row, $academician->full_name ?? 'N/A');
+            $sheet->setCellValue('B' . $row, $academician->user->email ?? 'N/A');
+            $sheet->setCellValue('C' . $row, $academician->department ?? 'N/A');
+            $sheet->setCellValue('D' . $row, $academician->current_position ?? 'N/A');
+            
+            // Handle research expertise
+            $expertiseText = '';
+            if (is_array($academician->research_expertise) && !empty($academician->research_expertise)) {
+                $expertiseList = [];
+                foreach ($academician->research_expertise as $index => $expertiseId) {
+                    $matchedOption = $researchOptions->first(function ($option) use ($expertiseId) {
+                        $compositeId = $option->field_of_research_id . '-' . $option->research_area_id . '-' . $option->niche_domain_id;
+                        return $compositeId === $expertiseId;
+                    });
+                    
+                    if ($matchedOption) {
+                        $expertiseList[] = ($index + 1) . '. ' . $matchedOption->field_of_research_name . ' - ' . 
+                            $matchedOption->research_area_name . ' - ' . $matchedOption->niche_domain_name;
+                    } else {
+                        $expertiseList[] = ($index + 1) . '. Unknown expertise (ID: ' . $expertiseId . ')';
+                    }
+                }
+                $expertiseText = implode("\n", $expertiseList);
+            } else {
+                $expertiseText = 'No research expertise specified';
+            }
+            
+            $sheet->setCellValue('E' . $row, $expertiseText);
+            
+            // Format the cell for line breaks
+            $sheet->getStyle('E' . $row)->getAlignment()->setWrapText(true);
+            
+            // Set verification status
+            $sheet->setCellValue('F' . $row, $academician->verified ? 'Verified' : 'Unverified');
+            
+            $row++;
+        }
+        
+        // Auto-size columns
+        foreach (range('A', 'F') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+        
+        // Create writer and save to temporary file
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'academicians_pdf_' . Str::slug($faculty->name ?? 'faculty') . '_' . now()->format('Ymd_His') . '.xlsx';
+        $tempFilePath = storage_path('app/public/temp/' . $filename);
+        
+        // Ensure the directory exists
+        if (!file_exists(dirname($tempFilePath))) {
+            mkdir(dirname($tempFilePath), 0755, true);
+        }
+        
+        // Save file
+        $writer->save($tempFilePath);
+        
+        // Return the file as a download
+        return response()->download($tempFilePath, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 }
