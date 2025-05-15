@@ -23,7 +23,7 @@ export default function SearchTypeSelector({ currentType, onTypeChange, isAcadem
       id: 'collaborators',
       label: 'Collaborators',
       icon: <FaUsers className="mr-2" />,
-      description: 'Find potential research collaborators (academicians and students)',
+      description: 'Find potential research collaborators (academicians only)',
       available: true // Available to all users
       // available: isAcademician // Only available to academicians
     }

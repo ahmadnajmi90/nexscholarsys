@@ -465,7 +465,7 @@ The AI Matching feature extends the semantic search capabilities with a more com
 1. **Multiple Search Types:**
    - **Supervisor Search:** For students to find potential research supervisors
    - **Student Search:** For academicians to find potential students to supervise
-   - **Collaborator Search:** For academicians to find potential research collaborators
+   - **Collaborator Search:** For academicians to find potential research collaborators (academicians only)
 
 2. **Role-Based Access Control:**
    - Only academicians can search for students and collaborators
@@ -484,7 +484,14 @@ The AI Matching feature extends the semantic search capabilities with a more com
    - Progressive loading for better performance
    - AI-generated insights for each match
 
-5. **Technical Implementation:**
+5. **Publication-Enhanced AI Insights:**
+   - AI-generated insights for academicians now incorporate their publication history
+   - Insights reference specific publications relevant to the search query
+   - Publication data includes titles, years, citation counts, and brief abstract excerpts
+   - Enhanced insights help users better understand potential collaborators' or supervisors' research contributions
+   - Maintains existing insight generation for student matches (postgraduates and undergraduates)
+
+6. **Technical Implementation:**
    - Uses the same embedding infrastructure as supervisor matching
    - Optimized threshold values for different query types
    - Role-specific matching logic

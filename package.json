@@ -31,6 +31,7 @@
         "echarts-for-react": "^3.0.2",
         "express": "latest",
         "lucide-react": "^0.474.0",
+        "mysql-mcp": "^1.1.1",
         "openai": "latest",
         "quill": "^2.0.3",
         "react-chartjs-2": "^5.2.0",

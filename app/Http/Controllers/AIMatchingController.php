@@ -348,7 +348,7 @@ class AIMatchingController extends Controller
         // Search for other academicians
         $academicians = $this->semanticSearchService->findSimilarAcademicians(
             $searchQuery,
-            30,           // Get up to 30 academician matches
+            50,           // Increased to 50 academician matches (was 30)
             $threshold,   // Use the adaptive threshold
             null,         // No student ID for this search
             null,         // No student type for this search
@@ -356,27 +356,12 @@ class AIMatchingController extends Controller
             $academicianId // Pass academician ID for personalized matching
         );
         
-        // Search for students
-        $students = $this->semanticSearchService->findSimilarStudents(
-            $searchQuery,
-            30,           // Get up to 30 student matches
-            $threshold,   // Use the adaptive threshold
-            $academicianId,  // Pass academician ID for personalized matching
-            true          // Include both postgraduates and undergraduates
-        );
-        
-        // Combine and sort results by match score
+        // Process academicians - no need to combine with students anymore
         $combinedResults = [];
         
         // Process academicians
         foreach ($academicians as $item) {
             $item['result_type'] = 'academician';
-            $combinedResults[] = $item;
-        }
-        
-        // Process students
-        foreach ($students as $item) {
-            $item['result_type'] = $item['student_type']; // 'postgraduate' or 'undergraduate'
             $combinedResults[] = $item;
         }
         
@@ -391,8 +376,7 @@ class AIMatchingController extends Controller
         Log::info("Collaborator search results count", [
             'query' => $searchQuery,
             'total_matches_found' => $totalResults,
-            'academicians_count' => count($academicians),
-            'students_count' => count($students)
+            'academicians_count' => count($academicians)
         ]);
         
         // Calculate pagination
@@ -417,11 +401,8 @@ class AIMatchingController extends Controller
             ];
             
             // Add the appropriate profile data based on result type
-            if ($result['result_type'] === 'academician') {
-                $match['academician'] = $result;
-            } else {
-                $match['student'] = $result;
-            }
+            // Only academicians are processed now
+            $match['academician'] = $result;
             
             $matches[] = $match;
         }

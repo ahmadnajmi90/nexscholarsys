@@ -164,7 +164,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
     } else if (searchType === 'students') {
       return 'Enter research topics or methods you\'re interested in to find students who may be suitable for your research projects.';
     } else if (searchType === 'collaborators') {
-      return 'Enter research areas or methodologies to find potential collaborators for joint research projects.';
+      return 'Enter research areas or methodologies to find potential academician collaborators for joint research projects.';
     }
     
     return 'Enter your search query below to find matches.';

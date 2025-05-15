@@ -62,9 +62,10 @@ class OpenAICompletionService
      * @param string $query The search query
      * @param int|null $studentId The authenticated student's ID (if available)
      * @param string|null $studentType The student type (postgraduate/undergraduate, if available)
+     * @param array $publications Publications data (if available)
      * @return string Generated insight
      */
-    public function generateSupervisorInsight(array $academician, string $query, int $studentId = null, string $studentType = null): string
+    public function generateSupervisorInsight(array $academician, string $query, int $studentId = null, string $studentType = null, array $publications = []): string
     {
         // Create cache key including the student ID if available
         $cacheKey = 'supervisor_insight_' . md5($academician['id'] . '_' . $query . '_' . $studentId);
@@ -79,6 +80,8 @@ class OpenAICompletionService
             $systemPrompt = "You are an academic advisor helping students find suitable research supervisors. ";
             $systemPrompt .= "Provide a personalized insight about why this supervisor might be a good match ";
             $systemPrompt .= "for the student based on their research interests and the supervisor's expertise. ";
+            $systemPrompt .= "When available, use the supervisor's publication history to provide specific insights ";
+            $systemPrompt .= "about their research experience and how it relates to the student's interests. ";
             $systemPrompt .= "Keep your response concise (4-5 sentences maximum) but informative, highlighting ";
             $systemPrompt .= "the most relevant aspects of the supervisor's background that align with the student's interests.";
             
@@ -157,6 +160,32 @@ class OpenAICompletionService
                     }
                 } catch (\Exception $e) {
                     Log::warning("Error processing supervision style: " . $e->getMessage());
+                }
+            }
+            
+            // Add publications data if available
+            if (!empty($publications)) {
+                $userMessage .= "\nKey Publications:\n";
+                $pubCount = 0;
+                foreach ($publications as $pub) {
+                    if ($pubCount >= 5) break; // Limit to 5 publications
+                    
+                    $userMessage .= "- " . $pub['title'];
+                    
+                    if (isset($pub['year'])) {
+                        $userMessage .= " (" . $pub['year'] . ")";
+                    }
+                    
+                    if (isset($pub['citations'])) {
+                        $userMessage .= ", Citations: " . $pub['citations'];
+                    }
+                    
+                    if (isset($pub['abstract'])) {
+                        $userMessage .= "\n  Abstract: " . $pub['abstract'];
+                    }
+                    
+                    $userMessage .= "\n";
+                    $pubCount++;
                 }
             }
             
@@ -607,10 +636,13 @@ EOT;
         $collaboratorExpertise = $collaborator['research_expertise'] ?? '[]';
         $collaboratorBio = $collaborator['bio'] ?? '';
         
+        // Extract publication data if available
+        $publicationsData = isset($collaborator['publications']) ? $collaborator['publications'] : "No publications data available.";
+        
         // Create a formatted prompt
         $prompt = <<<EOT
 You are an academic collaboration advisor with expertise in identifying potential research partnerships between academics.
-Your task is to generate a personalized, insightful explanation as to why two academics may be good research collaborators based on their research profiles and a search query.
+Your task is to generate a personalized, insightful explanation as to why two academics may be good research collaborators based on their research profiles, publication history, and a search query.
 
 Search Query: "$query"
 
@@ -627,14 +659,18 @@ POTENTIAL COLLABORATOR:
 - Research Expertise: $collaboratorExpertise
 - Bio: $collaboratorBio
 
+PUBLICATIONS:
+$publicationsData
+
 Match Score: {$matchScore} (on a scale of 0-1)
 
-Provide 3-5 sentences that explain why these two academics might make good research collaborators, especially considering:
+Provide 4-6 sentences that explain why these two academics might make good research collaborators, especially considering:
 1. Complementary aspects of their research expertise
 2. Potential interdisciplinary research opportunities
-3. How the potential collaborator's profile matches the searching academician's query
-4. Specific research topics they might explore together
+3. How the potential collaborator's publication record demonstrates their expertise in areas relevant to the search query
+4. Specific research topics they might explore together based on the collaborator's publication history
 5. Possible synergies between their departments or specializations
+6. Real-world impact of potential collaborative research
 
 Use a professional, helpful tone but maintain a concise explanatory style focused on academic collaboration opportunities.
 EOT;

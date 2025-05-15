@@ -393,33 +393,124 @@ class SemanticSearchService
     }
     
     /**
-     * Generate AI insights for each academician based on the search query
+     * Generate insights for academician matches using OpenAI GPT-4o
      *
-     * @param array $academicians Array of academicians with match scores
-     * @param string $query The original search query
+     * @param array $academicians Array of academician data
+     * @param string $query Search query
      * @param int|null $studentId Student ID for personalized insights
-     * @param string|null $studentType Student type (postgraduate/undergraduate)
-     * @return array Updated array with AI insights
+     * @param string|null $studentType Student type
+     * @return array Academicians with added AI insights
      */
     public function generateAcademicianInsights(array $academicians, string $query, int $studentId = null, string $studentType = null): array
     {
-        $results = [];
-        
-        foreach ($academicians as $academician) {
-            // Generate a personalized insight using the OpenAI Completion Service
-            $insight = $this->openaiCompletionService->generateSupervisorInsight(
-                $academician, 
-                $query, 
-                $studentId, 
-                $studentType
-            );
+        foreach ($academicians as &$academician) {
+            try {
+                // Skip generating insights for academicians that already have them
+                if (isset($academician['ai_insights'])) {
+                    continue;
+                }
+                
+                // Use cache to avoid regenerating the same insights
+                $cacheKey = 'academician_insight_' . md5($academician['id'] . '_' . $query . '_' . $studentId . '_' . $studentType);
+                
+                if (Cache::has($cacheKey)) {
+                    $academician['ai_insights'] = Cache::get($cacheKey);
+                    continue;
+                }
+                
+                // Fetch publication data for this academician
+                $publications = $this->getAcademicianPublications($academician['id']);
+                
+                // Generate insight using OpenAI
+                $insight = $this->openaiCompletionService->generateSupervisorInsight(
+                    $academician, 
+                    $query, 
+                    $studentId, 
+                    $studentType,
+                    $publications
+                );
+                
+                $academician['ai_insights'] = $insight;
+                
+                // Cache the result
+                Cache::put($cacheKey, $insight, now()->addMinutes(30));
             
-            // Add the insight to the academician data
-            $academician['ai_insights'] = $insight;
-            $results[] = $academician;
+            } catch (\Exception $e) {
+                Log::error('Error generating insight for academician: ' . $e->getMessage(), [
+                    'academician_id' => $academician['id'] ?? 'unknown',
+                    'query' => $query
+                ]);
+                
+                $academician['ai_insights'] = "No insights available for this match at this time.";
+            }
         }
         
-        return $results;
+        return $academicians;
+    }
+    
+    /**
+     * Fetch publications for an academician
+     *
+     * @param int $academicianId The academician's ID
+     * @return array Formatted publication data
+     */
+    protected function getAcademicianPublications(int $academicianId): array
+    {
+        try {
+            // Look up the academician by ID to get the academician_id (unique identifier)
+            $academician = Academician::find($academicianId);
+            
+            if (!$academician) {
+                return [];
+            }
+            
+            // Retrieve publications using the academician_id (unique identifier)
+            $publications = \App\Models\Publication::where('academician_id', $academician->academician_id)
+                ->orderBy('year', 'desc') // Most recent first
+                ->limit(5) // Limit to 5 most recent publications
+                ->get();
+                
+            if ($publications->isEmpty()) {
+                return [];
+            }
+            
+            // Format publications for inclusion in the prompt
+            $result = [];
+            foreach ($publications as $pub) {
+                $pubData = [
+                    'title' => $pub->title,
+                    'year' => $pub->year,
+                ];
+                
+                // Add optional fields if available
+                if (!empty($pub->authors)) {
+                    $pubData['authors'] = $pub->authors;
+                }
+                
+                if (!empty($pub->venue)) {
+                    $pubData['venue'] = $pub->venue;
+                }
+                
+                if (!empty($pub->citations)) {
+                    $pubData['citations'] = $pub->citations;
+                }
+                
+                if (!empty($pub->abstract)) {
+                    // Limit abstract length to avoid token bloat
+                    $pubData['abstract'] = \Illuminate\Support\Str::limit($pub->abstract, 100);
+                }
+                
+                $result[] = $pubData;
+            }
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching publications for academician: ' . $e->getMessage(), [
+                'academician_id' => $academicianId
+            ]);
+            return [];
+        }
     }
     
     /**

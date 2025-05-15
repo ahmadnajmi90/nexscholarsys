@@ -7,6 +7,7 @@ use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class AIMatchInsightService
 {
@@ -141,9 +142,9 @@ class AIMatchInsightService
     }
     
     /**
-     * Generate insights for collaborator matches (both academicians and students)
+     * Generate insights for collaborator matches (only academicians now)
      *
-     * @param array $collaborators Array of potential collaborators (mixed academicians and students)
+     * @param array $collaborators Array of potential collaborators (only academicians)
      * @param string $query The search query
      * @param int $academicianId The academician's ID performing the search
      * @return array The collaborators data with AI insights added
@@ -168,26 +169,20 @@ class AIMatchInsightService
         // Get academician data for the prompt
         $academicianData = $academician->toArray();
         
-        // Process each collaborator
+        // Process each collaborator (all are academicians now)
         foreach ($collaborators as &$collaborator) {
-            $collaboratorType = $collaborator['result_type'] ?? 'unknown';
             $collaboratorId = $collaborator['id'] ?? 0;
             
             // Check cache first
-            $cacheKey = 'collaborator_insight_' . md5($collaboratorId . '_' . $collaboratorType . '_' . $query . '_' . $academicianId);
+            $cacheKey = 'collaborator_insight_' . md5($collaboratorId . '_academician_' . $query . '_' . $academicianId);
             
             if (Cache::has($cacheKey)) {
                 $collaborator['ai_insights'] = Cache::get($cacheKey);
                 continue;
             }
             
-            // Generate appropriate insight based on collaborator type
-            if ($collaboratorType === 'academician') {
-                $insight = $this->generateAcademicianCollaboratorInsight($collaborator, $query, $academicianId, $academicianData);
-            } else {
-                // For students (postgraduate or undergraduate)
-                $insight = $this->generateStudentInsight($collaborator, $query, $academicianId, $academicianData);
-            }
+            // Generate academician collaborator insight
+            $insight = $this->generateAcademicianCollaboratorInsight($collaborator, $query, $academicianId, $academicianData);
             
             // Store and cache the insight
             $collaborator['ai_insights'] = $insight;
@@ -227,6 +222,10 @@ class AIMatchInsightService
             $searcherExpertise = json_encode($searcherData['research_expertise'] ?? []);
             $collaboratorExpertise = json_encode($collaborator['research_expertise'] ?? []);
             
+            // Fetch publication data for the collaborator academician
+            $collaboratorPublications = $this->getAcademicianPublications($collaborator['id']);
+            $collaboratorPublicationData = $this->formatPublicationsForInsight($collaboratorPublications);
+            
             // Generate the insight using GPT-4o
             $insightResponse = $this->openaiCompletionService->generateMatchInsight([
                 'match_type' => 'academician_to_academician',
@@ -242,7 +241,8 @@ class AIMatchInsightService
                     'position' => $collaborator['current_position'] ?? '',
                     'department' => $collaborator['department'] ?? '',
                     'research_expertise' => $collaboratorExpertise,
-                    'bio' => $collaborator['bio'] ?? ''
+                    'bio' => $collaborator['bio'] ?? '',
+                    'publications' => $collaboratorPublicationData
                 ],
                 'match_score' => $collaborator['match_score'] ?? 0.5
             ]);
@@ -257,5 +257,83 @@ class AIMatchInsightService
             
             return "No insights available at this time.";
         }
+    }
+    
+    /**
+     * Fetch publications for an academician
+     *
+     * @param int $academicianId The academician's ID
+     * @return \Illuminate\Database\Eloquent\Collection Collection of publications
+     */
+    protected function getAcademicianPublications(int $academicianId): \Illuminate\Database\Eloquent\Collection
+    {
+        // Look up the academician by ID to get the academician_id (unique identifier)
+        $academician = Academician::find($academicianId);
+        
+        if (!$academician) {
+            return collect();
+        }
+        
+        // Retrieve publications using the academician_id (unique identifier)
+        // Limit to recent and most cited publications for relevance
+        return \App\Models\Publication::where('academician_id', $academician->academician_id)
+            ->orderBy('year', 'desc') // Order by most recent first
+            ->limit(10) // Limit to the 10 most recent publications
+            ->get();
+    }
+    
+    /**
+     * Format publications data for inclusion in LLM prompt
+     *
+     * @param \Illuminate\Database\Eloquent\Collection $publications Collection of publications
+     * @return string Formatted publications data
+     */
+    protected function formatPublicationsForInsight(\Illuminate\Database\Eloquent\Collection $publications): string
+    {
+        if ($publications->isEmpty()) {
+            return "No publications data available.";
+        }
+        
+        // Start with a header
+        $formattedData = "Recent Publications:\n";
+        
+        // Track the number of publications we're including
+        $count = 0;
+        $maxPublications = 5; // Limit to 5 most recent publications to avoid token limits
+        
+        foreach ($publications as $publication) {
+            if ($count >= $maxPublications) {
+                break;
+            }
+            
+            // Format each publication with key details
+            $formattedData .= "- " . $publication->title;
+            
+            // Add year if available
+            if (!empty($publication->year)) {
+                $formattedData .= " (" . $publication->year . ")";
+            }
+            
+            // Add citation count if available
+            if (!empty($publication->citations) && $publication->citations > 0) {
+                $formattedData .= ", Citations: " . $publication->citations;
+            }
+            
+            // Add a brief abstract excerpt if available (limited to avoid token bloat)
+            if (!empty($publication->abstract)) {
+                $abstractExcerpt = Str::limit($publication->abstract, 100); // Limit abstract to 100 chars
+                $formattedData .= "\n  Abstract: " . $abstractExcerpt;
+            }
+            
+            $formattedData .= "\n";
+            $count++;
+        }
+        
+        // Add publication count if there are more than we displayed
+        if ($publications->count() > $maxPublications) {
+            $formattedData .= "(" . ($publications->count() - $maxPublications) . " more publications not shown)\n";
+        }
+        
+        return $formattedData;
     }
 } 
