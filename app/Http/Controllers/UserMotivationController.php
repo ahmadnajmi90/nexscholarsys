@@ -20,17 +20,24 @@ class UserMotivationController extends Controller
     }
 
     /**
-     * Store the user's reason for joining Nexscholar.
+     * Store the user's reasons for joining Nexscholar.
      */
     public function storeReason(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'reason' => 'nullable|string|max:1000',
+            'main_reason' => 'required|string|in:A,B,C,D,E,F,G,H',
+            'features_interested' => 'required|array',
+            'features_interested.*' => 'in:A,B,C,D,E,F,G',
+            'additional_info' => 'nullable|string|max:1000',
         ]);
 
         UserMotivation::updateOrCreate(
             ['user_id' => Auth::id()],
-            ['reason' => $validated['reason'] ?? null]
+            [
+                'main_reason' => $validated['main_reason'],
+                'features_interested' => $validated['features_interested'],
+                'additional_info' => $validated['additional_info'] ?? null,
+            ]
         );
 
         return redirect()->route('profile.complete');

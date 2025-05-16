@@ -12,7 +12,7 @@ class NicheDomainSeeder extends Seeder
             ['name' => 'Plant breeding and genetics', 'research_area_id' => 1],
             ['name' => 'Sustainable crop production', 'research_area_id' => 1],
             ['name' => 'Precision agriculture', 'research_area_id' => 1],
-
+            
             // Soil Science niche domains
             ['name' => 'Soil fertility and nutrient management', 'research_area_id' => 2],
             ['name' => 'Soil microbiology', 'research_area_id' => 2],

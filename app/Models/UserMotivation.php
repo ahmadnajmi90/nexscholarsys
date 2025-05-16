@@ -17,7 +17,18 @@ class UserMotivation extends Model
      */
     protected $fillable = [
         'user_id',
-        'reason',
+        'main_reason',
+        'features_interested',
+        'additional_info',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'features_interested' => 'array',
     ];
 
     /**

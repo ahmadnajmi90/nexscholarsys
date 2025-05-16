@@ -215,12 +215,22 @@ php artisan storage:link
    - Upon registration, a verification email is sent to the user's email address
    - The `is_profile_complete` flag is set to `false` at this stage
 
+This workflow ensures that all users have verified emails and role-specific profiles before they can interact with the platform's features. After email verification, the system collects user motivation through the WhyNexscholar feature, then guides users through role selection and profile completion before granting full access to the platform.
+
 2. **Email Verification**
    - Users must verify their email address by clicking the link in the verification email
    - This is enforced by Laravel's built-in `MustVerifyEmail` interface
    - Only verified users can proceed to the profile completion step
 
-3. **Role Selection & Profile Completion**
+3. **WhyNexscholar Motivation Collection**
+   - After email verification, users are presented with the "WhyNexscholar" screen
+   - This step collects information about what motivated the user to join the platform
+   - Users can share their reasons in an optional text field
+   - This information helps in understanding user needs and improving the platform
+   - Users can either provide their motivation or skip this step
+   - Responses are stored in the `user_motivations` table linked to the user account
+
+4. **Role Selection & Profile Completion**
    - After email verification, users are automatically redirected to the `complete-profile` page
    - Users must select their role (Academician, Postgraduate, Undergraduate)
    - Based on the selected role, users provide:
@@ -231,18 +241,16 @@ php artisan storage:link
    - The `is_profile_complete` flag is set to `true` upon completion
    - Users are granted role-specific permissions via Bouncer
 
-4. **Role-Specific Profile Creation**
+5. **Role-Specific Profile Creation**
    - Based on the selected role, an entry is created in the appropriate table
    - Each role has its own table with role-specific data
    - Default profile pictures and background images are assigned
 
-5. **Dashboard Access**
+6. **Dashboard Access**
    - Once profile completion is successful, users are redirected to the dashboard
    - The system checks the `is_profile_complete` flag before allowing dashboard access
    - Incomplete profiles are redirected back to the profile completion page
    - Users are shown profile completion alerts if key profile information is missing
-
-This workflow ensures that all users have verified emails and role-specific profiles before they can interact with the platform's features.
 
 ### Content Creation
 
