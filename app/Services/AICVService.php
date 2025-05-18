@@ -15,6 +15,9 @@ class AICVService
      */
     public function generateCV(string $prompt): ?array
     {
+        // Sanitize the prompt to ensure valid UTF-8 encoding
+        $prompt = $this->sanitizeInput($prompt);
+        
         $token = config('services.githubopenai.token');
         $endpoint = config('services.githubopenai.endpoint');
         $modelName = 'gpt-4o';
@@ -71,5 +74,30 @@ class AICVService
         }
         
         return null;
+    }
+    
+    /**
+     * Sanitize input text to ensure valid UTF-8 encoding for JSON
+     *
+     * @param string $text
+     * @return string
+     */
+    protected function sanitizeInput(string $text): string
+    {
+        // Check if the text contains valid UTF-8
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            Log::info("CV prompt required UTF-8 sanitization");
+            
+            // Convert to UTF-8, replacing invalid sequences
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+            
+            // Additional cleaning if needed
+            $text = iconv('UTF-8', 'UTF-8//IGNORE', $text);
+        }
+        
+        // Remove null bytes and other control characters that can cause JSON encoding issues
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+        
+        return $text;
     }
 }

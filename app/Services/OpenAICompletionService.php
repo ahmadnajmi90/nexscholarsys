@@ -21,37 +21,14 @@ class OpenAICompletionService
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.key');
-        
-        // Check if using Azure OpenAI (different endpoint formatting)
-        $isAzure = config('services.openai.is_azure', false);
-        $this->azureApiVersion = config('services.openai.azure_api_version', '2024-02-01');
-        
-        if ($isAzure) {
-            // Azure OpenAI requires a specific endpoint format
-            $baseEndpoint = config('services.openai.azure_endpoint');
-            $deploymentName = config('services.openai.completion_deployment', 'gpt-4o');
-            $this->apiEndpoint = "{$baseEndpoint}/openai/deployments/{$deploymentName}/chat/completions?api-version={$this->azureApiVersion}";
-            $this->model = null; // Not needed for Azure, as it's part of the URL
-        } else {
-            // Regular OpenAI or GitHub OpenAI endpoint
-            $baseEndpoint = config('services.openai.endpoint', 'https://api.github.com/octocat/openai');
-            
-            // For direct OpenAI API, we need to append '/chat/completions' to the endpoint
-            if (strpos($baseEndpoint, 'api.openai.com') !== false) {
-                $this->apiEndpoint = rtrim($baseEndpoint, '/') . '/chat/completions';
-            } else {
-                // GitHub OpenAI or other custom endpoint
-                $this->apiEndpoint = $baseEndpoint;
-            }
-            
-            $this->model = config('services.openai.model', 'gpt-4o');
-        }
+        $this->apiKey = env('OPENAI_API_KEY');
+        $this->apiEndpoint = 'https://api.openai.com/v1/chat/completions';
+        $this->model = env('OPENAI_MODEL', 'gpt-4o');
         
         Log::info('OpenAI Completion Service Configuration', [
-            'isAzure' => $isAzure,
             'endpoint' => $this->apiEndpoint,
-            'model' => $this->model
+            'model' => $this->model,
+            'api_key_prefix' => substr($this->apiKey, 0, 10) . '...'
         ]);
     }
 
@@ -215,24 +192,12 @@ class OpenAICompletionService
                 'Content-Type' => 'application/json',
             ];
             
-            // For Azure OpenAI, use api-key header instead of Authorization
-            if (config('services.openai.is_azure', false)) {
-                $headers = [
-                    'api-key' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ];
-            }
-            
             $payload = [
+                'model' => $this->model,
                 'messages' => $messages,
                 'temperature' => 0.1, // Low temperature for consistent results
                 'max_tokens' => 300 // Limit response size
             ];
-            
-            // Add model only if not using Azure (for Azure, it's in the URL)
-            if ($this->model) {
-                $payload['model'] = $this->model;
-            }
             
             $response = Http::withHeaders($headers)
                 ->timeout(15) // 15 second timeout
@@ -710,15 +675,11 @@ EOT;
             
             // Create payload
             $payload = [
+                'model' => $this->model,
                 'messages' => $messages,
                 'temperature' => $temperature,
                 'max_tokens' => $maxTokens
             ];
-            
-            // Add model only if not using Azure (for Azure, it's in the URL)
-            if ($this->model) {
-                $payload['model'] = $this->model;
-            }
             
             // Make the API call
             $response = Http::withHeaders($headers)

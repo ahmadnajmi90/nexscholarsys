@@ -18,6 +18,8 @@ use App\Models\FieldOfResearch;
 use App\Models\ResearchArea;
 use App\Models\NicheDomain;
 use App\Services\AIProfileService;
+use App\Services\CVProfileGeneratorService;
+use App\Services\DocumentTextExtractorService;
 use GuzzleHttp\Client;
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\IOFactory;
@@ -25,9 +27,24 @@ use Illuminate\Support\Facades\Log;
 use App\Services\AICVService;
 use Symfony\Component\DomCrawler\Crawler;
 use App\Services\GoogleSearchService;
+use Illuminate\Support\Facades\Cache;
 
 class RoleProfileController extends Controller
 {
+    protected $aiProfileService;
+    protected $cvProfileGeneratorService;
+    protected $documentTextExtractorService;
+    
+    public function __construct(
+        AIProfileService $aiProfileService,
+        CVProfileGeneratorService $cvProfileGeneratorService,
+        DocumentTextExtractorService $documentTextExtractorService
+    ) {
+        $this->aiProfileService = $aiProfileService;
+        $this->cvProfileGeneratorService = $cvProfileGeneratorService;
+        $this->documentTextExtractorService = $documentTextExtractorService;
+    }
+
     public function edit(): Response
     {
         $isPostgraduate = BouncerFacade::is(Auth::user())->an('postgraduate');
@@ -52,14 +69,32 @@ class RoleProfileController extends Controller
             }
         }
 
+        // Check for generation_initiated query parameter
+        if (request()->has('generation_initiated')) {
+            session(['ai_profile_generation_in_progress' => true]);
+            session(['ai_profile_generation_method' => 'cv']);
+        }
+
         // Check for AI generation status
         $aiGenerationInProgress = session('ai_profile_generation_in_progress', false);
         $aiGenerationMethod = session('ai_profile_generation_method', null);
         
         // Check if we have a cached profile ready
         $generatedProfileData = null;
-        if ($aiGenerationInProgress && $isAcademician) {
-            $cacheKey = 'academician_profile_' . Auth::id();
+        if ($aiGenerationInProgress) {
+            $userId = Auth::id();
+            $cacheKey = null;
+            
+            // Check for the appropriate role's cached profile
+            if ($isAcademician) {
+                $cacheKey = 'academician_profile_' . $userId;
+            } elseif ($isPostgraduate) {
+                $cacheKey = 'postgraduate_profile_' . $userId;
+            } elseif ($isUndergraduate) {
+                $cacheKey = 'undergraduate_profile_' . $userId;
+            }
+            
+            if ($cacheKey) {
             $cachedProfile = \Illuminate\Support\Facades\Cache::get($cacheKey);
             
             if ($cachedProfile) {
@@ -68,6 +103,7 @@ class RoleProfileController extends Controller
                 
                 // Clear the session flags as we've successfully retrieved the profile
                 session()->forget(['ai_profile_generation_in_progress', 'ai_profile_generation_method']);
+                }
             }
         }
 
@@ -226,15 +262,21 @@ class RoleProfileController extends Controller
                 $validatedData['profile_picture'] = $request->input('profile_picture');
             }
 
-            // Handle CV_file (for students)
-            if (($isPostgraduate || $isUndergraduate) && $request->hasFile('CV_file')) {
+            // Handle CV_file (for all roles including academicians)
+            if ($request->hasFile('CV_file')) {
                 logger()->info('CV file hasFile');
                 $destinationPath = public_path('storage/CV_files');
                 if (!file_exists($destinationPath)) {
                     mkdir($destinationPath, 0755, true);
                 }
+                // Delete old CV file if it exists
                 if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
                     $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath);
+                    }
+                } elseif ($isAcademician && $user->academician && $user->academician->CV_file) {
+                    $oldFilePath = public_path('storage/' . $user->academician->CV_file);
                     if (file_exists($oldFilePath)) {
                         unlink($oldFilePath);
                     }
@@ -805,12 +847,19 @@ class RoleProfileController extends Controller
     public function showAIProfileGeneration()
     {
         $user = Auth::user();
+        $isAcademician = BouncerFacade::is($user)->an('academician');
+        $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+        $isUndergraduate = BouncerFacade::is($user)->an('undergraduate');
         
-        if (!BouncerFacade::is($user)->an('academician')) {
+        // If user is not an academician, postgraduate, or undergraduate, redirect to dashboard
+        if (!$isAcademician && !$isPostgraduate && !$isUndergraduate) {
             return redirect()->route('dashboard');
         }
         
-        return Inertia::render('Auth/AIProfileGeneration');
+        return Inertia::render('Auth/AIProfileGeneration', [
+            'userRole' => $isAcademician ? 'academician' : ($isPostgraduate ? 'postgraduate' : 'undergraduate'),
+            'showAllOptions' => $isAcademician, // Only academicians have all generation options
+        ]);
     }
 
     /**
@@ -994,53 +1043,66 @@ class RoleProfileController extends Controller
     {
         $user = Auth::user();
         
-        if (!BouncerFacade::is($user)->an('academician')) {
-            return response()->json(['error' => 'User is not an academician'], 403);
+        // Check generation status for all roles
+        $isAcademician = BouncerFacade::is($user)->an('academician');
+        $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+        $isUndergraduate = BouncerFacade::is($user)->an('undergraduate');
+        
+        // Make sure user has one of the supported roles
+        if (!$isAcademician && !$isPostgraduate && !$isUndergraduate) {
+            return response()->json(['error' => 'User role not supported'], 403);
         }
 
-        $academician = $user->academician()->first();
-        
-        if (!$academician) {
-            return response()->json(['error' => 'Academician profile not found'], 404);
+        // Determine the role-specific cache key
+        $roleName = '';
+        if ($isAcademician) {
+            $roleName = 'academician';
+        } elseif ($isPostgraduate) {
+            $roleName = 'postgraduate';
+        } elseif ($isUndergraduate) {
+            $roleName = 'undergraduate';
         }
-
-        $generationInProgress = session('ai_profile_generation_in_progress', false);
-        $generationMethod = session('ai_profile_generation_method', null);
-
-        // Check if we already have cached results
-        $cacheKey = 'academician_profile_' . $user->id;
-        $cachedProfile = \Illuminate\Support\Facades\Cache::get($cacheKey);
         
-        if ($cachedProfile) {
-            // Clear the session flags once generation is complete
-            session()->forget(['ai_profile_generation_in_progress', 'ai_profile_generation_method']);
+        // Use the role-specific cache key
+        $cacheKey = "{$roleName}_profile_{$user->id}";
+
+        // Check if we have a cached profile
+        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+            // Get the cached profile data
+            $generatedProfile = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        
+            // Clear any session flags
+            session(['ai_profile_generation_in_progress' => false]);
+            session(['ai_profile_generation_method' => null]);
             
-            // Return the cached profile data
-            return response()->json($cachedProfile);
-        }
-        
-        // For manual testing, we'll simulate completed generation when requested
-        $isCompleted = $request->has('simulate_completed') ? true : false;
-
-        if ($isCompleted) {
-            // Clear the session flags once generation is complete
-            session()->forget(['ai_profile_generation_in_progress', 'ai_profile_generation_method']);
-            
-            // Generate the profile using the existing generateProfile method
-            // This approach reuses your existing implementation
-            $generationRequest = new Request();
-            $generationRequest->merge([
-                'mode' => $generationMethod,
-                'urls' => session('institutional_website') ? [$academician->website, $academician->linkedin, $academician->google_scholar, $academician->researchgate, session('institutional_website')] : []
+            // Log the retrieved profile
+            Log::info("Retrieved generated profile from cache for {$roleName} user {$user->id}", [
+                'cache_key' => $cacheKey,
+                'data_keys' => array_keys($generatedProfile),
+                'skills' => isset($generatedProfile['skills']) ? $generatedProfile['skills'] : null,
+                'field_of_research' => isset($generatedProfile['field_of_research']) ? $generatedProfile['field_of_research'] : null,
+                'previous_degree' => isset($generatedProfile['previous_degree']) ? $generatedProfile['previous_degree'] : null
             ]);
             
-            // Call the existing method
-            return $this->generateProfile($generationRequest);
+            // Return a complete response with all potential data fields for the profile
+            return response()->json([
+                'status' => 'completed',
+                'data' => $generatedProfile
+            ]);
         }
         
+        // Check if generation is still in progress
+        if (session('ai_profile_generation_in_progress', false)) {
+            $method = session('ai_profile_generation_method', 'unknown');
         return response()->json([
             'status' => 'in_progress',
-            'method' => $generationMethod,
+                'method' => $method
+            ]);
+        }
+        
+        // No generation in progress and no cached profile
+        return response()->json([
+            'status' => 'not_started'
         ]);
     }
 
@@ -1096,5 +1158,321 @@ class RoleProfileController extends Controller
             'researchOptions' => $researchOptions,
             'isEditing' => true, // Flag to indicate this is the edit view
         ]);
+    }
+
+    /**
+     * Generate profile from CV file
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateProfileFromCV(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Determine the user's role for proper cache key
+        $isAcademician = BouncerFacade::is($user)->an('academician');
+        $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+        $isUndergraduate = BouncerFacade::is($user)->an('undergraduate');
+        
+        $roleName = '';
+        if ($isAcademician) {
+            $roleName = 'academician';
+        } elseif ($isPostgraduate) {
+            $roleName = 'postgraduate';
+        } elseif ($isUndergraduate) {
+            $roleName = 'undergraduate';
+        } else {
+            return response()->json(['error' => 'User role not supported'], 400);
+        }
+        
+        // Validate either CV upload or existing CV
+        $cvPath = null;
+        
+        // Handle new CV upload
+        if ($request->hasFile('CV_file')) {
+            $cvFile = $request->file('CV_file');
+            
+            // Validate file
+            $validatedFile = $request->validate([
+                'CV_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',  // 10MB max, PDF/DOC/DOCX and images
+            ]);
+            
+            // Store the file in the appropriate location
+            $destinationPath = public_path('storage/CV_files');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $fileName = time() . '_' . $cvFile->getClientOriginalName();
+            $cvFile->move($destinationPath, $fileName);
+            $path = 'CV_files/' . $fileName;
+            
+            if ($path) {
+                $cvPath = $path;
+                
+                // Update the user's role model with the CV path
+                if ($isAcademician && $user->academician) {
+                    $user->academician->update(['CV_file' => $path]);
+                } elseif ($isPostgraduate && $user->postgraduate) {
+                    $user->postgraduate->update(['CV_file' => $path]);
+                } elseif ($isUndergraduate && $user->undergraduate) {
+                    $user->undergraduate->update(['CV_file' => $path]);
+                }
+                
+                Log::info("CV file uploaded for user {$user->id}", ['path' => $path]);
+            } else {
+                Log::error("Failed to upload CV file for user {$user->id}");
+                return response()->json(['error' => 'Failed to upload CV file'], 500);
+            }
+        } 
+        // Check for alternative cv_file parameter (for backward compatibility)
+        else if ($request->hasFile('cv_file')) {
+            $cvFile = $request->file('cv_file');
+            
+            // Validate file
+            $validatedFile = $request->validate([
+                'cv_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',  // 10MB max, PDF/DOC/DOCX and images
+            ]);
+            
+            // Store the file in the appropriate location
+            $destinationPath = public_path('storage/CV_files');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            $fileName = time() . '_' . $cvFile->getClientOriginalName();
+            $cvFile->move($destinationPath, $fileName);
+            $path = 'CV_files/' . $fileName;
+            
+            if ($path) {
+                $cvPath = $path;
+                
+                // Update the user's role model with the CV path
+                if ($isAcademician && $user->academician) {
+                    $user->academician->update(['CV_file' => $path]);
+                } elseif ($isPostgraduate && $user->postgraduate) {
+                    $user->postgraduate->update(['CV_file' => $path]);
+                } elseif ($isUndergraduate && $user->undergraduate) {
+                    $user->undergraduate->update(['CV_file' => $path]);
+                }
+                
+                Log::info("CV file uploaded for user {$user->id} (using legacy cv_file parameter)", ['path' => $path]);
+            } else {
+                Log::error("Failed to upload CV file for user {$user->id}");
+                return response()->json(['error' => 'Failed to upload CV file'], 500);
+            }
+        } 
+        // Use existing CV from user profile
+        else {
+            // This code assumes the relationships are properly defined on the User model
+            if ($isAcademician && $user->academician && !empty($user->academician->CV_file)) {
+                $cvPath = $user->academician->CV_file;
+            } elseif ($isPostgraduate && $user->postgraduate && !empty($user->postgraduate->CV_file)) {
+                $cvPath = $user->postgraduate->CV_file;
+            } elseif ($isUndergraduate && $user->undergraduate && !empty($user->undergraduate->CV_file)) {
+                $cvPath = $user->undergraduate->CV_file;
+            }
+            
+            if (!$cvPath) {
+                Log::error("No CV file found for user {$user->id}");
+                return response()->json(['error' => 'No CV file found'], 400);
+            }
+        }
+        
+        try {
+        // Set the profile generation process as in-progress
+        session(['ai_profile_generation_in_progress' => true]);
+        session(['ai_profile_generation_method' => 'cv']);
+        
+            // Generate profile data 
+        $generatedProfile = $this->cvProfileGeneratorService->generateProfileFromCV($user, $cvPath);
+        
+        // Log the result
+        if ($generatedProfile) {
+                Log::info("Successfully generated profile data for user {$user->id} from CV", [
+                'user_id' => $user->id,
+                    'role' => $roleName,
+                    'data_keys' => array_keys($generatedProfile),
+                    'research_expertise_count' => isset($generatedProfile['research_expertise']) ? 
+                        (is_array($generatedProfile['research_expertise']) ? count($generatedProfile['research_expertise']) : 'not_array') : 'null'
+            ]);
+            
+            // Cache the generated profile with the appropriate role-specific key
+            $cacheKey = "{$roleName}_profile_{$user->id}";
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $generatedProfile, now()->addHours(1));
+            
+                // Mark generation as complete
+                session(['ai_profile_generation_in_progress' => false]);
+                
+                // Return the generated profile data directly along with status
+                // Include a comprehensive set of fields for all role types
+                $responseData = [
+                    'status' => 'success',
+                    'generation_initiated' => true,
+                    // Common fields across all roles
+                    'full_name' => $generatedProfile['full_name'] ?? null,
+                    'email' => $generatedProfile['email'] ?? null,
+                    'phone_number' => $generatedProfile['phone_number'] ?? null,
+                    'bio' => $generatedProfile['bio'] ?? null,
+                    'field_of_research' => $generatedProfile['field_of_research'] ?? [],
+                    'skills' => $generatedProfile['skills'] ?? [],
+                    'nationality' => $generatedProfile['nationality'] ?? null,
+                    'english_proficiency_level' => $generatedProfile['english_proficiency_level'] ?? null
+                ];
+
+                // Add academician-specific fields
+                if ($isAcademician) {
+                    $responseData = array_merge($responseData, [
+                        'current_position' => $generatedProfile['current_position'] ?? null,
+                        'department' => $generatedProfile['department'] ?? null,
+                        'highest_degree' => $generatedProfile['highest_degree'] ?? null,
+                        'field_of_study' => $generatedProfile['field_of_study'] ?? null,
+                        'research_expertise' => $generatedProfile['research_expertise'] ?? []
+                    ]);
+                }
+                
+                // Add postgraduate-specific fields
+                if ($isPostgraduate) {
+                    $responseData = array_merge($responseData, [
+                        'previous_degree' => $generatedProfile['previous_degree'] ?? null,
+                        'bachelor' => $generatedProfile['bachelor'] ?? null,
+                        'CGPA_bachelor' => $generatedProfile['CGPA_bachelor'] ?? null,
+                        'master' => $generatedProfile['master'] ?? null,
+                        'master_type' => $generatedProfile['master_type'] ?? null,
+                        'funding_requirement' => $generatedProfile['funding_requirement'] ?? null,
+                        'current_postgraduate_status' => $generatedProfile['current_postgraduate_status'] ?? null,
+                        'suggested_research_title' => $generatedProfile['suggested_research_title'] ?? null,
+                        'suggested_research_description' => $generatedProfile['suggested_research_description'] ?? null
+                    ]);
+                }
+                
+                // Add undergraduate-specific fields
+                if ($isUndergraduate) {
+                    $responseData = array_merge($responseData, [
+                        'bachelor' => $generatedProfile['bachelor'] ?? null,
+                        'CGPA_bachelor' => $generatedProfile['CGPA_bachelor'] ?? null,
+                        'current_undergraduate_status' => $generatedProfile['current_undergraduate_status'] ?? null,
+                        'interested_do_research' => $generatedProfile['interested_do_research'] ?? null,
+                        'expected_graduate' => $generatedProfile['expected_graduate'] ?? null,
+                        'research_preference' => $generatedProfile['research_preference'] ?? []
+                    ]);
+                }
+                
+                // Return the completed response data
+                return response()->json($responseData);
+            } else {
+                Log::error("Generation returned null result for user {$user->id} from CV", [
+                    'user_id' => $user->id,
+                    'role' => $roleName,
+                    'cv_path' => $cvPath
+                ]);
+                
+                return response()->json([
+                    'status' => 'error',
+                    'error' => 'Profile generation did not produce any results',
+                    'generation_initiated' => false
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception occurred during CV profile generation for user {$user->id}", [
+                'user_id' => $user->id,
+                'role' => $roleName,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'error' => 'Exception occurred during profile generation: ' . $e->getMessage(),
+                'generation_initiated' => false
+            ], 500);
+        }
+    }
+
+    /**
+     * Update the CV file for a user's role profile
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateCV(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
+            $isAcademician = BouncerFacade::is($user)->an('academician');
+            $isUndergraduate = BouncerFacade::is($user)->an('undergraduate');
+
+            // Validate the request data
+            $request->validate([
+                'CV_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',
+            ]);
+
+            $cvPath = null;
+
+            if ($request->hasFile('CV_file')) {
+                $file = $request->file('CV_file');
+                $destinationPath = public_path('storage/CV_files');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                
+                // Delete old CV file if it exists
+                if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
+                    $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath);
+                    }
+                } elseif ($isAcademician && $user->academician && $user->academician->CV_file) {
+                    $oldFilePath = public_path('storage/' . $user->academician->CV_file);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath);
+                    }
+                } elseif ($isUndergraduate && $user->undergraduate && $user->undergraduate->CV_file) {
+                    $oldFilePath = public_path('storage/' . $user->undergraduate->CV_file);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath);
+                    }
+                }
+                
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->move($destinationPath, $fileName);
+                $cvPath = 'CV_files/' . $fileName;
+                
+                // Update the CV path in the role model
+                if ($isPostgraduate && $user->postgraduate) {
+                    $user->postgraduate->update(['CV_file' => $cvPath]);
+                } elseif ($isAcademician && $user->academician) {
+                    $user->academician->update(['CV_file' => $cvPath]);
+                } elseif ($isUndergraduate && $user->undergraduate) {
+                    $user->undergraduate->update(['CV_file' => $cvPath]);
+                }
+                
+                Log::info("CV file uploaded for user {$user->id}", ['path' => $cvPath]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'CV file uploaded successfully',
+                    'cv_path' => $cvPath
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'No CV file was provided'
+            ], 400);
+            
+        } catch (\Exception $e) {
+            Log::error("Error uploading CV file: " . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Error uploading CV file: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

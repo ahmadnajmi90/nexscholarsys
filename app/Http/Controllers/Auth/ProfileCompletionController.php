@@ -106,6 +106,9 @@ class ProfileCompletionController extends Controller
                 ]
             );
 
+            // Redirect to dashboard for Industry users
+            return redirect()->route('dashboard');
+
         } elseif ($request->role === 'Postgraduate') {
             $request->validate([
                 'university' => 'nullable|exists:university_list,id',
@@ -134,6 +137,10 @@ class ProfileCompletionController extends Controller
                     'background_image' => "profile_background_images/default.jpg",
                 ]
             );
+            
+            // Redirect to AI Profile Generation page for Postgraduates
+            return redirect()->route('ai.profile.show');
+            
         } elseif ($request->role === 'Undergraduate') {
             $request->validate([
                 'university' => 'nullable|exists:university_list,id',
@@ -162,6 +169,9 @@ class ProfileCompletionController extends Controller
                     'background_image' => "profile_background_images/default.jpg",
                 ]
             );
+            
+            // Redirect to AI Profile Generation page for Undergraduates
+            return redirect()->route('ai.profile.show');
         }
 
         return redirect()->route('dashboard');

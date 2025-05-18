@@ -15,41 +15,19 @@ class EmbeddingService
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.key');
+        $this->apiKey = env('OPENAI_API_KEY');
         
-        // Check if using Azure OpenAI (different endpoint formatting)
-        $isAzure = config('services.openai.is_azure', false);
-        $this->azureApiVersion = config('services.openai.azure_api_version', '2024-02-01');
+        // Use OpenAI API directly
+        $this->apiEndpoint = 'https://api.openai.com/v1/embeddings';
         
-        if ($isAzure) {
-            // Azure OpenAI requires a specific endpoint format
-            $baseEndpoint = config('services.openai.azure_endpoint');
-            $deploymentName = config('services.openai.embedding_deployment', 'text-embedding-3-small');
-            $this->apiEndpoint = "{$baseEndpoint}/openai/deployments/{$deploymentName}/embeddings?api-version={$this->azureApiVersion}";
-            $this->model = null; // Not needed for Azure, as it's part of the URL
-        } else {
-            // Regular OpenAI or GitHub OpenAI endpoint
-            $baseEndpoint = config('services.openai.endpoint', 'https://api.github.com/octocat/openai');
-            
-            // For direct OpenAI API, we need to append '/embeddings' to the endpoint
-            if (strpos($baseEndpoint, 'api.openai.com') !== false) {
-                $this->apiEndpoint = rtrim($baseEndpoint, '/') . '/embeddings';
-            } else {
-                // GitHub OpenAI or other custom endpoint
-                $this->apiEndpoint = $baseEndpoint;
-            }
-            
-            // OpenAI updated their embedding models in early 2024:
-            // - text-embedding-3-small (1536 dimensions) - replacement for ada-002
-            // - text-embedding-3-large (3072 dimensions) - higher quality, larger dimensions
-            $this->model = config('services.openai.embedding_model', 'text-embedding-3-small');
-        }
+        // Use the model from environment variables
+        $this->model = env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small');
         
-        // Log::info('Embedding Service Configuration', [
-        //     'isAzure' => $isAzure,
-        //     'endpoint' => $this->apiEndpoint,
-        //     'model' => $this->model
-        // ]);
+        Log::info('Embedding Service Configuration', [
+            'endpoint' => $this->apiEndpoint,
+            'model' => $this->model,
+            'api_key_prefix' => substr($this->apiKey, 0, 10) . '...'
+        ]);
     }
 
     /**

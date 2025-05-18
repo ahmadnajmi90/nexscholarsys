@@ -34,8 +34,30 @@ export default function UpdateProfileInformation({
                     generatedProfileData={generatedProfileData}
                 /> 
             )}
-            {postgraduate && (<PostgraduateForm postgraduate={postgraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} skills={skills}/> )}
-            {undergraduate && (<UndergraduateForm undergraduate={undergraduate} universities={universities} faculties={faculties} researchOptions={researchOptions} skills={skills} /> )}
+            {postgraduate && (
+                <PostgraduateForm 
+                    postgraduate={postgraduate} 
+                    universities={universities} 
+                    faculties={faculties} 
+                    researchOptions={researchOptions} 
+                    skills={skills}
+                    aiGenerationInProgress={aiGenerationInProgress}
+                    aiGenerationMethod={aiGenerationMethod}
+                    generatedProfileData={generatedProfileData}
+                /> 
+            )}
+            {undergraduate && (
+                <UndergraduateForm 
+                    undergraduate={undergraduate} 
+                    universities={universities} 
+                    faculties={faculties} 
+                    researchOptions={researchOptions} 
+                    skills={skills} 
+                    aiGenerationInProgress={aiGenerationInProgress}
+                    aiGenerationMethod={aiGenerationMethod}
+                    generatedProfileData={generatedProfileData}
+                /> 
+            )}
         </>
     );
 }

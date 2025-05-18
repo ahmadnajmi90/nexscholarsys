@@ -36,6 +36,9 @@ export default function UpdateProfileInformation_M({
                     faculties={faculties}
                     researchOptions={researchOptions}
                     skills={skills}
+                    aiGenerationInProgress={aiGenerationInProgress}
+                    aiGenerationMethod={aiGenerationMethod}
+                    generatedProfileData={generatedProfileData}
                 />
             )}
             {isUndergraduate && (
@@ -45,6 +48,9 @@ export default function UpdateProfileInformation_M({
                     faculties={faculties}
                     researchOptions={researchOptions}
                     skills={skills}
+                    aiGenerationInProgress={aiGenerationInProgress}
+                    aiGenerationMethod={aiGenerationMethod}
+                    generatedProfileData={generatedProfileData}
                 />
             )}
         </div>

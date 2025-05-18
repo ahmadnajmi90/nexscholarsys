@@ -148,6 +148,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/role', [RoleProfileController::class, 'update'])->name('role.update');
     Route::post('/role/updateProfilePicture', [RoleProfileController::class, 'updateProfilePicture'])->name('role.updateProfilePicture');
     Route::post('/role/updateBackgroundImage', [RoleProfileController::class, 'updateBackgroundImage'])->name('role.updateBackgroundImage');
+    Route::post('/role/updateCV', [RoleProfileController::class, 'updateCV'])->name('role.updateCV');
     Route::delete('/role', [RoleProfileController::class, 'destroy'])->name('role.destroy');
     Route::get('/role/publications', [RoleProfileController::class, 'showPublications'])->name('role.publications');
 });
@@ -265,6 +266,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('ai.generate.automatic');
     Route::post('/ai/urls/save', [App\Http\Controllers\RoleProfileController::class, 'saveProfileURLs'])
         ->name('ai.urls.save');
+    Route::post('/ai/generate/cv', [App\Http\Controllers\RoleProfileController::class, 'generateProfileFromCV'])
+        ->name('ai.generate.cv');
     Route::get('/ai/status', [App\Http\Controllers\RoleProfileController::class, 'checkGenerationStatus'])
         ->name('ai.status');
 });

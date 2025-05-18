@@ -36,6 +36,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       availability_as_supervisor: academician?.availability_as_supervisor || false,
       style_of_supervision: academician?.style_of_supervision || '',
       background_image: academician?.background_image || '',
+      CV_file: academician?.CV_file || '',
     });
 
   // State for modals and generation
@@ -87,12 +88,17 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
   // Effect to trigger automatic generation if URL params are present
   useEffect(() => {
+    // Check for generation_initiated parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const generationInitiated = urlParams.get('generation_initiated') === 'true';
+    
     console.log("Checking if automatic generation should be triggered:", {
       aiGenerationInProgress,
       aiGenerationMethod,
       generationTriggeredRef: generationTriggeredRef.current,
       isGenerating,
       generatedProfileData: !!generatedProfileData,
+      generationInitiated,
       location: window.location.href
     });
     
@@ -102,9 +108,9 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       return;
     }
     
-    // If generation is already in progress, check status
-    if (aiGenerationInProgress && !generationTriggeredRef.current && !isGenerating) {
-      console.log("Generation in progress, checking status");
+    // If generation was initiated from CV upload page or is in progress
+    if ((generationInitiated || aiGenerationInProgress) && !generationTriggeredRef.current && !isGenerating) {
+      console.log("Generation in progress or initiated, checking status");
       checkGenerationStatus();
       return;
     }
@@ -117,8 +123,21 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
     }
     
     setIsGenerating(true);
-    axios.get(route('ai.status'))
+    console.log("Checking generation status");
+    
+    // Get CSRF token from the meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    axios.get(route('ai.status'), {
+      headers: {
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
       .then(response => {
+        console.log("Status check response:", response.data);
+        
         if (response.data.status === 'in_progress') {
           // Still in progress, check again after delay
           setTimeout(checkGenerationStatus, 3000);
@@ -126,22 +145,22 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
           // Error occurred
           setIsGenerating(false);
           alert("Profile generation failed: " + response.data.message);
-        } else {
-          // Generation completed
+        } else if (response.data.status === 'completed' || response.data.data || 
+                 (typeof response.data === 'object' && response.data.full_name)) {
+          // Generation completed - handle different response formats
           setIsGenerating(false);
-          if (response.data) {
+          let profileData = response.data;
+          
+          // Handle nested response structure if present
+          if (response.data.data) {
+            profileData = response.data.data;
+          } else if (response.data.response) {
+            profileData = response.data.response;
+          }
+          
+          if (profileData) {
             // Apply the generated profile data
-            setData((prevData) => ({
-              ...prevData,
-              full_name: data.full_name, // Keep existing name
-              phone_number: response.data.phone_number || prevData.phone_number,
-              bio: response.data.bio || prevData.bio,
-              current_position: response.data.current_position || prevData.current_position,
-              department: response.data.department || prevData.department,
-              highest_degree: response.data.highest_degree || prevData.highest_degree,
-              field_of_study: response.data.field_of_study || prevData.field_of_study,
-              research_expertise: response.data.research_expertise || prevData.research_expertise,
-            }));
+            updateFormWithGeneratedData(profileData);
             
             // Mark as triggered to prevent double processing
             generationTriggeredRef.current = true;
@@ -153,10 +172,19 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
               alert("Profile successfully generated! Please review and save the changes.");
             }
           }
+        } else {
+          // Fallback to checking directly from cache in case status API doesn't return expected format
+          console.log("Unexpected status format, checking cache directly");
+          setIsGenerating(false);
         }
       })
       .catch(error => {
         console.error("Error checking generation status:", error);
+        console.log('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
         setIsGenerating(false);
       });
   };
@@ -222,81 +250,260 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
   };
 
   // Function to initiate profile generation (existing functionality)
-  const handleGenerateProfile = () => {
-    // Prevent duplicate calls
-    if (isGenerating) {
-      console.log("Generation already in progress", { isGenerating });
-      return;
-    }
-    
-    // Check if the generation has already been completed
-    if (generationTriggeredRef.current) {
-      console.log("Generation has already been triggered and completed");
-      return;
-    }
-    
-    console.log("Starting profile generation with mode:", genMode);
-    
-    // Mark as triggered
-    generationTriggeredRef.current = true;
-    
-    setShowMethodModal(false);
+  const handleGenerateProfile = async () => {
     setIsGenerating(true);
+    setGenerationStatus('Generating...');
     
-    // Reset success message flag when starting a new generation
-    window._profileSuccessShown = false;
-    
-    // Get URLs from fields if we're using 'url' method and no custom URLs are provided
-    const urlsToSend = genMode === 'url' ? 
-      // If we have custom URLs, use those; otherwise, use the URLs from our profile fields
-      (providedUrls.filter(url => url.trim() !== '').length > 0 ? 
-        providedUrls : 
-        [data.personal_website, data.institution_website, data.linkedin, data.google_scholar, data.researchgate].filter(url => url && url.trim() !== '')
-      ) : 
-      [];
-    
-    console.log("Sending profile generation request with:", { mode: genMode, urls: urlsToSend });
-    
-    axios
-      .post(route('academician.generateProfile'), {
-        mode: genMode,
-        urls: urlsToSend,
-      })
-      .then((response) => {
-        console.log("Profile generation successful:", response.data);
-        const generatedData = response.data;
-        setData((prevData) => ({
-          ...prevData,
-          full_name: data.full_name,
-          bio: generatedData.bio || prevData.bio,
-          current_position: generatedData.current_position || prevData.current_position,
-          department: generatedData.department || prevData.department,
-          highest_degree: generatedData.highest_degree || prevData.highest_degree,
-          field_of_study: generatedData.field_of_study || prevData.field_of_study,
-          research_expertise: generatedData.research_expertise || prevData.research_expertise,
-          // The 4 URL fields are already provided by users in their profile.
-          personal_website: data.personal_website,
-          institution_website: data.institution_website,
-          linkedin: data.linkedin,
-          google_scholar: data.google_scholar,
-          researchgate: data.researchgate,
-        }));
-        setIsGenerating(false);
+    try {
+        const response = await axios.post(route('academician.generateProfile'), {
+            mode: 'auto',
+        });
         
-        // Track that we've shown a success message to avoid duplicate alerts
-        if (!window._profileSuccessShown) {
-          window._profileSuccessShown = true;
-          // Show success message to the user
-          alert("Profile successfully generated! Please review and save the changes.");
+        if (response.status === 200) {
+            // Update form values with generated profile data
+            const profileData = response.data;
+            
+            // Update form fields
+            updateFormWithGeneratedData(profileData);
+            
+            setGenerationStatus('Profile generated successfully!');
+            setTimeout(() => {
+                setGenerationStatus('');
+            }, 3000);
         }
-      })
-      .catch((error) => {
-        console.error("Profile generation failed:", error.response?.data || error.message || error);
-        alert("Profile generation failed, please try again.");
+    } catch (error) {
+        console.error('Error generating profile:', error);
+        setGenerationStatus('Error generating profile. Please try again.');
+    } finally {
         setIsGenerating(false);
-        // Reset the generation flag on error to allow retrying
-        generationTriggeredRef.current = false;
-      });
+    }
+  };
+
+  const handleGenerateProfileFromCV = async () => {
+    // First check if CV exists
+    if (data.CV_file) {
+        // CV already exists, use it
+        setIsGenerating(true);
+        setGenerationStatus('Generating profile from existing CV...');
+        try {
+            // Get CSRF token from the meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            // Use FormData to explicitly include the token
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            
+            // Log details for debugging
+            console.log('Attempting CV generation with token:', csrfToken);
+            
+            const response = await axios.post(route('ai.generate.cv'), formData, {
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'multipart/form-data', // Use multipart/form-data when sending FormData
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            console.log('CV generation response:', response.data);
+            
+            if (response.data.status === 'success' && response.data.generation_initiated) {
+                // Wait for a brief moment then check for the profile data
+                setTimeout(async () => {
+                    try {
+                        const statusResponse = await axios.get(route('ai.status'), {
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        console.log('Status check response:', statusResponse.data);
+                        
+                        if (statusResponse.data && statusResponse.data.status !== 'in_progress') {
+                            // Update form with the generated data
+                            updateFormWithGeneratedData(statusResponse.data.data || statusResponse.data);
+                            setGenerationStatus('Profile generated successfully from CV!');
+                        } else {
+                            setGenerationStatus('Profile generation in progress. Refresh the page in a few moments.');
+                        }
+                    } catch (err) {
+                        console.error('Error checking generation status:', err);
+                        console.log('Error details:', {
+                            message: err.message,
+                            response: err.response?.data,
+                            status: err.response?.status
+                        });
+                        setGenerationStatus('Error checking generation status. Please refresh the page.');
+                    } finally {
+                        setIsGenerating(false);
+                    }
+                }, 3000);
+            } else if (response.data && typeof response.data === 'object' && response.data.full_name) {
+                // Response contains profile data directly
+                updateFormWithGeneratedData(response.data);
+                setGenerationStatus('Profile generated successfully from CV!');
+                setIsGenerating(false);
+            } else {
+                console.log('Unexpected response format:', response.data);
+                throw new Error('Generation could not be initiated: Invalid response format');
+            }
+        } catch (error) {
+            console.error('Error generating profile from CV:', error);
+            console.log('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                headers: error.response?.headers
+            });
+            setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
+            setIsGenerating(false);
+        }
+    } else {
+        // No CV exists, prompt for upload
+        setCVModalOpen(true);
+    }
+  };
+
+  const [cvFile, setCVFile] = useState(null);
+  const [cvModalOpen, setCVModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = (e) => {
+    setCVFile(e.target.files[0]);
+  };
+
+  const handleCVUpload = async () => {
+    if (!cvFile) {
+        return;
+    }
+    
+    setIsUploading(true);
+    setGenerationStatus('Uploading CV and generating profile...');
+    
+    try {
+        // Get CSRF token from the meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        console.log('CSRF Token for CV upload:', csrfToken);
+        
+        // Create form data to submit the file
+        const formData = new FormData();
+        formData.append('cv_file', cvFile);
+        
+        // First save the CV to the user's profile
+        const cvFormData = new FormData();
+        cvFormData.append('cv', cvFile);
+        cvFormData.append('_token', csrfToken); // Explicitly include token in form data
+        
+        console.log('Saving CV to profile...');
+        const saveResponse = await axios.post(route('role.updateCV'), cvFormData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        console.log('CV save response:', saveResponse.data);
+        
+        // If saved successfully, update the local state
+        if (saveResponse.data.success) {
+            setData('CV_file', saveResponse.data.cv_path);
+            
+            // Now make the API call to process the CV and trigger generation
+            formData.append('_token', csrfToken); // Explicitly include token in form data
+            
+            console.log('Generating profile from uploaded CV...');
+            const response = await axios.post(route('ai.generate.cv'), formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            console.log('CV generation response:', response.data);
+            
+            // Handle different success response formats
+            if (response.data.status === 'success' || 
+                (response.data && typeof response.data === 'object' && 
+                (response.data.full_name || response.data.response || response.data.data))) {
+                
+                setCVModalOpen(false);
+                setCVFile(null);
+                setGenerationStatus('CV uploaded and profile generation started...');
+                
+                // Wait for a brief moment then check for the profile data
+                setTimeout(async () => {
+                    try {
+                        const statusResponse = await axios.get(route('ai.status'), {
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        console.log('Status check after CV generation:', statusResponse.data);
+                        
+                        // Handle the response appropriately
+                        if (statusResponse.data.status === 'in_progress') {
+                            // Still in progress
+                            setGenerationStatus('Profile generation in progress. Please wait...');
+                            // Check again after a delay
+                            setTimeout(checkGenerationStatus, 3000);
+                        } else {
+                            // Extract profile data from various response formats
+                            let profileData = statusResponse.data;
+                            if (statusResponse.data.response) {
+                                profileData = statusResponse.data.response;
+                            } else if (statusResponse.data.data) {
+                                profileData = statusResponse.data.data;
+                            }
+                            
+                            // Update form with the generated data
+                            updateFormWithGeneratedData(profileData);
+                            setGenerationStatus('Profile generated successfully from CV!');
+                        }
+                    } catch (err) {
+                        console.error('Error checking generation status:', err);
+                        console.log('Error details:', {
+                            message: err.message,
+                            response: err.response?.data,
+                            status: err.response?.status
+                        });
+                        setGenerationStatus('Error checking generation status. Please refresh the page.');
+                    } finally {
+                        setIsUploading(false);
+                    }
+                }, 3000);
+            } else if (response.data && typeof response.data === 'object' && response.data.full_name) {
+                // Response contains profile data directly
+                setCVModalOpen(false);
+                setCVFile(null);
+                updateFormWithGeneratedData(response.data);
+                setGenerationStatus('Profile generated successfully from CV!');
+                setIsUploading(false);
+            } else {
+                console.error('Unexpected response format:', response.data);
+                throw new Error('Failed to generate profile: Invalid response format');
+            }
+        } else {
+            throw new Error('Failed to save CV to profile');
+        }
+    } catch (error) {
+        console.error('Error uploading CV:', error);
+        console.log('Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            statusText: error.response?.statusText
+        });
+        setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
+        setIsUploading(false);
+    }
   };
 
   // Function to download the profile picture (existing)
@@ -357,7 +564,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
     const formData = new FormData();
 
     Object.keys(data).forEach((key) => {
-      if (key !== "profile_picture") {
+      if (key !== "profile_picture" && key !== "background_image" && key !== "CV_file") {
         if (key === "research_expertise") {
           formData.append(key, JSON.stringify(data[key]));
         } else if (key === "availability_as_supervisor") {
@@ -369,6 +576,14 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         }
       }
     });
+
+    // Handle CV file separately
+    if (data.CV_file && typeof data.CV_file !== 'string') {
+      formData.append('CV_file', data.CV_file);
+    } else if (data.CV_file === '') {
+      // If cv is empty string, it means the user has removed the CV
+      formData.append('CV_file', '');
+    }
 
     post(route("role.update"), {
       data: formData,
@@ -436,6 +651,27 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
   const showAIGenerationModal = () => {
     resetGenerationFlag();
     setShowMethodModal(true);
+  };
+
+  const [generationStatus, setGenerationStatus] = useState('');
+
+  const updateFormWithGeneratedData = (profileData) => {
+    setData((prevData) => ({
+      ...prevData,
+      full_name: profileData.full_name || prevData.full_name,
+      phone_number: profileData.phone_number || prevData.phone_number,
+      bio: profileData.bio || prevData.bio,
+      current_position: profileData.current_position || prevData.current_position,
+      department: profileData.department || prevData.department,
+      highest_degree: profileData.highest_degree || prevData.highest_degree,
+      field_of_study: profileData.field_of_study || prevData.field_of_study,
+      research_expertise: profileData.research_expertise || prevData.research_expertise,
+      personal_website: profileData.personal_website || prevData.personal_website,
+      institution_website: profileData.institution_website || prevData.institution_website,
+      linkedin: profileData.linkedin || prevData.linkedin,
+      google_scholar: profileData.google_scholar || prevData.google_scholar,
+      researchgate: profileData.researchgate || prevData.researchgate,
+    }));
   };
 
   return (
@@ -593,7 +829,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         >
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg">
-              <p className="text-lg font-medium">Generating profile, please wait...</p>
+              <p className="text-lg font-medium">{generationStatus}</p>
               <svg className="animate-spin h-8 w-8 mt-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -633,6 +869,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
               >
                 <option value="auto">Auto search from Internet</option>
                 <option value="url">Use my provided URL(s)</option>
+                <option value="cv">Generate from CV</option>
               </select>
             </div>
             {genMode === 'url' && (
@@ -663,7 +900,14 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={handleGenerateProfile}
+                onClick={() => {
+                  setShowMethodModal(false);
+                  if (genMode === 'cv') {
+                    handleGenerateProfileFromCV();
+                  } else {
+                    handleGenerateProfile();
+                  }
+                }}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-800"
               >
                 Submit
@@ -782,6 +1026,54 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   />
                   <InputError className="mt-2" message={errors.field_of_study} />
                 </div>
+              </div>
+
+              {/* CV Upload Section */}
+              <div className="w-full">
+                <InputLabel htmlFor="CV_file" value="Upload CV (Max 5MB)" />
+                <input
+                  type="file"
+                  id="CV_file"
+                  accept=".pdf,.doc,.docx"
+                  className="mt-1 block w-full border-gray-300 rounded-md py-2"
+                  onChange={e => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.size <= 5 * 1024 * 1024) {
+                        setData('CV_file', file);
+                      } else {
+                        alert("File size exceeds 5MB. Please upload a smaller file.");
+                      }
+                    }
+                  }}
+                />
+                {data.CV_file && (
+                  <div className="mt-2">
+                    {typeof data.CV_file === 'string' ? (
+                      <a
+                        href={`/storage/${data.CV_file}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-500 hover:underline"
+                      >
+                        View Current File: {data.CV_file.split('/').pop()}
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-500">File Selected: {data.CV_file.name}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setData('CV_file', '')}
+                      className="ml-3 text-xs text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                <p className="mt-1 text-sm text-gray-500">
+                  Upload your CV to enable CV-based profile generation and enhance your academic profile.
+                </p>
+                <InputError className="mt-2" message={errors.CV_file} />
               </div>
 
               <div className="grid grid-cols-1 gap-6 w-full">
@@ -1111,6 +1403,46 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             </div>
           </div>
         </Transition>
+      )}
+
+      {/* CV Upload Modal */}
+      {cvModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none">
+              <div className="fixed inset-0 bg-black opacity-50"></div>
+              <div className="relative w-auto my-6 mx-auto max-w-3xl z-50">
+                  <div className="relative bg-white rounded-lg shadow-xl p-6">
+                      <h3 className="text-lg font-medium mb-4">Upload CV for Profile Generation</h3>
+                      <p className="mb-4 text-sm text-gray-600">
+                          Upload your CV to generate your profile. We support PDF, DOCX, DOC, and image formats.
+                      </p>
+                      <input
+                          type="file"
+                          className="mb-4 p-2 border rounded w-full"
+                          onChange={handleFileChange}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff"
+                      />
+                      <div className="flex justify-end space-x-3">
+                          <button
+                              className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                              onClick={() => {
+                                  setCVModalOpen(false);
+                                  setCVFile(null);
+                              }}
+                              disabled={isUploading}
+                          >
+                              Cancel
+                          </button>
+                          <button
+                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                              onClick={handleCVUpload}
+                              disabled={!cvFile || isUploading}
+                          >
+                              {isUploading ? 'Uploading...' : 'Upload & Generate Profile'}
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );

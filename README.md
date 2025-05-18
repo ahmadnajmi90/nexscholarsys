@@ -142,11 +142,7 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 Configure the following API keys in your `.env` file:
 
 ```
-# GitHub OpenAI (optional if using direct OpenAI)
-GITHUB_TOKEN=your_github_openai_api_key
-GITHUB_OPENAI_ENDPOINT=your_github_openai_endpoint
-
-# Direct OpenAI API (recommended)
+# OpenAI API (required)
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_API_ENDPOINT=https://api.openai.com/v1
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
@@ -162,9 +158,9 @@ GOOGLE_ANALYTICS_PROPERTY_ID=your_google_analytics_property_id
 > `text-embedding-3-small` (1536 dimensions) by default. You can also use `text-embedding-3-large` (3072 dimensions)
 > for higher quality embeddings if needed.
 >
-> **Direct OpenAI vs GitHub OpenAI**: It's recommended to use the direct OpenAI API configuration (`OPENAI_API_KEY`) 
-> instead of GitHub OpenAI for better reliability and more consistent performance. The system will automatically
-> use your direct OpenAI API key if configured.
+> **OpenAI API Usage**: The application directly connects to OpenAI's API for all AI functionalities. 
+> The code has been updated to use OpenAI's endpoints for embeddings and completions, 
+> providing more reliable performance and better integration with the latest models.
 >
 > **GPT-4o for Insights**: The system uses GPT-4o for generating dynamic supervisor-student match insights.
 > This provides personalized, context-aware explanations of why a supervisor might be a good match for a student's
@@ -322,7 +318,7 @@ This workflow ensures that all users have verified emails and role-specific prof
 
 ### Profile Generation
 
-The platform uses GPT-4o for generating academic profiles through two methods:
+The platform uses GPT-4o for generating academic profiles through three methods:
 
 #### Automatic Search Method
 - System performs online search to find academic information
@@ -341,6 +337,25 @@ The platform uses GPT-4o for generating academic profiles through two methods:
 - The system extracts relevant information from each source
 - AI processes the extracted content to populate profile fields
 - Provides more accurate results when users have specific websites they want to use
+
+#### CV-based Method
+- Available for all user roles (Academicians, Postgraduates, Undergraduates)
+- Users upload their CV/resume in PDF, DOCX, DOC, or image formats
+- Hybrid text extraction approach:
+  - Direct text extraction for text-based PDFs and DOCX files
+  - Tesseract OCR fallback for image-based documents or scanned PDFs
+- Role-specific prompting to generate appropriate profile data
+- AI processes the extracted CV text to populate all relevant profile fields
+- Particularly useful for:
+  - Users without established online presence
+  - Users with limited web footprint
+  - Recent graduates or early-career academics
+  - Users with CVs in languages other than English (auto-translated)
+- Supports batch processing for administrators
+- CV can be uploaded during initial profile creation or later from profile settings
+- The uploaded CV is stored securely and can be accessed or replaced later
+- System supports multi-language CV extraction with automatic translation
+- Academicians can toggle between the three generation methods at any time
 
 #### Optimized Generation Flow
 - The system ensures generation is triggered exactly once per request
@@ -618,6 +633,21 @@ The platform integrates with Google Analytics to provide insights:
 - Update documentation for any changes
 
 ## Changelog
+
+### 2024-07-26
+- Updated AI services to use OpenAI API directly instead of GitHub OpenAI
+- Modified AIProfileService to use OpenAI's endpoint and API key
+- Updated EmbeddingService to use the text-embedding-3-small model directly
+- Simplified OpenAICompletionService by removing GitHub OpenAI specific code
+- Improved logging for better API request debugging
+
+### 2024-07-25
+- Implemented CV-based profile generation for all user roles (Academicians, Postgraduates, Undergraduates)
+- Added hybrid text extraction with direct content extraction and OCR fallback
+- Added CV upload functionality to profile management forms
+- Integrated secure CV storage and linking to user profiles
+- Implemented role-specific prompting for different user types
+- Enhanced AI Profile Generation component with CV upload option
 
 ### 2024-07-15
 - Created a new email notification system for profile updates 

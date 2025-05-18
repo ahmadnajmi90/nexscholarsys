@@ -1,0 +1,678 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Academician;
+use App\Models\Postgraduate;
+use App\Models\Undergraduate;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+
+class CVProfileGeneratorService
+{
+    protected $documentTextExtractor;
+    protected $aiProfileService;
+    protected $user;
+    
+    /**
+     * Constructor
+     *
+     * @param DocumentTextExtractorService $documentTextExtractor
+     * @param AIProfileService $aiProfileService
+     */
+    public function __construct(
+        DocumentTextExtractorService $documentTextExtractor,
+        AIProfileService $aiProfileService
+    ) {
+        $this->documentTextExtractor = $documentTextExtractor;
+        $this->aiProfileService = $aiProfileService;
+    }
+    
+    /**
+     * Generate profile data from CV for a user
+     *
+     * @param User $user
+     * @param string|null $cvPath Path to CV file (if not already stored in user's role model)
+     * @return array|null Generated profile data or null if generation failed
+     */
+    public function generateProfileFromCV(User $user, ?string $cvPath = null): ?array
+    {
+        $this->user = $user;
+        
+        // Determine user role
+        $roleModel = $this->getRoleModelAndCVPath($user, $cvPath);
+        if (!$roleModel) {
+            Log::error("Failed to determine user role or CV path for user {$user->id}");
+            return null;
+        }
+        
+        // Extract list from $roleModel if it's an array
+        if (is_array($roleModel)) {
+            $cvPath = $roleModel['cvPath'];
+            $roleModel = $roleModel['model'];
+        }
+        
+        // Extract text from CV
+        $cvText = $this->documentTextExtractor->extractText($cvPath, $user->id);
+        if (!$cvText) {
+            Log::error("Failed to extract text from CV for user {$user->id}");
+            return null;
+        }
+        
+        // Log the CV extraction success
+        Log::info("Successfully extracted text from CV for user {$user->id}", [
+            'cv_path' => $cvPath,
+            'text_length' => strlen($cvText),
+            'role_type' => get_class($roleModel)
+        ]);
+        
+        // Generate profile based on user role
+        $generatedProfile = $this->generateProfileBasedOnRole($roleModel, $cvText);
+        
+        return $generatedProfile;
+    }
+    
+    /**
+     * Get the appropriate role model and CV path for a user
+     *
+     * @param User $user
+     * @param string|null $cvPath
+     * @return mixed Role model object or an array with model and cvPath, or null if not found
+     */
+    protected function getRoleModelAndCVPath(User $user, ?string $cvPath = null)
+    {
+        if ($user->isAn('academician')) {
+            $roleModel = $user->academician;
+            if (!$cvPath && isset($roleModel->CV_file)) {
+                $cvPath = $roleModel->CV_file;
+            }
+            
+            return $cvPath ? ['model' => $roleModel, 'cvPath' => $cvPath] : null;
+        } elseif ($user->isAn('postgraduate')) {
+            $roleModel = $user->postgraduate;
+            if (!$cvPath && isset($roleModel->CV_file)) {
+                $cvPath = $roleModel->CV_file;
+            }
+            
+            return $cvPath ? ['model' => $roleModel, 'cvPath' => $cvPath] : null;
+        } elseif ($user->isAn('undergraduate')) {
+            $roleModel = $user->undergraduate;
+            if (!$cvPath && isset($roleModel->CV_file)) {
+                $cvPath = $roleModel->CV_file;
+            }
+            
+            return $cvPath ? ['model' => $roleModel, 'cvPath' => $cvPath] : null;
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Generate profile data based on user role and CV text
+     *
+     * @param mixed $roleModel
+     * @param string $cvText
+     * @return array|null
+     */
+    protected function generateProfileBasedOnRole($roleModel, string $cvText): ?array
+    {
+        // Get user's full name from the role model
+        $fullName = $roleModel->full_name ?? 'Unknown';
+        $email = $this->user->email ?? null;
+        $university = isset($roleModel->university) && $roleModel->university ? 
+            optional($roleModel->universityDetails)->full_name : null;
+        $faculty = isset($roleModel->faculty) && $roleModel->faculty ? 
+            optional($roleModel->faculty)->name : null;
+            
+        // Create role-specific prompts for the AI
+        if ($roleModel instanceof Academician) {
+            return $this->generateAcademicianProfile($roleModel, $cvText, $fullName, $email, $university, $faculty);
+        } elseif ($roleModel instanceof Postgraduate) {
+            return $this->generatePostgraduateProfile($roleModel, $cvText, $fullName, $email, $university, $faculty);
+        } elseif ($roleModel instanceof Undergraduate) {
+            return $this->generateUndergraduateProfile($roleModel, $cvText, $fullName, $email, $university, $faculty);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Generate profile data for an academician
+     *
+     * @param Academician $academician
+     * @param string $cvText
+     * @param string $fullName
+     * @param string|null $email
+     * @param string|null $university
+     * @param string|null $faculty
+     * @return array|null
+     */
+    protected function generateAcademicianProfile(
+        Academician $academician, 
+        string $cvText, 
+        string $fullName, 
+        ?string $email = null,
+        ?string $university = null,
+        ?string $faculty = null
+    ): ?array {
+        $prompt = "Generate a detailed academic profile for an academician using their CV text.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, current_position, department, highest_degree, field_of_study, research_expertise, bio.
+        Each field must be plausible and realistic, if not found then leave it as null:
+        - 'full_name' and 'email' should match the provided details.
+        - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
+        - 'highest_degree' should be one of: Certificate, Diploma, Bachelor's Degree, Master's Degree, Ph.D., or Postdoctoral.
+        - 'current_position' should be one of: Lecturer, Senior Lecturer, Associate Professor, Professor, Postdoctoral Researcher, or Researcher.
+        - 'research_expertise' should be an array of expertise terms.
+        Details: Name: {$fullName}, Email: {$email}, University: {$university}, Faculty: {$faculty}.
+        CV Text: {$cvText}
+        Provide plausible academic details based solely on these inputs, and output only valid JSON without any markdown formatting.";
+        
+        // Log the prompt being sent to AI
+        Log::info("Sending academician profile generation prompt to AI for user {$this->user->id}", [
+            'user_id' => $this->user->id,
+            'role' => 'academician',
+            'prompt_length' => strlen($prompt)
+        ]);
+        
+        // Log the full prompt for debugging 
+        Log::debug("Full AI prompt for academician profile generation (user: {$this->user->id}):", [
+            'prompt' => $prompt
+        ]);
+        
+        // Get AI response
+        $response = $this->aiProfileService->generateProfile($prompt);
+        
+        // Log the AI response
+        if ($response) {
+            Log::info("Received successful AI response for academician profile (user: {$this->user->id})", [
+                'user_id' => $this->user->id,
+                'response_fields' => array_keys($response),
+                'field_count' => count($response)
+            ]);
+            
+            // Log the detailed response
+            Log::debug("Full AI response for academician profile generation (user: {$this->user->id}):", [
+                'response' => $response
+            ]);
+            
+            // Process research_expertise field to map to database IDs
+            if (isset($response['research_expertise']) && is_array($response['research_expertise'])) {
+                $response['research_expertise'] = $this->mapFieldOfResearchToIds($response['research_expertise']);
+                
+                Log::info("Generated profile data for user {$this->user->id} from CV", [
+                    'user_id' => $this->user->id,
+                    'data_keys' => array_keys($response)
+                ]);
+            } else {
+                Log::warning("No research_expertise array found in AI response for user {$this->user->id}", [
+                    'user_id' => $this->user->id,
+                    'response' => $response
+                ]);
+            }
+        } else {
+            Log::error("Failed to get AI response for academician profile (user: {$this->user->id})");
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Map raw skills extracted from CV to existing skills in the database
+     *
+     * @param array $rawSkills Array of skill strings extracted from the CV
+     * @return array Array of skill IDs that match existing skills in the database
+     */
+    protected function mapSkillsToExistingOptions(array $rawSkills): array
+    {
+        // Get all skills from database
+        $existingSkills = \App\Models\Skill::all();
+        $mappedSkillIds = [];
+        
+        // Log the available skills in the database
+        Log::info("Available skills in database:", $existingSkills->pluck('name', 'id')->toArray());
+        
+        // Keywords mapping to help match extracted skills to categories
+        $skillKeywords = [
+            'Programming Skills' => ['programming', 'coding', 'development', 'software', 'java', 'python', 'c++', 'javascript', 'php', 'ruby', 'c#', 'golang', 'swift', 'typescript', 'kotlin', 'scala', 'rust', 'assembly', 'sql', 'bash', 'powershell', 'node', 'git', 'github', 'backend'],
+            
+            'Data Analysis' => ['data analysis', 'statistics', 'r', 'spss', 'analytics', 'data mining', 'data visualization', 'power bi', 'tableau', 'data science', 'analytics', 'excel', 'statistical analysis', 'data processing', 'data cleaning', 'exploratory data analysis', 'eda', 'data interpretation', 'data collection', 'data management', 'database', 'sql', 'nosql', 'mysql', 'postgresql', 'mongodb', 'data warehouse', 'data engineering'],
+            
+            'Machine Learning' => ['machine learning', 'ml', 'tensorflow', 'pytorch', 'keras', 'scikit-learn', 'sklearn', 'supervised learning', 'unsupervised learning', 'reinforcement learning', 'neural networks', 'deep learning', 'nlp', 'natural language processing', 'computer vision', 'classification', 'regression', 'clustering', 'dimensionality reduction', 'ensemble methods', 'feature engineering', 'model training', 'model evaluation', 'hyperparameter tuning'],
+            
+            'Artificial Intelligence' => ['artificial intelligence', 'ai', 'nlp', 'computer vision', 'expert systems', 'knowledge representation', 'reasoning', 'cognitive computing', 'robotics', 'agent systems', 'autonomous systems', 'intelligent systems', 'speech recognition', 'image recognition', 'ai ethics', 'explainable ai', 'ai-driven', 'ai integration', 'ai solution'],
+            
+            'Web Development' => ['web development', 'web design', 'web app', 'web application', 'html', 'css', 'javascript', 'js', 'frontend', 'front-end', 'backend', 'back-end', 'full stack', 'fullstack', 'responsive design', 'spa', 'pwa', 'api', 'restful', 'graphql', 'web security', 'web performance', 'web accessibility', 'cms', 'wordpress', 'shopify', 'magento', 'web hosting', 'domain', 'ssl', 'http', 'https', 'react', 'vue', 'angular', 'laravel', 'django', 'flask', 'express', 'node.js', 'nodejs', 'php', 'asp.net', 'inertia', 'next.js', 'nuxt', 'svelte', 'tailwind', 'bootstrap', 'jquery', 'astro']
+        ];
+        
+        // Pre-process all raw skills
+        $processedSkills = [];
+        foreach ($rawSkills as $skill) {
+            if (empty(trim($skill))) continue;
+            $processedSkills[] = strtolower(trim($skill));
+        }
+        
+        Log::info("Processing extracted skills:", ['raw_skills' => $processedSkills]);
+        
+        // Map skills to categories using more detailed matching
+        foreach ($skillKeywords as $categoryName => $keywords) {
+            $matched = false;
+            
+            // First try exact category matching
+            if (in_array(strtolower($categoryName), $processedSkills)) {
+                $categorySkill = $existingSkills->firstWhere('name', $categoryName);
+                if ($categorySkill && !in_array($categorySkill->id, $mappedSkillIds)) {
+                    $mappedSkillIds[] = $categorySkill->id;
+                    $matched = true;
+                    Log::info("Matched exact category name: $categoryName");
+                }
+            }
+            
+            // Then try keyword matching for each skill
+            foreach ($processedSkills as $skill) {
+                if (empty($skill)) continue;
+                
+                // Check if this exact skill exists in the database
+                $exactSkill = $existingSkills->first(function($item) use ($skill) {
+                    return strtolower($item->name) === $skill;
+                });
+                
+                if ($exactSkill) {
+                    if (!in_array($exactSkill->id, $mappedSkillIds)) {
+                        $mappedSkillIds[] = $exactSkill->id;
+                        Log::info("Matched exact skill: $skill to ID: {$exactSkill->id}");
+                    }
+                    continue;
+                }
+                
+                // Try keyword matching
+                foreach ($keywords as $keyword) {
+                    // Exact match on keyword
+                    if ($skill === $keyword) {
+                        $categorySkill = $existingSkills->firstWhere('name', $categoryName);
+                        if ($categorySkill && !in_array($categorySkill->id, $mappedSkillIds)) {
+                            $mappedSkillIds[] = $categorySkill->id;
+                            Log::info("Matched keyword: $keyword to category: $categoryName");
+                            break;
+                        }
+                    }
+                    // Contains the keyword
+                    elseif (strpos($skill, $keyword) !== false || strpos($keyword, $skill) !== false) {
+                        $categorySkill = $existingSkills->firstWhere('name', $categoryName);
+                        if ($categorySkill && !in_array($categorySkill->id, $mappedSkillIds)) {
+                            $mappedSkillIds[] = $categorySkill->id;
+                            Log::info("Matched partial keyword: $keyword in skill: $skill to category: $categoryName");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Handle special cases for common frameworks/languages
+        $specialCaseMapping = [
+            'react' => 'Web Development',
+            'laravel' => 'Web Development',
+            'vue' => 'Web Development',
+            'inertia' => 'Web Development',
+            'django' => 'Web Development',
+            'express' => 'Web Development',
+            'astro' => 'Web Development',
+            'flask' => 'Web Development',
+            'java' => 'Programming Skills',
+            'python' => 'Programming Skills',
+            'c++' => 'Programming Skills',
+            'php' => 'Programming Skills',
+            'javascript' => 'Programming Skills',
+            'mysql' => 'Data Analysis',
+            'ai' => 'Artificial Intelligence'
+        ];
+        
+        foreach ($processedSkills as $skill) {
+            foreach ($specialCaseMapping as $framework => $category) {
+                if (strpos($skill, $framework) !== false) {
+                    $categorySkill = $existingSkills->firstWhere('name', $category);
+                    if ($categorySkill && !in_array($categorySkill->id, $mappedSkillIds)) {
+                        $mappedSkillIds[] = $categorySkill->id;
+                        Log::info("Special case matched: $framework in skill: $skill to category: $category");
+                    }
+                }
+            }
+        }
+        
+        // If no skills were matched but raw skills exist, try one more general matching
+        if (empty($mappedSkillIds) && !empty($processedSkills)) {
+            $generalKeywords = [
+                'Programming Skills' => ['code', 'program', 'script', 'develop', 'algorithm'],
+                'Web Development' => ['web', 'website', 'frontend', 'backend', 'design', 'ui', 'ux'],
+                'Data Analysis' => ['data', 'analysis', 'analytics', 'statistics', 'database'],
+                'Machine Learning' => ['machine', 'learning', 'model', 'predict', 'classify', 'algorithm'],
+                'Artificial Intelligence' => ['intelligence', 'ai', 'smart', 'cognitive', 'neural']
+            ];
+            
+            foreach ($processedSkills as $skill) {
+                foreach ($generalKeywords as $category => $generalTerms) {
+                    foreach ($generalTerms as $term) {
+                        if (strpos($skill, $term) !== false) {
+                            $categorySkill = $existingSkills->firstWhere('name', $category);
+                            if ($categorySkill && !in_array($categorySkill->id, $mappedSkillIds)) {
+                                $mappedSkillIds[] = $categorySkill->id;
+                                Log::info("General term matched: $term in skill: $skill to category: $category");
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Log the mapping results
+        Log::info("Mapped extracted skills to IDs", [
+            'raw_skills' => $rawSkills,
+            'processed_skills' => $processedSkills,
+            'mapped_skill_ids' => $mappedSkillIds,
+            'mapped_skill_names' => $existingSkills->whereIn('id', $mappedSkillIds)->pluck('name')->toArray()
+        ]);
+        
+        return array_unique($mappedSkillIds);
+    }
+    
+    /**
+     * Map raw field of research terms from CV to existing field_of_research-research_area-niche_domain IDs
+     *
+     * @param array $rawResearchFields Array of research fields extracted from the CV
+     * @return array Array of field_of_research-research_area-niche_domain ID strings
+     */
+    protected function mapFieldOfResearchToIds(array $rawResearchFields): array
+    {
+        // Get all field of research options with their relationships
+        $fieldOfResearches = \App\Models\FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $mappedResearchIds = [];
+        
+        // Prepare research options similar to how they're prepared in the controller
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                        'full_text' => strtolower($field->name . ' ' . $area->name . ' ' . $domain->name)
+                    ];
+                }
+            }
+        }
+        
+        // Log the available research options
+        Log::info("Available research options count:", ['count' => count($researchOptions)]);
+        
+        // Process each raw research field and try to map it to existing options
+        foreach ($rawResearchFields as $field) {
+            $field = trim(strtolower($field));
+            $bestMatch = null;
+            $bestScore = 0;
+            
+            foreach ($researchOptions as $option) {
+                // Check for exact matches first
+                if (strtolower($option['field_of_research_name']) === $field || 
+                    strtolower($option['research_area_name']) === $field || 
+                    strtolower($option['niche_domain_name']) === $field) {
+                    // Create the ID format string
+                    $idString = $option['field_of_research_id'] . '-' . 
+                                $option['research_area_id'] . '-' . 
+                                $option['niche_domain_id'];
+                                
+                    if (!in_array($idString, $mappedResearchIds)) {
+                        $mappedResearchIds[] = $idString;
+                        Log::info("Exact match found for research field: $field", [
+                            'matched_to' => $option['field_of_research_name'] . ' - ' . 
+                                          $option['research_area_name'] . ' - ' . 
+                                          $option['niche_domain_name'],
+                            'id_string' => $idString
+                        ]);
+                    }
+                    continue;
+                }
+                
+                // Check for partial matches by counting how many terms match
+                $score = 0;
+                if (strpos($option['full_text'], $field) !== false) {
+                    $score += 3; // direct substring match is strongest
+                }
+                
+                // Check individual words
+                $fieldWords = explode(' ', $field);
+                foreach ($fieldWords as $word) {
+                    if (strlen($word) > 3) { // Only check meaningful words
+                        if (strpos($option['field_of_research_name'], $word) !== false) $score += 2;
+                        if (strpos($option['research_area_name'], $word) !== false) $score += 2;
+                        if (strpos($option['niche_domain_name'], $word) !== false) $score += 2;
+                    }
+                }
+                
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestMatch = $option;
+                }
+            }
+            
+            // If we found a good match (with score > 3), add it
+            if ($bestMatch && $bestScore > 3) {
+                $idString = $bestMatch['field_of_research_id'] . '-' . 
+                            $bestMatch['research_area_id'] . '-' . 
+                            $bestMatch['niche_domain_id'];
+                            
+                if (!in_array($idString, $mappedResearchIds)) {
+                    $mappedResearchIds[] = $idString;
+                    Log::info("Fuzzy match found for research field: $field", [
+                        'score' => $bestScore,
+                        'matched_to' => $bestMatch['field_of_research_name'] . ' - ' . 
+                                      $bestMatch['research_area_name'] . ' - ' . 
+                                      $bestMatch['niche_domain_name'],
+                        'id_string' => $idString
+                    ]);
+                }
+            }
+        }
+        
+        // Log the mapping results
+        Log::info("Mapped extracted research fields to IDs", [
+            'raw_fields' => $rawResearchFields,
+            'mapped_ids' => $mappedResearchIds,
+            'mapped_count' => count($mappedResearchIds)
+        ]);
+        
+        return $mappedResearchIds;
+    }
+    
+    /**
+     * Generate profile data for a postgraduate
+     *
+     * @param Postgraduate $postgraduate
+     * @param string $cvText
+     * @param string $fullName
+     * @param string|null $email
+     * @param string|null $university
+     * @param string|null $faculty
+     * @return array|null
+     */
+    protected function generatePostgraduateProfile(
+        Postgraduate $postgraduate, 
+        string $cvText, 
+        string $fullName, 
+        ?string $email = null,
+        ?string $university = null,
+        ?string $faculty = null
+    ): ?array {
+        $prompt = "Generate a detailed academic profile for a postgraduate student using their CV text.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, previous_degree, bachelor, CGPA_bachelor, master, master_type, nationality, english_proficiency_level, suggested_research_title, suggested_research_description, field_of_research, bio, skills, funding_requirement, current_postgraduate_status.
+        Each field must be plausible and realistic, if not found then leave it as null:
+        - 'full_name' and 'email' should match the provided details.
+        - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
+        - 'previous_degree' should be the highest academic qualification.
+        - 'bachelor' should be the bachelor's degree field or name.
+        - 'CGPA_bachelor' should be a decimal GPA value (e.g., '3.8').
+        - 'master' should be the master's degree field or name (if applicable).
+        - 'master_type' should be 'Research' or 'Coursework' (if applicable).
+        - 'english_proficiency_level' should be one of: 'Beginner', 'Intermediate', 'Advanced', 'Native'.
+        - 'field_of_research' should be an array of research fields.
+        - 'skills' should be an array of technical or academic skills.
+        - 'funding_requirement' should be 'Yes' or 'No'.
+        - 'current_postgraduate_status' should be 'Not registered yet' or 'Registered'.
+        Details: Name: {$fullName}, Email: {$email}, University: {$university}, Faculty: {$faculty}.
+        CV Text: {$cvText}
+        Provide plausible academic details based solely on these inputs, and output only valid JSON without any markdown formatting.";
+        
+        // Log the prompt being sent to AI
+        Log::info("Sending postgraduate profile generation prompt to AI for user {$this->user->id}", [
+            'user_id' => $this->user->id,
+            'role' => 'postgraduate',
+            'prompt_length' => strlen($prompt)
+        ]);
+        
+        // Log the full prompt for debugging 
+        Log::debug("Full AI prompt for postgraduate profile generation (user: {$this->user->id}):", [
+            'prompt' => $prompt
+        ]);
+        
+        // Get AI response
+        $response = $this->aiProfileService->generateProfile($prompt);
+        
+        // Post-process the response
+        if ($response) {
+            // Process field_of_research if available
+            if (isset($response['field_of_research']) && is_array($response['field_of_research'])) {
+                $response['field_of_research'] = $this->mapFieldOfResearchToIds($response['field_of_research']);
+            }
+            
+            // Process skills if available
+            if (isset($response['skills']) && is_array($response['skills'])) {
+                $response['skills'] = $this->mapSkillsToExistingOptions($response['skills']);
+            }
+            
+            // Set previous_degree based on bachelor/master information
+            if (isset($response['bachelor']) && !empty($response['bachelor'])) {
+                if (!isset($response['previous_degree']) || empty($response['previous_degree'])) {
+                    $response['previous_degree'] = ["Bachelor Degree"];
+                } elseif (is_string($response['previous_degree'])) {
+                    $response['previous_degree'] = ["Bachelor Degree"];
+                } elseif (is_array($response['previous_degree']) && !in_array("Bachelor Degree", $response['previous_degree'])) {
+                    $response['previous_degree'][] = "Bachelor Degree";
+                }
+            }
+            
+            if (isset($response['master']) && !empty($response['master'])) {
+                if (!isset($response['previous_degree']) || empty($response['previous_degree'])) {
+                    $response['previous_degree'] = ["Master"];
+                } elseif (is_string($response['previous_degree'])) {
+                    $response['previous_degree'] = ["Master"];
+                } elseif (is_array($response['previous_degree']) && !in_array("Master", $response['previous_degree'])) {
+                    $response['previous_degree'][] = "Master";
+                }
+            }
+            
+            Log::info("Received successful AI response for postgraduate profile (user: {$this->user->id})", [
+                'user_id' => $this->user->id,
+                'response_fields' => array_keys($response),
+                'field_count' => count($response)
+            ]);
+            
+            // Log the detailed response
+            Log::debug("Full AI response for postgraduate profile generation (user: {$this->user->id}):", [
+                'response' => $response
+            ]);
+        } else {
+            Log::error("Failed to get AI response for postgraduate profile (user: {$this->user->id})");
+        }
+        
+        return $response;
+    }
+    
+    /**
+     * Generate profile data for an undergraduate
+     *
+     * @param Undergraduate $undergraduate
+     * @param string $cvText
+     * @param string $fullName
+     * @param string|null $email
+     * @param string|null $university
+     * @param string|null $faculty
+     * @return array|null
+     */
+    protected function generateUndergraduateProfile(
+        Undergraduate $undergraduate, 
+        string $cvText, 
+        string $fullName, 
+        ?string $email = null,
+        ?string $university = null,
+        ?string $faculty = null
+    ): ?array {
+        $prompt = "Generate a detailed academic profile for an undergraduate student using their CV text.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, bio, bachelor, CGPA_bachelor, nationality, english_proficiency_level, current_undergraduate_status, matric_no, skills, interested_do_research, expected_graduate, research_preference.
+        Each field must be plausible and realistic, if not found then leave it as null:
+        - 'full_name' and 'email' should match the provided details.
+        - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
+        - 'bachelor' should be the undergraduate degree field or program.
+        - 'CGPA_bachelor' should be a decimal GPA value (e.g., '3.8') or null if in progress.
+        - 'english_proficiency_level' should be one of: 'Beginner', 'Intermediate', 'Advanced', 'Native'.
+        - 'current_undergraduate_status' should be 'Not registered yet' or 'Registered'.
+        - 'skills' should be an array of technical or academic skills.
+        - 'interested_do_research' should be true or false.
+        - 'expected_graduate' should be a year (e.g., '2025').
+        - 'research_preference' should be an array of research interests.
+        Details: Name: {$fullName}, Email: {$email}, University: {$university}, Faculty: {$faculty}.
+        CV Text: {$cvText}
+        Provide plausible academic details based solely on these inputs, and output only valid JSON without any markdown formatting.";
+        
+        // Log the prompt being sent to AI
+        Log::info("Sending undergraduate profile generation prompt to AI for user {$this->user->id}", [
+            'user_id' => $this->user->id,
+            'role' => 'undergraduate',
+            'prompt_length' => strlen($prompt)
+        ]);
+        
+        // Log the full prompt for debugging 
+        Log::debug("Full AI prompt for undergraduate profile generation (user: {$this->user->id}):", [
+            'prompt' => $prompt
+        ]);
+        
+        // Get AI response
+        $response = $this->aiProfileService->generateProfile($prompt);
+        
+        // Post-process the response
+        if ($response) {
+            // Process research preference if available
+            if (isset($response['research_preference']) && is_array($response['research_preference'])) {
+                $response['research_preference'] = $this->mapFieldOfResearchToIds($response['research_preference']);
+            }
+            
+            // Process skills if available
+            if (isset($response['skills']) && is_array($response['skills'])) {
+                $response['skills'] = $this->mapSkillsToExistingOptions($response['skills']);
+            }
+            
+            // Set bachelor degree type properly
+            if (isset($response['bachelor']) && !empty($response['bachelor'])) {
+                $response['previous_degree'] = ["Bachelor Degree"];
+            }
+            
+            Log::info("Received successful AI response for undergraduate profile (user: {$this->user->id})", [
+                'user_id' => $this->user->id,
+                'response_fields' => array_keys($response),
+                'field_count' => count($response)
+            ]);
+            
+            // Log the detailed response
+            Log::debug("Full AI response for undergraduate profile generation (user: {$this->user->id}):", [
+                'response' => $response
+            ]);
+        } else {
+            Log::error("Failed to get AI response for undergraduate profile (user: {$this->user->id})");
+        }
+        
+        return $response;
+    }
+} 

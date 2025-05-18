@@ -19,8 +19,11 @@
         "phpoffice/phpspreadsheet": "^1.29",
         "phpoffice/phpword": "^1.3",
         "silber/bouncer": "^1.0",
+        "smalot/pdfparser": "^2.12",
+        "spatie/pdf-to-text": "^1.52",
         "symfony/css-selector": "^7.2",
         "symfony/dom-crawler": "^7.2",
+        "thiagoalessio/tesseract_ocr": "^2.12",
         "tightenco/ziggy": "^2.5"
     },
     "require-dev": {

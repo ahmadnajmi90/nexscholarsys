@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -8,10 +8,12 @@ import InputError from '@/Components/InputError';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
 
-export default function AIProfileGeneration() {
+export default function AIProfileGeneration({ userRole, showAllOptions }) {
     const [activeOption, setActiveOption] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [cvFile, setCvFile] = useState(null);
+    const fileInputRef = useRef(null);
     
     const { data, setData, reset, errors } = useForm({
         personalWebsite: '',
@@ -29,6 +31,14 @@ export default function AIProfileGeneration() {
     const handleOptionSelect = (option) => {
         setActiveOption(option);
         setErrorMessage('');
+    };
+    
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setCvFile(file);
+            setErrorMessage('');
+        }
     };
     
     const handleAutomaticGeneration = async () => {
@@ -96,10 +106,101 @@ export default function AIProfileGeneration() {
         }
     };
     
+    const handleCVSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!cvFile) {
+            setErrorMessage('Please upload a CV file to continue');
+            return;
+        }
+        
+        // Validate file size (max 10MB) and type
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png', 'image/tiff'];
+        
+        if (cvFile.size > maxSize) {
+            setErrorMessage('File size exceeds 10MB limit. Please upload a smaller file.');
+            return;
+        }
+        
+        if (!allowedTypes.includes(cvFile.type)) {
+            setErrorMessage('File type not supported. Please upload PDF, DOC, DOCX, JPEG, PNG, or TIFF files.');
+            return;
+        }
+        
+        setIsLoading(true);
+        setErrorMessage('');
+        
+        try {
+            // First, save the CV to the user's profile
+            const cvFormData = new FormData();
+            cvFormData.append('CV_file', cvFile);
+            
+            console.log('Uploading CV file to profile via role.updateCV route');
+            
+            // Call the CV update route first
+            const updateResponse = await axios.post(route('role.updateCV'), cvFormData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (!updateResponse.data.success) {
+                throw new Error('Failed to upload CV to profile: ' + (updateResponse.data.error || 'Unknown error'));
+            }
+            
+            console.log('CV upload successful, now initiating profile generation');
+            
+            // Now create form data to submit for processing
+            const formData = new FormData();
+            formData.append('CV_file', cvFile); // Use CV_file consistently
+            
+            // Make the API call to process the CV and trigger generation
+            console.log('Sending CV for processing via ai.generate.cv route');
+            const response = await axios.post(route('ai.generate.cv'), formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            console.log('CV processing response:', response.data);
+            
+            // Check for a successful response - various success formats possible
+            if (
+                response.data.status === 'success' || 
+                (typeof response.data === 'object' && response.data.full_name) ||
+                response.data.generation_initiated
+            ) {
+                // Navigate to the profile edit page after CV has been processed
+                console.log('CV processing successful, navigating to profile edit page');
+                
+                // Add query parameter to indicate generation was initiated
+                router.visit(route('role.edit', { generation_initiated: true }), {
+                    preserveState: false,
+                    onSuccess: () => {
+                        setIsLoading(false);
+                    }
+                });
+            } else {
+                console.error('CV generation response format unexpected:', response.data);
+                throw new Error('Generation could not be initiated: Invalid response format');
+            }
+        } catch (error) {
+            console.error('CV processing error:', error);
+            setErrorMessage(error.response?.data?.error || error.message || 'An error occurred while processing your CV');
+            setIsLoading(false);
+        }
+    };
+    
     const handleSkip = () => {
         // When skipping, simply navigate to the role.edit route without any additional parameters
         router.visit(route('role.edit'));
     };
+    
+    // Determine which options to show based on user role
+    const showAutomaticOption = showAllOptions;
+    const showUrlOption = showAllOptions;
+    const showCvOption = true; // CV option is available for all roles
     
     return (
         <GuestLayout>
@@ -107,7 +208,7 @@ export default function AIProfileGeneration() {
             
             <div className="w-full sm:max-w-md px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
                 <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                    Generate Your Academic Profile
+                    Generate Your {userRole === 'academician' ? 'Academic' : (userRole === 'postgraduate' ? 'Postgraduate' : 'Undergraduate')} Profile
                 </h2>
                 
                 {errorMessage && (
@@ -119,10 +220,11 @@ export default function AIProfileGeneration() {
                 {!activeOption ? (
                     <>
                         <p className="text-gray-600 mb-6">
-                            Nexscholar can use AI to help you create your academic profile. How would you like to proceed?
+                            Nexscholar can use AI to help you create your profile. How would you like to proceed?
                         </p>
                         
                         <div className="space-y-4">
+                            {showAutomaticOption && (
                             <button
                                 onClick={() => handleOptionSelect('automatic')}
                                 className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
@@ -132,7 +234,9 @@ export default function AIProfileGeneration() {
                                     We'll search the web for your academic information based on your name and institution.
                                 </span>
                             </button>
+                            )}
                             
+                            {showUrlOption && (
                             <button
                                 onClick={() => handleOptionSelect('url')}
                                 className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
@@ -142,6 +246,19 @@ export default function AIProfileGeneration() {
                                     Provide your academic profile URLs for more accurate results.
                                 </span>
                             </button>
+                            )}
+                            
+                            {showCvOption && (
+                                <button
+                                    onClick={() => handleOptionSelect('cv')}
+                                    className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
+                                >
+                                    <span className="font-medium text-gray-800">Generate From My CV</span>
+                                    <span className="text-sm text-gray-600 mt-1">
+                                        Upload your CV for us to extract information and generate your profile.
+                                    </span>
+                                </button>
+                            )}
                             
                             <button
                                 onClick={handleSkip}
@@ -248,7 +365,6 @@ export default function AIProfileGeneration() {
                                         placeholder="https://www.researchgate.net/profile/..."
                                     />
                                     <InputError message={errors.researchgateProfile} className="mt-2" />
-                                </div>
                             </div>
                             
                             <div className="flex items-center justify-between mt-6">
@@ -262,11 +378,61 @@ export default function AIProfileGeneration() {
                                 </button>
                                 <PrimaryButton
                                     type="submit"
+                                        disabled={isLoading || !hasValidUrl()}
+                                        className="ml-4"
+                                    >
+                                        {isLoading ? 'Processing...' : 'Generate Profile'}
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+                        </form>
+                    </>
+                ) : activeOption === 'cv' ? (
+                    <>
+                        <p className="text-gray-600 mb-6">
+                            <strong>CV-based profile generation can extract information directly from your resume.</strong> Please upload your CV to continue.
+                        </p>
+                        
+                        <form onSubmit={handleCVSubmit}>
+                            <div className="space-y-4">
+                                <div>
+                                    <InputLabel htmlFor="cv_file" value="Upload Your CV" />
+                                    <input
+                                        id="cv_file"
+                                        type="file"
+                                        className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
+                                        onChange={handleFileChange}
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff"
+                                        ref={fileInputRef}
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Supported formats: PDF, DOCX, DOC, JPEG, PNG, TIFF
+                                    </p>
+                                </div>
+                                
+                                <div className="flex items-center justify-between mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setActiveOption(null);
+                                            setCvFile(null);
+                                            if (fileInputRef.current) {
+                                                fileInputRef.current.value = '';
+                                            }
+                                        }}
+                                        className="text-sm text-gray-600 hover:text-gray-900 underline"
+                                        disabled={isLoading}
+                                    >
+                                        Back
+                                    </button>
+                                    <PrimaryButton 
+                                        type="submit"
+                                        disabled={isLoading || !cvFile}
                                     className="ml-4"
-                                    disabled={isLoading || !hasValidUrl()}
                                 >
-                                    {isLoading ? 'Processing...' : 'Save URLs & Continue'}
+                                        {isLoading ? 'Processing...' : 'Generate Profile'}
                                 </PrimaryButton>
+                                </div>
                             </div>
                         </form>
                     </>

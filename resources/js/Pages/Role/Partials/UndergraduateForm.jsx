@@ -4,11 +4,15 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import NationalityForm from "./NationalityForm";
 import Select from 'react-select';
+import axios from 'axios';
 
-export default function UndergraduateForm({ universities, faculties, className = '', researchOptions, skills }) {
+export default function UndergraduateForm({ universities, faculties, className = '', researchOptions, skills, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
+  // Add useRef for tracking generation
+  const generationTriggeredRef = useRef(false);
+
   const undergraduate = usePage().props.undergraduate;
 
   const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
@@ -38,6 +42,230 @@ export default function UndergraduateForm({ universities, faculties, className =
     google_scholar: undergraduate?.google_scholar || '',
     researchgate: undergraduate?.researchgate || '',
   });
+
+  // Add state for CV generation
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState('');
+  const [cvFile, setCVFile] = useState(null);
+  const [cvModalOpen, setCVModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Effect to trigger automatic generation if URL params are present
+  useEffect(() => {
+    // Check for generation_initiated parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const generationInitiated = urlParams.get('generation_initiated') === 'true';
+    
+    console.log("Checking if automatic generation should be triggered:", {
+      aiGenerationInProgress,
+      aiGenerationMethod,
+      generationTriggeredRef: generationTriggeredRef.current,
+      isGenerating,
+      generatedProfileData: !!generatedProfileData,
+      generationInitiated,
+      location: window.location.href
+    });
+    
+    // If we already have generated data, apply it immediately
+    if (generatedProfileData && !generationTriggeredRef.current) {
+      console.log("Applying directly available generated profile data:", generatedProfileData);
+      updateFormWithGeneratedData(generatedProfileData);
+      generationTriggeredRef.current = true;
+      
+      // Show success message
+      if (!window._profileSuccessShown) {
+        window._profileSuccessShown = true;
+        alert("Profile successfully generated! Please review and save the changes.");
+      }
+    }
+    // If generation was initiated but we don't have data yet, check status
+    else if ((aiGenerationInProgress || generationInitiated) && !generationTriggeredRef.current && !isGenerating) {
+      console.log("Generation in progress or initiated, checking status");
+      checkGenerationStatus();
+    }
+  }, [aiGenerationInProgress, isGenerating, generatedProfileData]);
+
+  // Function to check the generation status
+  const checkGenerationStatus = () => {
+    if (generationTriggeredRef.current) {
+      return; // Don't check if already triggered
+    }
+    
+    setIsGenerating(true);
+    setGenerationStatus('Checking generation status...');
+    console.log("Checking generation status");
+    
+    axios.get(route('ai.status'), {
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      }
+    })
+      .then(response => {
+        console.log("Status check response:", response.data);
+        
+        if (response.data.status === 'in_progress') {
+          // Still in progress, check again after delay
+          setGenerationStatus('Generation in progress, please wait...');
+          setTimeout(checkGenerationStatus, 3000);
+        } else if (response.data.status === 'error') {
+          // Error occurred
+          setIsGenerating(false);
+          setGenerationStatus('');
+          alert("Profile generation failed: " + (response.data.message || 'Unknown error'));
+        } else if (response.data.status === 'completed') {
+          // Generation completed
+          setIsGenerating(false);
+          setGenerationStatus('Profile generated successfully!');
+          
+          if (response.data.data) {
+            // Extract the profile data from the nested 'data' property
+            updateFormWithGeneratedData(response.data.data);
+            // Mark as triggered to prevent double processing
+            generationTriggeredRef.current = true;
+            
+            // Track that we've shown a success message to avoid duplicate alerts
+            if (!window._profileSuccessShown) {
+              window._profileSuccessShown = true;
+              // Show success message to the user
+              alert("Profile successfully generated! Please review and save the changes.");
+            }
+          }
+        } else {
+          setIsGenerating(false);
+          setGenerationStatus('');
+          console.log('Unexpected status:', response.data.status);
+        }
+      })
+      .catch(error => {
+        console.error("Error checking generation status:", error);
+        setIsGenerating(false);
+        setGenerationStatus('');
+      });
+  };
+
+  // Function to update form with generated data
+  const updateFormWithGeneratedData = (profileData) => {
+    console.log('Updating form with data:', profileData); // Debug log
+    
+    setData((prevData) => ({
+      ...prevData,
+      full_name: profileData.full_name || prevData.full_name,
+      phone_number: profileData.phone_number || prevData.phone_number,
+      bio: profileData.bio || prevData.bio,
+      nationality: profileData.nationality || prevData.nationality,
+      english_proficiency_level: profileData.english_proficiency_level || prevData.english_proficiency_level,
+      bachelor: profileData.bachelor || prevData.bachelor,
+      CGPA_bachelor: profileData.CGPA_bachelor || prevData.CGPA_bachelor,
+      skills: profileData.skills || prevData.skills,
+      expected_graduate: profileData.expected_graduate || prevData.expected_graduate,
+      research_preference: profileData.research_preference || prevData.research_preference,
+      current_undergraduate_status: profileData.current_undergraduate_status || prevData.current_undergraduate_status,
+      interested_do_research: profileData.interested_do_research || prevData.interested_do_research
+    }));
+  };
+
+  // Function to handle generating profile from CV
+  const handleGenerateProfileFromCV = async () => {
+    // First check if CV exists
+    if (data.CV_file && typeof data.CV_file === 'string') {
+      // CV already exists, use it
+      setIsGenerating(true);
+      setGenerationStatus('Generating profile from existing CV...');
+      try {
+        const response = await axios.post(route('ai.generate.cv'), {}, {
+          headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+          }
+        });
+        console.log('Direct CV generation response:', response.data); // Debug log
+        
+        // Check if response.data contains profile data directly
+        if (response.data && typeof response.data === 'object' && response.data.full_name) {
+          // Response contains profile data directly
+          updateFormWithGeneratedData(response.data);
+          setGenerationStatus('Profile generated successfully from CV!');
+          setIsGenerating(false);
+          // Mark as triggered to prevent double processing
+          generationTriggeredRef.current = true;
+        } else if (response.data && response.data.status === 'success') {
+          // Traditional success response - check status after delay
+          setTimeout(checkGenerationStatus, 3000);
+        } else {
+          // Fallback to status check if we can't determine the response format
+          setTimeout(checkGenerationStatus, 3000);
+        }
+      } catch (error) {
+        console.error('Error generating profile from CV:', error);
+        setGenerationStatus('Error generating profile from CV. Please try again.');
+        setIsGenerating(false);
+      }
+    } else {
+      // No CV exists, prompt for upload
+      setCVModalOpen(true);
+    }
+  };
+
+  // Handle file selection for CV upload
+  const handleFileChange = (e) => {
+    setCVFile(e.target.files[0]);
+  };
+
+  // Handle CV upload and profile generation
+  const handleCVUpload = async () => {
+    if (!cvFile) {
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    try {
+      // Create form data to submit the file
+      const formData = new FormData();
+      formData.append('cv_file', cvFile);
+      
+      // Make the API call to process the CV and trigger generation
+      const response = await axios.post(route('ai.generate.cv'), formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+        }
+      });
+      
+      console.log('CV upload response:', response.data); // Debug log
+      
+      // Check if the response data is directly the profile data
+      if (response.data && typeof response.data === 'object' && response.data.full_name) {
+        setCVModalOpen(false);
+        setCVFile(null);
+        // Update form with the direct profile data
+        updateFormWithGeneratedData(response.data);
+        setGenerationStatus('Profile generated successfully from CV!');
+        setIsUploading(false);
+        // Mark as triggered to prevent double processing
+        generationTriggeredRef.current = true;
+      } else if (response.data && response.data.status === 'success') {
+        // Traditional success response
+        setCVModalOpen(false);
+        setCVFile(null);
+        setGenerationStatus('CV uploaded and profile generation started...');
+        
+        // Wait for a brief moment then check for the profile data
+        setTimeout(checkGenerationStatus, 3000);
+      } else {
+        // Fallback to status check
+        setCVModalOpen(false);
+        setCVFile(null);
+        setGenerationStatus('Processing CV, please wait...');
+        
+        // Wait for a brief moment then check for the profile data
+        setTimeout(checkGenerationStatus, 3000);
+      }
+    } catch (error) {
+      console.error('Error uploading CV:', error);
+      setGenerationStatus('Error uploading CV. Please try again.');
+      setIsUploading(false);
+    }
+  };
 
   // Handler for current undergraduate status change
   const handleStatusChange = (e) => {
@@ -214,10 +442,35 @@ export default function UndergraduateForm({ universities, faculties, className =
 
       {/* Form Section */}
       <section className={className}>
+        <div className="relative mb-6">
         <header>
           <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>
           <p className="mt-1 text-sm text-gray-600">Update your personal information.</p>
         </header>
+          
+          {/* Desktop view: button in the top right */}
+          <div className="hidden sm:flex space-x-2 absolute top-0 right-0 mt-2 mr-2">
+            <button 
+              type="button" 
+              onClick={handleGenerateProfileFromCV}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
+            >
+              Generate Profile From CV
+            </button>
+          </div>
+          
+          {/* Mobile view: button below header */}
+          <div className="sm:hidden mt-4">
+            <button 
+              type="button" 
+              onClick={handleGenerateProfileFromCV}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
+            >
+              Generate Profile From CV
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={submit} className="mt-6 space-y-6">
           {/* Full Name */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
@@ -584,6 +837,69 @@ export default function UndergraduateForm({ universities, faculties, className =
           </div>
         </form>
       </section>
+
+      {/* Generation Status Modal */}
+      {isGenerating && (
+        <Transition
+          show={isGenerating}
+          enter="transition-opacity duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition-opacity duration-300"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <p className="text-lg font-medium">{generationStatus || "Generating profile..."}</p>
+              <svg className="animate-spin h-8 w-8 mt-4 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+            </div>
+          </div>
+        </Transition>
+      )}
+
+      {/* CV Upload Modal */}
+      {cvModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-x-hidden overflow-y-auto outline-none focus:outline-none">
+          <div className="fixed inset-0 bg-black opacity-50"></div>
+          <div className="relative w-auto my-6 mx-auto max-w-3xl z-50">
+            <div className="relative bg-white rounded-lg shadow-xl p-6">
+              <h3 className="text-lg font-medium mb-4">Upload CV for Profile Generation</h3>
+              <p className="mb-4 text-sm text-gray-600">
+                Upload your CV to generate your profile. We support PDF, DOCX, DOC, and image formats.
+              </p>
+              <input
+                type="file"
+                className="mb-4 p-2 border rounded w-full"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff"
+              />
+              <div className="flex justify-end space-x-3">
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  onClick={() => {
+                    setCVModalOpen(false);
+                    setCVFile(null);
+                  }}
+                  disabled={isUploading}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onClick={handleCVUpload}
+                  disabled={!cvFile || isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Upload & Generate Profile'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
