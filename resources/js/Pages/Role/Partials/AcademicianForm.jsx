@@ -295,6 +295,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             
             // Log details for debugging
             console.log('Attempting CV generation with token:', csrfToken);
+            console.log('Using existing CV file:', data.CV_file);
             
             const response = await axios.post(route('ai.generate.cv'), formData, {
                 headers: {
@@ -393,7 +394,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         
         // First save the CV to the user's profile
         const cvFormData = new FormData();
-        cvFormData.append('cv', cvFile);
+        cvFormData.append('CV_file', cvFile);
         cvFormData.append('_token', csrfToken); // Explicitly include token in form data
         
         console.log('Saving CV to profile...');
@@ -435,7 +436,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                 setCVModalOpen(false);
                 setCVFile(null);
                 setGenerationStatus('CV uploaded and profile generation started...');
-                
+        
                 // Wait for a brief moment then check for the profile data
                 setTimeout(async () => {
                     try {
@@ -466,7 +467,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                             // Update form with the generated data
                             updateFormWithGeneratedData(profileData);
                             setGenerationStatus('Profile generated successfully from CV!');
-                        }
+        }
                     } catch (err) {
                         console.error('Error checking generation status:', err);
                         console.log('Error details:', {
@@ -1052,7 +1053,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                     {typeof data.CV_file === 'string' ? (
                       <a
                         href={`/storage/${data.CV_file}`}
-                        target="_blank"
+                        target="_blank" 
                         rel="noopener noreferrer"
                         className="text-sm text-blue-500 hover:underline"
                       >
@@ -1061,15 +1062,15 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                     ) : (
                       <p className="text-sm text-gray-500">File Selected: {data.CV_file.name}</p>
                     )}
-                    <button
-                      type="button"
+                      <button
+                        type="button"
                       onClick={() => setData('CV_file', '')}
                       className="ml-3 text-xs text-red-600 hover:text-red-800"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 <p className="mt-1 text-sm text-gray-500">
                   Upload your CV to enable CV-based profile generation and enhance your academic profile.
                 </p>

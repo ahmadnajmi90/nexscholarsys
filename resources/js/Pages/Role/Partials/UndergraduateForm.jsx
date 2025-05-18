@@ -172,9 +172,22 @@ export default function UndergraduateForm({ universities, faculties, className =
       setIsGenerating(true);
       setGenerationStatus('Generating profile from existing CV...');
       try {
-        const response = await axios.post(route('ai.generate.cv'), {}, {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        // Use FormData to explicitly include the token
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        
+        // Log details for debugging
+        console.log('Attempting CV generation with token:', csrfToken);
+        console.log('Using existing CV file:', data.CV_file);
+        
+        const response = await axios.post(route('ai.generate.cv'), formData, {
           headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            'X-CSRF-TOKEN': csrfToken,
+            'Content-Type': 'multipart/form-data', 
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
           }
         });
         console.log('Direct CV generation response:', response.data); // Debug log
@@ -217,48 +230,80 @@ export default function UndergraduateForm({ universities, faculties, className =
     }
     
     setIsUploading(true);
+    setGenerationStatus('Uploading CV and generating profile...');
     
     try {
-      // Create form data to submit the file
-      const formData = new FormData();
-      formData.append('cv_file', cvFile);
+      // Get CSRF token from the meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       
-      // Make the API call to process the CV and trigger generation
-      const response = await axios.post(route('ai.generate.cv'), formData, {
+      // First save the CV to the user's profile
+      const cvFormData = new FormData();
+      cvFormData.append('CV_file', cvFile);
+      cvFormData.append('_token', csrfToken); // Explicitly include token in form data
+      
+      console.log('Saving CV to profile...');
+      const saveResponse = await axios.post(route('role.updateCV'), cvFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         }
       });
       
-      console.log('CV upload response:', response.data); // Debug log
+      console.log('CV save response:', saveResponse.data);
       
-      // Check if the response data is directly the profile data
-      if (response.data && typeof response.data === 'object' && response.data.full_name) {
-        setCVModalOpen(false);
-        setCVFile(null);
-        // Update form with the direct profile data
-        updateFormWithGeneratedData(response.data);
-        setGenerationStatus('Profile generated successfully from CV!');
-        setIsUploading(false);
-        // Mark as triggered to prevent double processing
-        generationTriggeredRef.current = true;
-      } else if (response.data && response.data.status === 'success') {
-        // Traditional success response
-        setCVModalOpen(false);
-        setCVFile(null);
-        setGenerationStatus('CV uploaded and profile generation started...');
+      // If saved successfully, update the local state
+      if (saveResponse.data.success) {
+        setData('CV_file', saveResponse.data.cv_path);
         
-        // Wait for a brief moment then check for the profile data
-        setTimeout(checkGenerationStatus, 3000);
+        // Create form data to submit the file for generation
+        const formData = new FormData();
+        formData.append('cv_file', cvFile);
+        formData.append('_token', csrfToken); // Explicitly include token in form data
+        
+        // Make the API call to process the CV and trigger generation
+        console.log('Generating profile from uploaded CV...');
+        const response = await axios.post(route('ai.generate.cv'), formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+        console.log('CV upload response:', response.data); // Debug log
+        
+        // Check if the response data is directly the profile data
+        if (response.data && typeof response.data === 'object' && response.data.full_name) {
+          setCVModalOpen(false);
+          setCVFile(null);
+          // Update form with the direct profile data
+          updateFormWithGeneratedData(response.data);
+          setGenerationStatus('Profile generated successfully from CV!');
+          setIsUploading(false);
+          // Mark as triggered to prevent double processing
+          generationTriggeredRef.current = true;
+        } else if (response.data && response.data.status === 'success') {
+          // Traditional success response
+          setCVModalOpen(false);
+          setCVFile(null);
+          setGenerationStatus('CV uploaded and profile generation started...');
+          
+          // Wait for a brief moment then check for the profile data
+          setTimeout(checkGenerationStatus, 3000);
+        } else {
+          // Fallback to status check
+          setCVModalOpen(false);
+          setCVFile(null);
+          setGenerationStatus('Processing CV, please wait...');
+          
+          // Wait for a brief moment then check for the profile data
+          setTimeout(checkGenerationStatus, 3000);
+        }
       } else {
-        // Fallback to status check
-        setCVModalOpen(false);
-        setCVFile(null);
-        setGenerationStatus('Processing CV, please wait...');
-        
-        // Wait for a brief moment then check for the profile data
-        setTimeout(checkGenerationStatus, 3000);
+        throw new Error('Failed to save CV to profile');
       }
     } catch (error) {
       console.error('Error uploading CV:', error);
@@ -455,7 +500,7 @@ export default function UndergraduateForm({ universities, faculties, className =
               onClick={handleGenerateProfileFromCV}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
             >
-              Generate Profile From CV
+              AI Generate Profile From CV
             </button>
           </div>
           
@@ -466,7 +511,7 @@ export default function UndergraduateForm({ universities, faculties, className =
               onClick={handleGenerateProfileFromCV}
               className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-800"
             >
-              Generate Profile From CV
+              AI Generate Profile From CV
             </button>
           </div>
         </div>

@@ -1373,7 +1373,7 @@ class RoleProfileController extends Controller
                     'error' => 'Profile generation did not produce any results',
                     'generation_initiated' => false
                 ], 500);
-            }
+        }
         } catch (\Exception $e) {
             Log::error("Exception occurred during CV profile generation for user {$user->id}", [
                 'user_id' => $user->id,
