@@ -7,7 +7,7 @@ const getMeasurementId = () => {
     if (typeof window !== 'undefined' && window.gaConfig && window.gaConfig.measurementId) {
         return window.gaConfig.measurementId;
     }
-    return 'G-Q6VXKF3B0T'; // Fallback to hardcoded value if not set
+    return 'G-Q6VXXF3B0T'; // Fallback to hardcoded value if not set
 };
 
 /**

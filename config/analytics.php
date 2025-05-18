@@ -11,10 +11,10 @@ return [
     */
 
     // GA4 Property ID (without the 'G-' prefix)
-    'property_id' => env('GOOGLE_ANALYTICS_PROPERTY_ID', 'Q6VXKF3B0T'),
+    'property_id' => env('GOOGLE_ANALYTICS_PROPERTY_ID', 'Q6VXXF3B0T'),
 
     // Full Measurement ID (with 'G-' prefix)
-    'measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID', 'G-Q6VXKF3B0T'),
+    'measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID', 'G-Q6VXXF3B0T'),
 
     // Google Service Account Credentials JSON file path
     'service_account_credentials_json' => env('GOOGLE_ANALYTICS_SERVICE_ACCOUNT_JSON', base_path('storage/app/google/nexcholar-943eca95a1fe.json')),

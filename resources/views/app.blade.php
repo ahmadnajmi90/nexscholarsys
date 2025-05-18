@@ -95,10 +95,10 @@
         <script>
           // Create global config for GA measurement ID
           window.gaConfig = {
-            measurementId: '{{ config('analytics.measurement_id', 'G-Q6VXKF3B0T') }}'
+            measurementId: '{{ config('analytics.measurement_id', 'G-Q6VXXF3B0T') }}'
           };
         </script>
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('analytics.measurement_id', 'G-Q6VXKF3B0T') }}"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('analytics.measurement_id', 'G-Q6VXXF3B0T') }}"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -116,7 +116,7 @@
           
           if (isProduction) {
             console.log('[GA] Initializing GA tracking for production');
-            gtag('config', '{{ config('analytics.measurement_id', 'G-Q6VXKF3B0T') }}');
+            gtag('config', '{{ config('analytics.measurement_id', 'G-Q6VXXF3B0T') }}');
           } else {
             console.log('[GA] Skipping GA tracking on non-production environment: ' + hostname);
           }
