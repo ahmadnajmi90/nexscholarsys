@@ -24,49 +24,14 @@ class DocumentTextExtractorService
             'requested_path' => $filePath
         ]);
 
-        // First try using Laravel's Storage facade to locate the file
-        // This is the preferred modern approach that properly handles storage locations
-        if (Storage::disk('public')->exists($filePath)) {
-            $absolutePath = Storage::disk('public')->path($filePath);
-            Log::info("File found in public storage", [
-                'relative_path' => $filePath,
-                'absolute_path' => $absolutePath,
-                'file_size' => filesize($absolutePath)
+        // Find the absolute path to the file using multiple strategies
+        $absolutePath = $this->resolveFilePath($filePath, $userId);
+        if (!$absolutePath) {
+            Log::error("Document file not found in any of the expected locations", [
+                'user_id' => $userId,
+                'requested_path' => $filePath
             ]);
-        }
-        // Fallbacks in case the file is stored in a different location
-        else {
-            // Try different possible storage locations, prioritizing the correct path first
-            $possiblePaths = [
-                storage_path('app/public/' . $filePath),         // Standard Laravel public storage
-                storage_path('app/private/public/' . $filePath), // Possible non-standard path
-                storage_path('app/' . $filePath),                // Direct app storage
-                public_path('storage/' . $filePath),             // Symlinked public path
-                $filePath                                        // Direct absolute path as last resort
-            ];
-            
-            // Find the first valid path that exists
-            $absolutePath = null;
-            foreach ($possiblePaths as $path) {
-                if (file_exists($path)) {
-                    $absolutePath = $path;
-                    Log::info("File found via fallback path", [
-                        'original_path' => $filePath,
-                        'found_at' => $path,
-                        'file_size' => filesize($path)
-                    ]);
-                    break;
-                }
-            }
-            
-            if (!$absolutePath) {
-                Log::error("Document file not found in any of the expected locations", [
-                    'user_id' => $userId,
-                    'requested_path' => $filePath,
-                    'tried_paths' => $possiblePaths
-                ]);
-                return null;
-            }
+            return null;
         }
         
         $extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
@@ -129,6 +94,95 @@ class DocumentTextExtractorService
             ]);
             return null;
         }
+    }
+    
+    /**
+     * Resolve a file path to an absolute path using multiple strategies
+     * 
+     * @param string $filePath Relative file path
+     * @param int|null $userId Optional user ID for context
+     * @return string|null Absolute file path or null if not found
+     */
+    private function resolveFilePath(string $filePath, ?int $userId = null): ?string
+    {
+        // Log the file resolution attempt
+        Log::info("Resolving file path", [
+            'requested_path' => $filePath,
+            'user_id' => $userId
+        ]);
+        
+        // 1. Direct check using Laravel's Storage facade (preferred method)
+        if (Storage::disk('public')->exists($filePath)) {
+            $absolutePath = Storage::disk('public')->path($filePath);
+            Log::info("File found in public storage", [
+                'relative_path' => $filePath,
+                'absolute_path' => $absolutePath,
+                'file_size' => filesize($absolutePath)
+            ]);
+            return $absolutePath;
+        }
+        
+        // 2. Try direct path in the public storage directory
+        $publicStoragePath = public_path('storage/' . $filePath);
+        if (file_exists($publicStoragePath)) {
+            Log::info("File found in public/storage", [
+                'relative_path' => $filePath,
+                'absolute_path' => $publicStoragePath,
+                'file_size' => filesize($publicStoragePath)
+            ]);
+            return $publicStoragePath;
+        }
+        
+        // 3. Check common alternative paths
+        $possiblePaths = [
+            storage_path('app/public/' . $filePath),         // Standard Laravel public storage
+            storage_path('app/' . $filePath),                // Direct app storage
+            storage_path('app/private/public/' . $filePath), // Possible non-standard path
+            $filePath                                        // Direct absolute path as last resort
+        ];
+        
+        // Find the first valid path that exists
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                Log::info("File found via fallback path", [
+                    'original_path' => $filePath,
+                    'found_at' => $path,
+                    'file_size' => filesize($path)
+                ]);
+                return $path;
+            }
+        }
+        
+        // If a path slug is provided (without folders), try looking in common directories
+        $baseName = basename($filePath);
+        $commonDirectories = [
+            public_path('storage/CV_files/'),
+            storage_path('app/public/CV_files/'),
+            public_path('storage/cv_files/'),
+            storage_path('app/public/cv_files/')
+        ];
+        
+        foreach ($commonDirectories as $directory) {
+            $potentialPath = $directory . $baseName;
+            if (file_exists($potentialPath)) {
+                Log::info("File found via basename in common directory", [
+                    'original_path' => $filePath,
+                    'found_at' => $potentialPath,
+                    'file_size' => filesize($potentialPath)
+                ]);
+                return $potentialPath;
+            }
+        }
+        
+        // Log failure
+        Log::error("File not found in any expected location", [
+            'requested_path' => $filePath,
+            'tried_paths' => array_merge($possiblePaths, array_map(function($dir) use ($baseName) {
+                return $dir . $baseName;
+            }, $commonDirectories))
+        ]);
+        
+        return null;
     }
     
     /**

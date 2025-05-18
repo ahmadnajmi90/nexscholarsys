@@ -64,11 +64,38 @@ class CVProfileGeneratorService
             return null;
         }
         
-        // Verify the file exists in storage
-        if (!Storage::disk('public')->exists($cvPath)) {
+        // Verify the file exists in storage using multiple methods
+        $fileFound = false;
+        
+        // Try using Storage facade first
+        if (Storage::disk('public')->exists($cvPath)) {
+            $fileFound = true;
+            Log::info("CV file found in public storage", [
+                'user_id' => $userId,
+                'cv_path' => $cvPath,
+                'full_path' => Storage::disk('public')->path($cvPath)
+            ]);
+        } 
+        // Try direct file access as fallback
+        else {
+            $fullPath = public_path('storage/' . $cvPath);
+            if (file_exists($fullPath)) {
+                $fileFound = true;
+                Log::info("CV file found via direct path check", [
+                    'user_id' => $userId,
+                    'cv_path' => $cvPath,
+                    'full_path' => $fullPath
+                ]);
+            }
+        }
+        
+        // Handle file not found error
+        if (!$fileFound) {
             Log::error("CV file does not exist in storage", [
                 'user_id' => $userId,
-                'cv_path' => $cvPath
+                'cv_path' => $cvPath,
+                'storage_path' => Storage::disk('public')->path($cvPath),
+                'public_path' => public_path('storage/' . $cvPath)
             ]);
             return null;
         }

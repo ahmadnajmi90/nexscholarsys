@@ -1180,9 +1180,7 @@ class RoleProfileController extends Controller
             'has_file_CV_file' => $request->hasFile('CV_file'),
             'has_file_cv_file' => $request->hasFile('cv_file'), 
             'content_type' => $request->header('Content-Type'),
-            'content_length' => $request->header('Content-Length'),
-            'temp_dir' => sys_get_temp_dir(),
-            'upload_tmp_dir' => ini_get('upload_tmp_dir')
+            'content_length' => $request->header('Content-Length')
         ]);
         
         // Determine the user's role for proper cache key
@@ -1201,20 +1199,24 @@ class RoleProfileController extends Controller
             return response()->json(['error' => 'User role not supported'], 400);
         }
         
+        // Initialize session for tracking AI profile generation progress
+        session(['ai_profile_generation_in_progress' => true]);
+        session(['ai_profile_generation_method' => 'cv']);
+        
         try {
             // 2. BRANCH: Check if we're handling a new file upload or using an existing file
+            $cvPath = null;
+            $newUpload = false;
             
             // 2.A. NEW FILE UPLOAD CASE
             if ($request->hasFile('CV_file') || $request->hasFile('cv_file')) {
-                // Determine which input name has the file
+                $newUpload = true;
                 $inputName = $request->hasFile('CV_file') ? 'CV_file' : 'cv_file';
-                
-                // Get the uploaded file
                 $cvFile = $request->file($inputName);
                 
-                // IMMEDIATE VALIDATION: Check if the file is valid and log detailed information
-                if (!$cvFile->isValid()) {
-                    $errorCode = $cvFile->getError();
+                // IMMEDIATE VALIDATION: First validate that the file exists and is valid
+                if (!$cvFile || !$cvFile->isValid()) {
+                    $errorCode = $cvFile ? $cvFile->getError() : UPLOAD_ERR_NO_FILE;
                     $errorMessage = $this->getUploadErrorMessage($errorCode);
                     
                     Log::error("CV file upload validation failed", [
@@ -1224,119 +1226,112 @@ class RoleProfileController extends Controller
                         'error_message' => $errorMessage
                     ]);
                     
+                    // Reset session state
+                    session(['ai_profile_generation_in_progress' => false]);
+                    session(['ai_profile_generation_method' => null]);
+                    
                     return response()->json([
                         'error' => "File upload failed: {$errorMessage}",
                         'status' => 'error'
                     ], 400);
                 }
                 
-                // IMMEDIATE DETAILED CHECKS: Log detailed information about the valid file
+                // IMMEDIATE DETAILED LOGGING: Log the file details
                 Log::info("CV file validation passed", [
                     'user_id' => $userId,
                     'input_name' => $inputName,
                     'original_name' => $cvFile->getClientOriginalName(),
                     'mime_type' => $cvFile->getMimeType(),
                     'size' => $cvFile->getSize(),
-                    'temp_path' => $cvFile->getPathname(),
-                    'is_valid' => $cvFile->isValid() ? 'Yes' : 'No',
-                    'error_code' => $cvFile->getError(),
-                    'temp_file_exists' => file_exists($cvFile->getPathname()) ? 'Yes' : 'No'
+                    'temp_path' => $cvFile->getPathname()
                 ]);
                 
                 try {
-                    // VALIDATE FILE TYPE AND SIZE: Check allowed file types and size
-                    $request->validate([
+                    // VALIDATE FILE TYPE AND SIZE: Using Laravel's validation
+                    $validatedData = $request->validate([
                         $inputName => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',
                     ]);
                     
-                    // GENERATE A SAFE FILENAME: Create a unique filename based on timestamp and random string
-                    $originalExtension = $cvFile->getClientOriginalExtension();
-                    if (empty($originalExtension)) {
-                        // Fallback to a safe extension based on mime type
-                        $mime = $cvFile->getMimeType();
-                        $extensionMap = [
-                            'application/pdf' => 'pdf',
-                            'application/msword' => 'doc',
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-                            'image/jpeg' => 'jpg',
-                            'image/png' => 'png',
-                            'image/tiff' => 'tiff'
-                        ];
-                        $originalExtension = $extensionMap[$mime] ?? 'bin';
+                    // GENERATE A SAFE FILENAME: With timestamp and original filename
+                    $originalFileName = $cvFile->getClientOriginalName();
+                    $safeFileName = time() . '_' . $originalFileName;
+                    
+                    // DEFINE TARGET FOLDER: Following PostGrantController pattern
+                    $destinationPath = public_path('storage/CV_files');
+                    
+                    // ENSURE DIRECTORY EXISTS: Create if needed
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
                     }
                     
-                    // Create a unique filename
-                    $safeFileName = time() . '_' . Str::random(10) . '.' . $originalExtension;
-                    
-                    // IMMEDIATE PERMANENT STORAGE: Store the file to a permanent location
-                    $relativePath = "CV_files/{$safeFileName}";
-                    
-                    // Store using Laravel's Storage facade on the 'public' disk
-                    // This handles disk permissions and creates directories if needed
-                    $success = Storage::disk('public')->put($relativePath, file_get_contents($cvFile->getPathname()));
-                    
-                    if (!$success) {
-                        throw new \Exception("Failed to store file to public disk");
+                    // IMMEDIATE PERMANENT STORAGE: Move the uploaded file to permanent storage
+                    // Using the same direct move pattern as in PostGrantController
+                    if (!$cvFile->move($destinationPath, $safeFileName)) {
+                        throw new \Exception("Failed to move uploaded file to storage");
                     }
                     
-                    // ERROR ON STORAGE FAILURE: Verify the file exists and has content
-                    if (!Storage::disk('public')->exists($relativePath)) {
-                        throw new \Exception("Stored file does not exist at expected location");
+                    // VERIFICATION: Check that file was stored successfully
+                    $fullStoredPath = $destinationPath . '/' . $safeFileName;
+                    if (!file_exists($fullStoredPath)) {
+                        throw new \Exception("Stored file does not exist at expected location: {$fullStoredPath}");
                     }
                     
-                    // Get the full path for size verification
-                    $fullStoredPath = Storage::disk('public')->path($relativePath);
                     if (filesize($fullStoredPath) === 0) {
                         throw new \Exception("Stored file exists but is empty");
                     }
                     
-                    // Log successful permanent storage
-                    Log::info("CV file permanently stored successfully", [
+                    // Set the relative path for database storage
+                    $cvPath = 'CV_files/' . $safeFileName;
+                    
+                    Log::info("CV file successfully stored to permanent location", [
                         'user_id' => $userId,
-                        'relative_path' => $relativePath,
+                        'relative_path' => $cvPath,
                         'full_path' => $fullStoredPath,
                         'file_size' => filesize($fullStoredPath)
                     ]);
                     
-                                         // DATABASE UPDATE: Update the user's profile with the CV file path
-                     if ($isAcademician) {
-                         $user->academician()->update(['CV_file' => $relativePath]);
-                     } elseif ($isPostgraduate) {
-                         $user->postgraduate()->update(['CV_file' => $relativePath]);
-                     } elseif ($isUndergraduate) {
-                         $user->undergraduate()->update(['CV_file' => $relativePath]);
+                                         // DATABASE UPDATE: Save the file path to the user's profile
+                    if ($isAcademician && isset($user->academician)) {
+                        $user->academician->update(['CV_file' => $cvPath]);
+                    } elseif ($isPostgraduate && isset($user->postgraduate)) {
+                        $user->postgraduate->update(['CV_file' => $cvPath]);
+                    } elseif ($isUndergraduate && isset($user->undergraduate)) {
+                        $user->undergraduate->update(['CV_file' => $cvPath]);
                     }
-                    
-                    // USE PERMANENT PATH: Set the CV path to the permanent location for processing
-                    $cvPath = $relativePath;
                 } catch (ValidationException $e) {
-                    // Log validation error details
                     Log::error("CV file validation failed", [
                         'user_id' => $userId,
                         'errors' => $e->errors()
                     ]);
+                    
+                    // Reset session state
+                    session(['ai_profile_generation_in_progress' => false]);
+                    session(['ai_profile_generation_method' => null]);
+                    
                     return response()->json([
                         'error' => 'Invalid file: ' . implode(', ', Arr::flatten($e->errors())),
                         'status' => 'error'
                     ], 400);
                 } catch (\Exception $e) {
-                    // Log any exception during file storage
                     Log::error("Exception during CV file storage", [
                         'user_id' => $userId,
                         'message' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
+                    
+                    // Reset session state
+                    session(['ai_profile_generation_in_progress' => false]);
+                    session(['ai_profile_generation_method' => null]);
+                    
                     return response()->json([
                         'error' => 'Failed to store CV file: ' . $e->getMessage(),
                         'status' => 'error'
                     ], 500);
                 }
-            }
+            } 
             // 2.B. EXISTING FILE CASE
             else {
                 // Try to get the existing CV file path from the user's profile
-                $cvPath = null;
-                
                 if ($isAcademician && !empty($user->academician?->CV_file)) {
                     $cvPath = $user->academician->CV_file;
                 } elseif ($isPostgraduate && !empty($user->postgraduate?->CV_file)) {
@@ -1345,62 +1340,61 @@ class RoleProfileController extends Controller
                     $cvPath = $user->undergraduate->CV_file;
                 }
                 
-                // VALIDATE EXISTING FILE: Check if path is valid and file exists
+                // VALIDATE EXISTING FILE: Check if path exists and file exists
                 if (empty($cvPath)) {
                     Log::error("No CV file path found in user's profile", [
-                        'user_id' => $userId,
-                        'academician_has_file' => $isAcademician && !empty($user->academician?->CV_file),
-                        'postgraduate_has_file' => $isPostgraduate && !empty($user->postgraduate?->CV_file),
-                        'undergraduate_has_file' => $isUndergraduate && !empty($user->undergraduate?->CV_file)
+                        'user_id' => $userId
                     ]);
+                    
+                    // Reset session state
+                    session(['ai_profile_generation_in_progress' => false]);
+                    session(['ai_profile_generation_method' => null]);
+                    
                     return response()->json([
                         'error' => 'No CV file found in your profile. Please upload a CV file.',
                         'status' => 'error'
                     ], 400);
                 }
                 
-                // Check if the file exists in storage using Storage facade
-                if (!Storage::disk('public')->exists($cvPath)) {
+                // Check if the file exists in storage using both methods (direct file check and Storage facade)
+                $fullPath = public_path('storage/' . $cvPath);
+                if (!file_exists($fullPath) && !Storage::disk('public')->exists($cvPath)) {
                     Log::error("Existing CV file not found in storage", [
                         'user_id' => $userId,
-                        'cv_path' => $cvPath
+                        'cv_path' => $cvPath,
+                        'full_path' => $fullPath
                     ]);
+                    
+                    // Reset session state
+                    session(['ai_profile_generation_in_progress' => false]);
+                    session(['ai_profile_generation_method' => null]);
+                    
                     return response()->json([
                         'error' => 'Your CV file could not be found in storage. Please upload a new CV file.',
                         'status' => 'error'
                     ], 404);
                 }
                 
-                // Get the full path for logging purposes
-                $fullExistingPath = Storage::disk('public')->path($cvPath);
-                
-                // Log that we're using an existing file
                 Log::info("Using existing CV file from storage", [
                     'user_id' => $userId,
                     'cv_path' => $cvPath,
-                    'full_path' => $fullExistingPath,
-                    'file_exists' => 'Yes',
-                    'file_size' => filesize($fullExistingPath)
+                    'full_path' => $fullPath,
+                    'file_exists' => file_exists($fullPath) ? 'Yes' : 'No',
+                    'file_size' => file_exists($fullPath) ? filesize($fullPath) : 'N/A'
                 ]);
             }
             
             // 3. PROFILE GENERATION: Now that we have a valid CV path (either new or existing),
             // we can proceed with profile generation
-            
-                            // Initialize AI profile generation session
-                session(['ai_profile_generation_in_progress' => true]);
-                session(['ai_profile_generation_method' => 'cv']);
+            try {
+                Log::info("Starting profile generation from CV", [
+                    'user_id' => $userId,
+                    'cv_path' => $cvPath,
+                    'is_new_upload' => $newUpload
+                ]);
                 
-                try {
-                    // Log that we're starting profile generation
-                    Log::info("Starting profile generation from CV", [
-                        'user_id' => $userId,
-                        'cv_path' => $cvPath
-                    ]);
-                    
-                    // Call the service to generate profile from CV
-                    // Pass the relative path, which will be resolved correctly in the service
-                    $generatedProfile = $this->cvProfileGeneratorService->generateProfileFromCV($user, $cvPath);
+                // Call the service to generate profile from CV
+                $generatedProfile = $this->cvProfileGeneratorService->generateProfileFromCV($user, $cvPath);
                 
                 if (!$generatedProfile) {
                     throw new \Exception("Profile generation service returned null result");
