@@ -24,7 +24,10 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     // Track page views when the URL changes
     useEffect(() => {
-        trackPageView(url);
+        // Add a small delay to ensure GA has fully loaded
+        setTimeout(() => {
+            trackPageView(url);
+        }, 100);
     }, [url]);
 
     // Effect to determine screen size for responsiveness

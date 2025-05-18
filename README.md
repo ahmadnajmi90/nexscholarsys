@@ -609,11 +609,78 @@ The platform uses Google Custom Search for finding academic information:
 
 ### Google Analytics Integration
 
-The platform integrates with Google Analytics to provide insights:
+The platform integrates with Google Analytics 4 (GA4) to provide comprehensive insights on user behavior and platform performance:
 
-1. View user engagement metrics on your dashboard
-2. Track content performance metrics
-3. Analyze user behavior patterns
+#### Server-Side Integration
+
+The system uses the Google Analytics Data API (v1beta) to fetch analytics data for the admin dashboard:
+
+1. **Key Metrics Dashboard**
+   - Real-time active users count
+   - Average session duration
+   - Page view statistics over time
+   - Most popular pages with view counts
+
+2. **Analytics Service**
+   - Dedicated `GoogleAnalyticsService` class that handles all API interactions
+   - Supports multiple report types (active users, session duration, top pages, page views over time)
+   - Built-in caching system to improve performance and reduce API calls
+   - Graceful error handling with detailed logging
+   - Falls back to mock data when the API is unavailable
+
+3. **Visual Data Presentation**
+   - Interactive charts showing page views over 30 days
+   - Ranking tables for most visited pages
+   - User activity metrics with visual indicators
+
+#### Client-Side Tracking
+
+1. **Automatic Page View Tracking**
+   - `PageViewTracker` component that automatically tracks navigation
+   - Integrates with Inertia.js to track single-page application navigation
+   - Filters out development environments (localhost) to prevent skewing analytics
+
+2. **Custom Event Tracking**
+   - Utility functions for tracking user interactions
+   - Supports tracking of:
+     - User profile interactions (view, update, generate CV)
+     - Content engagement (post views, likes, comments)
+     - Search and navigation patterns
+     - Feature usage (AI matching, supervisor search)
+
+3. **Implementation**
+   - Global tag implementation via standard GTM script
+   - Non-blocking asynchronous loading
+   - Respects user privacy preferences
+   - Easy configuration through environment variables
+
+#### Configuration
+
+Configure Google Analytics in your `.env` file:
+
+```
+# Google Analytics
+GOOGLE_ANALYTICS_PROPERTY_ID=your_property_id
+GOOGLE_ANALYTICS_MEASUREMENT_ID=G-your_measurement_id
+GOOGLE_ANALYTICS_SERVICE_ACCOUNT_JSON=path/to/credentials.json
+```
+
+The system requires:
+1. A GA4 property ID for server-side API access
+2. A measurement ID (with 'G-' prefix) for client-side tracking
+3. A service account JSON file with proper permissions for accessing the Google Analytics Data API
+
+#### Dashboard Integration
+
+The admin dashboard provides a comprehensive analytics overview:
+- Status indicator showing Analytics connection status
+- Real-time active users counter
+- Session quality metrics
+- Top content performance
+- User engagement trends
+- Visual data representations with interactive elements
+
+This integration provides administrators with valuable insights about platform usage, helping them make data-driven decisions to improve the user experience and content strategy.
 
 ## Contributing
 

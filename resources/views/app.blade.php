@@ -92,15 +92,33 @@
         @inertiaHead
         
         <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-483738680"></script>
+        <script>
+          // Create global config for GA measurement ID
+          window.gaConfig = {
+            measurementId: '{{ config('analytics.measurement_id', 'G-483738680') }}'
+          };
+        </script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('analytics.measurement_id', 'G-483738680') }}"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-
-          // Only track if not on localhost
-          if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            gtag('config', 'G-483738680');
+          
+          // Set up debugging for easier troubleshooting
+          const hostname = window.location.hostname;
+          const isProduction = (hostname === 'nexscholar.com' || hostname.endsWith('.nexscholar.com'));
+          const isDevelopment = (
+            hostname === 'localhost' || 
+            hostname === '127.0.0.1' || 
+            hostname.includes('.test') || 
+            hostname.includes('.local')
+          );
+          
+          if (isProduction) {
+            console.log('[GA] Initializing GA tracking for production');
+            gtag('config', '{{ config('analytics.measurement_id', 'G-483738680') }}');
+          } else {
+            console.log('[GA] Skipping GA tracking on non-production environment: ' + hostname);
           }
         </script>
     </head>

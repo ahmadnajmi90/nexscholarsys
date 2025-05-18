@@ -10,7 +10,10 @@ export default function PageViewTracker() {
     const { url } = usePage();
     
     useEffect(() => {
-        trackPageView(url);
+        // Add a small delay to ensure GA has fully loaded
+        setTimeout(() => {
+            trackPageView(url);
+        }, 100);
     }, [url]);
     
     return null; // This component doesn't render anything
