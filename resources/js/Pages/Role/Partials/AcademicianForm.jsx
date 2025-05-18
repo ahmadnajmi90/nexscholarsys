@@ -309,6 +309,16 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             console.log('CV generation successful:', response.data);
             
             if (response.data) {
+                // Ensure the CV file path is updated in the form data
+                if (response.data.CV_file) {
+                    console.log('Updating CV file path from response:', response.data.CV_file);
+                    setData(prevData => ({
+                        ...prevData,
+                        CV_file: response.data.CV_file
+                    }));
+                }
+                
+                // Update rest of the form data
                 updateFormWithGeneratedData(response.data);
                 setGenerationStatus('Profile generated successfully!');
                 setIsGenerating(false);
@@ -372,6 +382,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
+                'Content-Type': 'multipart/form-data',
             },
             // Add explicit timeout and make sure we're handling binary data properly
             responseType: 'json',
@@ -384,6 +395,18 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         if (response.data) {
             setCVModalOpen(false);
             setCVFile(null);
+            
+            // Update CV_file path in the form data FIRST
+            // This ensures the CV file path is correctly set in the form
+            if (response.data.CV_file) {
+                console.log('Updating CV file path:', response.data.CV_file);
+                setData(prevData => ({
+                    ...prevData,
+                    CV_file: response.data.CV_file // Update with string path from server
+                }));
+            }
+            
+            // Then update the rest of the profile data
             updateFormWithGeneratedData(response.data);
             setGenerationStatus('Profile generated successfully!');
             setIsUploading(false);
@@ -568,6 +591,8 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       linkedin: profileData.linkedin || prevData.linkedin,
       google_scholar: profileData.google_scholar || prevData.google_scholar,
       researchgate: profileData.researchgate || prevData.researchgate,
+      // Preserve CV_file if it was already set in the handleCVUpload function
+      CV_file: prevData.CV_file || profileData.CV_file,
     }));
   };
 

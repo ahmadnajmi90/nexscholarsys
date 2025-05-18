@@ -30,6 +30,9 @@ use App\Services\GoogleSearchService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use App\Models\Academician;
+use App\Models\Postgraduate;
+use App\Models\Undergraduate;
 
 class RoleProfileController extends Controller
 {
@@ -261,39 +264,67 @@ class RoleProfileController extends Controller
                 $file->move($destinationPath, $fileName);
                 $validatedData['profile_picture'] = 'profile_pictures/' . $fileName;
             } else {
-                $validatedData['profile_picture'] = $request->input('profile_picture');
+                // Keep the existing path if it exists
+                if ($isPostgraduate && $user->postgraduate) {
+                    $validatedData['profile_picture'] = $user->postgraduate->profile_picture;
+                } elseif ($isAcademician && $user->academician) {
+                    $validatedData['profile_picture'] = $user->academician->profile_picture;
+                } elseif ($isUndergraduate && $user->undergraduate) {
+                    $validatedData['profile_picture'] = $user->undergraduate->profile_picture;
+                }
             }
 
-            // Handle CV_file (for all roles including academicians)
+            // Handle CV_file upload - Using the exact same approach as PostGrantController's attachment handling
             if ($request->hasFile('CV_file')) {
-                logger()->info('CV file hasFile');
-                $destinationPath = public_path('storage/CV_files');
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
+                logger()->info('CV file upload detected');
+                
+                // Determine which model to use
+                $model = null;
+                $oldCVPath = null;
+                
+                if ($isPostgraduate && $user->postgraduate) {
+                    $model = $user->postgraduate;
+                    $oldCVPath = $model->CV_file;
+                } elseif ($isAcademician && $user->academician) {
+                    $model = $user->academician;
+                    $oldCVPath = $model->CV_file;
+                } elseif ($isUndergraduate && $user->undergraduate) {
+                    $model = $user->undergraduate;
+                    $oldCVPath = $model->CV_file;
                 }
-                // Delete old CV file if it exists
-                if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
-                    $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
+                
+                // Delete the old CV file if it exists
+                if ($oldCVPath) {
+                    $oldFilePath = public_path('storage/' . $oldCVPath);
                     if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
-                    }
-                } elseif ($isAcademician && $user->academician && $user->academician->CV_file) {
-                    $oldFilePath = public_path('storage/' . $user->academician->CV_file);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
-                    }
-                } elseif ($isUndergraduate && $user->undergraduate && $user->undergraduate->CV_file) {
-                    $oldFilePath = public_path('storage/' . $user->undergraduate->CV_file);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
+                        unlink($oldFilePath); // Delete the old CV file
                     }
                 }
-                $file = $request->file('CV_file');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $file->move($destinationPath, $fileName);
-                $validatedData['CV_file'] = 'CV_files/' . $fileName;
+            
+                // Define the destination path
+                $cvDestination = public_path('storage/CV_files');
+                
+                // Ensure the directory exists
+                if (!file_exists($cvDestination)) {
+                    mkdir($cvDestination, 0755, true);
+                }
+                
+                // Save the new CV file
+                $cvFile = $request->file('CV_file');
+                $cvFileName = time() . '_' . $cvFile->getClientOriginalName();
+                $cvFile->move($cvDestination, $cvFileName);
+                
+                // Save the relative path
+                $validatedData['CV_file'] = 'CV_files/' . $cvFileName;
             } else {
-                $validatedData['CV_file'] = $request->input('CV_file');
+                // Keep the existing path
+                if ($isPostgraduate && $user->postgraduate) {
+                    $validatedData['CV_file'] = $user->postgraduate->CV_file;
+                } elseif ($isAcademician && $user->academician) {
+                    $validatedData['CV_file'] = $user->academician->CV_file;
+                } elseif ($isUndergraduate && $user->undergraduate) {
+                    $validatedData['CV_file'] = $user->undergraduate->CV_file;
+                }
             }
 
             if ($isAcademician) {
@@ -408,8 +439,9 @@ class RoleProfileController extends Controller
             logger()->info('Decoded Data:', $validatedData);
 
             if ($isPostgraduate) {
-                $user->postgraduate()->updateOrCreate(
-                    ['postgraduate_id' => $user->postgraduate->postgraduate_id ?? $user->id],
+                // Create or find the postgraduate model directly
+                $postgraduate = Postgraduate::updateOrCreate(
+                    ['postgraduate_id' => $user->unique_id],
                     $validatedData
                 );
             } else if ($isUndergraduate) {
@@ -419,21 +451,30 @@ class RoleProfileController extends Controller
                     $validatedData['interested_do_research'] = 0;
                 }
                 logger()->info('Undergraduate Data:', $validatedData);
-                $user->undergraduate()->updateOrCreate(
-                    ['undergraduate_id' => $user->undergraduate->undergraduate_id ?? $user->id],
+                
+                // Create or find the undergraduate model directly
+                $undergraduate = Undergraduate::updateOrCreate(
+                    ['undergraduate_id' => $user->unique_id],
                     $validatedData
                 );
             } elseif ($isAcademician) {
-                $validatedData['university'] = $user->academician->university;
-                $validatedData['faculty'] = $user->academician->faculty;
+                // Fix issue with academician->university/faculty access by getting it first
+                $academician = Academician::where('academician_id', $user->unique_id)->first();
+                if ($academician) {
+                    $validatedData['university'] = $academician->university;
+                    $validatedData['faculty'] = $academician->faculty;
+                }
+                
                 if ($validatedData['availability_as_supervisor'] == true) {
                     $validatedData['availability_as_supervisor'] = 1;
                 } else {
                     $validatedData['availability_as_supervisor'] = 0;
                 }
                 logger()->info('Academician Data:', $validatedData);
-                $user->academician()->updateOrCreate(
-                    ['academician_id' => $user->academician->academician_id ?? $user->id],
+                
+                // Create or find the academician model directly
+                $academician = Academician::updateOrCreate(
+                    ['academician_id' => $user->unique_id],
                     $validatedData
                 );
             }
@@ -461,7 +502,9 @@ class RoleProfileController extends Controller
         }
 
         // Eager load related models
-        $academician = $user->academician()->with(['universityDetails', 'faculty', 'user'])->first();
+        $academician = Academician::where('academician_id', $user->unique_id)
+            ->with(['universityDetails', 'faculty', 'user'])
+            ->first();
 
         $data = [
             'full_name'  => $academician->full_name,
@@ -623,9 +666,11 @@ class RoleProfileController extends Controller
 
     public function generateCV(Request $request)
     {
-        $user = auth()->user();
-        // Retrieve the academician profile (adjust relationship as needed)
-        $academicianProfile = $user->academician()->with('user')->first();
+        $user = Auth::user();
+        // Retrieve the academician profile
+        $academicianProfile = Academician::where('academician_id', $user->unique_id)
+            ->with('user')
+            ->first();
 
         if (!$academicianProfile) {
             return response()->json(['error' => 'Profile not found'], 404);
@@ -875,7 +920,9 @@ class RoleProfileController extends Controller
             return response()->json(['error' => 'User is not an academician'], 403);
         }
 
-        $academician = $user->academician()->with(['universityDetails', 'faculty', 'user'])->first();
+        $academician = Academician::where('academician_id', $user->unique_id)
+            ->with(['universityDetails', 'faculty', 'user'])
+            ->first();
         
         if (!$academician) {
             return response()->json(['error' => 'Academician profile not found'], 404);
@@ -939,7 +986,7 @@ class RoleProfileController extends Controller
             return response()->json(['error' => 'User is not an academician'], 403);
         }
 
-        $academician = $user->academician()->first();
+        $academician = Academician::where('academician_id', $user->unique_id)->first();
         
         if (!$academician) {
             return response()->json(['error' => 'Academician profile not found'], 404);
@@ -1290,13 +1337,56 @@ class RoleProfileController extends Controller
                         'file_size' => filesize($fullStoredPath)
                     ]);
                     
-                                         // DATABASE UPDATE: Save the file path to the user's profile
-                    if ($isAcademician && isset($user->academician)) {
-                        $user->academician->update(['CV_file' => $cvPath]);
-                    } elseif ($isPostgraduate && isset($user->postgraduate)) {
-                        $user->postgraduate->update(['CV_file' => $cvPath]);
-                    } elseif ($isUndergraduate && isset($user->undergraduate)) {
-                        $user->undergraduate->update(['CV_file' => $cvPath]);
+                    // DATABASE UPDATE: Save the file path to the user's profile model
+                    $dbUpdateSuccess = false;
+                    
+                    // Get the appropriate model based on role and update it
+                    if ($isAcademician) {
+                        $academician = Academician::where('academician_id', $user->unique_id)->first();
+                        if ($academician) {
+                            $academician->CV_file = $cvPath;
+                            $academician->save();
+                            $dbUpdateSuccess = true;
+                            
+                            Log::info("Updated academician model with CV file path", [
+                                'user_id' => $userId,
+                                'cv_path' => $cvPath
+                            ]);
+                        }
+                    } elseif ($isPostgraduate) {
+                        $postgraduate = Postgraduate::where('postgraduate_id', $user->unique_id)->first();
+                        if ($postgraduate) {
+                            $postgraduate->CV_file = $cvPath;
+                            $postgraduate->save();
+                            $dbUpdateSuccess = true;
+                            
+                            Log::info("Updated postgraduate model with CV file path", [
+                                'user_id' => $userId,
+                                'cv_path' => $cvPath
+                            ]);
+                        }
+                    } elseif ($isUndergraduate) {
+                        $undergraduate = Undergraduate::where('undergraduate_id', $user->unique_id)->first();
+                        if ($undergraduate) {
+                            $undergraduate->CV_file = $cvPath;
+                            $undergraduate->save();
+                            $dbUpdateSuccess = true;
+                            
+                            Log::info("Updated undergraduate model with CV file path", [
+                                'user_id' => $userId,
+                                'cv_path' => $cvPath
+                            ]);
+                        }
+                    }
+                    
+                    if (!$dbUpdateSuccess) {
+                        Log::warning("Could not update database with CV file path", [
+                            'user_id' => $userId,
+                            'cv_path' => $cvPath,
+                            'is_academician' => $isAcademician,
+                            'is_postgraduate' => $isPostgraduate,
+                            'is_undergraduate' => $isUndergraduate
+                        ]);
                     }
                 } catch (ValidationException $e) {
                     Log::error("CV file validation failed", [
@@ -1332,12 +1422,23 @@ class RoleProfileController extends Controller
             // 2.B. EXISTING FILE CASE
             else {
                 // Try to get the existing CV file path from the user's profile
-                if ($isAcademician && !empty($user->academician?->CV_file)) {
-                    $cvPath = $user->academician->CV_file;
-                } elseif ($isPostgraduate && !empty($user->postgraduate?->CV_file)) {
-                    $cvPath = $user->postgraduate->CV_file;
-                } elseif ($isUndergraduate && !empty($user->undergraduate?->CV_file)) {
-                    $cvPath = $user->undergraduate->CV_file;
+                $cvPath = null;
+                
+                if ($isAcademician) {
+                    $academician = Academician::where('academician_id', $user->unique_id)->first();
+                    if ($academician && !empty($academician->CV_file)) {
+                        $cvPath = $academician->CV_file;
+                    }
+                } elseif ($isPostgraduate) {
+                    $postgraduate = Postgraduate::where('postgraduate_id', $user->unique_id)->first();
+                    if ($postgraduate && !empty($postgraduate->CV_file)) {
+                        $cvPath = $postgraduate->CV_file;
+                    }
+                } elseif ($isUndergraduate) {
+                    $undergraduate = Undergraduate::where('undergraduate_id', $user->unique_id)->first();
+                    if ($undergraduate && !empty($undergraduate->CV_file)) {
+                        $cvPath = $undergraduate->CV_file;
+                    }
                 }
                 
                 // VALIDATE EXISTING FILE: Check if path exists and file exists
@@ -1413,10 +1514,11 @@ class RoleProfileController extends Controller
                 // Mark generation as complete
                 session(['ai_profile_generation_in_progress' => false]);
                 
-                // Build response with appropriate fields based on user role
+                // Add CV file path to the response so frontend can update accordingly
                 $responseData = [
                     'status' => 'success',
                     'generation_initiated' => true,
+                    'CV_file' => $cvPath, // Add this to ensure frontend has the updated path
                     'full_name' => $generatedProfile['full_name'] ?? null,
                     'email' => $generatedProfile['email'] ?? null,
                     'phone_number' => $generatedProfile['phone_number'] ?? null,
@@ -1529,6 +1631,9 @@ class RoleProfileController extends Controller
     {
         try {
             $user = Auth::user();
+            $userId = $user->id;
+            $uniqueId = $user->unique_id;
+            
             $isPostgraduate = BouncerFacade::is($user)->an('postgraduate');
             $isAcademician = BouncerFacade::is($user)->an('academician');
             $isUndergraduate = BouncerFacade::is($user)->an('undergraduate');
@@ -1548,20 +1653,29 @@ class RoleProfileController extends Controller
                 }
                 
                 // Delete old CV file if it exists
-                if ($isPostgraduate && $user->postgraduate && $user->postgraduate->CV_file) {
-                    $oldFilePath = public_path('storage/' . $user->postgraduate->CV_file);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
+                if ($isPostgraduate) {
+                    $postgraduate = Postgraduate::where('postgraduate_id', $uniqueId)->first();
+                    if ($postgraduate && $postgraduate->CV_file) {
+                        $oldFilePath = public_path('storage/' . $postgraduate->CV_file);
+                        if (file_exists($oldFilePath)) {
+                            unlink($oldFilePath);
+                        }
                     }
-                } elseif ($isAcademician && $user->academician && $user->academician->CV_file) {
-                    $oldFilePath = public_path('storage/' . $user->academician->CV_file);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
+                } elseif ($isAcademician) {
+                    $academician = Academician::where('academician_id', $uniqueId)->first();
+                    if ($academician && $academician->CV_file) {
+                        $oldFilePath = public_path('storage/' . $academician->CV_file);
+                        if (file_exists($oldFilePath)) {
+                            unlink($oldFilePath);
+                        }
                     }
-                } elseif ($isUndergraduate && $user->undergraduate && $user->undergraduate->CV_file) {
-                    $oldFilePath = public_path('storage/' . $user->undergraduate->CV_file);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
+                } elseif ($isUndergraduate) {
+                    $undergraduate = Undergraduate::where('undergraduate_id', $uniqueId)->first();
+                    if ($undergraduate && $undergraduate->CV_file) {
+                        $oldFilePath = public_path('storage/' . $undergraduate->CV_file);
+                        if (file_exists($oldFilePath)) {
+                            unlink($oldFilePath);
+                        }
                     }
                 }
                 
@@ -1570,15 +1684,27 @@ class RoleProfileController extends Controller
                 $cvPath = 'CV_files/' . $fileName;
                 
                 // Update the CV path in the role model
-                if ($isPostgraduate && $user->postgraduate) {
-                    $user->postgraduate->update(['CV_file' => $cvPath]);
-                } elseif ($isAcademician && $user->academician) {
-                    $user->academician->update(['CV_file' => $cvPath]);
-                } elseif ($isUndergraduate && $user->undergraduate) {
-                    $user->undergraduate->update(['CV_file' => $cvPath]);
+                if ($isPostgraduate) {
+                    $postgraduate = Postgraduate::where('postgraduate_id', $uniqueId)->first();
+                    if ($postgraduate) {
+                        $postgraduate->CV_file = $cvPath;
+                        $postgraduate->save();
+                    }
+                } elseif ($isAcademician) {
+                    $academician = Academician::where('academician_id', $uniqueId)->first();
+                    if ($academician) {
+                        $academician->CV_file = $cvPath;
+                        $academician->save();
+                    }
+                } elseif ($isUndergraduate) {
+                    $undergraduate = Undergraduate::where('undergraduate_id', $uniqueId)->first();
+                    if ($undergraduate) {
+                        $undergraduate->CV_file = $cvPath;
+                        $undergraduate->save();
+                    }
                 }
                 
-                Log::info("CV file uploaded for user {$user->id}", ['path' => $cvPath]);
+                Log::info("CV file uploaded for user {$userId}", ['path' => $cvPath]);
                 
                 return response()->json([
                     'success' => true,
