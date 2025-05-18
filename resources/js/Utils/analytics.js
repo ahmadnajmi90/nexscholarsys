@@ -43,9 +43,21 @@ const shouldTrack = () => {
  */
 export const trackPageView = (path) => {
     if (shouldTrack()) {
-        console.log(`GA Tracking pageview: ${path}`); // Debugging
-        window.gtag('config', getMeasurementId(), {
-            page_path: path
+        // Get current page details
+        const pageTitle = document.title;
+        const pageLocation = window.location.href;
+        const pagePath = path || window.location.pathname + window.location.search;
+        const measurementId = getMeasurementId();
+        
+        console.log(`GA Tracking pageview: ${pagePath} (${pageTitle})`); // Debugging
+        
+        // For SPAs, it's better to use the 'event' method rather than 'config'
+        // This ensures that page titles are properly tracked
+        window.gtag('event', 'page_view', {
+            page_title: pageTitle,
+            page_location: pageLocation,
+            page_path: pagePath,
+            send_to: measurementId
         });
     }
 };

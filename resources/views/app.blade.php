@@ -116,7 +116,17 @@
           
           if (isProduction) {
             console.log('[GA] Initializing GA tracking for production');
-            gtag('config', '{{ config('analytics.measurement_id', 'G-Q6VXXF3B0T') }}');
+            
+            // Configure GA4 with these SPA-specific settings
+            gtag('config', '{{ config('analytics.measurement_id', 'G-Q6VXXF3B0T') }}', {
+              send_page_view: false, // Disable automatic page view on initialization
+              transport_type: 'beacon', // Use navigator.sendBeacon to help ensure events are sent
+              debug_mode: true, // Enable debug mode temporarily to help troubleshoot
+              cookie_flags: 'samesite=none;secure' // Ensure cookies work correctly
+            });
+            
+            // Initial page view will be handled by the React components
+            // We don't use gtag('event', 'page_view') here to avoid duplicate initial page view
           } else {
             console.log('[GA] Skipping GA tracking on non-production environment: ' + hostname);
           }

@@ -24,11 +24,13 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     // Track page views when the URL changes
     useEffect(() => {
-        // Add a small delay to ensure GA has fully loaded
+        // Add a small delay to ensure both GA has loaded
+        // and the document title has been updated by Inertia
         setTimeout(() => {
+            console.log(`MainLayout tracking: ${title} at ${url}`);
             trackPageView(url);
-        }, 100);
-    }, [url]);
+        }, 200); // Slightly longer delay to ensure title is updated
+    }, [url, title]);
 
     // Effect to determine screen size for responsiveness
     useEffect(() => {
