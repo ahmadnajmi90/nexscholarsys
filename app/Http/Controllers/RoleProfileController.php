@@ -1191,76 +1191,156 @@ class RoleProfileController extends Controller
         
         // Handle new CV upload
         if ($request->hasFile('CV_file')) {
-            $cvFile = $request->file('CV_file');
-            
-            // Validate file
-            $validatedFile = $request->validate([
-                'CV_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',  // 10MB max, PDF/DOC/DOCX and images
-            ]);
-            
-            // Store the file in the appropriate location
-            $destinationPath = public_path('storage/CV_files');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-            
-            $fileName = time() . '_' . $cvFile->getClientOriginalName();
-            $cvFile->move($destinationPath, $fileName);
-            $path = 'CV_files/' . $fileName;
-            
-            if ($path) {
-                $cvPath = $path;
+            try {
+                $cvFile = $request->file('CV_file');
                 
-                // Update the user's role model with the CV path
-                if ($isAcademician && $user->academician) {
-                    $user->academician->update(['CV_file' => $path]);
-                } elseif ($isPostgraduate && $user->postgraduate) {
-                    $user->postgraduate->update(['CV_file' => $path]);
-                } elseif ($isUndergraduate && $user->undergraduate) {
-                    $user->undergraduate->update(['CV_file' => $path]);
+                // Additional logging
+                Log::info("CV file upload received", [
+                    'user_id' => $user->id,
+                    'original_name' => $cvFile->getClientOriginalName(),
+                    'mime_type' => $cvFile->getMimeType(),
+                    'size' => $cvFile->getSize(),
+                    'error' => $cvFile->getError()
+                ]);
+                
+                // Validate file
+                $validatedFile = $request->validate([
+                    'CV_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',  // 10MB max, PDF/DOC/DOCX and images
+                ]);
+                
+                // Make sure the storage directory exists
+                $destinationPath = storage_path('app/public/CV_files');
+                if (!file_exists($destinationPath)) {
+                    if (!mkdir($destinationPath, 0755, true)) {
+                        Log::error("Failed to create CV storage directory", [
+                            'user_id' => $user->id,
+                            'path' => $destinationPath
+                        ]);
+                        return response()->json(['error' => 'Failed to create storage directory'], 500);
+                    }
                 }
                 
-                Log::info("CV file uploaded for user {$user->id}", ['path' => $path]);
-            } else {
-                Log::error("Failed to upload CV file for user {$user->id}");
-                return response()->json(['error' => 'Failed to upload CV file'], 500);
+                // Check that the directory is writable
+                if (!is_writable($destinationPath)) {
+                    Log::error("CV storage directory is not writable", [
+                        'user_id' => $user->id,
+                        'path' => $destinationPath
+                    ]);
+                    return response()->json(['error' => 'Storage directory is not writable'], 500);
+                }
+                
+                // Generate a safe filename
+                $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $cvFile->getClientOriginalName());
+                
+                // Store using Laravel's storage system instead of move
+                $path = $cvFile->storeAs('public/CV_files', $fileName);
+                
+                // If storage was successful
+                if ($path) {
+                    // Convert the path to the format used in the database (without 'public/')
+                    $cvPath = str_replace('public/', '', $path);
+                    
+                    // Update the user's role model with the CV path
+                    if ($isAcademician && $user->academician) {
+                        $user->academician->update(['CV_file' => $cvPath]);
+                    } elseif ($isPostgraduate && $user->postgraduate) {
+                        $user->postgraduate->update(['CV_file' => $cvPath]);
+                    } elseif ($isUndergraduate && $user->undergraduate) {
+                        $user->undergraduate->update(['CV_file' => $cvPath]);
+                    }
+                    
+                    Log::info("CV file uploaded for user {$user->id}", ['path' => $cvPath]);
+                } else {
+                    Log::error("Failed to store CV file for user {$user->id}", [
+                        'original_name' => $cvFile->getClientOriginalName(),
+                        'destination' => $destinationPath
+                    ]);
+                    return response()->json(['error' => 'Failed to upload CV file'], 500);
+                }
+            } catch (\Exception $e) {
+                Log::error("Exception during CV file upload", [
+                    'user_id' => $user->id,
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return response()->json(['error' => 'Exception during CV upload: ' . $e->getMessage()], 500);
             }
-        } 
+        }
         // Check for alternative cv_file parameter (for backward compatibility)
         else if ($request->hasFile('cv_file')) {
-            $cvFile = $request->file('cv_file');
-            
-            // Validate file
-            $validatedFile = $request->validate([
-                'cv_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',  // 10MB max, PDF/DOC/DOCX and images
-            ]);
-            
-            // Store the file in the appropriate location
-            $destinationPath = public_path('storage/CV_files');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-            
-            $fileName = time() . '_' . $cvFile->getClientOriginalName();
-            $cvFile->move($destinationPath, $fileName);
-            $path = 'CV_files/' . $fileName;
-            
-            if ($path) {
-                $cvPath = $path;
+            try {
+                $cvFile = $request->file('cv_file');
                 
-                // Update the user's role model with the CV path
-                if ($isAcademician && $user->academician) {
-                    $user->academician->update(['CV_file' => $path]);
-                } elseif ($isPostgraduate && $user->postgraduate) {
-                    $user->postgraduate->update(['CV_file' => $path]);
-                } elseif ($isUndergraduate && $user->undergraduate) {
-                    $user->undergraduate->update(['CV_file' => $path]);
+                // Additional logging
+                Log::info("CV file upload received (legacy parameter)", [
+                    'user_id' => $user->id,
+                    'original_name' => $cvFile->getClientOriginalName(),
+                    'mime_type' => $cvFile->getMimeType(),
+                    'size' => $cvFile->getSize(),
+                    'error' => $cvFile->getError()
+                ]);
+                
+                // Validate file
+                $validatedFile = $request->validate([
+                    'cv_file' => 'required|file|max:10240|mimes:pdf,doc,docx,jpg,jpeg,png,tiff',  // 10MB max, PDF/DOC/DOCX and images
+                ]);
+                
+                // Make sure the storage directory exists
+                $destinationPath = storage_path('app/public/CV_files');
+                if (!file_exists($destinationPath)) {
+                    if (!mkdir($destinationPath, 0755, true)) {
+                        Log::error("Failed to create CV storage directory", [
+                            'user_id' => $user->id,
+                            'path' => $destinationPath
+                        ]);
+                        return response()->json(['error' => 'Failed to create storage directory'], 500);
+                    }
                 }
                 
-                Log::info("CV file uploaded for user {$user->id} (using legacy cv_file parameter)", ['path' => $path]);
-            } else {
-                Log::error("Failed to upload CV file for user {$user->id}");
-                return response()->json(['error' => 'Failed to upload CV file'], 500);
+                // Check that the directory is writable
+                if (!is_writable($destinationPath)) {
+                    Log::error("CV storage directory is not writable", [
+                        'user_id' => $user->id,
+                        'path' => $destinationPath
+                    ]);
+                    return response()->json(['error' => 'Storage directory is not writable'], 500);
+                }
+                
+                // Generate a safe filename
+                $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9_.-]/', '_', $cvFile->getClientOriginalName());
+                
+                // Store using Laravel's storage system instead of move
+                $path = $cvFile->storeAs('public/CV_files', $fileName);
+                
+                // If storage was successful
+                if ($path) {
+                    // Convert the path to the format used in the database (without 'public/')
+                    $cvPath = str_replace('public/', '', $path);
+                    
+                    // Update the user's role model with the CV path
+                    if ($isAcademician && $user->academician) {
+                        $user->academician->update(['CV_file' => $cvPath]);
+                    } elseif ($isPostgraduate && $user->postgraduate) {
+                        $user->postgraduate->update(['CV_file' => $cvPath]);
+                    } elseif ($isUndergraduate && $user->undergraduate) {
+                        $user->undergraduate->update(['CV_file' => $cvPath]);
+                    }
+                    
+                    Log::info("CV file uploaded for user {$user->id} (using legacy cv_file parameter)", ['path' => $cvPath]);
+                } else {
+                    Log::error("Failed to store CV file for user {$user->id} (legacy parameter)", [
+                        'original_name' => $cvFile->getClientOriginalName(),
+                        'destination' => $destinationPath
+                    ]);
+                    return response()->json(['error' => 'Failed to upload CV file'], 500);
+                }
+            } catch (\Exception $e) {
+                Log::error("Exception during CV file upload (legacy parameter)", [
+                    'user_id' => $user->id,
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return response()->json(['error' => 'Exception during CV upload: ' . $e->getMessage()], 500);
             }
         } 
         // Use existing CV from user profile

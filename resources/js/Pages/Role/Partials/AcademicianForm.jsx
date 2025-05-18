@@ -351,24 +351,31 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         // Get CSRF token from the meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         
-        // Create form data with CV file
+        // Create form data with CV file - use proper file name and type info
         const formData = new FormData();
-        formData.append('CV_file', cvFile);
+        formData.append('CV_file', cvFile, cvFile.name);
         
-        console.log('Generating profile from CV...');
-        console.log('CSRF Token:', csrfToken);
-        console.log('CV File:', cvFile.name, cvFile.size, cvFile.type);
+        // Log CV file details for debugging
+        console.log('CV File details:', {
+            name: cvFile.name,
+            size: cvFile.size,
+            type: cvFile.type,
+            lastModified: new Date(cvFile.lastModified).toISOString()
+        });
         
-        // Add standard debugging headers
-        const headers = {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-        };
-        
-        console.log('Request headers:', headers);
+        // Ensure the file size isn't too large
+        if (cvFile.size > 5 * 1024 * 1024) {
+            throw new Error('File size exceeds 5MB. Please upload a smaller file.');
+        }
         
         const response = await axios.post(route('ai.generate.cv'), formData, {
-            headers: headers
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            // Add explicit timeout and make sure we're handling binary data properly
+            responseType: 'json',
+            timeout: 60000, // 60 seconds
         });
         
         console.log('CV generation successful:', response.data);
