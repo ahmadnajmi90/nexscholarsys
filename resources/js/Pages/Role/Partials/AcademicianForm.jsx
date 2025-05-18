@@ -281,7 +281,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
   const handleGenerateProfileFromCV = async () => {
     // First check if CV exists
-    if (data.CV_file) {
+    if (data.CV_file && typeof data.CV_file === 'string') {
         // CV already exists, use it
         setIsGenerating(true);
         setGenerationStatus('Generating profile from existing CV...');
@@ -289,65 +289,29 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             // Get CSRF token from the meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             
-            // Use FormData to explicitly include the token
+            // Create simple form data with token only
             const formData = new FormData();
-            formData.append('_token', csrfToken);
             
-            // Log details for debugging
-            console.log('Attempting CV generation with token:', csrfToken);
-            console.log('Using existing CV file:', data.CV_file);
+            console.log('Attempting CV generation with existing CV file');
+            console.log('CSRF Token:', csrfToken);
+            console.log('Using existing CV:', data.CV_file);
+            
+            // Standard headers
+            const headers = {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            };
             
             const response = await axios.post(route('ai.generate.cv'), formData, {
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Content-Type': 'multipart/form-data', // Use multipart/form-data when sending FormData
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: headers
             });
             
-            console.log('CV generation response:', response.data);
+            console.log('CV generation successful:', response.data);
             
-            if (response.data.status === 'success' && response.data.generation_initiated) {
-                // Wait for a brief moment then check for the profile data
-                setTimeout(async () => {
-                    try {
-                        const statusResponse = await axios.get(route('ai.status'), {
-                            headers: {
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        console.log('Status check response:', statusResponse.data);
-                        
-                        if (statusResponse.data && statusResponse.data.status !== 'in_progress') {
-                            // Update form with the generated data
-                            updateFormWithGeneratedData(statusResponse.data.data || statusResponse.data);
-                            setGenerationStatus('Profile generated successfully from CV!');
-                        } else {
-                            setGenerationStatus('Profile generation in progress. Refresh the page in a few moments.');
-                        }
-                    } catch (err) {
-                        console.error('Error checking generation status:', err);
-                        console.log('Error details:', {
-                            message: err.message,
-                            response: err.response?.data,
-                            status: err.response?.status
-                        });
-                        setGenerationStatus('Error checking generation status. Please refresh the page.');
-                    } finally {
-                        setIsGenerating(false);
-                    }
-                }, 3000);
-            } else if (response.data && typeof response.data === 'object' && response.data.full_name) {
-                // Response contains profile data directly
+            if (response.data) {
                 updateFormWithGeneratedData(response.data);
-                setGenerationStatus('Profile generated successfully from CV!');
+                setGenerationStatus('Profile generated successfully!');
                 setIsGenerating(false);
-            } else {
-                console.log('Unexpected response format:', response.data);
-                throw new Error('Generation could not be initiated: Invalid response format');
             }
         } catch (error) {
             console.error('Error generating profile from CV:', error);
@@ -386,113 +350,36 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
     try {
         // Get CSRF token from the meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        console.log('CSRF Token for CV upload:', csrfToken);
         
-        // Create form data to submit the file
+        // Create form data with CV file
         const formData = new FormData();
-        formData.append('cv_file', cvFile);
+        formData.append('CV_file', cvFile);
         
-        // First save the CV to the user's profile
-        const cvFormData = new FormData();
-        cvFormData.append('CV_file', cvFile);
-        cvFormData.append('_token', csrfToken); // Explicitly include token in form data
+        console.log('Generating profile from CV...');
+        console.log('CSRF Token:', csrfToken);
+        console.log('CV File:', cvFile.name, cvFile.size, cvFile.type);
         
-        console.log('Saving CV to profile...');
-        const saveResponse = await axios.post(route('role.updateCV'), cvFormData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+        // Add standard debugging headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        };
+        
+        console.log('Request headers:', headers);
+        
+        const response = await axios.post(route('ai.generate.cv'), formData, {
+            headers: headers
         });
         
-        console.log('CV save response:', saveResponse.data);
+        console.log('CV generation successful:', response.data);
         
-        // If saved successfully, update the local state
-        if (saveResponse.data.success) {
-            setData('CV_file', saveResponse.data.cv_path);
-            
-            // Now make the API call to process the CV and trigger generation
-            formData.append('_token', csrfToken); // Explicitly include token in form data
-            
-            console.log('Generating profile from uploaded CV...');
-            const response = await axios.post(route('ai.generate.cv'), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            console.log('CV generation response:', response.data);
-            
-            // Handle different success response formats
-            if (response.data.status === 'success' || 
-                (response.data && typeof response.data === 'object' && 
-                (response.data.full_name || response.data.response || response.data.data))) {
-                
-                setCVModalOpen(false);
-                setCVFile(null);
-                setGenerationStatus('CV uploaded and profile generation started...');
-        
-                // Wait for a brief moment then check for the profile data
-                setTimeout(async () => {
-                    try {
-                        const statusResponse = await axios.get(route('ai.status'), {
-                            headers: {
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        console.log('Status check after CV generation:', statusResponse.data);
-                        
-                        // Handle the response appropriately
-                        if (statusResponse.data.status === 'in_progress') {
-                            // Still in progress
-                            setGenerationStatus('Profile generation in progress. Please wait...');
-                            // Check again after a delay
-                            setTimeout(checkGenerationStatus, 3000);
-                        } else {
-                            // Extract profile data from various response formats
-                            let profileData = statusResponse.data;
-                            if (statusResponse.data.response) {
-                                profileData = statusResponse.data.response;
-                            } else if (statusResponse.data.data) {
-                                profileData = statusResponse.data.data;
-                            }
-                            
-                            // Update form with the generated data
-                            updateFormWithGeneratedData(profileData);
-                            setGenerationStatus('Profile generated successfully from CV!');
-        }
-                    } catch (err) {
-                        console.error('Error checking generation status:', err);
-                        console.log('Error details:', {
-                            message: err.message,
-                            response: err.response?.data,
-                            status: err.response?.status
-                        });
-                        setGenerationStatus('Error checking generation status. Please refresh the page.');
-                    } finally {
-                        setIsUploading(false);
-                    }
-                }, 3000);
-            } else if (response.data && typeof response.data === 'object' && response.data.full_name) {
-                // Response contains profile data directly
-                setCVModalOpen(false);
-                setCVFile(null);
-                updateFormWithGeneratedData(response.data);
-                setGenerationStatus('Profile generated successfully from CV!');
-                setIsUploading(false);
-            } else {
-                console.error('Unexpected response format:', response.data);
-                throw new Error('Failed to generate profile: Invalid response format');
-            }
-        } else {
-            throw new Error('Failed to save CV to profile');
+        // Update profile data
+        if (response.data) {
+            setCVModalOpen(false);
+            setCVFile(null);
+            updateFormWithGeneratedData(response.data);
+            setGenerationStatus('Profile generated successfully!');
+            setIsUploading(false);
         }
     } catch (error) {
         console.error('Error uploading CV:', error);
@@ -500,8 +387,10 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             message: error.message,
             response: error.response?.data,
             status: error.response?.status,
-            statusText: error.response?.statusText
+            statusText: error.response?.statusText,
+            headers: error.response?.headers
         });
+        
         setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
         setIsUploading(false);
     }
