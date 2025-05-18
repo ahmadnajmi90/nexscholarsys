@@ -7,6 +7,7 @@ use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CVProfileGeneratorService
 {
@@ -38,29 +39,54 @@ class CVProfileGeneratorService
     public function generateProfileFromCV(User $user, ?string $cvPath = null): ?array
     {
         $this->user = $user;
+        $userId = $user->id;
         
-        // Determine user role
-        $roleModel = $this->getRoleModelAndCVPath($user, $cvPath);
-        if (!$roleModel) {
-            Log::error("Failed to determine user role or CV path for user {$user->id}");
+        // Log the start of profile generation
+        Log::info("Starting CV profile generation for user", [
+            'user_id' => $userId,
+            'provided_cv_path' => $cvPath
+        ]);
+        
+        // Validate that we have a CV path
+        if (empty($cvPath)) {
+            Log::error("No CV path provided for profile generation", [
+                'user_id' => $userId
+            ]);
             return null;
         }
         
-        // Extract list from $roleModel if it's an array
-        if (is_array($roleModel)) {
-            $cvPath = $roleModel['cvPath'];
-            $roleModel = $roleModel['model'];
+        // Determine user role
+        $roleModel = $this->getRoleModel($user);
+        if (!$roleModel) {
+            Log::error("Failed to determine user role for user", [
+                'user_id' => $userId
+            ]);
+            return null;
         }
         
-        // Extract text from CV
-        $cvText = $this->documentTextExtractor->extractText($cvPath, $user->id);
+        // Verify the file exists in storage
+        if (!Storage::disk('public')->exists($cvPath)) {
+            Log::error("CV file does not exist in storage", [
+                'user_id' => $userId,
+                'cv_path' => $cvPath
+            ]);
+            return null;
+        }
+        
+        // Extract text from CV using the document text extractor service
+        // The service will handle resolving the full path correctly
+        $cvText = $this->documentTextExtractor->extractText($cvPath, $userId);
         if (!$cvText) {
-            Log::error("Failed to extract text from CV for user {$user->id}");
+            Log::error("Failed to extract text from CV file", [
+                'user_id' => $userId,
+                'cv_path' => $cvPath
+            ]);
             return null;
         }
         
         // Log the CV extraction success
-        Log::info("Successfully extracted text from CV for user {$user->id}", [
+        Log::info("Successfully extracted text from CV file", [
+            'user_id' => $userId,
             'cv_path' => $cvPath,
             'text_length' => strlen($cvText),
             'role_type' => get_class($roleModel)
@@ -73,35 +99,19 @@ class CVProfileGeneratorService
     }
     
     /**
-     * Get the appropriate role model and CV path for a user
+     * Get the appropriate role model for a user
      *
      * @param User $user
-     * @param string|null $cvPath
-     * @return mixed Role model object or an array with model and cvPath, or null if not found
+     * @return mixed Role model object or null if not found
      */
-    protected function getRoleModelAndCVPath(User $user, ?string $cvPath = null)
+    protected function getRoleModel(User $user)
     {
-        if ($user->isAn('academician')) {
-            $roleModel = $user->academician;
-            if (!$cvPath && isset($roleModel->CV_file)) {
-                $cvPath = $roleModel->CV_file;
-            }
-            
-            return $cvPath ? ['model' => $roleModel, 'cvPath' => $cvPath] : null;
-        } elseif ($user->isAn('postgraduate')) {
-            $roleModel = $user->postgraduate;
-            if (!$cvPath && isset($roleModel->CV_file)) {
-                $cvPath = $roleModel->CV_file;
-            }
-            
-            return $cvPath ? ['model' => $roleModel, 'cvPath' => $cvPath] : null;
-        } elseif ($user->isAn('undergraduate')) {
-            $roleModel = $user->undergraduate;
-            if (!$cvPath && isset($roleModel->CV_file)) {
-                $cvPath = $roleModel->CV_file;
-            }
-            
-            return $cvPath ? ['model' => $roleModel, 'cvPath' => $cvPath] : null;
+        if ($user->isAn('academician') && $user->academician) {
+            return $user->academician;
+        } elseif ($user->isAn('postgraduate') && $user->postgraduate) {
+            return $user->postgraduate;
+        } elseif ($user->isAn('undergraduate') && $user->undergraduate) {
+            return $user->undergraduate;
         }
         
         return null;

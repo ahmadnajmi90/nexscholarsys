@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #f5f5f5;
+            white-space: pre-wrap;
+            display: none;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>CV Upload Test Tool</h1>
+    <p>This tool helps diagnose CV upload issues by showing the complete request and response data.</p>
+    
+    <form id="uploadForm">
+        <div class="form-group">
+            <label for="cv_file">Select CV File:</label>
+            <input type="file" id="cv_file" name="CV_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        </div>
+        <button type="submit">Upload CV</button>
+    </form>
+    
+    <div id="loading">Uploading... Please wait</div>
+    
+    <div id="response"></div>
+    
+    <div class="log">
+        <h3>Console Log:</h3>
+        <div id="console-log"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('uploadForm');
+            const responseDiv = document.getElementById('response');
+            const loadingDiv = document.getElementById('loading');
+            const consoleLogDiv = document.getElementById('console-log');
+            
+            // Override console.log to display in our div
+            const originalConsoleLog = console.log;
+            console.log = function() {
+                // Call the original console.log
+                originalConsoleLog.apply(console, arguments);
+                
+                // Convert arguments to string and add to our log div
+                const args = Array.from(arguments);
+                const logEntry = document.createElement('div');
+                logEntry.textContent = args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                consoleLogDiv.appendChild(logEntry);
+            };
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Get CSRF token from meta tag
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (!csrfToken) {
+                    console.log('Warning: CSRF token not found. Authentication may fail.');
+                }
+                
+                const fileInput = document.getElementById('cv_file');
+                if (!fileInput.files.length) {
+                    alert('Please select a file to upload');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                console.log('Selected file:', {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    lastModified: new Date(file.lastModified).toISOString()
+                });
+                
+                // Create FormData object
+                const formData = new FormData();
+                formData.append('CV_file', file);
+                if (csrfToken) {
+                    formData.append('_token', csrfToken);
+                }
+                
+                // Show loading indicator
+                loadingDiv.style.display = 'block';
+                responseDiv.style.display = 'none';
+                
+                try {
+                    console.log('Starting CV upload to /ai/generate/cv');
+                    
+                    // Use fetch API to post the data
+                    const response = await fetch('/ai/generate/cv', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken || '',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', Object.fromEntries([...response.headers]));
+                    
+                    // Parse response
+                    let responseData;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        responseData = await response.json();
+                        console.log('Response data (JSON):', responseData);
+                    } else {
+                        responseData = await response.text();
+                        console.log('Response data (text):', responseData);
+                        
+                        // Try to auto-detect JSON in text response
+                        try {
+                            const possibleJson = JSON.parse(responseData);
+                            console.log('Auto-detected JSON in text response:', possibleJson);
+                        } catch (e) {
+                            // Not JSON, that's fine
+                        }
+                    }
+                    
+                    // Display response
+                    responseDiv.textContent = typeof responseData === 'object' 
+                        ? JSON.stringify(responseData, null, 2) 
+                        : responseData;
+                    responseDiv.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Error during upload:', error);
+                    responseDiv.textContent = 'Error: ' + error.message;
+                    responseDiv.style.display = 'block';
+                } finally {
+                    loadingDiv.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

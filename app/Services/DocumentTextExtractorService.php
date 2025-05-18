@@ -18,26 +18,55 @@ class DocumentTextExtractorService
      */
     public function extractText(string $filePath, ?int $userId = null): ?string
     {
-        // Try different possible storage locations, prioritizing the correct path first
-        $possiblePaths = [
-            storage_path('app/private/public/' . $filePath), // Correct primary path
-            storage_path('app/public/' . $filePath),         // Standard Laravel public storage
-            storage_path('app/private/private/public/' . $filePath), // Handle previously-stored files with double private
-            storage_path('app/' . $filePath)                 // Direct app storage
-        ];
-        
-        // Find the first valid path that exists
-        $absolutePath = null;
-        foreach ($possiblePaths as $path) {
-            if (file_exists($path)) {
-                $absolutePath = $path;
-                break;
-            }
+        // Log the requested file path for debugging
+        Log::info("CV text extraction requested", [
+            'user_id' => $userId,
+            'requested_path' => $filePath
+        ]);
+
+        // First try using Laravel's Storage facade to locate the file
+        // This is the preferred modern approach that properly handles storage locations
+        if (Storage::disk('public')->exists($filePath)) {
+            $absolutePath = Storage::disk('public')->path($filePath);
+            Log::info("File found in public storage", [
+                'relative_path' => $filePath,
+                'absolute_path' => $absolutePath,
+                'file_size' => filesize($absolutePath)
+            ]);
         }
-        
-        if (!$absolutePath) {
-            Log::error("Document file not found in any of the expected locations. Tried: " . implode(', ', $possiblePaths));
-            return null;
+        // Fallbacks in case the file is stored in a different location
+        else {
+            // Try different possible storage locations, prioritizing the correct path first
+            $possiblePaths = [
+                storage_path('app/public/' . $filePath),         // Standard Laravel public storage
+                storage_path('app/private/public/' . $filePath), // Possible non-standard path
+                storage_path('app/' . $filePath),                // Direct app storage
+                public_path('storage/' . $filePath),             // Symlinked public path
+                $filePath                                        // Direct absolute path as last resort
+            ];
+            
+            // Find the first valid path that exists
+            $absolutePath = null;
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path)) {
+                    $absolutePath = $path;
+                    Log::info("File found via fallback path", [
+                        'original_path' => $filePath,
+                        'found_at' => $path,
+                        'file_size' => filesize($path)
+                    ]);
+                    break;
+                }
+            }
+            
+            if (!$absolutePath) {
+                Log::error("Document file not found in any of the expected locations", [
+                    'user_id' => $userId,
+                    'requested_path' => $filePath,
+                    'tried_paths' => $possiblePaths
+                ]);
+                return null;
+            }
         }
         
         $extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
@@ -83,9 +112,21 @@ class DocumentTextExtractorService
                 return $text;
             }
             
+            Log::error("Text extraction methods returned empty or null result", [
+                'user_id' => $userId,
+                'filename' => $filename,
+                'extension' => $extension
+            ]);
             return null;
         } catch (Exception $e) {
-            Log::error("Error extracting text from document: {$e->getMessage()}");
+            Log::error("Error extracting text from document", [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => $userId,
+                'filename' => $filename,
+                'extension' => $extension
+            ]);
             return null;
         }
     }

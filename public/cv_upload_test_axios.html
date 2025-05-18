@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="" id="csrf-token">
+    <title>CV Upload Test with Axios</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #f5f5f5;
+            white-space: pre-wrap;
+            display: none;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .method-selector {
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .setting-group {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .setting-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CV Upload Test Tool (Axios Version)</h1>
+    <p>This tool closely mimics the React component's upload flow using axios.</p>
+    
+    <div class="method-selector">
+        <button class="tab-button active" data-endpoint="ai-generate-cv">AI Generate from CV</button>
+        <button class="tab-button" data-endpoint="role-update-cv">Role Update CV</button>
+    </div>
+    
+    <div class="setting-group">
+        <div class="setting-title">CSRF Token</div>
+        <div class="form-group">
+            <label for="csrf-token-input">CSRF Token (manually set):</label>
+            <input type="text" id="csrf-token-input" style="width: 80%;" placeholder="Enter Laravel CSRF token">
+            <p><small>Note: This is normally auto-filled from a meta tag in Laravel.</small></p>
+        </div>
+    </div>
+    
+    <form id="uploadForm">
+        <div class="form-group">
+            <label for="cv_file">Select CV File:</label>
+            <input type="file" id="cv_file" name="CV_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        </div>
+        
+        <div class="setting-group">
+            <div class="setting-title">Request Settings</div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="use-xhr" checked>
+                    Use FormData with exact same field name (CV_file)
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="include-filename" checked>
+                    Include original filename in request
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="set-content-type" checked>
+                    Set Content-Type header explicitly
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Timeout (ms):
+                    <input type="number" id="request-timeout" value="60000" min="1000" step="1000">
+                </label>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button type="submit">Upload CV</button>
+            <button type="button" id="clear-log">Clear Log</button>
+        </div>
+    </form>
+    
+    <div id="loading">Processing... Please wait</div>
+    
+    <div id="response"></div>
+    
+    <div class="log">
+        <h3>Console Log:</h3>
+        <div id="console-log"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('uploadForm');
+            const responseDiv = document.getElementById('response');
+            const loadingDiv = document.getElementById('loading');
+            const consoleLogDiv = document.getElementById('console-log');
+            const csrfTokenInput = document.getElementById('csrf-token-input');
+            const clearLogButton = document.getElementById('clear-log');
+            const tabButtons = document.querySelectorAll('.tab-button');
+            
+            let currentEndpoint = '/ai/generate/cv'; // Default endpoint
+            
+            // Set up tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const endpoint = button.getAttribute('data-endpoint');
+                    switch(endpoint) {
+                        case 'ai-generate-cv':
+                            currentEndpoint = '/ai/generate/cv';
+                            console.log('Endpoint set to:', currentEndpoint);
+                            break;
+                        case 'role-update-cv':
+                            currentEndpoint = '/role/updateCV';
+                            console.log('Endpoint set to:', currentEndpoint);
+                            break;
+                    }
+                });
+            });
+            
+            // Clear log button
+            clearLogButton.addEventListener('click', () => {
+                consoleLogDiv.innerHTML = '';
+            });
+            
+            // Update meta tag when input changes
+            csrfTokenInput.addEventListener('input', function() {
+                document.getElementById('csrf-token').setAttribute('content', this.value);
+                console.log('CSRF token updated to:', this.value);
+            });
+            
+            // Override console.log to display in our div
+            const originalConsoleLog = console.log;
+            const originalConsoleError = console.error;
+            
+            console.log = function() {
+                // Call the original console.log
+                originalConsoleLog.apply(console, arguments);
+                
+                // Convert arguments to string and add to our log div
+                const args = Array.from(arguments);
+                const logEntry = document.createElement('div');
+                logEntry.textContent = args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                consoleLogDiv.appendChild(logEntry);
+                consoleLogDiv.scrollTop = consoleLogDiv.scrollHeight; // Auto-scroll
+            };
+            
+            console.error = function() {
+                // Call the original console.error
+                originalConsoleError.apply(console, arguments);
+                
+                // Convert arguments to string and add to our log div with error styling
+                const args = Array.from(arguments);
+                const logEntry = document.createElement('div');
+                logEntry.style.color = 'red';
+                logEntry.textContent = 'ERROR: ' + args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                consoleLogDiv.appendChild(logEntry);
+                consoleLogDiv.scrollTop = consoleLogDiv.scrollHeight; // Auto-scroll
+            };
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Get settings
+                const useXHR = document.getElementById('use-xhr').checked;
+                const includeFilename = document.getElementById('include-filename').checked;
+                const setContentType = document.getElementById('set-content-type').checked;
+                const requestTimeout = parseInt(document.getElementById('request-timeout').value) || 60000;
+                
+                // Get CSRF token - first from input, fallback to meta tag
+                let csrfToken = csrfTokenInput.value.trim();
+                if (!csrfToken) {
+                    csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                }
+                
+                if (!csrfToken) {
+                    console.log('Warning: CSRF token not found. Authentication may fail.');
+                }
+                
+                const fileInput = document.getElementById('cv_file');
+                if (!fileInput.files.length) {
+                    alert('Please select a file to upload');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                console.log('Selected file:', {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    lastModified: new Date(file.lastModified).toISOString()
+                });
+                
+                // Create FormData object
+                const formData = new FormData();
+                
+                if (useXHR) {
+                    // Use the exact same field name as the React component
+                    if (includeFilename) {
+                        formData.append('CV_file', file, file.name);
+                    } else {
+                        formData.append('CV_file', file);
+                    }
+                } else {
+                    // Just use the File object directly (which shouldn't make a difference)
+                    formData.append('CV_file', file);
+                }
+                
+                // Add CSRF token if available
+                if (csrfToken) {
+                    formData.append('_token', csrfToken);
+                }
+                
+                // Show loading indicator
+                loadingDiv.style.display = 'block';
+                responseDiv.style.display = 'none';
+                
+                try {
+                    console.log(`Starting CV upload to ${currentEndpoint} with settings:`, {
+                        useXHR,
+                        includeFilename,
+                        setContentType,
+                        requestTimeout
+                    });
+                    
+                    // Set up headers
+                    const headers = {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    };
+                    
+                    if (csrfToken) {
+                        headers['X-CSRF-TOKEN'] = csrfToken;
+                    }
+                    
+                    // Conditionally set Content-Type
+                    if (setContentType) {
+                        headers['Content-Type'] = 'multipart/form-data';
+                    }
+                    
+                    console.log('Request headers:', headers);
+                    
+                    // Use axios to post the data - mirroring React component
+                    const response = await axios.post(currentEndpoint, formData, {
+                        headers: headers,
+                        timeout: requestTimeout,
+                        responseType: 'json',
+                        onUploadProgress: (progressEvent) => {
+                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            console.log(`Upload progress: ${percentCompleted}%`);
+                        }
+                    });
+                    
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    console.log('Response data:', response.data);
+                    
+                    // Display response
+                    responseDiv.textContent = JSON.stringify(response.data, null, 2);
+                    responseDiv.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Error during upload:', error);
+                    console.log('Error details:', {
+                        message: error.message,
+                        response: error.response?.data,
+                        status: error.response?.status,
+                        statusText: error.response?.statusText,
+                        headers: error.response?.headers
+                    });
+                    
+                    // If we have error response data, show it
+                    if (error.response && error.response.data) {
+                        let errorData = error.response.data;
+                        if (typeof errorData === 'object') {
+                            responseDiv.textContent = JSON.stringify(errorData, null, 2);
+                        } else {
+                            responseDiv.textContent = errorData;
+                            
+                            // Try to auto-detect JSON in text response
+                            try {
+                                const possibleJson = JSON.parse(errorData);
+                                console.log('Auto-detected JSON in error response:', possibleJson);
+                            } catch (e) {
+                                // Not JSON, check for HTML error page with exception details
+                                if (typeof errorData === 'string' && errorData.includes('<html')) {
+                                    console.log('HTML error response detected, extracting Laravel exception info');
+                                    
+                                    // Extract stack trace or message from Laravel error page
+                                    const messageMatch = errorData.match(/<div class="exception-message">(.*?)<\/div>/s);
+                                    if (messageMatch && messageMatch[1]) {
+                                        console.log('Exception message:', messageMatch[1].trim());
+                                    }
+                                    
+                                    const stackMatch = errorData.match(/<div class="stack-trace">(.*?)<\/div>/s);
+                                    if (stackMatch && stackMatch[1]) {
+                                        console.log('Stack trace found in HTML response');
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        responseDiv.textContent = 'Error: ' + error.message;
+                    }
+                    
+                    responseDiv.style.display = 'block';
+                } finally {
+                    loadingDiv.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
