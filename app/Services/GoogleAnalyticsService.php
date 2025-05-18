@@ -29,10 +29,19 @@ class GoogleAnalyticsService
             $this->cacheLifetime = config('analytics.cache_lifetime', 60);
             
             $credentialsPath = config('analytics.service_account_credentials_json');
+            $measurementId = config('analytics.measurement_id');
+            
+            // Validate measurement ID format
+            if ($measurementId !== 'G-Q6VXXF3B0T' && !app()->environment('testing')) {
+                Log::warning('Google Analytics measurement ID does not match expected value (G-Q6VXXF3B0T)', [
+                    'configured_id' => $measurementId
+                ]);
+            }
             
             // Debug logging to help troubleshoot
             Log::info('Google Analytics initialization attempt', [
                 'property_id' => $this->propertyId,
+                'measurement_id' => $measurementId,
                 'credentials_path' => $credentialsPath,
                 'file_exists' => file_exists($credentialsPath) ? 'true' : 'false'
             ]);

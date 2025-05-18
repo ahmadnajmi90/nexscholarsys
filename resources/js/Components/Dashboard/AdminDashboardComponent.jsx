@@ -2,7 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { FaUsers, FaDesktop, FaChartLine, FaEye, FaCheck, FaBell, FaFile } from 'react-icons/fa';
 
 const AdminDashboardComponent = ({ totalUsers, topViewedAcademicians, analyticsData }) => {
-    const [gaLoaded, setGaLoaded] = useState(!!analyticsData);
+    const [gaLoaded, setGaLoaded] = useState(false);
+    
+    // Verify analytics data on component mount
+    useEffect(() => {
+        // Check if analytics data exists and has the expected properties
+        const isValidData = analyticsData && 
+            typeof analyticsData === 'object' &&
+            'activeUsers' in analyticsData &&
+            'avgSessionDuration' in analyticsData &&
+            'topPages' in analyticsData &&
+            'pageViewsOverTime' in analyticsData;
+            
+        setGaLoaded(isValidData);
+        
+        if (analyticsData && !isValidData) {
+            console.warn('Analytics data has an unexpected format', analyticsData);
+        }
+    }, [analyticsData]);
 
     // Render Google Analytics charts
     const renderGACharts = () => {

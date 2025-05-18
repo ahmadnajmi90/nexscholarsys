@@ -3,7 +3,24 @@ import { FaUsers, FaDesktop, FaChartLine, FaEye, FaCheck, FaBell, FaFile } from 
 
 const AdminDashboardComponent_m = ({ totalUsers, topViewedAcademicians, analyticsData }) => {
     // Determine if Google Analytics data is loaded
-    const gaLoaded = !!analyticsData;
+    const [gaLoaded, setGaLoaded] = React.useState(false);
+    
+    // Verify analytics data on component mount
+    React.useEffect(() => {
+        // Check if analytics data exists and has expected structure
+        const isValidData = analyticsData && 
+            typeof analyticsData === 'object' &&
+            'activeUsers' in analyticsData &&
+            'avgSessionDuration' in analyticsData &&
+            'topPages' in analyticsData &&
+            'pageViewsOverTime' in analyticsData;
+            
+        setGaLoaded(isValidData);
+        
+        if (analyticsData && !isValidData) {
+            console.warn('Mobile: Analytics data has an unexpected format', analyticsData);
+        }
+    }, [analyticsData]);
 
     // Top viewed academicians component (mobile optimized)
     const TopViewedAcademicians = ({ academicians }) => (
