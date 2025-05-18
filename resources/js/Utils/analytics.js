@@ -40,22 +40,35 @@ const shouldTrack = () => {
 /**
  * Track a page view in Google Analytics
  * @param {string} path - The current page path
+ * @param {string} [explicitTitle] - Optional explicit page title to use
  */
-export const trackPageView = (path) => {
+export const trackPageView = (path, explicitTitle = null) => {
     if (shouldTrack()) {
         // Get current page details
-        const pageTitle = document.title;
+        const pageTitle = explicitTitle || document.title;
         const pageLocation = window.location.href;
         const pagePath = path || window.location.pathname + window.location.search;
         const measurementId = getMeasurementId();
         
         console.log(`GA Tracking pageview: ${pagePath} (${pageTitle})`); // Debugging
         
-        // For SPAs, it's better to use the 'event' method rather than 'config'
-        // This ensures that page titles are properly tracked
-        window.gtag('event', 'page_view', {
+        // First, update the configuration with current page info
+        window.gtag('config', measurementId, {
             page_title: pageTitle,
             page_location: pageLocation,
+            page_path: pagePath,
+            send_page_view: false // Don't send a page view yet
+        });
+        
+        // Then explicitly send a page_view event with the same parameters
+        // This is critical for SPA tracking in GA4
+        window.gtag('event', 'page_view', {
+            // Include ALL parameters directly in the event
+            title: pageTitle,
+            page_title: pageTitle,
+            location: pageLocation,
+            page_location: pageLocation,
+            path: pagePath,
             page_path: pagePath,
             send_to: measurementId
         });

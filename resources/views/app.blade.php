@@ -122,7 +122,12 @@
               send_page_view: false, // Disable automatic page view on initialization
               transport_type: 'beacon', // Use navigator.sendBeacon to help ensure events are sent
               debug_mode: true, // Enable debug mode temporarily to help troubleshoot
-              cookie_flags: 'samesite=none;secure' // Ensure cookies work correctly
+              link_attribution: true, // Track link clicks automatically
+              cookie_flags: 'samesite=none;secure', // Ensure cookies work correctly
+              custom_map: {
+                dimension1: 'page_title',
+                dimension2: 'page_path'
+              }
             });
             
             // Initial page view will be handled by the React components

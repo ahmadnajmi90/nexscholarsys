@@ -27,9 +27,32 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         // Add a small delay to ensure both GA has loaded
         // and the document title has been updated by Inertia
         setTimeout(() => {
-            console.log(`MainLayout tracking: ${title} at ${url}`);
-            trackPageView(url);
-        }, 200); // Slightly longer delay to ensure title is updated
+            // Get the actual title from various sources with fallbacks for SEO URLs
+            let pageTitle = title;
+            
+            // If title is undefined (common with SEO URLs), try to get it from document
+            if (pageTitle === undefined) {
+                pageTitle = document.title;
+                
+                // If document title is just the site name, try to extract from URL
+                if (pageTitle === 'Nexscholar' || pageTitle.endsWith('- Nexscholar')) {
+                    // Extract title from SEO URL if available
+                    const urlPath = url.split('/').filter(Boolean);
+                    if (urlPath.length > 0) {
+                        const lastSegment = urlPath[urlPath.length - 1];
+                        // Convert slug to title case: money-matters-how -> Money Matters How
+                        pageTitle = lastSegment
+                            .split('-')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+                }
+            }
+            
+            console.log(`MainLayout tracking: ${pageTitle || 'Unknown'} at ${url}`);
+            // Pass both URL and explicit title to ensure correct tracking
+            trackPageView(url, pageTitle);
+        }, 250); // Slightly longer delay to ensure title is updated
     }, [url, title]);
 
     // Effect to determine screen size for responsiveness
