@@ -1523,11 +1523,14 @@ class RoleProfileController extends Controller
                     'email' => $generatedProfile['email'] ?? null,
                     'phone_number' => $generatedProfile['phone_number'] ?? null,
                     'bio' => $generatedProfile['bio'] ?? null,
-                    'field_of_research' => $generatedProfile['field_of_research'] ?? [],
-                    'skills' => $generatedProfile['skills'] ?? [],
                     'nationality' => $generatedProfile['nationality'] ?? null,
                     'english_proficiency_level' => $generatedProfile['english_proficiency_level'] ?? null
                 ];
+                
+                // Only include non-empty array fields for skills
+                if (!empty($generatedProfile['skills']) && is_array($generatedProfile['skills'])) {
+                    $responseData['skills'] = $generatedProfile['skills'];
+                }
 
                 // Add role-specific fields
                 if ($isAcademician) {
@@ -1536,8 +1539,12 @@ class RoleProfileController extends Controller
                         'department' => $generatedProfile['department'] ?? null,
                         'highest_degree' => $generatedProfile['highest_degree'] ?? null,
                         'field_of_study' => $generatedProfile['field_of_study'] ?? null,
-                        'research_expertise' => $generatedProfile['research_expertise'] ?? []
                     ]);
+                    
+                    // Only include research_expertise if it's not empty
+                    if (!empty($generatedProfile['research_expertise']) && is_array($generatedProfile['research_expertise'])) {
+                        $responseData['research_expertise'] = $generatedProfile['research_expertise'];
+                    }
                 } elseif ($isPostgraduate) {
                     $responseData = array_merge($responseData, [
                         'previous_degree' => $generatedProfile['previous_degree'] ?? null,
@@ -1550,6 +1557,11 @@ class RoleProfileController extends Controller
                         'suggested_research_title' => $generatedProfile['suggested_research_title'] ?? null,
                         'suggested_research_description' => $generatedProfile['suggested_research_description'] ?? null
                     ]);
+                    
+                    // Only include field_of_research if it's not empty
+                    if (!empty($generatedProfile['field_of_research']) && is_array($generatedProfile['field_of_research'])) {
+                        $responseData['field_of_research'] = $generatedProfile['field_of_research'];
+                    }
                 } elseif ($isUndergraduate) {
                     $responseData = array_merge($responseData, [
                         'bachelor' => $generatedProfile['bachelor'] ?? null,
@@ -1557,8 +1569,12 @@ class RoleProfileController extends Controller
                         'current_undergraduate_status' => $generatedProfile['current_undergraduate_status'] ?? null,
                         'interested_do_research' => $generatedProfile['interested_do_research'] ?? null,
                         'expected_graduate' => $generatedProfile['expected_graduate'] ?? null,
-                        'research_preference' => $generatedProfile['research_preference'] ?? []
                     ]);
+                    
+                    // Only include research_preference if it's not empty
+                    if (!empty($generatedProfile['research_preference']) && is_array($generatedProfile['research_preference'])) {
+                        $responseData['research_preference'] = $generatedProfile['research_preference'];
+                    }
                 }
                 
                 return response()->json($responseData);

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import NationalityForm from "./NationalityForm";
 import Select from 'react-select';
 import axios from 'axios';
+import React from 'react';
 
 export default function UndergraduateForm({ universities, faculties, className = '', researchOptions, skills, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   // Add useRef for tracking generation
@@ -158,7 +159,10 @@ export default function UndergraduateForm({ universities, faculties, className =
       CGPA_bachelor: profileData.CGPA_bachelor || prevData.CGPA_bachelor,
       skills: profileData.skills || prevData.skills,
       expected_graduate: profileData.expected_graduate || prevData.expected_graduate,
-      research_preference: profileData.research_preference || prevData.research_preference,
+      // Preserve existing research_preference if AI returns empty array or undefined
+      research_preference: (profileData.research_preference && profileData.research_preference.length > 0)
+        ? profileData.research_preference
+        : prevData.research_preference,
       current_undergraduate_status: profileData.current_undergraduate_status || prevData.current_undergraduate_status,
       interested_do_research: profileData.interested_do_research || prevData.interested_do_research
     }));
@@ -718,6 +722,8 @@ export default function UndergraduateForm({ universities, faculties, className =
                 }))}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 classNamePrefix="select"
+                hideSelectedOptions={false}
+                closeMenuOnSelect={false}
                 value={data.research_preference?.map(selectedValue => {
                   const matchedOption = researchOptions.find(option =>
                     `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
@@ -732,11 +738,11 @@ export default function UndergraduateForm({ universities, faculties, className =
                 styles={{
                   valueContainer: (provided) => ({
                     ...provided,
-                    maxWidth: '100%', // ensure the container stays within its parent width
+                    maxWidth: '100%',
                   }),
                   multiValueLabel: (provided) => ({
                     ...provided,
-                    maxWidth: 250, // set a fixed max width for each selected label (adjust as needed)
+                    maxWidth: 250,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -745,9 +751,82 @@ export default function UndergraduateForm({ universities, faculties, className =
                     ...provided,
                     zIndex: 9999,
                   }),
+                  option: (provided, { data, isSelected, isFocused, isDisabled }) => {
+                    return {
+                      ...provided,
+                      backgroundColor: isSelected
+                        ? '#2563EB'
+                        : isFocused
+                        ? '#F3F4F6'
+                        : 'white',
+                      color: isSelected 
+                        ? 'white' 
+                        : '#374151',
+                      paddingLeft: isSelected ? '25px' : provided.paddingLeft,
+                      position: 'relative',
+                      ':before': isSelected
+                        ? {
+                            content: '"✓"',
+                            position: 'absolute',
+                            left: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'white',
+                          }
+                        : undefined,
+                    };
+                  },
                 }}
                 onChange={handleResearchPreferenceChange}
                 placeholder="Select preferred field of research..."
+                
+                filterOption={(option, inputValue) => {
+                  return inputValue ? option.label.toLowerCase().includes(inputValue.toLowerCase()) : true;
+                }}
+                components={{
+                  MenuList: props => {
+                    // Clone the children (options) for sorting
+                    const children = React.Children.toArray(props.children);
+                    
+                    // Extract the currently selected values
+                    const selectedValues = data.research_preference || [];
+                    
+                    // Sort children: first selected options, then unselected
+                    const sortedChildren = children.sort((a, b) => {
+                      if (!a || !b || !a.props || !b.props) return 0;
+                      
+                      // Get option values - respect react-select internal structure
+                      const aValue = a.props.data?.value;
+                      const bValue = b.props.data?.value;
+                      
+                      // Check if options are selected
+                      const aSelected = selectedValues.includes(aValue);
+                      const bSelected = selectedValues.includes(bValue);
+                      
+                      // Sort selected items first
+                      if (aSelected && !bSelected) return -1;
+                      if (!aSelected && bSelected) return 1;
+                      
+                      // If both have same selection status, sort alphabetically by label
+                      return a.props.data?.label?.localeCompare(b.props.data?.label) || 0;
+                    });
+                    
+                    // Return the MenuList with sorted children and fixed height with scrolling
+                    return (
+                      <div 
+                        className="react-select__menu-list" 
+                        {...props.innerProps}
+                        style={{
+                          maxHeight: '215px', // Height to show approximately 5-7 items
+                          overflowY: 'auto',  // Enable vertical scrolling
+                          padding: '5px 0'    // Maintain padding from original component
+                        }}
+                      >
+                        {sortedChildren}
+                      </div>
+                    );
+                  }
+                }}
               />
             </div>
           )}

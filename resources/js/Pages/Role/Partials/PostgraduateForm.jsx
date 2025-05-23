@@ -184,7 +184,10 @@ export default function PostgraduateForm({ universities, faculties, className = 
             CGPA_bachelor: profileData.CGPA_bachelor || prevData.CGPA_bachelor,
             master: profileData.master || prevData.master,
             master_type: profileData.master_type || prevData.master_type,
-            field_of_research: profileData.field_of_research || prevData.field_of_research,
+            // Preserve existing field_of_research if AI returns empty array or undefined
+            field_of_research: (profileData.field_of_research && profileData.field_of_research.length > 0)
+                ? profileData.field_of_research
+                : prevData.field_of_research,
             suggested_research_title: profileData.suggested_research_title || prevData.suggested_research_title,
             suggested_research_description: profileData.suggested_research_description || prevData.suggested_research_description,
             skills: profileData.skills || prevData.skills,
@@ -951,6 +954,8 @@ export default function PostgraduateForm({ universities, faculties, className = 
                             }))}
                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                             classNamePrefix="select"
+                            hideSelectedOptions={false}
+                            closeMenuOnSelect={false}
                             value={data.field_of_research?.map((selectedValue) => {
                                 const matchedOption = researchOptions.find(
                                     (option) =>
@@ -966,11 +971,11 @@ export default function PostgraduateForm({ universities, faculties, className = 
                             styles={{
                                 valueContainer: (provided) => ({
                                   ...provided,
-                                  maxWidth: '100%', // ensure the container stays within its parent width
+                                  maxWidth: '100%',
                                 }),
                                 multiValueLabel: (provided) => ({
                                   ...provided,
-                                  maxWidth: 250, // set a fixed max width for each selected label (adjust as needed)
+                                  maxWidth: 250,
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -979,12 +984,77 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                   ...provided,
                                   zIndex: 9999,
                                 }),
-                              }}
+                                option: (provided, { data, isSelected, isFocused, isDisabled }) => {
+                                  return {
+                                    ...provided,
+                                    backgroundColor: isSelected
+                                      ? '#2563EB'
+                                      : isFocused
+                                      ? '#F3F4F6'
+                                      : 'white',
+                                    color: isSelected 
+                                      ? 'white' 
+                                      : '#374151',
+                                    paddingLeft: isSelected ? '25px' : provided.paddingLeft,
+                                    position: 'relative',
+                                    ':before': isSelected
+                                      ? {
+                                          content: '"✓"',
+                                          position: 'absolute',
+                                          left: '10px',
+                                          top: '50%',
+                                          transform: 'translateY(-50%)',
+                                          color: 'white',
+                                        }
+                                      : undefined,
+                                  };
+                                },
+                            }}
                             onChange={(selectedOptions) => {
                                 const selectedValues = selectedOptions.map((option) => option.value);
                                 setData('field_of_research', selectedValues);
                             }}
                             placeholder="Select field of research..."
+                            
+                            filterOption={(option, inputValue) => {
+                              return true;
+                            }}
+                            components={{
+                              MenuList: props => {
+                                const children = React.Children.toArray(props.children);
+                                
+                                const selectedValues = data.field_of_research || [];
+                                
+                                const sortedChildren = children.sort((a, b) => {
+                                  if (!a || !b || !a.props || !b.props) return 0;
+                                  
+                                  const aValue = a.props.data?.value;
+                                  const bValue = b.props.data?.value;
+                                  
+                                  const aSelected = selectedValues.includes(aValue);
+                                  const bSelected = selectedValues.includes(bValue);
+                                  
+                                  if (aSelected && !bSelected) return -1;
+                                  if (!aSelected && bSelected) return 1;
+                                  
+                                  return a.props.data?.label?.localeCompare(b.props.data?.label) || 0;
+                                });
+                                
+                                return (
+                                  <div 
+                                    className="react-select__menu-list" 
+                                    {...props.innerProps}
+                                    style={{
+                                      maxHeight: '215px', // Height to show approximately 5-7 items
+                                      overflowY: 'auto',  // Enable vertical scrolling
+                                      padding: '5px 0'    // Maintain padding from original component
+                                    }}
+                                  >
+                                    {sortedChildren}
+                                  </div>
+                                );
+                              }
+                            }}
                         />
                     </div>
 

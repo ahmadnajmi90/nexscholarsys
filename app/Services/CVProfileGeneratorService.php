@@ -193,13 +193,12 @@ class CVProfileGeneratorService
         ?string $faculty = null
     ): ?array {
         $prompt = "Generate a detailed academic profile for an academician using their CV text.
-        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, current_position, department, highest_degree, field_of_study, research_expertise, bio.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, current_position, department, highest_degree, field_of_study, bio.
         Each field must be plausible and realistic, if not found then leave it as null:
         - 'full_name' and 'email' should match the provided details.
         - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
         - 'highest_degree' should be one of: Certificate, Diploma, Bachelor's Degree, Master's Degree, Ph.D., or Postdoctoral.
         - 'current_position' should be one of: Lecturer, Senior Lecturer, Associate Professor, Professor, Postdoctoral Researcher, or Researcher.
-        - 'research_expertise' should be an array of expertise terms.
         Details: Name: {$fullName}, Email: {$email}, University: {$university}, Faculty: {$faculty}.
         CV Text: {$cvText}
         Provide plausible academic details based solely on these inputs, and output only valid JSON without any markdown formatting.";
@@ -232,20 +231,10 @@ class CVProfileGeneratorService
                 'response' => $response
             ]);
             
-            // Process research_expertise field to map to database IDs
-            if (isset($response['research_expertise']) && is_array($response['research_expertise'])) {
-                $response['research_expertise'] = $this->mapFieldOfResearchToIds($response['research_expertise']);
-                
-                Log::info("Generated profile data for user {$this->user->id} from CV", [
-                    'user_id' => $this->user->id,
-                    'data_keys' => array_keys($response)
-                ]);
-            } else {
-                Log::warning("No research_expertise array found in AI response for user {$this->user->id}", [
-                    'user_id' => $this->user->id,
-                    'response' => $response
-                ]);
-            }
+            Log::info("Generated profile data for user {$this->user->id} from CV", [
+                'user_id' => $this->user->id,
+                'data_keys' => array_keys($response)
+            ]);
         } else {
             Log::error("Failed to get AI response for academician profile (user: {$this->user->id})");
         }
@@ -414,118 +403,6 @@ class CVProfileGeneratorService
     }
     
     /**
-     * Map raw field of research terms from CV to existing field_of_research-research_area-niche_domain IDs
-     *
-     * @param array $rawResearchFields Array of research fields extracted from the CV
-     * @return array Array of field_of_research-research_area-niche_domain ID strings
-     */
-    protected function mapFieldOfResearchToIds(array $rawResearchFields): array
-    {
-        // Get all field of research options with their relationships
-        $fieldOfResearches = \App\Models\FieldOfResearch::with('researchAreas.nicheDomains')->get();
-        $mappedResearchIds = [];
-        
-        // Prepare research options similar to how they're prepared in the controller
-        $researchOptions = [];
-        foreach ($fieldOfResearches as $field) {
-            foreach ($field->researchAreas as $area) {
-                foreach ($area->nicheDomains as $domain) {
-                    $researchOptions[] = [
-                        'field_of_research_id' => $field->id,
-                        'field_of_research_name' => $field->name,
-                        'research_area_id' => $area->id,
-                        'research_area_name' => $area->name,
-                        'niche_domain_id' => $domain->id,
-                        'niche_domain_name' => $domain->name,
-                        'full_text' => strtolower($field->name . ' ' . $area->name . ' ' . $domain->name)
-                    ];
-                }
-            }
-        }
-        
-        // Log the available research options
-        Log::info("Available research options count:", ['count' => count($researchOptions)]);
-        
-        // Process each raw research field and try to map it to existing options
-        foreach ($rawResearchFields as $field) {
-            $field = trim(strtolower($field));
-            $bestMatch = null;
-            $bestScore = 0;
-            
-            foreach ($researchOptions as $option) {
-                // Check for exact matches first
-                if (strtolower($option['field_of_research_name']) === $field || 
-                    strtolower($option['research_area_name']) === $field || 
-                    strtolower($option['niche_domain_name']) === $field) {
-                    // Create the ID format string
-                    $idString = $option['field_of_research_id'] . '-' . 
-                                $option['research_area_id'] . '-' . 
-                                $option['niche_domain_id'];
-                                
-                    if (!in_array($idString, $mappedResearchIds)) {
-                        $mappedResearchIds[] = $idString;
-                        Log::info("Exact match found for research field: $field", [
-                            'matched_to' => $option['field_of_research_name'] . ' - ' . 
-                                          $option['research_area_name'] . ' - ' . 
-                                          $option['niche_domain_name'],
-                            'id_string' => $idString
-                        ]);
-                    }
-                    continue;
-                }
-                
-                // Check for partial matches by counting how many terms match
-                $score = 0;
-                if (strpos($option['full_text'], $field) !== false) {
-                    $score += 3; // direct substring match is strongest
-                }
-                
-                // Check individual words
-                $fieldWords = explode(' ', $field);
-                foreach ($fieldWords as $word) {
-                    if (strlen($word) > 3) { // Only check meaningful words
-                        if (strpos($option['field_of_research_name'], $word) !== false) $score += 2;
-                        if (strpos($option['research_area_name'], $word) !== false) $score += 2;
-                        if (strpos($option['niche_domain_name'], $word) !== false) $score += 2;
-                    }
-                }
-                
-                if ($score > $bestScore) {
-                    $bestScore = $score;
-                    $bestMatch = $option;
-                }
-            }
-            
-            // If we found a good match (with score > 3), add it
-            if ($bestMatch && $bestScore > 3) {
-                $idString = $bestMatch['field_of_research_id'] . '-' . 
-                            $bestMatch['research_area_id'] . '-' . 
-                            $bestMatch['niche_domain_id'];
-                            
-                if (!in_array($idString, $mappedResearchIds)) {
-                    $mappedResearchIds[] = $idString;
-                    Log::info("Fuzzy match found for research field: $field", [
-                        'score' => $bestScore,
-                        'matched_to' => $bestMatch['field_of_research_name'] . ' - ' . 
-                                      $bestMatch['research_area_name'] . ' - ' . 
-                                      $bestMatch['niche_domain_name'],
-                        'id_string' => $idString
-                    ]);
-                }
-            }
-        }
-        
-        // Log the mapping results
-        Log::info("Mapped extracted research fields to IDs", [
-            'raw_fields' => $rawResearchFields,
-            'mapped_ids' => $mappedResearchIds,
-            'mapped_count' => count($mappedResearchIds)
-        ]);
-        
-        return $mappedResearchIds;
-    }
-    
-    /**
      * Generate profile data for a postgraduate
      *
      * @param Postgraduate $postgraduate
@@ -545,7 +422,7 @@ class CVProfileGeneratorService
         ?string $faculty = null
     ): ?array {
         $prompt = "Generate a detailed academic profile for a postgraduate student using their CV text.
-        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, previous_degree, bachelor, CGPA_bachelor, master, master_type, nationality, english_proficiency_level, suggested_research_title, suggested_research_description, field_of_research, bio, skills, funding_requirement, current_postgraduate_status.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, previous_degree, bachelor, CGPA_bachelor, master, master_type, nationality, english_proficiency_level, suggested_research_title, suggested_research_description, bio, funding_requirement, current_postgraduate_status.
         Each field must be plausible and realistic, if not found then leave it as null:
         - 'full_name' and 'email' should match the provided details.
         - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
@@ -555,8 +432,6 @@ class CVProfileGeneratorService
         - 'master' should be the master's degree field or name (if applicable).
         - 'master_type' should be 'Research' or 'Coursework' (if applicable).
         - 'english_proficiency_level' should be one of: 'Beginner', 'Intermediate', 'Advanced', 'Native'.
-        - 'field_of_research' should be an array of research fields.
-        - 'skills' should be an array of technical or academic skills.
         - 'funding_requirement' should be 'Yes' or 'No'.
         - 'current_postgraduate_status' should be 'Not registered yet' or 'Registered'.
         Details: Name: {$fullName}, Email: {$email}, University: {$university}, Faculty: {$faculty}.
@@ -580,11 +455,6 @@ class CVProfileGeneratorService
         
         // Post-process the response
         if ($response) {
-            // Process field_of_research if available
-            if (isset($response['field_of_research']) && is_array($response['field_of_research'])) {
-                $response['field_of_research'] = $this->mapFieldOfResearchToIds($response['field_of_research']);
-            }
-            
             // Process skills if available
             if (isset($response['skills']) && is_array($response['skills'])) {
                 $response['skills'] = $this->mapSkillsToExistingOptions($response['skills']);
@@ -648,7 +518,7 @@ class CVProfileGeneratorService
         ?string $faculty = null
     ): ?array {
         $prompt = "Generate a detailed academic profile for an undergraduate student using their CV text.
-        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, bio, bachelor, CGPA_bachelor, nationality, english_proficiency_level, current_undergraduate_status, matric_no, skills, interested_do_research, expected_graduate, research_preference.
+        Return the output as valid JSON with exactly the following keys: full_name, email, phone_number, bio, bachelor, CGPA_bachelor, nationality, english_proficiency_level, current_undergraduate_status, matric_no, interested_do_research, expected_graduate.
         Each field must be plausible and realistic, if not found then leave it as null:
         - 'full_name' and 'email' should match the provided details.
         - 'phone_number' must be in an international format (e.g. '+60 123-456-7890') and contain only digits, spaces, or dashes.
@@ -656,10 +526,8 @@ class CVProfileGeneratorService
         - 'CGPA_bachelor' should be a decimal GPA value (e.g., '3.8') or null if in progress.
         - 'english_proficiency_level' should be one of: 'Beginner', 'Intermediate', 'Advanced', 'Native'.
         - 'current_undergraduate_status' should be 'Not registered yet' or 'Registered'.
-        - 'skills' should be an array of technical or academic skills.
         - 'interested_do_research' should be true or false.
         - 'expected_graduate' should be a year (e.g., '2025').
-        - 'research_preference' should be an array of research interests.
         Details: Name: {$fullName}, Email: {$email}, University: {$university}, Faculty: {$faculty}.
         CV Text: {$cvText}
         Provide plausible academic details based solely on these inputs, and output only valid JSON without any markdown formatting.";
@@ -681,11 +549,6 @@ class CVProfileGeneratorService
         
         // Post-process the response
         if ($response) {
-            // Process research preference if available
-            if (isset($response['research_preference']) && is_array($response['research_preference'])) {
-                $response['research_preference'] = $this->mapFieldOfResearchToIds($response['research_preference']);
-            }
-            
             // Process skills if available
             if (isset($response['skills']) && is_array($response['skills'])) {
                 $response['skills'] = $this->mapSkillsToExistingOptions($response['skills']);

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import CVPreviewModal from './CVPreviewModal';
+import React from 'react';
 
 export default function AcademicianForm({ className = '', researchOptions, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   const academician = usePage().props.academician; // Related academician data
@@ -585,7 +586,10 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       department: profileData.department || prevData.department,
       highest_degree: profileData.highest_degree || prevData.highest_degree,
       field_of_study: profileData.field_of_study || prevData.field_of_study,
-      research_expertise: profileData.research_expertise || prevData.research_expertise,
+      // Preserve existing research_expertise if AI returns empty array or undefined
+      research_expertise: (profileData.research_expertise && profileData.research_expertise.length > 0) 
+        ? profileData.research_expertise 
+        : prevData.research_expertise,
       personal_website: profileData.personal_website || prevData.personal_website,
       institution_website: profileData.institution_website || prevData.institution_website,
       linkedin: profileData.linkedin || prevData.linkedin,
@@ -1027,6 +1031,8 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   classNamePrefix="select"
                   menuPortalTarget={document.body}
+                  hideSelectedOptions={false} // Keep selected options visible in the dropdown
+                  closeMenuOnSelect={false} // Keep the menu open after selection
                   styles={{
                     valueContainer: (provided) => ({
                       ...provided,
@@ -1043,6 +1049,33 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                       ...provided,
                       zIndex: 9999,
                     }),
+                    // Style for options in dropdown to highlight already selected items
+                    option: (provided, { data, isSelected, isFocused, isDisabled }) => {
+                      return {
+                        ...provided,
+                        backgroundColor: isSelected
+                          ? '#2563EB' // Primary blue for active selection
+                          : isFocused
+                          ? '#F3F4F6' // Light gray on hover
+                          : 'white',
+                        color: isSelected 
+                          ? 'white' 
+                          : '#374151', // Default text color
+                        // Add checkmark for selected items
+                        paddingLeft: isSelected ? '25px' : provided.paddingLeft,
+                        position: 'relative',
+                        ':before': isSelected
+                          ? {
+                              content: '"✓"',
+                              position: 'absolute',
+                              left: '10px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              color: 'white',
+                            }
+                          : undefined,
+                      };
+                    },
                   }}
                   
                   value={data.research_expertise?.map((selectedValue) => {
@@ -1063,6 +1096,59 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                     setData('research_expertise', selectedValues);
                   }}
                   placeholder="Select field of research..."
+                  
+                  // Using proper react-select props for sorting and grouping
+                  // This custom filter function controls the order of options
+                  filterOption={(option, inputValue) => {
+                    // Always show all options, we're just controlling their order
+                    return true;
+                  }}
+                  // This custom sort function ensures selected options appear at the top
+                  // In react-select v5 the order of options is determined by this parameter
+                  components={{
+                    MenuList: props => {
+                      // Clone the children (options) for sorting
+                      const children = React.Children.toArray(props.children);
+                      
+                      // Extract the currently selected values
+                      const selectedValues = data.research_expertise || [];
+                      
+                      // Sort children: first selected options, then unselected
+                      const sortedChildren = children.sort((a, b) => {
+                        if (!a || !b || !a.props || !b.props) return 0;
+                        
+                        // Get option values - respect react-select internal structure
+                        const aValue = a.props.data?.value;
+                        const bValue = b.props.data?.value;
+                        
+                        // Check if options are selected
+                        const aSelected = selectedValues.includes(aValue);
+                        const bSelected = selectedValues.includes(bValue);
+                        
+                        // Sort selected items first
+                        if (aSelected && !bSelected) return -1;
+                        if (!aSelected && bSelected) return 1;
+                        
+                        // If both have same selection status, sort alphabetically by label
+                        return a.props.data?.label?.localeCompare(b.props.data?.label) || 0;
+                      });
+                      
+                      // Return the MenuList with sorted children and fixed height with scrolling
+                      return (
+                        <div 
+                          className="react-select__menu-list" 
+                          {...props.innerProps}
+                          style={{
+                            maxHeight: '215px', // Height to show approximately 5-7 items
+                            overflowY: 'auto',  // Enable vertical scrolling
+                            padding: '5px 0'    // Maintain padding from original component
+                          }}
+                        >
+                          {sortedChildren}
+                        </div>
+                      );
+                    }
+                  }}
                 />
               </div>
 
