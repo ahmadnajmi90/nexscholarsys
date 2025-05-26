@@ -8,6 +8,7 @@ import FilterPanel from './Components/FilterPanel';
 import { FaFilter } from 'react-icons/fa';
 import axios from 'axios';
 import useRoles from '@/Hooks/useRoles';
+import { isSessionExpired, handlePossibleSessionExpiration } from '@/Utils/csrfHelper';
 
 export default function Index({ auth, universities, faculties, users, researchOptions, skills }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -49,10 +50,13 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setPage(1); // Reset to first page
     
     try {
-      const response = await axios.post(route('ai.matching.search'), { 
-        query,
-        searchType,
-      });
+      // Use the helper function to handle CSRF token refreshing if needed
+      const response = await handlePossibleSessionExpiration(() => 
+        axios.post(route('ai.matching.search'), { 
+          query,
+          searchType,
+        })
+      );
       
       // Process results
       if (response.data && response.data.matches) {
@@ -64,10 +68,16 @@ export default function Index({ auth, universities, faculties, users, researchOp
       }
     } catch (error) {
       console.error('Search error:', error);
-      if (error.response && error.response.data && error.response.data.error) {
+      
+      // Check if this is a CSRF token mismatch (419 status code)
+      if (isSessionExpired(error)) {
+        setError(
+          'Your session has expired. Please refresh the page and try again.'
+        );
+      } else if (error.response && error.response.data && error.response.data.error) {
         setError(error.response.data.error);
       } else {
-        setError('Failed to perform search. Please try again later.');
+        setError(error.message || 'Failed to perform search. Please try again later.');
       }
     } finally {
       setIsSearching(false);
@@ -82,11 +92,14 @@ export default function Index({ auth, universities, faculties, users, researchOp
     const nextPage = page + 1;
     
     try {
-      const response = await axios.post(route('ai.matching.search'), { 
-        query: searchQuery,
-        searchType,
-        page: nextPage
-      });
+      // Use the helper function to handle CSRF token refreshing if needed
+      const response = await handlePossibleSessionExpiration(() => 
+        axios.post(route('ai.matching.search'), { 
+          query: searchQuery,
+          searchType,
+          page: nextPage
+        })
+      );
       
       if (response.data && response.data.matches) {
         // Merge new results with existing ones
@@ -101,6 +114,15 @@ export default function Index({ auth, universities, faculties, users, researchOp
       }
     } catch (error) {
       console.error('Error loading more results:', error);
+      
+      // Check if this is a CSRF token mismatch
+      if (isSessionExpired(error)) {
+        setError(
+          'Your session has expired. Please refresh the page and try again.'
+        );
+      } else {
+        setError(error.message || 'Failed to load more results. Please try again later.');
+      }
     } finally {
       setIsLoadingMore(false);
     }

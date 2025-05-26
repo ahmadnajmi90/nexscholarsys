@@ -290,6 +290,13 @@ Route::middleware(['auth'])->group(function () {
         ->name('ai.matching.diagnostics');
 });
 
+// CSRF Token Refresh Route
+Route::get('/csrf/refresh', function () {
+    return response()->json([
+        'csrfToken' => csrf_token(),
+    ]);
+})->name('csrf.refresh');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
     Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
