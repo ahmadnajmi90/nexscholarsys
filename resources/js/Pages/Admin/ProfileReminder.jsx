@@ -1,13 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import AcademicianTable from './Components/AcademicianTable';
 import PostgraduateTable from './Components/PostgraduateTable';
 import UndergraduateTable from './Components/UndergraduateTable';
 
 const ProfileReminder = ({ academicians, postgraduates, undergraduates, universities, faculties, researchOptions }) => {
-    const [activeTab, setActiveTab] = useState('academicians');
+    const { url } = usePage();
+    
+    // Use URL query parameter to determine the active tab
+    const getInitialActiveTab = () => {
+        // Parse the query string
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // If there's an academicians_page parameter, set to academicians tab
+        if (urlParams.has('academicians_page')) {
+            return 'academicians';
+        }
+        
+        // If there's a postgraduates_page parameter, set to postgraduates tab
+        if (urlParams.has('postgraduates_page')) {
+            return 'postgraduates';
+        }
+        
+        // If there's an undergraduates_page parameter, set to undergraduates tab
+        if (urlParams.has('undergraduates_page')) {
+            return 'undergraduates';
+        }
+        
+        // Default to academicians if no tab-specific pagination
+        return 'academicians';
+    };
+    
+    const [activeTab, setActiveTab] = useState(getInitialActiveTab);
+    
+    // Update the tab state when URL changes
+    useEffect(() => {
+        setActiveTab(getInitialActiveTab());
+    }, [url]);
     
     const sendReminder = async (userId, role) => {
         try {
@@ -43,6 +74,26 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
         { id: 'undergraduates', label: 'Undergraduates', count: undergraduates.total },
     ];
     
+    // Update URL query parameter when tab changes
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        
+        // Update URL to include the active tab
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Remove all pagination parameters first
+        urlParams.delete('academicians_page');
+        urlParams.delete('postgraduates_page');
+        urlParams.delete('undergraduates_page');
+        
+        // Add tab parameter
+        urlParams.set('tab', tabId);
+        
+        // Replace URL without triggering a page reload
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    };
+    
     return (
         <MainLayout title="">
             <Head title="Profile Management" />
@@ -67,7 +118,7 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
-                                        onClick={() => setActiveTab(tab.id)}
+                                        onClick={() => handleTabChange(tab.id)}
                                         className={`py-4 px-6 text-center border-b-2 font-medium text-sm sm:text-base ${
                                             activeTab === tab.id
                                                 ? 'border-blue-500 text-blue-600'
@@ -96,6 +147,7 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
                                     onSendReminder={sendReminder}
                                     onSendBatchReminder={sendBatchReminder}
                                     pagination={academicians}
+                                    currentTab={activeTab}
                                 />
                             )}
                             
@@ -108,6 +160,7 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
                                     onSendReminder={sendReminder}
                                     onSendBatchReminder={sendBatchReminder}
                                     pagination={postgraduates}
+                                    currentTab={activeTab}
                                 />
                             )}
                             
@@ -120,6 +173,7 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
                                     onSendReminder={sendReminder}
                                     onSendBatchReminder={sendBatchReminder}
                                     pagination={undergraduates}
+                                    currentTab={activeTab}
                                 />
                             )}
                         </div>

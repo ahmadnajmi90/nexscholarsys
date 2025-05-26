@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { FaSpinner, FaEnvelope, FaCheckCircle, FaFilter, FaChevronDown, FaChevronUp, FaExclamationCircle } from 'react-icons/fa';
+import { Link } from '@inertiajs/react';
 
-const PostgraduateTable = ({ postgraduates, universities, faculties, researchOptions, onSendReminder, onSendBatchReminder, pagination }) => {
+const PostgraduateTable = ({ postgraduates, universities, faculties, researchOptions, onSendReminder, onSendBatchReminder, pagination, currentTab }) => {
     const [sentStatus, setSentStatus] = useState({});
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [batchSending, setBatchSending] = useState(false);
@@ -87,24 +88,34 @@ const PostgraduateTable = ({ postgraduates, universities, faculties, researchOpt
     
     // Function to render pagination controls
     const renderPagination = () => {
+        // Common options for Inertia links to preserve state and scroll position
+        const linkOptions = {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['academicians', 'postgraduates', 'undergraduates'],
+            replace: true
+        };
+        
         return (
             <div className="mt-4 flex items-center justify-between px-4 py-3 bg-white sm:px-6">
                 <div className="flex flex-1 justify-between sm:hidden">
                     {pagination.current_page > 1 && (
-                        <a
-                            href={`?postgraduates_page=${pagination.current_page - 1}`}
+                        <Link
+                            href={`?postgraduates_page=${pagination.current_page - 1}&tab=${currentTab}`}
                             className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            {...linkOptions}
                         >
                             Previous
-                        </a>
+                        </Link>
                     )}
                     {pagination.current_page < pagination.last_page && (
-                        <a
-                            href={`?postgraduates_page=${pagination.current_page + 1}`}
+                        <Link
+                            href={`?postgraduates_page=${pagination.current_page + 1}&tab=${currentTab}`}
                             className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            {...linkOptions}
                         >
                             Next
-                        </a>
+                        </Link>
                     )}
                 </div>
                 <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
@@ -117,12 +128,13 @@ const PostgraduateTable = ({ postgraduates, universities, faculties, researchOpt
                     <div>
                         <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                             {pagination.current_page > 1 && (
-                                <a
-                                    href={`?postgraduates_page=${pagination.current_page - 1}`}
+                                <Link
+                                    href={`?postgraduates_page=${pagination.current_page - 1}&tab=${currentTab}`}
                                     className="relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                                    {...linkOptions}
                                 >
                                     Previous
-                                </a>
+                                </Link>
                             )}
                             
                             {/* Current page indicator */}
@@ -133,12 +145,13 @@ const PostgraduateTable = ({ postgraduates, universities, faculties, researchOpt
                             </span>
                             
                             {pagination.current_page < pagination.last_page && (
-                                <a
-                                    href={`?postgraduates_page=${pagination.current_page + 1}`}
+                                <Link
+                                    href={`?postgraduates_page=${pagination.current_page + 1}&tab=${currentTab}`}
                                     className="relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                                    {...linkOptions}
                                 >
                                     Next
-                                </a>
+                                </Link>
                             )}
                         </nav>
                     </div>
@@ -368,8 +381,8 @@ const PostgraduateTable = ({ postgraduates, universities, faculties, researchOpt
                 </div>
             </div>
             
-            {/* Pagination controls */}
-            {renderPagination()}
+            {/* Render the pagination controls only if multiple pages exist */}
+            {pagination.last_page > 1 && renderPagination()}
         </div>
     );
 };
