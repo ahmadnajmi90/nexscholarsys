@@ -1065,7 +1065,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                             placeholder="Select field of research..."
                             
                             filterOption={(option, inputValue) => {
-                              return true;
+                              return inputValue ? option.label.toLowerCase().includes(inputValue.toLowerCase()) : true;
                             }}
                             components={{
                               MenuList: props => {

@@ -15,13 +15,9 @@ class EmbeddingService
 
     public function __construct()
     {
-        $this->apiKey = env('OPENAI_API_KEY');
-        
-        // Use OpenAI API directly
-        $this->apiEndpoint = 'https://api.openai.com/v1/embeddings';
-        
-        // Use the model from environment variables
-        $this->model = env('OPENAI_EMBEDDING_MODEL', 'text-embedding-3-small');
+        $this->apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
+        $this->apiEndpoint = config('services.openai.embedding_api_url', 'https://api.openai.com/v1/embeddings');
+        $this->model = config('services.openai.embedding_model', 'text-embedding-3-small');
         
         Log::info('Embedding Service Configuration', [
             'endpoint' => $this->apiEndpoint,
@@ -31,14 +27,25 @@ class EmbeddingService
     }
 
     /**
-     * Generate embeddings for a text input
+     * Generate embedding for text
      *
      * @param string $text The text to embed
-     * @return array|null The embedding vector or null if failed
+     * @param bool $isQuery Whether this is a search query (vs. a document)
+     * @return array|null Vector embedding or null if failed
      */
-    public function generateEmbedding($text)
+    public function generateEmbedding($text, $isQuery = false)
     {
-        // Clean and prepare the text
+        if (empty($text)) {
+            Log::warning('Empty text provided for embedding generation');
+            return null;
+        }
+
+        // If this is a query, enhance it for better search relevance
+        if ($isQuery) {
+            $text = $this->enhanceQueryForEmbedding($text);
+        }
+        
+        // Prepare text (clean, normalize)
         $text = $this->prepareText($text);
         
         // Check cache first to avoid redundant API calls
@@ -46,31 +53,21 @@ class EmbeddingService
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
-
+        
         try {
             $headers = [
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ];
             
-            // For Azure OpenAI, use api-key header instead of Authorization
-            if (config('services.openai.is_azure', false)) {
-                $headers = [
-                    'api-key' => $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ];
-            }
-            
-            $payload = ['input' => $text];
-            
-            // Add model only if not using Azure (for Azure, it's in the URL)
-            if ($this->model) {
-                $payload['model'] = $this->model;
-            }
+            $payload = [
+                'model' => $this->model,
+                'input' => $text
+            ];
             
             $response = Http::withHeaders($headers)
                 ->post($this->apiEndpoint, $payload);
-
+            
             if ($response->successful()) {
                 $embedding = $response->json('data.0.embedding');
                 
@@ -94,6 +91,84 @@ class EmbeddingService
         } catch (\Exception $e) {
             Log::error('Error generating embedding: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Enhance a search query for better embedding-based matching
+     * 
+     * @param string $query The original search query
+     * @return string Enhanced query for embedding
+     */
+    protected function enhanceQueryForEmbedding(string $query): string
+    {
+        // Normalize
+        $query = trim($query);
+        
+        // Skip enhancement for very long queries (likely already detailed)
+        if (str_word_count($query) > 20) {
+            return $query;
+        }
+        
+        // Check for academic field keywords to provide context
+        $academicFieldKeywords = [
+            'artificial intelligence', 'machine learning', 'deep learning', 'neural networks',
+            'data science', 'big data', 'data mining', 'natural language processing',
+            'computer vision', 'robotics', 'software engineering', 'information systems',
+            'cybersecurity', 'networking', 'database', 'cloud computing', 'computational',
+            'bioinformatics', 'physics', 'chemistry', 'biology', 'mathematics', 'statistics',
+            'engineering', 'electrical', 'mechanical', 'civil', 'medicine', 'healthcare',
+            'psychology', 'sociology', 'economics', 'business', 'management', 'finance',
+            'accounting', 'marketing', 'law', 'education', 'architecture', 'arts',
+            'humanities', 'philosophy', 'linguistics', 'language', 'literature'
+        ];
+        
+        // Check if query contains academic field terms
+        $containsAcademicField = false;
+        foreach ($academicFieldKeywords as $keyword) {
+            if (stripos($query, $keyword) !== false) {
+                $containsAcademicField = true;
+                break;
+            }
+        }
+        
+        // If it's a single technical term or very short query, enhance it
+        if (str_word_count($query) <= 3) {
+            if ($containsAcademicField) {
+                return "Research in academic field: " . $query;
+            } else {
+                return "Research topic in academic context: " . $query;
+            }
+        }
+        
+        // For natural language queries about finding supervisors
+        if (stripos($query, "supervisor") !== false || 
+            stripos($query, "professor") !== false || 
+            stripos($query, "academician") !== false) {
+            
+            return "Find academic supervisor specializing in: " . $query;
+        }
+        
+        // For queries about collaboration
+        if (stripos($query, "collaborat") !== false || 
+            stripos($query, "partner") !== false) {
+            
+            return "Find academic collaboration in: " . $query;
+        }
+        
+        // For queries about students
+        if (stripos($query, "student") !== false || 
+            stripos($query, "postgraduate") !== false || 
+            stripos($query, "undergraduate") !== false) {
+            
+            return "Find students interested in: " . $query;
+        }
+        
+        // Default enhancement for other queries
+        if ($containsAcademicField) {
+            return "Academic research in: " . $query;
+        } else {
+            return "Academic research query: " . $query;
         }
     }
 
@@ -128,39 +203,27 @@ class EmbeddingService
             $textParts[] = "Name: " . $academician->full_name;
         }
         
-        // Professional title and affiliation
-        if (!empty($academician->professional_title)) {
-            $textParts[] = "Title: " . $academician->professional_title;
-        }
-        
-        // Keywords section - duplicated to increase relevance for search
-        $keywords = [];
-        
-        // Research interests and expertise
+        // Research expertise - the most important part, emphasized three times with different labels
         if (!empty($academician->research_expertise)) {
             // Get the text representation of research expertise IDs
             $expertiseText = $this->getResearchExpertiseText($academician->research_expertise);
             if (!empty($expertiseText)) {
+                // Add research expertise three times to increase its weight for matching
                 $textParts[] = "Research Expertise: " . $expertiseText;
-                $keywords[] = $expertiseText;
+                $textParts[] = "Research Focus: " . $expertiseText;
+                $textParts[] = "Research Specialty: " . $expertiseText;
             } else {
                 $expertiseValue = is_array($academician->research_expertise) 
                     ? implode(", ", $academician->research_expertise) 
                     : $academician->research_expertise;
+                // Still add multiple times for weighting
                 $textParts[] = "Research Expertise: " . $expertiseValue;
-                $keywords[] = $expertiseValue;
+                $textParts[] = "Research Focus: " . $expertiseValue;
+                $textParts[] = "Research Specialty: " . $expertiseValue;
             }
         }
         
-        if (!empty($academician->research_interests)) {
-            $interestsValue = is_array($academician->research_interests) 
-                ? implode(", ", $academician->research_interests) 
-                : $academician->research_interests;
-            $textParts[] = "Research Interests: " . $interestsValue;
-            $keywords[] = $interestsValue;
-        }
-        
-        // Bio or about section
+        // Bio or about section - important for context
         if (!empty($academician->bio)) {
             $textParts[] = "Bio: " . $academician->bio;
         }
@@ -173,13 +236,11 @@ class EmbeddingService
         // Department
         if (!empty($academician->department)) {
             $textParts[] = "Department: " . $academician->department;
-            $keywords[] = $academician->department;
         }
         
-        // Field of study
+        // Field of study - general field
         if (!empty($academician->field_of_study)) {
             $textParts[] = "Field of Study: " . $academician->field_of_study;
-            $keywords[] = $academician->field_of_study;
         }
         
         // Selected publications if available
@@ -188,7 +249,19 @@ class EmbeddingService
             $textParts[] = "Selected Publications: " . implode("; ", $publications);
         }
         
-        // Keywords section - redundant to increase matching weight
+        // Extract keywords from various fields to create a dedicated keywords section
+        $keywords = [];
+        
+        // Add field_of_study and department as keywords if available
+        if (!empty($academician->field_of_study)) {
+            $keywords[] = $academician->field_of_study;
+        }
+        
+        if (!empty($academician->department)) {
+            $keywords[] = $academician->department;
+        }
+        
+        // Add Keywords section to boost term matching
         if (!empty($keywords)) {
             $textParts[] = "Keywords: " . implode("; ", array_unique($keywords));
         }
@@ -200,16 +273,32 @@ class EmbeddingService
     /**
      * Get text representation of research expertise from IDs
      * 
-     * @param array $expertiseIds Array of expertise IDs in format "field_id-area_id-domain_id"
+     * @param array|string $expertiseIds Array of expertise IDs in format "field_id-area_id-domain_id"
      * @return string Text representation
      */
     protected function getResearchExpertiseText($expertiseIds): string
     {
-        if (empty($expertiseIds) || !is_array($expertiseIds)) {
+        if (empty($expertiseIds) || (!is_array($expertiseIds) && !is_string($expertiseIds))) {
             return '';
         }
         
+        // Convert string to array if necessary
+        if (is_string($expertiseIds)) {
+            // Try to decode if it's a JSON string
+            $decoded = json_decode($expertiseIds, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $expertiseIds = $decoded;
+            } else {
+                // Single string value
+                $expertiseIds = [$expertiseIds];
+            }
+        }
+        
         $textParts = [];
+        $fieldParts = [];
+        $areaParts = [];
+        $domainParts = [];
+        $combinedParts = [];
         
         foreach ($expertiseIds as $expertiseId) {
             // Skip if not a string or empty
@@ -232,20 +321,28 @@ class EmbeddingService
                         $domain = \App\Models\NicheDomain::find($domainId);
                         
                         if ($field && $area && $domain) {
-                            // Include all the terms to make it more searchable
+                            // Full hierarchical representation
                             $textParts[] = "{$field->name} - {$area->name} - {$domain->name}";
-                            // Also add individual terms to improve match likelihood
-                            if (!in_array($field->name, $textParts)) {
-                                $textParts[] = $field->name;
+                            
+                            // Store individual components for separate inclusion
+                            if (!in_array($field->name, $fieldParts)) {
+                                $fieldParts[] = $field->name;
                             }
-                            if (!in_array($area->name, $textParts)) {
-                                $textParts[] = $area->name;
+                            
+                            if (!in_array($area->name, $areaParts)) {
+                                $areaParts[] = $area->name;
                             }
-                            if (!in_array($domain->name, $textParts)) {
-                                $textParts[] = $domain->name;
+                            
+                            if (!in_array($domain->name, $domainParts)) {
+                                $domainParts[] = $domain->name;
                             }
+                            
+                            // Store useful combinations for improved matching
+                            $combinedParts[] = "{$field->name} {$area->name}";
+                            $combinedParts[] = "{$area->name} {$domain->name}";
+                            $combinedParts[] = "{$field->name} {$domain->name}";
                         } else {
-                            Log::warning("Could not resolve research expertise ID: {$expertiseId}");
+                            Log::warning("Could not resolve all components of research expertise ID: {$expertiseId}");
                         }
                     } catch (\Exception $e) {
                         Log::error("Error resolving research expertise ID {$expertiseId}: " . $e->getMessage());
@@ -260,7 +357,32 @@ class EmbeddingService
             }
         }
         
-        return implode("; ", array_unique($textParts));
+        $result = '';
+        
+        // Start with the full hierarchical representations
+        if (!empty($textParts)) {
+            $result .= implode("; ", array_unique($textParts));
+        }
+        
+        // Add individual field components to improve match rates
+        if (!empty($fieldParts)) {
+            $result .= "\nFields: " . implode(", ", array_unique($fieldParts));
+        }
+        
+        if (!empty($areaParts)) {
+            $result .= "\nAreas: " . implode(", ", array_unique($areaParts));
+        }
+        
+        if (!empty($domainParts)) {
+            $result .= "\nDomains: " . implode(", ", array_unique($domainParts));
+        }
+        
+        // Add useful combinations
+        if (!empty($combinedParts)) {
+            $result .= "\nTerms: " . implode(", ", array_unique($combinedParts));
+        }
+        
+        return $result;
     }
 
     /**
@@ -345,21 +467,27 @@ class EmbeddingService
             $textParts[] = "Name: " . $postgraduate->full_name;
         }
         
-        // Field of research (prioritized for embedding)
+        // Field of research (prioritized for embedding) - emphasized three times for better matching
         if (!empty($postgraduate->field_of_research)) {
             // Get the text representation of research field IDs (same format as academician)
             $researchText = $this->getResearchExpertiseText($postgraduate->field_of_research);
             if (!empty($researchText)) {
+                // Add three times with different labels to increase weight
                 $textParts[] = "Field of Research: " . $researchText;
+                $textParts[] = "Research Focus: " . $researchText;
+                $textParts[] = "Research Interests: " . $researchText;
             } else {
-                $textParts[] = "Field of Research: " . 
-                    (is_array($postgraduate->field_of_research) 
-                        ? implode(", ", $postgraduate->field_of_research) 
-                        : $postgraduate->field_of_research);
+                $fieldValue = is_array($postgraduate->field_of_research) 
+                    ? implode(", ", $postgraduate->field_of_research) 
+                    : $postgraduate->field_of_research;
+                // Still add multiple times for weighting
+                $textParts[] = "Field of Research: " . $fieldValue;
+                $textParts[] = "Research Focus: " . $fieldValue;
+                $textParts[] = "Research Interests: " . $fieldValue;
             }
         }
         
-        // Suggested research information
+        // Suggested research information - important for matching
         if (!empty($postgraduate->suggested_research_title)) {
             $textParts[] = "Suggested Research Title: " . $postgraduate->suggested_research_title;
         }
@@ -369,8 +497,8 @@ class EmbeddingService
         }
         
         // Academic background
-        if (!empty($postgraduate->previous_degree)) {
-            $textParts[] = "Previous Degree: " . $postgraduate->previous_degree;
+        if (!empty($postgraduate->bachelor)) {
+            $textParts[] = "Bachelor's Degree: " . $postgraduate->bachelor;
         }
         
         if (!empty($postgraduate->master)) {
@@ -380,6 +508,23 @@ class EmbeddingService
         // Bio or about section
         if (!empty($postgraduate->bio)) {
             $textParts[] = "Bio: " . $postgraduate->bio;
+        }
+        
+        // Extract keywords for better matching
+        $keywords = [];
+        
+        // Add bachelor's and master's fields as keywords if available
+        if (!empty($postgraduate->bachelor)) {
+            $keywords[] = $postgraduate->bachelor;
+        }
+        
+        if (!empty($postgraduate->master)) {
+            $keywords[] = $postgraduate->master;
+        }
+        
+        // Add keywords section to boost term matching
+        if (!empty($keywords)) {
+            $textParts[] = "Keywords: " . implode("; ", array_unique($keywords));
         }
         
         // Combine all parts
@@ -402,17 +547,23 @@ class EmbeddingService
             $textParts[] = "Name: " . $undergraduate->full_name;
         }
         
-        // Research preference (prioritized for embedding)
+        // Research preference (prioritized for embedding) - emphasized three times for better matching
         if (!empty($undergraduate->research_preference)) {
             // Get the text representation of research preference IDs (same format as academician)
             $researchText = $this->getResearchExpertiseText($undergraduate->research_preference);
             if (!empty($researchText)) {
+                // Add three times with different labels to increase weight
                 $textParts[] = "Research Preference: " . $researchText;
+                $textParts[] = "Research Interest: " . $researchText;
+                $textParts[] = "Research Focus: " . $researchText;
             } else {
-                $textParts[] = "Research Preference: " . 
-                    (is_array($undergraduate->research_preference) 
-                        ? implode(", ", $undergraduate->research_preference) 
-                        : $undergraduate->research_preference);
+                $preferenceValue = is_array($undergraduate->research_preference) 
+                    ? implode(", ", $undergraduate->research_preference) 
+                    : $undergraduate->research_preference;
+                // Still add multiple times for weighting
+                $textParts[] = "Research Preference: " . $preferenceValue;
+                $textParts[] = "Research Interest: " . $preferenceValue;
+                $textParts[] = "Research Focus: " . $preferenceValue;
             }
         }
         
@@ -421,14 +572,29 @@ class EmbeddingService
             $textParts[] = "Bachelor's Degree: " . $undergraduate->bachelor;
         }
         
-        // Research interest
+        // Research interest flag - explicitly indicate interest in research
         if (!empty($undergraduate->interested_do_research)) {
             $textParts[] = "Interested in Research: Yes";
+            // Add an extra emphasis on research interest if flag is true
+            $textParts[] = "Active Research Interest: Yes";
         }
         
         // Bio or about section
         if (!empty($undergraduate->bio)) {
             $textParts[] = "Bio: " . $undergraduate->bio;
+        }
+        
+        // Extract keywords for better matching
+        $keywords = [];
+        
+        // Add bachelor's field as keyword if available
+        if (!empty($undergraduate->bachelor)) {
+            $keywords[] = $undergraduate->bachelor;
+        }
+        
+        // Add keywords section to boost term matching
+        if (!empty($keywords)) {
+            $textParts[] = "Keywords: " . implode("; ", array_unique($keywords));
         }
         
         // Combine all parts

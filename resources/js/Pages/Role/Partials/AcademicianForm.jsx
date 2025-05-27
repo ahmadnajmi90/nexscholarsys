@@ -1100,8 +1100,8 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   // Using proper react-select props for sorting and grouping
                   // This custom filter function controls the order of options
                   filterOption={(option, inputValue) => {
-                    // Always show all options, we're just controlling their order
-                    return true;
+                    // Filter options based on input text
+                    return inputValue ? option.label.toLowerCase().includes(inputValue.toLowerCase()) : true;
                   }}
                   // This custom sort function ensures selected options appear at the top
                   // In react-select v5 the order of options is determined by this parameter

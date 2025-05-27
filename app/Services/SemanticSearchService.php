@@ -95,7 +95,7 @@ class SemanticSearchService
             // Generate embedding for the query (if not vague or if student embedding is missing)
             $queryEmbedding = null;
             if (!$isVagueQuery || !$studentEmbedding) {
-                $queryEmbedding = $this->embeddingService->generateEmbedding($query);
+                $queryEmbedding = $this->embeddingService->generateEmbedding($query, true);
                 
                 if (!$queryEmbedding) {
                     Log::error('Failed to generate embedding for query: ' . $query);
@@ -785,7 +785,7 @@ class SemanticSearchService
             ]);
             
             // Generate embedding for the query
-            $queryEmbedding = $this->embeddingService->generateEmbedding($query);
+            $queryEmbedding = $this->embeddingService->generateEmbedding($query, true);
             
             if (!$queryEmbedding) {
                 Log::error('Failed to generate embedding for query: ' . $query);
