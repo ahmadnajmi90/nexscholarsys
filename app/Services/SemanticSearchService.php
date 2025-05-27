@@ -159,6 +159,42 @@ class SemanticSearchService
             // Combine and reweight results (client-side)
             $combinedResults = $this->combineSearchResults($queryResults, $studentResults, 0.6, 0.4);
             
+            // If combined results has few or no matches, implement fallback with lower thresholds
+            if (count($combinedResults) < 3 && $threshold > 0.2) {
+                Log::info("Few results found with threshold {$threshold} in combined Qdrant search, trying with lower threshold");
+                
+                // For higher initial thresholds, try an intermediate value first
+                if ($threshold >= 0.4) {
+                    $lowerThreshold = 0.3;
+                    Log::info("Retrying with intermediate threshold {$lowerThreshold}");
+                    
+                    // Retry with lower threshold
+                    $queryResults = $this->qdrantService->findSimilarAcademicians($queryEmbedding, $limit * 2, $lowerThreshold);
+                    $studentResults = $this->qdrantService->findSimilarAcademicians($studentEmbedding, $limit * 2, $lowerThreshold);
+                    
+                    // Combine results again
+                    $combinedResults = $this->combineSearchResults($queryResults, $studentResults, 0.6, 0.4);
+                    
+                    // If still few results, try with lowest threshold
+                    if (count($combinedResults) < 3) {
+                        $lowestThreshold = 0.2;
+                        Log::info("Still few results, retrying with lowest threshold {$lowestThreshold}");
+                        
+                        $queryResults = $this->qdrantService->findSimilarAcademicians($queryEmbedding, $limit * 2, $lowestThreshold);
+                        $studentResults = $this->qdrantService->findSimilarAcademicians($studentEmbedding, $limit * 2, $lowestThreshold);
+                        $combinedResults = $this->combineSearchResults($queryResults, $studentResults, 0.6, 0.4);
+                    }
+                } else {
+                    // For lower initial thresholds, go straight to the lowest threshold
+                    $lowestThreshold = 0.2;
+                    Log::info("Retrying with lowest threshold {$lowestThreshold}");
+                    
+                    $queryResults = $this->qdrantService->findSimilarAcademicians($queryEmbedding, $limit * 2, $lowestThreshold);
+                    $studentResults = $this->qdrantService->findSimilarAcademicians($studentEmbedding, $limit * 2, $lowestThreshold);
+                    $combinedResults = $this->combineSearchResults($queryResults, $studentResults, 0.6, 0.4);
+                }
+            }
+            
             // Convert to expected format (this is different from the simpler search cases)
             return $this->loadAcademiciansFromIds(array_slice($combinedResults, 0, $limit));
         } elseif ($queryEmbedding) {
@@ -179,6 +215,30 @@ class SemanticSearchService
         if ($searchType === 'query_only' || $searchType === 'student_only') {
             // Search in Qdrant
             $qdrantResults = $this->qdrantService->findSimilarAcademicians($searchEmbedding, $limit, $threshold);
+            
+            // Add fallback mechanism for single embedding searches
+            if (count($qdrantResults) < 3 && $threshold > 0.2) {
+                Log::info("Few results found with threshold {$threshold} in Qdrant {$searchType} search, trying with lower threshold");
+                
+                // For higher initial thresholds, try an intermediate value first
+                if ($threshold >= 0.4) {
+                    $lowerThreshold = 0.3;
+                    Log::info("Retrying with intermediate threshold {$lowerThreshold}");
+                    $qdrantResults = $this->qdrantService->findSimilarAcademicians($searchEmbedding, $limit, $lowerThreshold);
+                    
+                    // If still few results, try with lowest threshold
+                    if (count($qdrantResults) < 3) {
+                        $lowestThreshold = 0.2;
+                        Log::info("Still few results, retrying with lowest threshold {$lowestThreshold}");
+                        $qdrantResults = $this->qdrantService->findSimilarAcademicians($searchEmbedding, $limit, $lowestThreshold);
+                    }
+                } else {
+                    // For lower initial thresholds, go straight to the lowest threshold
+                    $lowestThreshold = 0.2;
+                    Log::info("Retrying with lowest threshold {$lowestThreshold}");
+                    $qdrantResults = $this->qdrantService->findSimilarAcademicians($searchEmbedding, $limit, $lowestThreshold);
+                }
+            }
             
             // Get full academician records from MySQL using IDs
             return $this->loadAcademiciansFromIds($qdrantResults);
@@ -374,17 +434,19 @@ class SemanticSearchService
             'used_threshold' => $threshold
         ]);
         
-        // If no results, try with a lower threshold as fallback, but only for non-specific queries
-        if (count($results) === 0 && $threshold > 0.2 && !$isVagueQuery) {
-            // Check if this was likely a specific query (threshold ≥ 0.5)
-            if ($threshold >= 0.5) {
-                // For specific queries, first try an intermediate threshold
-                Log::info("No results found with specific query threshold {$threshold}, trying with intermediate threshold 0.35");
-                return $this->searchUsingMySQL($queryEmbedding, $studentEmbedding, $isVagueQuery, $limit, 0.35, $studentId, $studentType);
+        // If no results or very few results, try with a lower threshold as fallback
+        // The fallback mechanism now works more consistently for all query types
+        if (count($results) < 3 && $threshold > 0.2) {
+            // For higher initial thresholds, try an intermediate threshold first
+            if ($threshold >= 0.4) {
+                $intermediateThreshold = 0.3;
+                Log::info("Few or no results found with threshold {$threshold}, trying with intermediate threshold {$intermediateThreshold}");
+                return $this->searchUsingMySQL($queryEmbedding, $studentEmbedding, $isVagueQuery, $limit, $intermediateThreshold, $studentId, $studentType);
             } else {
-                // For regular queries, try the lowest fallback threshold
-                Log::info("No results found with threshold {$threshold}, trying with lower threshold 0.2");
-                return $this->searchUsingMySQL($queryEmbedding, $studentEmbedding, $isVagueQuery, $limit, 0.2, $studentId, $studentType);
+                // For already moderate thresholds, try the lowest reasonable threshold
+                $lowestThreshold = 0.2;
+                Log::info("Few or no results found with threshold {$threshold}, trying with lowest threshold {$lowestThreshold}");
+                return $this->searchUsingMySQL($queryEmbedding, $studentEmbedding, $isVagueQuery, $limit, $lowestThreshold, $studentId, $studentType);
             }
         }
         
@@ -790,6 +852,42 @@ class SemanticSearchService
             // Combine and reweight results
             $combinedResults = $this->combineStudentSearchResults($queryResults, $academicianResults, 0.6, 0.4);
             
+            // Add fallback mechanism for combined searches
+            if (count($combinedResults) < 3 && $threshold > 0.2) {
+                Log::info("Few results found with threshold {$threshold} in combined Qdrant student search, trying with lower threshold");
+                
+                // For higher initial thresholds, try an intermediate value first
+                if ($threshold >= 0.4) {
+                    $lowerThreshold = 0.3;
+                    Log::info("Retrying student search with intermediate threshold {$lowerThreshold}");
+                    
+                    // Retry with lower threshold
+                    $queryResults = $this->qdrantService->findSimilarStudents($queryEmbedding, $limit * 2, $lowerThreshold);
+                    $academicianResults = $this->qdrantService->findSimilarStudents($academicianEmbedding, $limit * 2, $lowerThreshold);
+                    
+                    // Combine results again
+                    $combinedResults = $this->combineStudentSearchResults($queryResults, $academicianResults, 0.6, 0.4);
+                    
+                    // If still few results, try with lowest threshold
+                    if (count($combinedResults) < 3) {
+                        $lowestThreshold = 0.2;
+                        Log::info("Still few student results, retrying with lowest threshold {$lowestThreshold}");
+                        
+                        $queryResults = $this->qdrantService->findSimilarStudents($queryEmbedding, $limit * 2, $lowestThreshold);
+                        $academicianResults = $this->qdrantService->findSimilarStudents($academicianEmbedding, $limit * 2, $lowestThreshold);
+                        $combinedResults = $this->combineStudentSearchResults($queryResults, $academicianResults, 0.6, 0.4);
+                    }
+                } else {
+                    // For lower initial thresholds, go straight to the lowest threshold
+                    $lowestThreshold = 0.2;
+                    Log::info("Retrying student search with lowest threshold {$lowestThreshold}");
+                    
+                    $queryResults = $this->qdrantService->findSimilarStudents($queryEmbedding, $limit * 2, $lowestThreshold);
+                    $academicianResults = $this->qdrantService->findSimilarStudents($academicianEmbedding, $limit * 2, $lowestThreshold);
+                    $combinedResults = $this->combineStudentSearchResults($queryResults, $academicianResults, 0.6, 0.4);
+                }
+            }
+            
             // Convert to expected format
             return $this->loadStudentsFromIds(array_slice($combinedResults, 0, $limit), $includeBothTypes, $specificType);
         } else {
@@ -803,6 +901,30 @@ class SemanticSearchService
             
             // Search in Qdrant
             $qdrantResults = $this->qdrantService->findSimilarStudents($searchEmbedding, $limit, $threshold);
+            
+            // Add fallback mechanism for single embedding searches
+            if (count($qdrantResults) < 3 && $threshold > 0.2) {
+                Log::info("Few results found with threshold {$threshold} in Qdrant student search, trying with lower threshold");
+                
+                // For higher initial thresholds, try an intermediate value first
+                if ($threshold >= 0.4) {
+                    $lowerThreshold = 0.3;
+                    Log::info("Retrying student search with intermediate threshold {$lowerThreshold}");
+                    $qdrantResults = $this->qdrantService->findSimilarStudents($searchEmbedding, $limit, $lowerThreshold);
+                    
+                    // If still few results, try with lowest threshold
+                    if (count($qdrantResults) < 3) {
+                        $lowestThreshold = 0.2;
+                        Log::info("Still few student results, retrying with lowest threshold {$lowestThreshold}");
+                        $qdrantResults = $this->qdrantService->findSimilarStudents($searchEmbedding, $limit, $lowestThreshold);
+                    }
+                } else {
+                    // For lower initial thresholds, go straight to the lowest threshold
+                    $lowestThreshold = 0.2;
+                    Log::info("Retrying student search with lowest threshold {$lowestThreshold}");
+                    $qdrantResults = $this->qdrantService->findSimilarStudents($searchEmbedding, $limit, $lowestThreshold);
+                }
+            }
             
             // Get full student records from MySQL using IDs
             return $this->loadStudentsFromIds($qdrantResults, $includeBothTypes, $specificType);
@@ -921,6 +1043,21 @@ class SemanticSearchService
             'lowest_similarity' => $lowestSimilarity,
             'used_threshold' => $threshold
         ]);
+        
+        // Add fallback mechanism for student searches too
+        if (count($results) < 3 && $threshold > 0.2) {
+            // For higher initial thresholds, try an intermediate threshold first
+            if ($threshold >= 0.4) {
+                $intermediateThreshold = 0.3;
+                Log::info("Few or no student results found with threshold {$threshold}, trying with intermediate threshold {$intermediateThreshold}");
+                return $this->searchStudentsUsingMySQL($queryEmbedding, $academicianEmbedding, $limit, $intermediateThreshold, $includeBothTypes, $specificType);
+            } else {
+                // For already moderate thresholds, try the lowest reasonable threshold
+                $lowestThreshold = 0.2;
+                Log::info("Few or no student results found with threshold {$threshold}, trying with lowest threshold {$lowestThreshold}");
+                return $this->searchStudentsUsingMySQL($queryEmbedding, $academicianEmbedding, $limit, $lowestThreshold, $includeBothTypes, $specificType);
+            }
+        }
         
         // Limit results
         return array_slice($results, 0, $limit);

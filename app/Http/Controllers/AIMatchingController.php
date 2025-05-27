@@ -141,19 +141,20 @@ class AIMatchingController extends Controller
         // Check if the query is vague
         $isVagueQuery = $this->isVagueQuery($searchQuery);
         
-        // Check if the query is highly specific (for adjusting threshold)
+        // Check if the query is highly specific (but we're now much more selective about what's considered "specific")
         $isSpecificQuery = $this->isSpecificQuery($searchQuery);
         
-        // Determine the appropriate threshold based on query specificity
-        $threshold = 0.3; // Default threshold - changed from 0.5 to 0.3 to match SupervisorMatchingController
+        // Determine the appropriate threshold - using a more forgiving approach that works better with semantic search
+        $threshold = 0.35; // Default moderate threshold for most queries
         
         if ($isSpecificQuery) {
-            // Raise threshold for very specific queries to get more relevant results
-            $threshold = 0.5; // Changed from 0.6 to 0.5
-            Log::info("Using higher threshold for specific query");
+            // Only apply a slightly higher threshold for the rare truly specific technical patterns
+            // Threshold is only marginally higher than default to avoid penalizing natural language
+            $threshold = 0.4;
+            Log::info("Using slightly higher threshold for truly specific technical query");
         } else if ($isVagueQuery) {
-            // Lower threshold for vague queries
-            $threshold = 0.3; // Changed from 0.4 to 0.3
+            // Use a more lenient threshold for vague queries
+            $threshold = 0.25;
             Log::info("Using lower threshold for vague query");
         }
         
@@ -529,39 +530,26 @@ class AIMatchingController extends Controller
     {
         $query = strtolower(trim($query));
         
-        // Patterns that indicate a specific, detailed query
+        // We'll focus only on truly specific technical search patterns
+        // NOT treating natural language or longer queries as "specific"
         $specificPatterns = [
-            'machine learning for', 
-            'deep learning in',
-            'artificial intelligence for',
-            'data science in',
-            'research on',
-            'expertise in',
-            'specialized in', 
-            'applications of',
-            'implementation of',
-            'methodology for',
-            'framework for',
-            'approach to',
-            'technique for',
-            'analysis of',
-            'modeling of',
-            'design of'
+            'expertise in exact',
+            'specialized only in',
+            'specific expertise in',
+            'specific research on'
         ];
         
-        // Check if the query contains specific patterns
+        // Check if the query contains truly specific patterns
         foreach ($specificPatterns as $pattern) {
             if (strpos($query, $pattern) !== false) {
-                Log::info("Query contains specific pattern: {$pattern}");
+                Log::info("Query contains highly specific pattern: {$pattern}");
                 return true;
             }
         }
         
-        // Check if query is long and detailed (over 5 words, over 30 chars)
-        if (str_word_count($query) > 5 && strlen($query) > 30) {
-            Log::info("Query is long and detailed, treating as specific");
-            return true;
-        }
+        // No longer treating long queries or natural language as "specific"
+        // This was counterintuitive for semantic search, as natural language
+        // should not be penalized with higher thresholds
         
         return false;
     }
