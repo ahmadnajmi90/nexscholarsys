@@ -292,10 +292,17 @@ Route::middleware(['auth'])->group(function () {
 
 // CSRF Token Refresh Route
 Route::get('/csrf/refresh', function () {
+    // Clear any old session data that might be causing issues
+    session()->regenerate(true);
+    
+    // Generate and return a fresh CSRF token
+    $token = csrf_token();
+    
     return response()->json([
-        'csrfToken' => csrf_token(),
+        'csrfToken' => $token,
+        'timestamp' => now()->timestamp
     ]);
-})->name('csrf.refresh');
+})->name('csrf.refresh')->middleware('web');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
