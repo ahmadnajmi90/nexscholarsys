@@ -413,6 +413,54 @@ export default function PostgraduateForm({ universities, faculties, className = 
     const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('profiles');
 
+    // Function to update the profile picture
+    const submitImage = (e) => {
+        e.preventDefault();
+        if (!data.profile_picture) {
+            alert("Please select a profile picture.");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("profile_picture", data.profile_picture);
+        post(route("role.updateProfilePicture"), {
+            data: formData,
+            headers: { "Content-Type": "multipart/form-data" },
+            onSuccess: () => {
+                alert("Profile picture updated successfully.");
+                closeModal();
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error("Error updating profile picture:", errors);
+                alert("Failed to update the profile picture. Please try again.");
+            },
+        });
+    };
+
+    // Function to update the background image
+    const submitBackgroundImage = (e) => {
+        e.preventDefault();
+        if (!data.background_image) {
+            alert("Please select a background image.");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("background_image", data.background_image);
+        post(route("role.updateBackgroundImage"), {
+            data: formData,
+            headers: { "Content-Type": "multipart/form-data" },
+            onSuccess: () => {
+                alert("Background image updated successfully.");
+                setIsBackgroundModalOpen(false);
+                window.location.reload();
+            },
+            onError: (errors) => {
+                console.error("Error updating background image:", errors);
+                alert("Failed to update the background image. Please try again.");
+            },
+        });
+    };
+
     return (
         // Responsive outer container
         <div className="max-w-8xl mx-auto px-4 pb-8">
@@ -466,7 +514,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">Update Background Image</h2>
-                        <form onSubmit={e => { e.preventDefault(); /* Implement background image update */ }}>
+                        <form onSubmit={submitBackgroundImage}>
                             <input
                                 type="file"
                                 accept="image/*"
@@ -474,7 +522,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 onChange={(e) => setData("background_image", e.target.files[0])}
                             />
                             <div className="mt-4 flex justify-end">
-                                <PrimaryButton>Save</PrimaryButton>
+                                <PrimaryButton type="submit">Save</PrimaryButton>
                                 <button
                                     type="button"
                                     onClick={() => setIsBackgroundModalOpen(false)}
@@ -493,7 +541,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
                     <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">Update Profile Picture</h2>
-                        <form onSubmit={e => { e.preventDefault(); /* Implement profile picture update */ }}>
+                        <form onSubmit={submitImage}>
                             <input
                                 type="file"
                                 accept="image/*"
@@ -501,7 +549,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 onChange={(e) => setData("profile_picture", e.target.files[0])}
                             />
                             <div className="mt-4 flex justify-end">
-                                <PrimaryButton>Save</PrimaryButton>
+                                <PrimaryButton type="submit">Save</PrimaryButton>
                                 <button
                                     type="button"
                                     onClick={closeModal}
