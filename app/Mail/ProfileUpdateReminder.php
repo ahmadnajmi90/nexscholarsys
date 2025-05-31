@@ -48,8 +48,15 @@ class ProfileUpdateReminder extends Mailable
      */
     public function envelope()
     {
+        $subject = match($this->role) {
+            'academician' => '📢 Keep Your NexScholar Profile Updated – Unlock More Opportunities!',
+            'postgraduate' => '🎓 Elevate Your Postgraduate Profile on NexScholar – Unlock Research Connections!',
+            'undergraduate' => '🚀 Kickstart Your Academic Journey on NexScholar – Update Your Profile!',
+            default => '📢 Keep Your NexScholar Profile Updated – Unlock More Opportunities!',
+        };
+        
         return new Envelope(
-            subject: 'Nexscholar Profile Update Reminder',
+            subject: $subject,
         );
     }
 
@@ -60,8 +67,15 @@ class ProfileUpdateReminder extends Mailable
      */
     public function content()
     {
+        $view = match($this->role) {
+            'academician' => 'emails.profile-update-academician',
+            'postgraduate' => 'emails.profile-update-postgraduate',
+            'undergraduate' => 'emails.profile-update-undergraduate',
+            default => 'emails.profile-update-academician',
+        };
+        
         return new Content(
-            view: 'emails.profile-update-reminder',
+            view: $view,
         );
     }
 
@@ -74,4 +88,4 @@ class ProfileUpdateReminder extends Mailable
     {
         return [];
     }
-} 
+}

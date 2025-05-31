@@ -53,7 +53,7 @@ class EmbeddingService
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
-        
+
         try {
             $headers = [
                 'Authorization' => 'Bearer ' . $this->apiKey,
@@ -67,7 +67,7 @@ class EmbeddingService
             
             $response = Http::withHeaders($headers)
                 ->post($this->apiEndpoint, $payload);
-            
+
             if ($response->successful()) {
                 $embedding = $response->json('data.0.embedding');
                 
@@ -478,7 +478,7 @@ class EmbeddingService
                 $textParts[] = "Research Interests: " . $researchText;
             } else {
                 $fieldValue = is_array($postgraduate->field_of_research) 
-                    ? implode(", ", $postgraduate->field_of_research) 
+                        ? implode(", ", $postgraduate->field_of_research) 
                     : $postgraduate->field_of_research;
                 // Still add multiple times for weighting
                 $textParts[] = "Field of Research: " . $fieldValue;
@@ -558,7 +558,7 @@ class EmbeddingService
                 $textParts[] = "Research Focus: " . $researchText;
             } else {
                 $preferenceValue = is_array($undergraduate->research_preference) 
-                    ? implode(", ", $undergraduate->research_preference) 
+                        ? implode(", ", $undergraduate->research_preference) 
                     : $undergraduate->research_preference;
                 // Still add multiple times for weighting
                 $textParts[] = "Research Preference: " . $preferenceValue;

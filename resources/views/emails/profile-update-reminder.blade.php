@@ -51,37 +51,39 @@
         </div>
         
         <div class="content">
-            <h2>Hello {{ $user->name }},</h2>
+            <h2>Dear {{ $user->name }},</h2>
             
-            <p>We noticed that your Nexscholar profile could use some updates. A complete profile helps you connect with other academics and showcase your work effectively.</p>
+            <p>We noticed that your NexScholar profile could benefit from an update. A complete and accurate profile not only enhances your visibility but also increases your chances of connecting with the right collaborators, students, and research opportunities.</p>
             
-            <p>As a {{ ucfirst($role) }}, it's important to maintain an up-to-date profile with your current:</p>
+            <p>As an academician, keeping your profile up to date helps ensure effective AI-powered matchmaking and research visibility. Please take a moment to review and update the following key areas:</p>
             
+            <p><strong>✅ To get listed in search results:</strong></p>
             <ul>
-                @if($role == 'academician')
-                <li>Research interests</li>
-                <li>Publications</li>
-                <li>Ongoing projects</li>
-                <li>Teaching areas</li>
-                <li>Availability for supervision</li>
-                @elseif($role == 'postgraduate')
-                <li>Research focus</li>
-                <li>Academic background</li>
-                <li>Skills and expertise</li>
-                <li>Current research projects</li>
-                @elseif($role == 'undergraduate')
-                <li>Areas of interest</li>
-                <li>Academic achievements</li>
-                <li>Skills and expertise</li>
-                <li>Projects and activities</li>
-                @endif
+                <li>Upload a professional profile picture</li>
+                <li>Add a Short Bio summarizing your academic background and interests</li>
+                <li>Specify your Research Expertise areas</li>
             </ul>
             
-            <p>Please take a moment to review and update your profile information.</p>
+            <p><strong>🔍 To improve AI-driven matchmaking:</strong></p>
+            <ul>
+                <li>Update your Research Interests</li>
+                <li>Add your Recent Publications</li>
+                <li>List any Ongoing Projects</li>
+                <li>Upload your CV</li>
+                <li>Indicate your Availability for Supervision</li>
+            </ul>
             
-            <a href="{{ url('/role') }}" class="button">Update My Profile</a>
+            <p><strong>💡 Need help?</strong><br>
+            You can use the AI Profile Generator to quickly fill in your profile. The AI can search the internet, use provided URLs, or extract information from your uploaded CV to complete your details accurately.</p>
             
-            <p>Thank you for being part of the Nexscholar community!</p>
+            <p>By maintaining a complete profile, NexScholar can help you connect with the right collaborators, postgraduate students, and funding opportunities — faster and smarter.</p>
+            
+            <a href="{{ url('/role') }}" class="button">Update Your Profile Now</a>
+            
+            <p>Thank you for being part of the NexScholar community.</p>
+            
+            <p>Best regards,<br>
+            The NexScholar Team</p>
         </div>
         
         <div class="footer">
@@ -90,4 +92,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>

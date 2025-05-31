@@ -96,6 +96,33 @@ class Academician extends Model
     }
 
     /**
+     * Get the profile status attribute.
+     * 
+     * @return string
+     */
+    public function getProfileStatusAttribute()
+    {
+        // Check if bio is not null and not empty
+        $hasBio = !empty($this->bio);
+        
+        // Check if profile picture is not null and not the default
+        $hasCustomProfilePicture = !empty($this->profile_picture) && $this->profile_picture !== 'profile_pictures/default.jpg';
+        
+        // Check if research expertise is not null and not empty
+        $hasResearchExpertise = !empty($this->research_expertise);
+        
+        // Return 'Complete' if all criteria are met, otherwise 'Needs Update'
+        return ($hasBio && $hasCustomProfilePicture && $hasResearchExpertise) ? 'Complete' : 'Needs Update';
+    }
+    
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['profile_status'];
+
+    /**
      * Get the views for the academician.
      */
     public function views()

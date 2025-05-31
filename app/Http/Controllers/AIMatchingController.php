@@ -102,11 +102,14 @@ class AIMatchingController extends Controller
         $user = Auth::user();
         
         // Check permissions for different search types
-        if ($searchType === 'students' || $searchType === 'collaborators') {
+        if ($searchType === 'students') {
             if (!BouncerFacade::is($user)->an('academician') || !$user->academician) {
-                return response()->json(['error' => 'You must be an academician to search for students or collaborators'], 403);
+                return response()->json(['error' => 'You must be an academician to search for students'], 403);
             }
         }
+        
+        // For collaborator search, we need to ensure the user is authenticated but don't restrict by role
+        // This allows students (postgraduates and undergraduates) to also search for academician collaborators
         
         // For supervisor search, we need student information
         $studentId = null;
@@ -328,33 +331,32 @@ class AIMatchingController extends Controller
     }
     
     /**
-     * Search for collaborators (other academicians and students)
+     * Search for collaborators (academicians only)
      */
-    protected function searchForCollaborators($searchQuery, $threshold, $page, $perPage, $academicianId)
+    protected function searchForCollaborators($searchQuery, $threshold, $page, $perPage, $academicianId = null)
     {
-        // Get academician's profile for personalized matching
-        $academician = Academician::find($academicianId);
+        // Get the current user
+        $user = auth()->user();
+        $usePersonalization = false;
         
-        if (!$academician) {
-            return [
-                'error' => 'Academician profile not found',
-                'matches' => [],
-                'total' => 0,
-                'current_page' => $page,
-                'per_page' => $perPage,
-                'has_more' => false
-            ];
+        // If an academician ID is provided and valid, use it for personalized matching
+        if ($academicianId) {
+            $academician = Academician::find($academicianId);
+            
+            if ($academician) {
+                $usePersonalization = true;
+            }
         }
         
-        // Search for other academicians
+        // Search for academicians
         $academicians = $this->semanticSearchService->findSimilarAcademicians(
             $searchQuery,
-            50,           // Increased to 50 academician matches (was 30)
+            50,           // Get up to 50 academician matches to support pagination
             $threshold,   // Use the adaptive threshold
             null,         // No student ID for this search
             null,         // No student type for this search
             null,         // Use default Qdrant setting
-            $academicianId // Pass academician ID for personalized matching
+            $usePersonalization ? $academicianId : null // Only pass academician ID if personalization is enabled
         );
         
         // Process academicians - no need to combine with students anymore
@@ -386,11 +388,29 @@ class AIMatchingController extends Controller
         $hasMore = ($offset + $perPage) < $totalResults;
         
         // Generate AI insights for each match in the current page
-        $paginatedResults = $this->aiMatchInsightService->generateCollaboratorInsights(
-            $paginatedResults,
-            $searchQuery,
-            $academicianId
-        );
+        // If the user is an academician, generate personalized insights
+        if ($usePersonalization && $academicianId) {
+            $paginatedResults = $this->aiMatchInsightService->generateCollaboratorInsights(
+                $paginatedResults,
+                $searchQuery,
+                $academicianId
+            );
+        } else {
+            // For non-academician users (students), generate generic insights
+            // or use a simplified version that doesn't require an academician profile
+            foreach ($paginatedResults as &$result) {
+                // Use the academician's bio and research expertise to generate a simple insight
+                // Check if research_expertise is already an array or needs to be decoded
+                $expertise = $result['research_expertise'] ?? [];
+                if (is_string($expertise)) {
+                    $expertise = json_decode($expertise, true) ?? [];
+                }
+                
+                $result['ai_insights'] = "This academician specializes in " . 
+                    implode(", ", $expertise) . 
+                    ". Consider reaching out to discuss potential collaboration opportunities.";
+            }
+        }
         
         // Convert to the expected format for the frontend
         $matches = [];
@@ -414,10 +434,11 @@ class AIMatchingController extends Controller
             'searchType' => 'collaborators',
             'matches' => $matches,
             'total' => $totalResults,
-            'profile_used' => true, // Always use academician profile
+            'profile_used' => $usePersonalization, // Indicate if personalization was used
             'current_page' => $page,
             'per_page' => $perPage,
-            'has_more' => $hasMore
+            'has_more' => $hasMore,
+            'user_type' => $user->roles->first()->name ?? 'unknown' // Include user type for frontend reference
         ];
     }
     
@@ -712,4 +733,4 @@ class AIMatchingController extends Controller
         
         return response()->json($diagnosticInfo);
     }
-} 
+}

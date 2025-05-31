@@ -90,6 +90,30 @@ class Undergraduate extends Model
         return $this->belongsTo(FacultyList::class, 'faculty');
     }
 
+    /**
+     * Get the profile status attribute.
+     * 
+     * @return string
+     */
+    public function getProfileStatusAttribute()
+    {
+        // Check if bio is not null and not empty
+        $hasBio = !empty($this->bio);
+        
+        // Check if profile picture is not null and not the default
+        $hasCustomProfilePicture = !empty($this->profile_picture) && $this->profile_picture !== 'profile_pictures/default.jpg';
+        
+        // For undergraduates, only bio and profile picture are required for complete status
+        return ($hasBio && $hasCustomProfilePicture) ? 'Complete' : 'Needs Update';
+    }
+    
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['profile_status'];
+
     public function skills()
     {
         return $this->belongsToMany(Skill::class, 'skills' );

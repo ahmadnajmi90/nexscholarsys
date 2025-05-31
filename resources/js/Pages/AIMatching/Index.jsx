@@ -28,9 +28,9 @@ export default function Index({ auth, universities, faculties, users, researchOp
   
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
-    // Only allow academicians to search for students and collaborators
-    if ((newType === 'students' || newType === 'collaborators') && !isAcademician) {
-      setError('You need to be an academician to search for students or collaborators.');
+    // Only allow academicians to search for students
+    if (newType === 'students' && !isAcademician) {
+      setError('You need to be an academician to search for students.');
       return;
     }
     
@@ -283,4 +283,4 @@ export default function Index({ auth, universities, faculties, users, researchOp
       </div>
     </MainLayout>
   );
-} 
+}

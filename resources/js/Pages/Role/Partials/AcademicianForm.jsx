@@ -506,15 +506,30 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       formData.append('CV_file', '');
     }
 
+    // Use Inertia's post method with proper callbacks to ensure UI state is updated correctly
     post(route("role.update"), {
       data: formData,
+      onStart: () => {
+        // This ensures the processing state is properly set at the start
+        console.log('Form submission started');
+      },
       onSuccess: () => {
-        alert("Profile updated successfully.");
+        // This will be called when the server responds with a successful response
+        console.log('Form submission successful');
+        // Show success alert to the user
+        alert('Profile updated successfully!');
+        // The recentlySuccessful state will be automatically set to true here
+        // and will be automatically set back to false after 2 seconds
       },
       onError: (errors) => {
-        console.error("Error updating profile:", errors);
-        alert("Failed to update the profile. Please try again.");
+        // Handle errors if needed
+        console.error('Form submission errors:', errors);
       },
+      onFinish: () => {
+        // This will be called regardless of success or error
+        console.log('Form submission completed');
+        // Ensure any custom loading states are reset
+      }
     });
   };
 

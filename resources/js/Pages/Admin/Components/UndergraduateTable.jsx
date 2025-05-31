@@ -8,6 +8,7 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
     const [batchSending, setBatchSending] = useState(false);
     const [batchSent, setBatchSent] = useState(false);
     const [expandedIds, setExpandedIds] = useState({});
+    console.log(undergraduates);
     
     const handleSendReminder = async (userId) => {
         setSentStatus(prev => ({ ...prev, [userId]: 'sending' }));
@@ -219,6 +220,7 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">University & Faculty</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Degree & Status</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Research Interest</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Profile Status</th>
                                 <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                     <span className="sr-only">Actions</span>
                                 </th>
@@ -343,6 +345,17 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
                                                 )}
                                             </div>
                                         </td>
+                                        <td className="px-3 py-4">
+                                            <div className="flex items-center">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    profile?.profile_status === 'Complete' 
+                                                        ? 'bg-green-100 text-green-800' 
+                                                        : 'bg-orange-100 text-orange-800'
+                                                }`}>
+                                                    {profile?.profile_status || 'Needs Update'}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                             <button
                                                 onClick={() => handleSendReminder(user.id)}
@@ -400,4 +413,4 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
     );
 };
 
-export default UndergraduateTable; 
+export default UndergraduateTable;

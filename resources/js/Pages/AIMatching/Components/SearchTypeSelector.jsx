@@ -23,9 +23,8 @@ export default function SearchTypeSelector({ currentType, onTypeChange, isAcadem
       id: 'collaborators',
       label: 'Collaborators',
       icon: <FaUsers className="mr-2" />,
-      description: 'Find potential research collaborators (academicians only)',
+      description: 'Find potential research collaborators among academicians',
       available: true // Available to all users
-      // available: isAcademician // Only available to academicians
     }
   ];
 
@@ -34,7 +33,7 @@ export default function SearchTypeSelector({ currentType, onTypeChange, isAcadem
       {/* Description for the selected option */}
       <div className="text-sm text-gray-600 mb-2">
         {options.find(opt => opt.id === currentType)?.description}
-        {!isAcademician && currentType !== 'supervisor' && (
+        {!isAcademician && currentType === 'students' && (
           <span className="ml-2 text-red-500">
             (You need to be an academician to access this feature)
           </span>
@@ -63,4 +62,4 @@ export default function SearchTypeSelector({ currentType, onTypeChange, isAcadem
       </div>
     </div>
   );
-} 
+}

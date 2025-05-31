@@ -97,6 +97,33 @@ class Postgraduate extends Model
         return $this->belongsTo(FacultyList::class, 'faculty');
     }
 
+    /**
+     * Get the profile status attribute.
+     * 
+     * @return string
+     */
+    public function getProfileStatusAttribute()
+    {
+        // Check if bio is not null and not empty
+        $hasBio = !empty($this->bio);
+        
+        // Check if profile picture is not null and not the default
+        $hasCustomProfilePicture = !empty($this->profile_picture) && $this->profile_picture !== 'profile_pictures/default.jpg';
+        
+        // Check if field of research is not null and not empty
+        $hasFieldOfResearch = !empty($this->field_of_research);
+        
+        // Return 'Complete' if all criteria are met, otherwise 'Needs Update'
+        return ($hasBio && $hasCustomProfilePicture && $hasFieldOfResearch) ? 'Complete' : 'Needs Update';
+    }
+    
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['profile_status'];
+
     public function skills()
     {
         return $this->belongsToMany(Skill::class, 'skills' );
