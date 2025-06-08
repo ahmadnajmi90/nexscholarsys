@@ -7,8 +7,6 @@ import RecommendationDisplay from "@/Components/RecommendationDisplay";
 import BookmarkButton from "@/Components/BookmarkButton";
 import MatchIndicator from "@/Components/MatchIndicator";
 import ProgressiveLoadingResults from "@/Components/ProgressiveLoadingResults";
-import ConnectButton from "@/Components/ConnectButton";
-import { Popover } from '@headlessui/react';
 
 export default function ResultsGrid({
   searchType,
@@ -566,23 +564,13 @@ export default function ResultsGrid({
 
                   {/* Social Action Links */}
                   <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-                    {/* Connect Button */}
-                    <ConnectButton
-                      userId={users.find(
-                        (user) =>
-                          user.unique_id === 
-                          (isAcademician ? profile.academician_id || profile.id : 
-                           profile.postgraduate_id || profile.undergraduate_id || profile.id)
-                      )?.id}
-                      iconSize="text-lg"
-                      tooltipPosition="top"
-                    />
-                    
-                    {/* Send Email */}
-                    <Popover className="relative">
-                      {({ open }) => (
-                        <>
-                          <Popover.Button as="div" className="focus:outline-none">
+                    <a
+                      href="#"
+                      className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                      title="Add Friend"
+                    >
+                      <FaUserPlus className="text-lg" />
+                    </a>
                     <Link
                       href={route('email.compose', { 
                         to: users.find(
@@ -597,56 +585,18 @@ export default function ResultsGrid({
                     >
                       <FaPaperPlane className="text-lg" />
                     </Link>
-                          </Popover.Button>
-                          <Popover.Panel className="absolute z-50 bottom-full mb-2 -left-10 transform bg-white border border-gray-200 shadow-lg rounded-md p-2 text-sm">
-                            Send Email
-                          </Popover.Panel>
-                        </>
-                      )}
-                    </Popover>
-                    
-                    {/* Recommend button */}
-                    <Popover className="relative">
-                      {({ open }) => (
-                        <>
-                          <Popover.Button as="div" className="focus:outline-none">
                     <a
                       href="#"
                       onClick={(e) => handleRecommendClick(profile, e)}
                       className="text-gray-500 text-lg hover:text-yellow-500"
+                      title="Recommend"
                     >
                       <FaStar className="text-lg" />
                     </a>
-                          </Popover.Button>
-                          <Popover.Panel className="absolute z-50 bottom-full mb-2 -left-10 transform bg-white border border-gray-200 shadow-lg rounded-md p-2 text-sm">
-                            Recommend
-                          </Popover.Panel>
-                        </>
-                      )}
-                    </Popover>
-                    
-                    {/* Bookmark Button */}
                     <BookmarkButton 
-                      bookmarkableId={users.find(
-                        (user) =>
-                          user.unique_id === 
-                          (isAcademician ? profile.academician_id || profile.id : 
-                           profile.postgraduate_id || profile.undergraduate_id || profile.id)
-                      )?.id}
-                      bookmarkableType={
-                        isAcademician 
-                          ? "academician" 
-                          : (match.result_type === 'postgraduate' || profile.student_type === 'postgraduate')
-                            ? "postgraduate"
-                            : "undergraduate"
-                      }
-                      category={
-                        isAcademician 
-                          ? "Academicians" 
-                          : (match.result_type === 'postgraduate' || profile.student_type === 'postgraduate')
-                            ? "Postgraduates"
-                            : "Undergraduates"
-                      }
+                      bookmarkableType={isAcademician ? "academician" : match.result_type} 
+                      bookmarkableId={profileId}
+                      category={isAcademician ? "Academicians" : "Students"} 
                       iconSize="text-lg"
                       tooltipPosition="top"
                     />

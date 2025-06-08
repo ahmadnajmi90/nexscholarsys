@@ -45,7 +45,6 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\UserMotivationController;
 use App\Http\Controllers\AIGenerationController;
 use App\Http\Controllers\AIMatchingController;
-use App\Http\Controllers\ConnectionController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
@@ -59,17 +58,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
     Route::post('/bookmarks', [BookmarkController::class, 'store'])->name('bookmarks.store');
     Route::post('/bookmarks/toggle', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
-    Route::post('/bookmarks/check', [BookmarkController::class, 'check'])->name('bookmarks.check');
+    Route::get('/bookmarks/check', [BookmarkController::class, 'check'])->name('bookmarks.check');
     Route::delete('/bookmarks/{id}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
-
-    // Connection routes
-    Route::get('/connections', [ConnectionController::class, 'index'])->name('connections.index');
-    Route::get('/connections/get', [ConnectionController::class, 'getConnections'])->name('connections.get');
-    Route::post('/connections/friend/request', [ConnectionController::class, 'sendFriendRequest'])->name('connections.friend.request');
-    Route::post('/connections/{connection}/accept', [ConnectionController::class, 'acceptFriendRequest'])->name('connections.friend.accept');
-    Route::post('/connections/{connection}/reject', [ConnectionController::class, 'rejectFriendRequest'])->name('connections.friend.reject');
-    Route::delete('/connections/remove', [ConnectionController::class, 'removeConnection'])->name('connections.remove');
-    Route::get('/connections/status', [ConnectionController::class, 'checkConnectionStatus'])->name('connections.status');
 });
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
