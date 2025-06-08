@@ -126,6 +126,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>AI Matching</span>
                         </Link>
 
+                        <Link href={route('connections.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
+                            <FaUsers className="text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Connections</span>
+                        </Link>
+
                         <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                             <FaBookmark className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Bookmarks</span>

@@ -5,7 +5,9 @@ import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter, FaUserPlus, FaPape
 import axios from "axios";
 import RecommendationModal from "./RecommendationModal";
 import RecommendationDisplay from "./RecommendationDisplay";
+import ConnectButton from "@/Components/ConnectButton";
 import BookmarkButton from "@/Components/BookmarkButton";
+import { Popover } from '@headlessui/react';
 
 // Helper function to capitalize each skill
 const capitalize = (s) => {
@@ -266,156 +268,211 @@ const ProfileGridWithDualFilter = ({
       {/* Main Content */}
       <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
-          {displayedProfiles.map((profile) => (
-            <div
-              key={profile.id}
-              className="bg-white shadow-md rounded-lg overflow-hidden relative"
-            >
-              {/* University Badge */}
-              <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
-                {universitiesList.find((u) => u.id === profile.university)?.short_name || "Unknown University"}
-              </div>
-
-              {!isUndergraduateList && (
-                <div className="relative">
-                  {/* Removed the tooltip from here as it's now part of the verified badge */}
+          {displayedProfiles.map((profile) => {
+            // Pre-compute bookmark-related variables
+            // Use the correct bookmarkable ID directly from the profile object
+            // This ID is the primary key of the 'undergraduates' or 'postgraduates' model
+            const bookmarkableId = profile.id;
+            
+            const bookmarkableType = profile.postgraduate_id 
+              ? "postgraduate" 
+              : profile.undergraduate_id 
+                ? "undergraduate" 
+                : null;
+                
+            const category = profile.postgraduate_id 
+              ? "Postgraduates" 
+              : profile.undergraduate_id 
+                ? "Undergraduates" 
+                : null;
+                
+            // Flag to determine if bookmark functionality should be enabled
+            const isBookmarkable = !!bookmarkableId && !!bookmarkableType;
+            
+            // Get user ID for other components that need it (ConnectButton, email link)
+            const userId = users.find(
+              (user) => user.unique_id === (profile.postgraduate_id || profile.undergraduate_id)
+            )?.id;
+            
+            return (
+              <div
+                key={profile.id}
+                className="bg-white shadow-md rounded-lg overflow-hidden relative"
+              >
+                {/* University Badge */}
+                <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
+                  {universitiesList.find((u) => u.id === profile.university)?.short_name || "Unknown University"}
                 </div>
-              )}
 
-              {/* Profile Banner */}
-              <div className="h-32">
-                <img
-                  src={profile.background_image !== null ? `/storage/${profile.background_image}` : "/storage/profile_background_images/default.jpg"}
-                  alt="Banner"
-                  className="object-cover w-full h-full"
-                />
-              </div>
-
-              {/* Profile Image */}
-              <div className="flex justify-center -mt-12">
-                <div className="relative w-24 h-24">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                    <img
-                      src={profile.profile_picture !== null ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg"}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                {!isUndergraduateList && (
+                  <div className="relative">
+                    {/* Removed the tooltip from here as it's now part of the verified badge */}
                   </div>
-                  {/* Move verified badge outside the profile image circle */}
-                  {profile.verified === 1 && (
-                    <div className="absolute bottom-0 right-0 p-1 rounded-full group cursor-pointer">
-                      <div className="flex items-center justify-center w-7 h-7 bg-blue-500 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      {/* Tooltip */}
-                      <div className="absolute bottom-8 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10 w-48">
-                        This account is verified by {getUniversityNameById(profile.university)}
-                      </div>
+                )}
+
+                {/* Profile Banner */}
+                <div className="h-32">
+                  <img
+                    src={profile.background_image !== null ? `/storage/${profile.background_image}` : "/storage/profile_background_images/default.jpg"}
+                    alt="Banner"
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+
+                {/* Profile Image */}
+                <div className="flex justify-center -mt-12">
+                  <div className="relative w-24 h-24">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                      <img
+                        src={profile.profile_picture !== null ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg"}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
+                    {/* Move verified badge outside the profile image circle */}
+                    {profile.verified === 1 && (
+                      <div className="absolute bottom-0 right-0 p-1 rounded-full group cursor-pointer">
+                        <div className="flex items-center justify-center w-7 h-7 bg-blue-500 rounded-full">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        {/* Tooltip */}
+                        <div className="absolute bottom-8 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10 w-48">
+                          This account is verified by {getUniversityNameById(profile.university)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Profile Info */}
+                <div className="text-center mt-4">
+                  <h2 className="text-lg font-semibold truncate px-6">{profile.full_name}</h2>
+                  <p
+                    className="text-gray-500 text-sm px-6"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      minHeight: "2.5rem",
+                    }}
+                  >
+                    {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
+                      ? (() => {
+                          const id = profile.field_of_research[0];
+                          const matchedOption = researchOptions.find(
+                            (option) =>
+                              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                          );
+                          return matchedOption
+                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                            : "Unknown";
+                        })()
+                      : Array.isArray(profile.research_preference) && profile.research_preference.length > 0
+                      ? (() => {
+                          const id = profile.research_preference[0];
+                          const matchedOption = researchOptions.find(
+                            (option) =>
+                              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                          );
+                          return matchedOption
+                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
+                            : "Unknown";
+                        })()
+                      : "No Field of Research or Preference"}
+                  </p>
+                  <div className="mt-2 flex justify-center gap-2">
+                    <button
+                      onClick={() => handleQuickInfoClick(profile)}
+                      className="bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
+                    >
+                      Quick Info
+                    </button>
+                    <Link
+                      href={
+                        isPostgraduateList && !isUndergraduateList
+                          ? route('postgraduates.show', profile.url)
+                          : route('undergraduates.show', profile.url)
+                      }
+                      className="bg-green-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-green-600"
+                    >
+                      Full Profile
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Social Action Links */}
+                <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
+                  {/* Connect Button */}
+                  <ConnectButton
+                    userId={userId}
+                    iconSize="text-lg"
+                    tooltipPosition="top"
+                  />
+                  
+                  {/* Send Email */}
+                  <Popover className="relative">
+                    {({ open }) => (
+                      <>
+                        <Popover.Button as="div" className="focus:outline-none">
+                          <Link
+                            href={route('email.compose', { 
+                              to: users.find(
+                                (user) =>
+                                  user.unique_id === 
+                                  (profile.postgraduate_id || profile.undergraduate_id)
+                              )?.email 
+                            })}
+                            className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
+                            title="Send Email"
+                          >
+                            <FaPaperPlane className="text-lg" />
+                          </Link>
+                        </Popover.Button>
+                        <Popover.Panel className="absolute z-50 bottom-full mb-2 -left-10 transform bg-white border border-gray-200 shadow-lg rounded-md p-2 text-sm">
+                          Send Email
+                        </Popover.Panel>
+                      </>
+                    )}
+                  </Popover>
+                  
+                  {/* LinkedIn */}
+                  <Popover className="relative">
+                    {({ open }) => (
+                      <>
+                        <Popover.Button as="div" className="focus:outline-none">
+                          <a
+                            href={profile.linkedin || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 text-lg hover:text-blue-800"
+                          >
+                            <FaLinkedin className="text-lg" />
+                          </a>
+                        </Popover.Button>
+                        <Popover.Panel className="absolute z-50 bottom-full mb-2 -left-10 transform bg-white border border-gray-200 shadow-lg rounded-md p-2 text-sm">
+                          LinkedIn Profile
+                        </Popover.Panel>
+                      </>
+                    )}
+                  </Popover>
+                  
+                  {/* Safeguarded Bookmark Button */}
+                  {isBookmarkable && (
+                    <BookmarkButton 
+                      bookmarkableId={bookmarkableId}
+                      bookmarkableType={bookmarkableType}
+                      category={category}
+                      iconSize="text-lg"
+                      tooltipPosition="top"
+                    />
                   )}
                 </div>
               </div>
-
-              {/* Profile Info */}
-              <div className="text-center mt-4">
-                <h2 className="text-lg font-semibold truncate px-6">{profile.full_name}</h2>
-                <p
-                  className="text-gray-500 text-sm px-6"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                    minHeight: "2.5rem",
-                  }}
-                >
-                  {Array.isArray(profile.field_of_research) && profile.field_of_research.length > 0
-                    ? (() => {
-                        const id = profile.field_of_research[0];
-                        const matchedOption = researchOptions.find(
-                          (option) =>
-                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                        );
-                        return matchedOption
-                          ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                          : "Unknown";
-                      })()
-                    : Array.isArray(profile.research_preference) && profile.research_preference.length > 0
-                    ? (() => {
-                        const id = profile.research_preference[0];
-                        const matchedOption = researchOptions.find(
-                          (option) =>
-                            `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                        );
-                        return matchedOption
-                          ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                          : "Unknown";
-                      })()
-                    : "No Field of Research or Preference"}
-                </p>
-                <div className="mt-2 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleQuickInfoClick(profile)}
-                    className="bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
-                  >
-                    Quick Info
-                  </button>
-                  <Link
-                    href={
-                      isPostgraduateList && !isUndergraduateList
-                        ? route('postgraduates.show', profile.url)
-                        : route('undergraduates.show', profile.url)
-                    }
-                    className="bg-green-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-green-600"
-                  >
-                    Full Profile
-                  </Link>
-                </div>
-              </div>
-
-              {/* Social Action Links - MODIFIED */}
-              <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-                <a
-                  href="#"
-                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                  title="Add Friend"
-                >
-                  <FaUserPlus className="text-lg" />
-                </a>
-                <Link
-                  href={route('email.compose', { 
-                    to: users.find(
-                      (user) =>
-                        user.unique_id === 
-                        (profile.postgraduate_id || profile.undergraduate_id)
-                    )?.email 
-                  })}
-                  className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                  title="Send Email"
-                >
-                  <FaPaperPlane className="text-lg" />
-                </Link>
-                <a
-                  href={profile.linkedin || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-500 text-lg hover:text-blue-800"
-                  title="LinkedIn"
-                >
-                  <FaLinkedin className="text-lg" />
-                </a>
-                <BookmarkButton 
-                  bookmarkableType={isUndergraduateList ? "undergraduate" : isPostgraduateList ? "postgraduate" : "academician"}
-                  bookmarkableId={profile.id}
-                  category={isUndergraduateList ? "Undergraduates" : isPostgraduateList ? "Postgraduates" : "Academicians"}
-                  iconSize="text-lg"
-                  tooltipPosition="top"
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {isModalOpen && selectedProfile && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"

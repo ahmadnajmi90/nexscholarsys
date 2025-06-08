@@ -162,6 +162,13 @@ const MobileSidebar = () => {
                                 <span className="ml-2">AI Matching</span>
                             </Link>
                             <Link
+                                href={route('connections.index')}
+                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                            >
+                                <FaUsers className="text-gray-600" />
+                                <span className="ml-2">My Connections</span>
+                            </Link>
+                            <Link
                                 href={route('bookmarks.index')}
                                 className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
                             >

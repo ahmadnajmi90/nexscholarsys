@@ -7,6 +7,7 @@ import TopMenu from '../Components/TopMenu';
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 import { Home, Calendar1, User, FileBadge, Briefcase } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
+import NotificationBell from '@/Components/NotificationBell';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -108,6 +109,9 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                         <h1 className="text-2xl font-semibold mb-4 pt-2 pl-2">{title}</h1>
                         {children}
                     </div>
+                    
+                    {/* Notification Bell on Desktop */}
+                    <NotificationBell />
                 </div>
             ) : (
                 // Mobile-specific content area
@@ -116,6 +120,9 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     <div className="pb-20">
                         {children}
                     </div>
+
+                    {/* Notification Bell on Mobile */}
+                    <NotificationBell />
 
                     {/* Bottom Navigation Bar */}
                     <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 rounded-t-3xl shadow-lg">
@@ -153,8 +160,6 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                         </div>
                     </div>
                 </div>
-
-
             )}
         </div>
     );

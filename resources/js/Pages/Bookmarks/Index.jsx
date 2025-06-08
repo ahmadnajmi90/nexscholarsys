@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { FaTrash, FaFilter } from 'react-icons/fa';
@@ -279,6 +279,48 @@ export default function Bookmarks({ auth, bookmarks }) {
   const [bookmarksList, setBookmarksList] = useState(bookmarks);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Create a mapping to categorize bookmarks by type if using the older "Profiles" category
+  const categorizeBookmarks = () => {
+    const updatedBookmarks = { ...bookmarksList };
+    
+    // Check if we have the old "Profiles" category that needs to be split
+    if (updatedBookmarks.Profiles) {
+      // Create new categories if they don't exist
+      if (!updatedBookmarks.Academicians) updatedBookmarks.Academicians = [];
+      if (!updatedBookmarks.Postgraduates) updatedBookmarks.Postgraduates = [];
+      if (!updatedBookmarks.Undergraduates) updatedBookmarks.Undergraduates = [];
+      
+      // Distribute the profiles to their appropriate categories
+      updatedBookmarks.Profiles.forEach(bookmark => {
+        const type = bookmark.bookmarkable_type.toLowerCase();
+        
+        if (type.includes('academician')) {
+          updatedBookmarks.Academicians.push(bookmark);
+        } else if (type.includes('postgraduate')) {
+          updatedBookmarks.Postgraduates.push(bookmark);
+        } else if (type.includes('undergraduate')) {
+          updatedBookmarks.Undergraduates.push(bookmark);
+        }
+      });
+      
+      // Remove empty categories
+      if (updatedBookmarks.Academicians.length === 0) delete updatedBookmarks.Academicians;
+      if (updatedBookmarks.Postgraduates.length === 0) delete updatedBookmarks.Postgraduates;
+      if (updatedBookmarks.Undergraduates.length === 0) delete updatedBookmarks.Undergraduates;
+      
+      // Remove the old Profiles category if we've distributed all the bookmarks
+      delete updatedBookmarks.Profiles;
+      
+      // Update the state with the new categorized bookmarks
+      setBookmarksList(updatedBookmarks);
+    }
+  };
+  
+  // Run the categorization once when the component mounts
+  useEffect(() => {
+    categorizeBookmarks();
+  }, []);
   
   const categories = Object.keys(bookmarksList).sort();
   

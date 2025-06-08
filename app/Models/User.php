@@ -16,6 +16,7 @@ use App\Models\PostEvent;
 use App\Models\Undergraduate;
 use App\Models\CreatePost;
 use App\Models\Bookmark;
+use App\Models\Connection;
 use App\Models\UserMotivation;
 
 
@@ -141,5 +142,55 @@ class User extends Authenticatable implements MustVerifyEmail
     public function motivation()
     {
         return $this->hasOne(UserMotivation::class);
+    }
+    
+    /**
+     * Get all connections initiated by the user (user_one).
+     */
+    public function initiatedConnections()
+    {
+        return $this->hasMany(Connection::class, 'user_one_id');
+    }
+    
+    /**
+     * Get all connections received by the user (user_two).
+     */
+    public function receivedConnections()
+    {
+        return $this->hasMany(Connection::class, 'user_two_id');
+    }
+    
+    /**
+     * Get all connections involving this user (either initiated or received).
+     */
+    public function connections()
+    {
+        return Connection::where(function ($query) {
+            $query->where('user_one_id', $this->id)
+                  ->orWhere('user_two_id', $this->id);
+        });
+    }
+    
+    /**
+     * Get all accepted friendship connections for this user.
+     */
+    public function friends()
+    {
+        return Connection::where('type', 'friendship')
+            ->where('status', 'accepted')
+            ->where(function ($query) {
+                $query->where('user_one_id', $this->id)
+                      ->orWhere('user_two_id', $this->id);
+            });
+    }
+    
+    /**
+     * Get all bookmarked users for this user using the new connections system.
+     */
+    public function bookmarkedUsers()
+    {
+        return $this->initiatedConnections()
+            ->where('type', 'bookmark')
+            ->where('status', 'accepted');
     }
 }
