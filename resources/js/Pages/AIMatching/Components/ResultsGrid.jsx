@@ -627,7 +627,12 @@ export default function ResultsGrid({
                     
                     {/* Bookmark Button */}
                     <BookmarkButton 
-                      bookmarkableId={isAcademician ? profile.id : profile.id}
+                      bookmarkableId={users.find(
+                        (user) =>
+                          user.unique_id === 
+                          (isAcademician ? profile.academician_id || profile.id : 
+                           profile.postgraduate_id || profile.undergraduate_id || profile.id)
+                      )?.id}
                       bookmarkableType={
                         isAcademician 
                           ? "academician" 

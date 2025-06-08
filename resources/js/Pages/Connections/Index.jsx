@@ -151,46 +151,72 @@ const ConnectionsIndex = ({ auth, friends, bookmarks = [] }) => {
     <MainLayout title="My Connections">
       <Head title="My Connections" />
 
-      <div className="">
-        <div className="max-w-8xl mx-auto sm:px-6 lg:px-0">
-          <div className="py-6 px-2">
-              <div>
-                {updatedFriends.length > 0 ? (
-                  <div className="space-y-4">
-                    {updatedFriends.map(friend => renderConnectionCard(friend, (friend) => (
-                      <>
-                        <Link 
-                          href={route('email.compose', { to: friend.email })}
-                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
-                          title="Send Email"
-                        >
-                          <FaEnvelope />
-                        </Link>
-                        <Link 
-                          href={getProfileLink(friend.profile)}
-                          className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 ml-2"
-                          title="View Profile"
-                        >
-                          <FaUser />
-                        </Link>
-                        <button
-                          onClick={() => handleRemoveConnection(friend.user_id)}
-                          className="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 ml-2"
-                          title="Remove Connection"
-                        >
-                          <FaTrash />
-                        </button>
-                      </>
-                    )))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <FaUser className="mx-auto text-4xl text-gray-400 mb-2" />
-                    <p className="text-gray-500">You have no connections yet.</p>
-                    <p className="text-gray-400 text-sm mt-2">Explore profiles and send friend requests to build your network.</p>
-                  </div>
-                )}
+      <div className="py-6">
+        <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div className="p-6">
+              {/* Tabs */}
+              <div className="flex border-b mb-6">
+                <button
+                  onClick={() => setActiveTab('friends')}
+                  className={`px-4 py-2 ${
+                    activeTab === 'friends'
+                      ? 'border-b-2 border-blue-500 text-blue-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  } font-medium flex items-center`}
+                >
+                  <FaUser className="mr-2" />
+                  <span>My Connections</span>
+                  {updatedFriends.length > 0 && (
+                    <span className="ml-2 bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs">
+                      {updatedFriends.length}
+                    </span>
+                  )}
+                </button>
               </div>
+
+              {/* Friends Tab Content */}
+              {activeTab === 'friends' && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-4">My Connections</h2>
+                  {updatedFriends.length > 0 ? (
+                    <div className="space-y-4">
+                      {updatedFriends.map(friend => renderConnectionCard(friend, (friend) => (
+                        <>
+                          <Link 
+                            href={route('email.compose', { to: friend.email })}
+                            className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
+                            title="Send Email"
+                          >
+                            <FaEnvelope />
+                          </Link>
+                          <Link 
+                            href={getProfileLink(friend.profile)}
+                            className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 ml-2"
+                            title="View Profile"
+                          >
+                            <FaUser />
+                          </Link>
+                          <button
+                            onClick={() => handleRemoveConnection(friend.user_id)}
+                            className="inline-flex items-center px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 ml-2"
+                            title="Remove Connection"
+                          >
+                            <FaTrash />
+                          </button>
+                        </>
+                      )))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <FaUser className="mx-auto text-4xl text-gray-400 mb-2" />
+                      <p className="text-gray-500">You have no connections yet.</p>
+                      <p className="text-gray-400 text-sm mt-2">Explore profiles and send friend requests to build your network.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

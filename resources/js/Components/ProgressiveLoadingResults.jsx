@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import SupervisorProfileCard from './SupervisorProfileCard';
 import { FaSearch } from 'react-icons/fa';
-import ResultsGrid from '@/Pages/AIMatching/Components/ResultsGrid';
 
 const ProgressiveLoadingResults = ({
   searchResults,
@@ -103,19 +103,33 @@ const ProgressiveLoadingResults = ({
         )}
         
         {/* Results Grid */}
-        <ResultsGrid
-          searchType="supervisor"
-          searchResults={searchResults}
-          universitiesList={universitiesList}
-          faculties={faculties}
-          users={users}
-          researchOptions={researchOptions}
-          selectedArea={[]}
-          selectedUniversity={[]}
-          selectedAvailability=""
-          onLoadMore={onLoadMore}
-          isLoadingMore={isLoadingMore}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+          {/* Loaded profiles */}
+          {loadedProfiles.map((match, index) => (
+            <SupervisorProfileCard
+              key={`${match.academician.id}-${index}`}
+              profile={{
+                ...match.academician,
+                ai_insight: match.ai_insights,
+                research_expertise: Array.isArray(match.academician.research_expertise) 
+                  ? match.academician.research_expertise 
+                  : [],
+                availability_as_supervisor: match.academician.availability_as_supervisor || 0,
+                match_score: match.score
+              }}
+              universitiesList={universitiesList}
+              faculties={faculties}
+              users={users}
+              researchOptions={researchOptions}
+              aiInsights={match.ai_insights}
+              searchQuery={searchQuery}
+            />
+          ))}
+          
+          {/* If more profiles are being loaded, show skeletons */}
+          {loadedProfiles.length < searchResults.matches.length && 
+            renderSkeletons(Math.min(3, searchResults.matches.length - loadedProfiles.length))}
+        </div>
         
         {/* Load more trigger */}
         {searchResults.has_more && (
