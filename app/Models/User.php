@@ -17,6 +17,7 @@ use App\Models\Undergraduate;
 use App\Models\CreatePost;
 use App\Models\Bookmark;
 use App\Models\UserMotivation;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -141,5 +142,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function motivation()
     {
         return $this->hasOne(UserMotivation::class);
+    }
+
+    /**
+     * Get the workspaces the user is a member of.
+     */
+    public function workspaces(): BelongsToMany
+    {
+        return $this->belongsToMany(Workspace::class, 'workspace_members')
+            ->withPivot('role')
+            ->withTimestamps();
     }
 }

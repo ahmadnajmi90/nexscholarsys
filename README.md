@@ -11,6 +11,7 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - [Usage](#usage)
 - [AI Integration](#ai-integration)
 - [Semantic Search](#semantic-search)
+- [Project Hub](#project-hub-task-management)
 - [Google Services](#google-services)
 - [Contributing](#contributing)
 - [Changelog](#changelog)
@@ -66,6 +67,86 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - Generate personalized insights about potential matches using GPT-4o
 - Filter results by university, availability, and research fields
 - Cache and store supervisor-student match insights for analytics
+
+### Project Hub (Task Management)
+
+The Project Hub is a versatile task management system integrated into the Nexscholar platform, designed specifically for academic and research collaboration. It provides researchers, academicians, and students with a centralized workspace to organize projects, track tasks, and collaborate effectively with team members throughout the research and academic workflow.
+
+#### Key Features
+
+* **Hierarchical Organization Structure**
+  * **Workspaces**: Create dedicated environments for different research projects, labs, or departments
+  * **Boards**: Organize work into separate boards for specific research initiatives or academic collaborations
+  * **Lists**: Structure your workflow with customizable lists (e.g., "Planning", "In Progress", "Literature Review", "Experiments", "Completed")
+  * **Tasks**: Break down your work into manageable tasks with detailed information
+
+* **Interactive Kanban Board**
+  * Intuitive drag-and-drop interface for moving tasks between lists
+  * Real-time updates via Laravel Reverb, ensuring all team members see changes instantly
+  * Visual indicators highlighting recently moved or updated tasks
+  * Customizable lists to adapt to different workflow stages
+
+* **Multiple View Options**
+  * **Board View (Kanban)**: Default view with draggable cards in columns for visual task management
+  * **Calendar View**: Timeline-based visualization of tasks with due dates for deadline management
+  * **List View**: Compact, grouped representation of tasks organized by list for quick scanning
+  * **Table View**: Sortable and filterable tabular display with advanced filtering capabilities
+  * **Timeline View**: Gantt-style chart showing task durations and deadlines
+
+* **Comprehensive Task Management**
+  * **Task Details**: Edit titles, descriptions, due dates, and priorities
+  * **Priority Levels**: Assign importance (Low, Medium, High, Urgent) with color-coding across all views
+  * **Comments**: Discuss tasks with team members through threaded comments
+  * **Attachments**: Upload and manage research files, papers, and documents
+  * **Task History**: Track task creation and updates with timestamps and user information
+
+* **Real-Time Collaboration**
+  * Live updates synchronized across all users viewing the same board
+  * Clear visual indicators when tasks are modified by collaborators
+  * Collaborative commenting system for discussions within task context
+
+* **Workspace Administration**
+  * Create and manage multiple workspaces for different projects or research groups
+  * Invite collaborators to specific workspaces with appropriate permissions
+  * Control who can view, edit, and administer project boards
+
+#### How to Use
+
+1. **Access Project Hub**: Navigate to "Project Hub" from the main sidebar navigation.
+
+2. **Workspace Management**:
+   * Create a new workspace by clicking the "New Workspace" button
+   * Enter a name and optional description for your workspace
+   * Access existing workspaces from the dashboard
+
+3. **Board Creation and Management**:
+   * Within a workspace, create new boards by clicking "Create new board"
+   * Name your board according to your research project or academic initiative
+   * Navigate between boards within the workspace
+
+4. **Working with Lists**:
+   * Each board starts empty and ready for customization
+   * Create lists to represent your workflow stages (e.g., "To Do", "In Progress", "Review", "Complete")
+   * Arrange lists in the order that matches your process
+
+5. **Task Management**:
+   * Create tasks within any list using the "Add Task" button
+   * Provide a title and optional details like description, due date, and priority
+   * Move tasks between lists by dragging and dropping them
+   * Click on a task to view and edit its details, add comments, or upload attachments
+
+6. **Changing Views**:
+   * Switch between different views using the view selector in the top navigation
+   * Use Calendar view for deadline-focused planning
+   * Use Table view for sorting and filtering tasks by various criteria
+   * Use Timeline view for visualizing task durations and timelines
+
+7. **Collaboration**:
+   * Share workspace access with team members for collaborative work
+   * Comment on tasks to discuss specific items
+   * Track updates and changes in real-time as collaborators modify the board
+
+The Project Hub seamlessly integrates with the rest of the Nexscholar platform, allowing for efficient academic project management while maintaining connection to research profiles, publications, and other scholarly activities.
 
 ## System Requirements
 

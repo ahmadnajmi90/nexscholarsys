@@ -7,6 +7,7 @@ import TopMenu from '../Components/TopMenu';
 import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
 import { Home, Calendar1, User, FileBadge, Briefcase } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
+import { Toaster } from 'react-hot-toast';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -85,6 +86,32 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
+            {/* Toast notifications */}
+            <Toaster 
+                position="top-right"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        background: '#363636',
+                        color: '#fff',
+                    },
+                    success: {
+                        duration: 3000,
+                        style: {
+                            background: '#22c55e', // Green background for success
+                            color: '#fff',
+                        },
+                    },
+                    error: {
+                        duration: 4000,
+                        style: {
+                            background: '#ef4444', // Red background for errors
+                            color: '#fff',
+                        },
+                    },
+                }}
+            />
+            
             {/* Sidebar for Desktop */}
             {isDesktop && (
                 <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />

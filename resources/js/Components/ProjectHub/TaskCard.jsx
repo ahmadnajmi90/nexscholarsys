@@ -1,0 +1,227 @@
+import React, { useState, useMemo } from 'react';
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Calendar, MessageSquare, Paperclip, Clock, Trash2 } from 'lucide-react';
+import { format, isToday, isTomorrow, isPast, parseISO } from 'date-fns';
+
+const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
+    const [showDeleteButton, setShowDeleteButton] = useState(false);
+    
+    // Set up drag-and-drop functionality with dnd-kit
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ 
+        id: `task-${task.id}`,
+        data: { 
+            type: 'Task', 
+            task 
+        }
+    });
+
+    const style = {
+        transition,
+        transform: CSS.Transform.toString(transform),
+    };
+
+    // Function to get initials from a name
+    const getInitials = (name) => {
+        return name
+            .split(' ')
+            .map(part => part[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+    };
+
+    // Enhanced date formatting using date-fns
+    const formattedDueDate = useMemo(() => {
+        if (!task.due_date) return null;
+
+        try {
+            const date = new Date(task.due_date);
+            if (isNaN(date)) return null;
+            
+            const overdue = isPast(date) && !isToday(date);
+            
+            let dateString;
+            if (isToday(date)) {
+                dateString = `Today at ${format(date, 'p')}`; // e.g., "Today at 2:30 PM"
+            } else if (isTomorrow(date)) {
+                dateString = `Tomorrow at ${format(date, 'p')}`;
+            } else if (overdue) {
+                // For overdue tasks, show full date with time
+                dateString = format(date, 'MMM d, p');
+            } else {
+                // For future dates, show month and day with time
+                dateString = format(date, 'MMM d, p');
+            }
+            
+            return {
+                text: dateString,
+                isOverdue: overdue
+            };
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return null;
+        }
+    }, [task.due_date]);
+    
+    // Handle delete button click
+    const handleDeleteClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Stop the event from propagating to the sortable handler
+        if (onDelete) {
+            onDelete(task);
+        }
+    };
+    
+    // Handle card click to open details modal
+    const handleCardClick = (e) => {
+        // Prevent click from triggering drag events
+        if (onClick && !e.target.closest('button')) {
+            e.preventDefault();
+            e.stopPropagation();
+            onClick(task);
+        }
+    };
+    
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={`
+                relative bg-white rounded-md shadow-sm border border-gray-200 p-3 mb-2 cursor-pointer
+                hover:shadow-md transition-all duration-200
+                ${isRecentlyUpdated ? 'ring-2 ring-indigo-500 ring-opacity-50' : ''}
+            `}
+            onMouseEnter={() => setShowDeleteButton(true)}
+            onMouseLeave={() => setShowDeleteButton(false)}
+            onClick={handleCardClick}
+        >
+            {/* Delete Button (visible on hover) */}
+            {showDeleteButton && onDelete && (
+                <button
+                    onClick={handleDeleteClick}
+                    className="absolute top-1 right-1 p-1 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
+                    title="Delete task"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                </button>
+            )}
+            
+            {/* Labels/Tags - render if available */}
+            {task.labels && task.labels.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                    {task.labels.map((label, index) => (
+                        <span 
+                            key={index} 
+                            className={`
+                                text-xs px-2 py-0.5 rounded-full
+                                ${label.color || 'bg-gray-200 text-gray-800'}
+                            `}
+                        >
+                            {label.name}
+                        </span>
+                    ))}
+                </div>
+            )}
+            
+            {/* Task Title */}
+            <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 pr-5">{task.title}</h3>
+            
+            {/* Task Description - truncated */}
+            {task.description && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {task.description}
+                </p>
+            )}
+            
+            {/* Priority Badge */}
+            {task.priority && (
+                <div className="mb-2">
+                    <span className={`
+                        text-xs px-2 py-1 rounded-full font-medium
+                        ${task.priority === 'Low' ? 'bg-blue-100 text-blue-800' : ''}
+                        ${task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' : ''}
+                        ${task.priority === 'High' ? 'bg-orange-100 text-orange-800' : ''}
+                        ${task.priority === 'Urgent' ? 'bg-red-100 text-red-800' : ''}
+                    `}>
+                        {task.priority}
+                    </span>
+                </div>
+            )}
+            
+            {/* Task Metadata */}
+            <div className="flex items-center justify-between mt-2">
+                {/* Left side - Meta information */}
+                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    {/* Due date indicator with enhanced formatting */}
+                    {formattedDueDate && (
+                        <div className={`flex items-center ${formattedDueDate.isOverdue ? 'text-red-600 font-medium' : ''}`}>
+                            <Calendar className={`w-3.5 h-3.5 mr-1 ${formattedDueDate.isOverdue ? 'text-red-600' : ''}`} />
+                            <span>{formattedDueDate.text}</span>
+                        </div>
+                    )}
+                    
+                    {/* Comments counter */}
+                    {task.comments_count > 0 && (
+                        <div className="flex items-center">
+                            <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                            <span>{task.comments_count}</span>
+                        </div>
+                    )}
+                    
+                    {/* Attachments counter */}
+                    {task.attachments && task.attachments.length > 0 && (
+                        <div className="flex items-center">
+                            <Paperclip className="w-3.5 h-3.5 mr-1" />
+                            <span>{task.attachments.length}</span>
+                        </div>
+                    )}
+                </div>
+                
+                {/* Right side - Assignees */}
+                {task.assignees && task.assignees.length > 0 && (
+                    <div className="flex -space-x-2">
+                        {task.assignees.slice(0, 3).map((assignee, index) => (
+                            <div 
+                                key={index} 
+                                className="w-6 h-6 rounded-full ring-2 ring-white overflow-hidden bg-gray-200 flex items-center justify-center"
+                                title={assignee.name || 'Unnamed user'}
+                            >
+                                {assignee.avatar_url ? (
+                                    <img 
+                                        src={assignee.avatar_url} 
+                                        alt={assignee.name} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-xs font-medium text-gray-600">
+                                        {assignee.name ? getInitials(assignee.name) : '??'}
+                                    </span>
+                                )}
+                            </div>
+                        ))}
+                        
+                        {/* If more than 3 assignees, show count */}
+                        {task.assignees.length > 3 && (
+                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs ring-2 ring-white text-gray-500">
+                                +{task.assignees.length - 3}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default TaskCard; 

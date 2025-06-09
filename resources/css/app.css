@@ -1,3 +1,65 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Frappe Gantt Styles */
+.gantt .bar-wrapper:hover .bar {
+    fill-opacity: 0.8;
+}
+
+.gantt .grid-header {
+    fill: #f9fafb;
+    stroke: #e5e7eb;
+}
+
+.gantt .grid-row {
+    fill: #ffffff;
+}
+
+.gantt .grid-row:nth-child(even) {
+    fill: #f9fafb;
+}
+
+.gantt .row-line {
+    stroke: #e5e7eb;
+}
+
+.gantt .tick {
+    stroke: #e5e7eb;
+}
+
+.gantt .tick.thick {
+    stroke: #d1d5db;
+}
+
+.gantt .today-highlight {
+    fill: rgba(37, 99, 235, 0.1);
+}
+
+.gantt .arrow {
+    fill: #9ca3af;
+}
+
+.gantt-tooltip {
+    position: absolute;
+    max-width: 300px;
+    min-width: 200px;
+    z-index: 999;
+}
+
+/* Priority-based task colors */
+.gantt .bar-wrapper[data-custom-class="high"] .bar {
+    fill: #ef4444;
+}
+
+.gantt .bar-wrapper[data-custom-class="medium"] .bar {
+    fill: #f59e0b;
+}
+
+.gantt .bar-wrapper[data-custom-class="low"] .bar {
+    fill: #3b82f6;
+}
+
+.gantt .bar-wrapper[data-custom-class="default"] .bar {
+    fill: #6b7280;
+}

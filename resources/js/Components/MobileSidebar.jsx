@@ -17,6 +17,7 @@ import {
     FaRobot,
     FaUserShield
 } from 'react-icons/fa';
+import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
 const MobileSidebar = () => {
@@ -167,6 +168,18 @@ const MobileSidebar = () => {
                             >
                                 <FaBookmark className="text-gray-600" />
                                 <span className="ml-2">My Bookmarks</span>
+                            </Link>
+                            
+                            <Link 
+                                href={route('project-hub.index')} 
+                                className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
+                                    route().current('project-hub.index') || route().current().startsWith('project-hub.') 
+                                    ? 'bg-blue-50 text-blue-600' 
+                                    : ''
+                                }`}
+                            >
+                                <LayoutGrid className="w-5 h-5 text-gray-600" />
+                                <span className="ml-2">Project Hub</span>
                             </Link>
                             
                             <button

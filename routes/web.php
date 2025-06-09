@@ -45,6 +45,7 @@ use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\UserMotivationController;
 use App\Http\Controllers\AIGenerationController;
 use App\Http\Controllers\AIMatchingController;
+use App\Http\Controllers\ProjectHubController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
@@ -308,6 +309,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
     Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
     Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
+});
+
+// Project Hub Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/project-hub', [ProjectHubController::class, 'index'])->name('project-hub.index');
+    Route::post('/project-hub/workspaces', [ProjectHubController::class, 'storeWorkspace'])->name('project-hub.workspaces.store');
+    Route::get('/project-hub/workspaces/{workspace}', [ProjectHubController::class, 'showWorkspace'])->name('project-hub.workspaces.show');
+    Route::get('/project-hub/boards/{board}', [ProjectHubController::class, 'showBoard'])->name('project-hub.boards.show');
 });
 
 require __DIR__.'/auth.php';
