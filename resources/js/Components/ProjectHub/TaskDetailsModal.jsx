@@ -386,28 +386,58 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
 
                                     <div className="space-y-4 max-h-60 overflow-y-auto mb-4">
                                         {task.comments && task.comments.length > 0 ? (
-                                            task.comments.map((comment) => (
-                                                <div key={comment.id} className="flex space-x-3">
-                                                    <div className="flex-shrink-0">
-                                                        <img
-                                                            className="h-8 w-8 rounded-full"
-                                                            src={comment.user.avatar_url}
-                                                            alt={comment.user.name}
-                                                        />
+                                            task.comments.map((comment) => {
+                                                // Helper function to get the correct avatar URL
+                                                const getAvatarUrl = () => {
+                                                    // Check for academician profile picture
+                                                    if (comment.user.academician?.profile_picture) {
+                                                        return `/storage/${comment.user.academician.profile_picture}`;
+                                                    }
+                                                    // Check for postgraduate profile picture
+                                                    if (comment.user.postgraduate?.profile_picture) {
+                                                        return `/storage/${comment.user.postgraduate.profile_picture}`;
+                                                    }
+                                                    // Check for undergraduate profile picture
+                                                    if (comment.user.undergraduate?.profile_picture) {
+                                                        return `/storage/${comment.user.undergraduate.profile_picture}`;
+                                                    }
+                                                    // Fallback to default avatar
+                                                    return comment.user.avatar_url || '/storage/images/default-avatar.jpg';
+                                                };
+
+                                                // Get user's full name
+                                                const getFullName = () => {
+                                                    return comment.user.academician?.full_name || 
+                                                           comment.user.postgraduate?.full_name || 
+                                                           comment.user.undergraduate?.full_name || 
+                                                           comment.user.name;
+                                                };
+                                                
+                                                return (
+                                                    <div key={comment.id} className="flex space-x-3">
+                                                        <div className="flex-shrink-0">
+                                                            <img
+                                                                className="h-8 w-8 rounded-full object-cover"
+                                                                src={getAvatarUrl()}
+                                                                alt={getFullName()}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-900">
+                                                                    {getFullName()}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-1 text-sm text-gray-700">
+                                                                <p>{comment.content}</p>
+                                                            </div>
+                                                            <div className="mt-1 text-xs text-gray-500">
+                                                                <p>{new Date(comment.created_at).toLocaleString()}</p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <div className="text-sm">
-                                                            <span className="font-medium text-gray-900">{comment.user.name}</span>
-                                                        </div>
-                                                        <div className="mt-1 text-sm text-gray-700">
-                                                            <p>{comment.content}</p>
-                                                        </div>
-                                                        <div className="mt-1 text-xs text-gray-500">
-                                                            <p>{new Date(comment.created_at).toLocaleString()}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))
+                                                );
+                                            })
                                         ) : (
                                             <p className="text-sm text-gray-500 italic">No comments yet</p>
                                         )}

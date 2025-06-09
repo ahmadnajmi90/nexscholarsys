@@ -103,7 +103,9 @@ class ProjectHubController extends Controller
                 $query->orderBy('order');
             },
             'lists.tasks.assignees',
-            'lists.tasks.comments.user',
+            'lists.tasks.comments.user.academician',
+            'lists.tasks.comments.user.postgraduate',
+            'lists.tasks.comments.user.undergraduate',
             'lists.tasks.creator',
             'lists.tasks.attachments'
         ]);
@@ -144,6 +146,8 @@ class ProjectHubController extends Controller
                                 'avatar_url' => $task->creator->profile_photo_url,
                             ] : null,
                             'comments' => $task->comments->map(function($comment) {
+                                $profile = $comment->user->academician ?? $comment->user->postgraduate ?? $comment->user->undergraduate ?? null;
+                                
                                 return [
                                     'id' => $comment->id,
                                     'content' => $comment->content,
@@ -152,6 +156,18 @@ class ProjectHubController extends Controller
                                         'id' => $comment->user->id,
                                         'name' => $comment->user->name,
                                         'avatar_url' => $comment->user->profile_photo_url,
+                                        'academician' => $comment->user->academician ? [
+                                            'full_name' => $comment->user->academician->full_name,
+                                            'profile_picture' => $comment->user->academician->profile_picture,
+                                        ] : null,
+                                        'postgraduate' => $comment->user->postgraduate ? [
+                                            'full_name' => $comment->user->postgraduate->full_name,
+                                            'profile_picture' => $comment->user->postgraduate->profile_picture,
+                                        ] : null,
+                                        'undergraduate' => $comment->user->undergraduate ? [
+                                            'full_name' => $comment->user->undergraduate->full_name,
+                                            'profile_picture' => $comment->user->undergraduate->profile_picture,
+                                        ] : null,
                                     ]
                                 ];
                             }),
