@@ -40,6 +40,7 @@ export default function Create() {
     amount: "",
     application_url: "",
     project_status: "published",
+    create_scholarlab_project: false,
   });
 
   const [selectedUniversity, setSelectedUniversity] = useState(data.university);
@@ -656,6 +657,25 @@ export default function Create() {
               {errors.application_url && <p className="text-red-500 text-xs mt-1">{errors.application_url}</p>}
             </div>
             )}
+          </div>
+
+          {/* ScholarLab Project Creation Option */}
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="create_scholarlab_project"
+                checked={data.create_scholarlab_project}
+                onChange={(e) => setData("create_scholarlab_project", e.target.checked)}
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="create_scholarlab_project" className="ml-2 block text-sm text-gray-900">
+                Also create a collaborative project for this publication in ScholarLab
+              </label>
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              This will create a project in ScholarLab where you can collaborate with others on tasks related to this research.
+            </p>
           </div>
 
           <div className="flex space-x-4">

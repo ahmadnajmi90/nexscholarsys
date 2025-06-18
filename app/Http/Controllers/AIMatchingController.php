@@ -65,7 +65,7 @@ class AIMatchingController extends Controller
         $faculties = FacultyList::select('id', 'name', 'university_id')->get();
         
         // Get users for email lookup
-        $users = User::select('id', 'unique_id', 'email')->get();
+        $users = User::with(['sentRequests', 'receivedRequests'])->get();
         
         // Get skills for profile display
         $skills = Skill::all();
@@ -336,7 +336,7 @@ class AIMatchingController extends Controller
     protected function searchForCollaborators($searchQuery, $threshold, $page, $perPage, $academicianId = null)
     {
         // Get the current user
-        $user = auth()->user();
+        $user = Auth::user();
         $usePersonalization = false;
         
         // If an academician ID is provided and valid, use it for personalized matching

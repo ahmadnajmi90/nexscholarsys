@@ -16,8 +16,8 @@ class BoardListPolicy
      */
     public function create(User $user, Board $board): bool
     {
-        // User can create a list if they are a member of the parent board's workspace
-        return $board->workspace->members->contains($user);
+        // User can create a list if they can view the board
+        return $user->can('view', $board);
     }
 
     /**
@@ -25,8 +25,8 @@ class BoardListPolicy
      */
     public function update(User $user, BoardList $boardList): bool
     {
-        // User can update a list if they are a member of the parent board's workspace
-        return $boardList->board->workspace->members->contains($user);
+        // User can update a list if they can view the parent board
+        return $user->can('view', $boardList->board);
     }
 
     /**
@@ -34,7 +34,7 @@ class BoardListPolicy
      */
     public function delete(User $user, BoardList $boardList): bool
     {
-        // User can delete a list if they are a member of the parent board's workspace
-        return $boardList->board->workspace->members->contains($user);
+        // User can delete a list if they can view the parent board
+        return $user->can('view', $boardList->board);
     }
 } 

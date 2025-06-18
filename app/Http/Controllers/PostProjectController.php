@@ -8,16 +8,18 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
-use Silber\Bouncer\BouncerFacade;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 use Illuminate\Support\Facades\DB;
 use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
+use App\Http\Requests\StorePostProjectRequest;
 
 class PostProjectController extends Controller
 {
     public function index(Request $request)
     {
-        if(Auth::user()->cannot('post-projects'))
+        $user = Auth::user();
+        if(!$user || !Bouncer::allows('post-projects'))
         {
             abort(403, 'Unauthorized access.');
         }
@@ -25,11 +27,11 @@ class PostProjectController extends Controller
             $search = $request->input('search');
 
             $postProjects = PostProject::query()
-            ->where('author_id', Auth::user()->unique_id) // Ensure only user's posts
-            ->when($search, function ($query, $search) {
+            ->where('author_id', $user->unique_id) // Ensure only user's posts
+            ->when($search, function ($query, $search) use ($user) {
                 $query->where('title', 'like', "%{$search}%")
                       ->orWhere('description', 'like', "%{$search}%")
-                      ->where('author_id', Auth::user()->unique_id);
+                      ->where('author_id', $user->unique_id);
             })
             ->paginate(10); // Paginate results with 10 items per page
 
@@ -42,7 +44,8 @@ class PostProjectController extends Controller
 
     public function create()
     {
-        if(Auth::user()->cannot('post-projects'))
+        $user = Auth::user();
+        if(!$user || !Bouncer::allows('post-projects'))
         {
             abort(403, 'Unauthorized access.');
         }
@@ -65,135 +68,136 @@ class PostProjectController extends Controller
             }
 
             return Inertia::render('PostProjects/Create', [
-                'auth' => Auth::user(),
+                'auth' => $user,
                 'researchOptions' => $researchOptions,
                 'universities' => UniversityList::all(),
             ]);
         }   
     }
 
-    public function store(Request $request)
+    public function store(StorePostProjectRequest $request)
     {
-        if(Auth::user()->cannot('post-projects'))
-        {
-            abort(403, 'Unauthorized access.');
-        }
-        else{
-            try {
-                logger('Store method reached');
-                $author = Auth::user();
-                $request->merge(['author_id' => $author->unique_id]);
-                if ($request->has('tags') && is_array($request->tags)) {
-                    logger('Tags: Im here ');
-                    $request->merge([
-                        'tags' => json_encode($request->tags),
-                    ]);
+        try {
+            logger('Store method reached');
+            
+            // Get validated data
+            $validated = $request->validated();
+            
+            // Ensure author_id is set
+            if (!isset($validated['author_id']) || empty($validated['author_id'])) {
+                $user = Auth::user();
+                if (!$user) {
+                    abort(403, 'User not authenticated');
                 }
-
-                $validated = $request->validate([
-                    'title' => 'required|string|max:255',
-                    'description' => 'required|string',
-                    'project_theme' => 'required|string|max:255',
-                    'purpose' => 'required|max:255',
-                    'start_date' => 'nullable|date',
-                    'end_date' => 'nullable|date',
-                    'application_deadline' => 'nullable|date',
-                    'duration' => 'nullable|string|max:255',
-                    'sponsored_by' => 'nullable|string|max:255',
-                    'category' => 'nullable|string|max:255',
-                    'field_of_research' => 'nullable',
-                    'supervisor_category' => 'nullable|string|max:255',
-                    'supervisor_name' => 'nullable|string|max:255',
-                    'university' => 'nullable|exists:university_list,id',
-                    'email' => 'nullable|email|max:255',
-                    'origin_country' => 'nullable|string|max:255',
-                    'student_nationality' => 'nullable|string|max:255',
-                    'student_level' => 'nullable',
-                    'student_mode_study' => 'nullable',
-                    'appointment_type' => 'nullable|string|max:255',
-                    'purpose_of_collaboration' => 'nullable|string|max:255',
-                    'image' => 'nullable|image|max:2048',
-                    'attachment' => 'nullable|file|max:5120',
-                    'amount' => 'nullable|numeric|min:0',
-                    'application_url' => 'nullable|url|max:255',
-                    'project_status' => 'nullable',
-                ]);
-
-                if ($request->hasFile('image')) {
-                    logger('Image: Im here ');
-                    
-                    // Define the destination path directly in the public directory
-                    $destinationPath = public_path('storage/project_images');
-                    
-                    // Ensure the directory exists
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0755, true);
-                    }
-                    
-                    // Store the uploaded file in the public/storage/event_images folder
-                    $image = $request->file('image');
-                    $imageName = time() . '_' . $image->getClientOriginalName();
-                    $image->move($destinationPath, $imageName);
-                    
-                    // Save the path relative to public/storage
-                    $validated['image'] = 'project_images/' . $imageName;
-                    logger('Image: Im here ', ['path' => $validated['image']]);
+                $validated['author_id'] = $user->unique_id;
+                logger('Setting author_id explicitly', ['author_id' => $validated['author_id']]);
+            }
+            
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                logger('Image: Im here ');
+                
+                // Define the destination path directly in the public directory
+                $destinationPath = public_path('storage/project_images');
+                
+                // Ensure the directory exists
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
                 }
                 
-                // Handle attachment upload
-                if ($request->hasFile('attachment')) {
-                    logger('Attachment: Im here ');
-                    
-                    // Define the destination path directly in the public directory
-                    $destinationPath = public_path('storage/project_attachments');
-                    
-                    // Ensure the directory exists
-                    if (!file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0755, true);
-                    }
-                    
-                    // Store the uploaded file in the public/storage/event_images folder
-                    $attachment = $request->file('attachment');
-                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
-                    $attachment->move($destinationPath, $attachmentName);
-                    
-                    // Save the path relative to public/storage
-                    $validated['attachment'] = 'project_attachments/' . $attachmentName;
-                    logger('Attachment: Im here ', ['path' => $validated['attachment']]);
-                }
-
-                if (isset($validated['purpose']) && is_string($validated['purpose'])) {
-                    $validated['purpose'] = json_decode($validated['purpose'], true);
-                    logger()->info('Purpose:', $validated['purpose']);
-                }
-
-                if (isset($validated['student_level']) && is_string($validated['student_level'])) {
-                    $validated['student_level'] = json_decode($validated['student_level'], true);
-                    logger()->info('Student Level:', $validated['student_level']);
-                }
-
-                if (isset($validated['student_mode_study']) && is_string($validated['student_mode_study'])) {
-                    $validated['student_mode_study'] = json_decode($validated['student_mode_study'], true);
-                    logger()->info('Student Mode Study:', $validated['student_mode_study']);
-                }
-
-                if (isset($validated['field_of_research']) && is_string($validated['field_of_research'])) {
-                    $validated['field_of_research'] = json_decode($validated['field_of_research'], true);
-                    logger()->info('Field of Research:', $validated['field_of_research']);
-                }
-
-                // Log validated data
-                logger('Validated Data:', $validated);
-
-                auth()->user()->postProjects()->create($validated);
-
-                return redirect()->route('post-projects.index')->with('success', 'Project project successfully.');
-        
-            } catch (ValidationException $e) {
-                logger('Validation Errors:', $e->errors());
-                // Return back with validation errors
-                return redirect()->back()->withErrors($e->errors())->withInput();
+                // Store the uploaded file in the public/storage/event_images folder
+                $image = $request->file('image');
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $image->move($destinationPath, $imageName);
+                
+                // Save the path relative to public/storage
+                $validated['image'] = 'project_images/' . $imageName;
+                logger('Image: Im here ', ['path' => $validated['image']]);
             }
+            
+            // Handle attachment upload
+            if ($request->hasFile('attachment')) {
+                logger('Attachment: Im here ');
+                
+                // Define the destination path directly in the public directory
+                $destinationPath = public_path('storage/project_attachments');
+                
+                // Ensure the directory exists
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                
+                // Store the uploaded file in the public/storage/event_images folder
+                $attachment = $request->file('attachment');
+                $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                $attachment->move($destinationPath, $attachmentName);
+                
+                // Save the path relative to public/storage
+                $validated['attachment'] = 'project_attachments/' . $attachmentName;
+                logger('Attachment: Im here ', ['path' => $validated['attachment']]);
+            }
+
+            // Process JSON fields
+            foreach (['purpose', 'student_level', 'student_mode_study', 'field_of_research'] as $field) {
+                if (isset($validated[$field]) && is_string($validated[$field])) {
+                    $validated[$field] = json_decode($validated[$field], true);
+                    logger()->info(ucfirst($field) . ':', $validated[$field] ?? []);
+                }
+            }
+
+            // Log validated data
+            logger('Validated Data:', $validated);
+
+            // Create the post project with explicit author_id
+            $postProject = new PostProject($validated);
+            $postProject->author_id = $validated['author_id'];
+            $postProject->save();
+
+            // Check if the user opted-in to create a ScholarLab project
+            if ($request->boolean('create_scholarlab_project')) {
+                logger('Creating ScholarLab project for post project ID: ' . $postProject->id);
+                
+                // Create the linked ScholarLab Project
+                $project = \App\Models\Project::create([
+                    'name' => $postProject->title, // Use the post's title as the project name
+                    'description' => 'Research project based on: ' . $postProject->title,
+                    'owner_id' => Auth::id(),
+                    'post_project_id' => $postProject->id, // Link to the post we just created
+                ]);
+                
+                // Create a default board for the project
+                $board = new \App\Models\Board([
+                    'name' => 'Main Board',
+                ]);
+                
+                // Save the board with the polymorphic relationship
+                $project->boards()->save($board);
+                
+                // Create some default lists for the board
+                $board->lists()->create([
+                    'name' => 'To Do',
+                    'order' => 1,
+                ]);
+                
+                $board->lists()->create([
+                    'name' => 'In Progress',
+                    'order' => 2,
+                ]);
+                
+                $board->lists()->create([
+                    'name' => 'Done',
+                    'order' => 3,
+                ]);
+                
+                logger('ScholarLab project created successfully with ID: ' . $project->id);
+            }
+
+            return redirect()->route('post-projects.index')->with('success', 'Project posted successfully.');
+    
+        } catch (ValidationException $e) {
+            logger('Validation Errors:', $e->errors());
+            // Return back with validation errors
+            return redirect()->back()->withErrors($e->errors())->withInput();
         }
     }
 
@@ -216,15 +220,16 @@ class PostProjectController extends Controller
             }
         }
 
-        if(Auth::user()->cannot('post-projects'))
+        $user = Auth::user();
+        if(!$user || !Bouncer::allows('post-projects'))
         {
             abort(403, 'Unauthorized access.');
         }
         else{
-            $postProject = auth()->user()->postProjects()->findOrFail($id);
+            $postProject = PostProject::where('author_id', $user->unique_id)->findOrFail($id);
             return Inertia::render('PostProjects/Edit', [
                 'postProject' => $postProject,
-                'auth' => Auth::user(),
+                'auth' => $user,
                 'researchOptions' => $researchOptions,
                 'universities' => UniversityList::all(),
             ]);
@@ -233,15 +238,15 @@ class PostProjectController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(Auth::user()->cannot('post-projects'))
+        $user = Auth::user();
+        if(!$user || !Bouncer::allows('post-projects'))
         {
             abort(403, 'Unauthorized access.');
         }
         else{
             try{
-                $user = Auth::user();
                 logger($request->all());
-                $postProject = auth()->user()->postProjects()->findOrFail($id);
+                $postProject = PostProject::where('author_id', $user->unique_id)->findOrFail($id);
                 $request->merge([
                     'is_featured' => filter_var($request->input('is_featured'), FILTER_VALIDATE_BOOLEAN),
                 ]);
@@ -407,12 +412,13 @@ class PostProjectController extends Controller
 
     public function destroy($id)
     {
-        if(Auth::user()->cannot('post-projects'))
+        $user = Auth::user();
+        if(!$user || !Bouncer::allows('post-projects'))
         {
             abort(403, 'Unauthorized access.');
         }
         else{
-            $postProject = auth()->user()->postProjects()->findOrFail($id);
+            $postProject = PostProject::where('author_id', $user->unique_id)->findOrFail($id);
             $postProject->delete();
 
             return redirect()->route('post-projects.index')->with('success', 'Post projects deleted successfully.');

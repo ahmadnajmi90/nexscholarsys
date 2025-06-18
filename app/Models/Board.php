@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Board extends Model
 {
@@ -17,16 +18,17 @@ class Board extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'workspace_id',
+        'boardable_id',
+        'boardable_type',
         'name',
     ];
 
     /**
-     * Get the workspace that owns the board.
+     * Get the parent model (workspace or project) that owns the board.
      */
-    public function workspace(): BelongsTo
+    public function boardable(): MorphTo
     {
-        return $this->belongsTo(Workspace::class);
+        return $this->morphTo();
     }
 
     /**

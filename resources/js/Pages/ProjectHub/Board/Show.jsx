@@ -12,7 +12,7 @@ import TaskDetailsModal from '@/Components/ProjectHub/TaskDetailsModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal } from 'lucide-react';
 
-export default function Show({ initialBoardData, workspace }) {
+export default function Show({ initialBoardData, parentEntity, parentType }) {
     // Initialize board state from props
     const [boardState, setBoardState] = useState(initialBoardData);
     // Track the active dragging task
@@ -35,6 +35,37 @@ export default function Show({ initialBoardData, workspace }) {
     const form = useForm({
         name: '',
     });
+
+    // Helper function to determine the correct back link details
+    const getBackLinkDetails = () => {
+        // Check if we have the parent data in the board state
+        if (!boardState || !boardState.parent) {
+            return { href: route('project-hub.index'), text: 'ScholarLab' };
+        }
+
+        // Use the parent information from the board state
+        const parent = boardState.parent;
+        const parentType = parent.type; // 'Workspace' or 'Project'
+
+        if (!parent.id) {
+            return { href: route('project-hub.index'), text: 'ScholarLab' };
+        }
+
+        if (parentType === 'Workspace') {
+            return { 
+                href: route('project-hub.workspaces.show', parent.id),
+                text: parent.name || 'Workspace'
+            };
+        } else if (parentType === 'Project') {
+            return { 
+                href: route('project-hub.projects.show', parent.id),
+                text: parent.name || 'Project'
+            };
+        }
+
+        // Default fallback
+        return { href: route('project-hub.index'), text: 'ScholarLab' };
+    };
 
     // Load board data into state when props change
     useEffect(() => {
@@ -424,10 +455,19 @@ export default function Show({ initialBoardData, workspace }) {
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 py-6">
             {/* Board header */}
             <div className="mb-6">
-                <Link href={route('project-hub.workspaces.show', workspace.data.id)} className="flex items-center text-gray-500 hover:text-gray-700 mb-2">
+                {/* Use the helper function to get the correct back link */}
+                {(() => {
+                    const backLink = getBackLinkDetails();
+                    return (
+                        <Link 
+                            href={backLink.href}
+                            className="flex items-center text-gray-500 hover:text-gray-700 mb-2"
+                        >
                     <ChevronLeft className="w-4 h-4 mr-1" />
-                    <span className="text-sm">Back to {workspace.data.name}</span>
+                            <span className="text-sm">Back to {backLink.text}</span>
                 </Link>
+                    );
+                })()}
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-900">{boardState.name}</h1>
                     
@@ -605,7 +645,7 @@ export default function Show({ initialBoardData, workspace }) {
                     task={viewingTask}
                     show={!!viewingTask}
                     onClose={() => setViewingTask(null)}
-                    workspaceMembers={boardState.workspace.members}
+                    workspaceMembers={boardState.parent.members}
                 />
             )}
         </div>

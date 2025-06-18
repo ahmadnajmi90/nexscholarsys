@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     FaTachometerAlt,
     FaUsers,
@@ -22,6 +22,7 @@ import useRoles from '@/Hooks/useRoles';
 
 const MobileSidebar = () => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
+    const { pendingRequestCount } = usePage().props;
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState({
         networking: false,
@@ -179,7 +180,7 @@ const MobileSidebar = () => {
                                 }`}
                             >
                                 <LayoutGrid className="w-5 h-5 text-gray-600" />
-                                <span className="ml-2">Project Hub</span>
+                                <span className="ml-2">Scholar Lab</span>
                             </Link>
                             
                             <button
@@ -192,6 +193,14 @@ const MobileSidebar = () => {
                             </button>
                             {menuOpen.networking && (
                                 <div className="ml-6">
+                                    <Link href={route('connections.index')} className="flex items-center justify-between py-2 hover:bg-gray-100 rounded">
+                                        <span>My Connections</span>
+                                        {pendingRequestCount > 0 && (
+                                            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                                {pendingRequestCount}
+                                            </span>
+                                        )}
+                                    </Link>
                                     <Link href="/postgraduates" className="block py-2 hover:bg-gray-100 rounded">
                                         Postgraduate
                                     </Link>

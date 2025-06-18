@@ -1,5 +1,5 @@
 import React from "react";
-import ProfileCard from '@/Components/ProfileCard';
+import ProfileCard from '@/Pages/Networking/partials/StudentProfileCard';
 import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
 import { Link } from '@inertiajs/react';

@@ -7,24 +7,117 @@ use Inertia\Inertia;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
 use App\Models\Board;
+use App\Models\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
 
 class ProjectHubController extends Controller
 {
     /**
      * Display the Project Hub index page.
      */
+    // public function index(Request $request)
+    // {
+    //     // Load the academician relationship for the authenticated user
+    //     $request->user()->load('academician');
+        
+    //     // Fetch all workspaces for the authenticated user with members relationship
+    //     $workspaces = $request->user()->workspaces()
+    //         ->with([
+    //             'owner',
+    //             'owner.academician',
+    //             'owner.postgraduate',
+    //             'owner.undergraduate',
+    //             'members',
+    //             'members.academician',
+    //             'members.postgraduate',
+    //             'members.undergraduate'
+    //         ])
+    //         ->get();
+        
+    //     // Fetch projects for the authenticated user
+    //     $projects = \App\Models\Project::where('owner_id', $request->user()->id)
+    //         ->with([
+    //             'owner',
+    //             'owner.academician',
+    //             'owner.postgraduate',
+    //             'owner.undergraduate',
+    //             'postProject',
+    //             'boards',
+    //             'members.academician',
+    //             'members.postgraduate',
+    //             'members.undergraduate'
+    //         ])
+    //         ->get();
+        
+    //     // Fetch post projects that can be linked (not already linked to a ScholarLab project)
+    //     $linkableProjects = \App\Models\PostProject::where('author_id', $request->user()->id)
+    //         ->whereDoesntHave('scholarLabProject')
+    //         ->get();
+            
+    //     // Get the authenticated user's accepted connections
+    //     // First get the friends with their IDs
+    //     $friendIds = $request->user()->getFriends()->pluck('id');
+        
+    //     // Then fetch the users with eager loaded relationships
+    //     $connections = \App\Models\User::whereIn('id', $friendIds)
+    //         ->with(['academician', 'postgraduate', 'undergraduate'])
+    //         ->get();
+        
+    //     return Inertia::render('ProjectHub/Index', [
+    //         'workspaces' => $workspaces, // Pass raw workspaces collection to match projects
+    //         'projects' => $projects,
+    //         'linkableProjects' => $linkableProjects,
+    //         'connections' => $connections, // Pass connections to the frontend
+    //     ]);
+    // }
+
     public function index(Request $request)
     {
-        // Fetch all workspaces for the authenticated user
-        $workspaces = $request->user()->workspaces()->with('owner')->get();
+        $user = $request->user()->load('academician'); // Load auth user's profile
+
+        // Fetch WORKSPACES with all necessary nested data
+        $workspaces = $user->workspaces()
+            ->with([
+                'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'members.academician', 'members.postgraduate', 'members.undergraduate'
+            ])
+            ->latest()
+            ->get();
+
+        // Fetch PROJECTS with all necessary nested data
+        $projects = \App\Models\Project::where('owner_id', $user->id)
+            ->with([
+                'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'postProject',
+                'boards',
+                'members.academician', 'members.postgraduate', 'members.undergraduate'
+            ])
+            ->latest()
+            ->get();
+
+        // Fetch other necessary data
+        $linkableProjects = \App\Models\PostProject::where('author_id', $user->unique_id)
+            ->whereDoesntHave('scholarLabProject')
+            ->get();
+
+        // Get the authenticated user's accepted connections
+        // First get the friends with their IDs
+        $friendIds = $user->getFriends()->pluck('id');
         
-        // Transform them with the resource to ensure consistent format
-        $workspacesResource = WorkspaceResource::collection($workspaces);
-        
+        // Then fetch the users with eager loaded relationships
+        $connections = \App\Models\User::whereIn('id', $friendIds)
+            ->with(['academician', 'postgraduate', 'undergraduate'])
+            ->get();
+
+        // RETURN THE RAW COLLECTIONS. NO API RESOURCES.
         return Inertia::render('ProjectHub/Index', [
-            'workspaces' => $workspacesResource,
+            'workspaces' => $workspaces,
+            'projects' => $projects,
+            'linkableProjects' => $linkableProjects,
+            'connections' => $connections,
         ]);
     }
     
@@ -80,8 +173,38 @@ class ProjectHubController extends Controller
             $query->orderBy('created_at');
         }]);
         
+        // Get the auth user's accepted connections to populate the invite list
+        $userId = Auth::id();
+        
+        // Get connections where this user is the requester and status is accepted
+        $requestedConnections = \App\Models\Connection::where('requester_id', $userId)
+            ->where('status', 'accepted')
+            ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+            ->get()
+            ->pluck('recipient');
+            
+        // Get connections where this user is the recipient and status is accepted
+        $receivedConnections = \App\Models\Connection::where('recipient_id', $userId)
+            ->where('status', 'accepted')
+            ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+            ->get()
+            ->pluck('requester');
+            
+        // Merge both collections
+        $connections = $requestedConnections->merge($receivedConnections);
+        
+        // Get the IDs of users who are already members of this workspace
+        $memberIds = $workspace->members()->pluck('users.id');
+        
+        // Filter out users who are already members of the workspace
+        $connections = $connections->whereNotIn('id', $memberIds);
+        
+        // Note: We don't need to explicitly load profiles here since they are already
+        // eager-loaded in the with() clauses above for both requestedConnections and receivedConnections
+        
         return Inertia::render('ProjectHub/Workspace/Show', [
             'workspace' => new WorkspaceResource($workspace),
+            'connections' => $connections, // Pass filtered connections to the frontend
         ]);
     }
     
@@ -90,12 +213,15 @@ class ProjectHubController extends Controller
      */
     public function showBoard(Board $board)
     {
-        // Authorize that the user can view this board
-        $this->authorize('view', $board);
+        // Load the boardable relationship to determine what this board belongs to
+        $board->load('boardable');
         
-        // Load the board with its workspace, lists, and tasks
+        // Authorize that the user can view the boardable (project or workspace)
+        $this->authorize('view', $board->boardable);
+        
+        // Load the board with its lists and tasks
         $board->load([
-            'workspace.members',
+            'boardable',
             'lists' => function($query) {
                 $query->orderBy('order');
             },
@@ -110,14 +236,29 @@ class ProjectHubController extends Controller
             'lists.tasks.attachments'
         ]);
         
+        // Get the parent entity (workspace or project)
+        $parentEntity = $board->boardable;
+        $parentType = class_basename($parentEntity);
+        
+        // Get members based on the parent entity type
+        $members = [];
+        if ($parentType === 'Workspace') {
+            $parentEntity->load('members');
+            $members = $parentEntity->members;
+        } elseif ($parentType === 'Project') {
+            $parentEntity->load('members');
+            $members = $parentEntity->members;
+        }
+        
         // Transform the board data to a suitable format for the frontend
         $initialBoardData = [
             'id' => $board->id,
             'name' => $board->name,
-            'workspace' => [
-                'id' => $board->workspace->id,
-                'name' => $board->workspace->name,
-                'members' => $board->workspace->members->map(function($member) {
+            'parent' => [
+                'id' => $parentEntity instanceof Model ? $parentEntity->getKey() : null,
+                'name' => $parentEntity->name ?? 'Unknown',
+                'type' => $parentType,
+                'members' => $members->map(function($member) {
                     return [
                         'id' => $member->id,
                         'name' => $member->name,
@@ -192,9 +333,20 @@ class ProjectHubController extends Controller
             })
         ];
         
+        // Create a resource for the parent entity
+        $parentResource = null;
+        if ($parentType === 'Workspace') {
+            $parentResource = new WorkspaceResource($parentEntity);
+        } elseif ($parentType === 'Project') {
+            // If you have a ProjectResource, use it here
+            // $parentResource = new ProjectResource($parentEntity);
+            $parentResource = $parentEntity;
+        }
+        
         return Inertia::render('ProjectHub/Board/Show', [
             'initialBoardData' => $initialBoardData,
-            'workspace' => new WorkspaceResource($board->workspace),
+            'parentEntity' => $parentResource,
+            'parentType' => $parentType,
         ]);
     }
     
@@ -213,5 +365,115 @@ class ProjectHubController extends Controller
         }
         
         return round($bytes, 2) . ' ' . $units[$i];
+    }
+    
+    /**
+     * Store a newly created project.
+     */
+    public function storeProject(Request $request)
+    {
+        // Authorize that the user can create a project
+        $this->authorize('create', \App\Models\Project::class);
+        
+        // Validate that a valid, unlinked PostProject was selected
+        $validated = $request->validate([
+            'post_project_id' => 'required|unique:projects|exists:post_projects,id',
+        ]);
+        
+        // Find the selected publication
+        $postProject = \App\Models\PostProject::find($validated['post_project_id']);
+        
+        // Create the new ScholarLab Project
+        $project = \App\Models\Project::create([
+            // Copy the name and description from the publication
+            'name' => $postProject->title,
+            'description' => $postProject->description,
+            'owner_id' => Auth::id(),
+            'post_project_id' => $postProject->id, // Create the link
+        ]);
+        
+        // Create a default board for the project
+        $board = new \App\Models\Board([
+            'name' => 'Main Board',
+        ]);
+        
+        // Save the board with the polymorphic relationship
+        $project->boards()->save($board);
+        
+        // Create some default lists for the board
+        $board->lists()->create([
+            'name' => 'To Do',
+            'order' => 1,
+        ]);
+        
+        $board->lists()->create([
+            'name' => 'In Progress',
+            'order' => 2,
+        ]);
+        
+        $board->lists()->create([
+            'name' => 'Done',
+            'order' => 3,
+        ]);
+        
+        return redirect()->route('project-hub.projects.show', ['scholar_project' => $project->id])->with('success', 'Project created successfully.');
+    }
+    
+    /**
+     * Display a project and its boards.
+     */
+    public function showProject(\App\Models\Project $scholar_project)
+    {
+        // Authorize that the user can view this project
+        $this->authorize('view', $scholar_project);
+        
+        // Load the project's members and boards
+        $scholar_project->load([
+            'owner', 
+            'boards' => function($query) {
+                $query->orderBy('created_at');
+            },
+            'members.academician', 'members.postgraduate', 'members.undergraduate'
+        ]);
+        
+        // Get the authenticated user
+        $user = Auth::user();
+        $userId = $user->id;
+        
+        // Get connections where this user is the requester and status is accepted
+        $requestedConnections = Connection::where('requester_id', $userId)
+            ->where('status', 'accepted')
+            ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+            ->get()
+            ->pluck('recipient');
+            
+        // Get connections where this user is the recipient and status is accepted
+        $receivedConnections = Connection::where('recipient_id', $userId)
+            ->where('status', 'accepted')
+            ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+            ->get()
+            ->pluck('requester');
+            
+        // Merge both collections
+        $connections = $requestedConnections->merge($receivedConnections);
+        
+        return Inertia::render('ProjectHub/Project/Show', [
+            'project' => $scholar_project,
+            'connections' => $connections, // Pass connections to the view
+        ]);
+    }
+
+    /**
+     * Remove the specified project from storage.
+     */
+    public function destroyProject(\App\Models\Project $scholar_project)
+    {
+        // Authorize that the user can delete this project
+        $this->authorize('delete', $scholar_project);
+        
+        // Delete the project
+        $scholar_project->delete();
+        
+        return redirect()->route('project-hub.index')->with('success', 'Project deleted successfully.');
     }
 } 

@@ -42,18 +42,21 @@ class WorkspacePolicy
      */
     public function addMember(User $user, Workspace $workspace): bool
     {
-        // Check if the user has the admin role in this workspace
-        $member = $workspace->members()->where('user_id', $user->id)->first();
-        return $member && $member->pivot->role === 'admin';
+        // Only the owner can add members to the workspace
+        return $user->id === $workspace->owner_id;
     }
 
     /**
      * Determine whether the user can remove members from the workspace.
+     * 
+     * @param User $user The authenticated user
+     * @param Workspace $workspace The workspace
+     * @param User $memberToRemove The user to be removed
+     * @return bool
      */
-    public function removeMember(User $user, Workspace $workspace): bool
+    public function removeMember(User $user, Workspace $workspace, User $memberToRemove): bool
     {
-        // Check if the user has the admin role in this workspace
-        $member = $workspace->members()->where('user_id', $user->id)->first();
-        return $member && $member->pivot->role === 'admin';
+        // Only the owner can remove members, and they cannot remove themselves
+        return $user->id === $workspace->owner_id && $user->id !== $memberToRemove->id;
     }
 } 

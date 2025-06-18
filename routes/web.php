@@ -75,9 +75,6 @@ Route::bind('grant', function ($value) {
 Route::bind('event', function ($value) {
     return PostEvent::where('url', $value)->firstOrFail();
 });
-Route::bind('project', function ($value) {
-    return PostProject::where('url', $value)->firstOrFail();
-});
 Route::bind('academician', function ($value) {
     return Academician::where('url', $value)->firstOrFail();
 });
@@ -86,6 +83,11 @@ Route::bind('postgraduate', function ($value) {
 });
 Route::bind('undergraduate', function ($value) {
     return Undergraduate::where('url', $value)->firstOrFail();
+});
+
+// Add route binding for ScholarLab Project
+Route::bind('scholar_project', function ($value) {
+    return \App\Models\Project::findOrFail($value);
 });
 
 Route::get('/admin/roles', [RolePermissionController::class, 'index'])->name('roles.index');
@@ -100,7 +102,7 @@ Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 Route::get('welcome/posts/{post}', [WelcomeController::class, 'showPost'])->name('welcome.posts.show');
 Route::get('welcome/events/{event}', [WelcomeController::class, 'showEvent'])->name('welcome.events.show');
-Route::get('welcome/projects/{project}', [WelcomeController::class, 'showProject'])->name('welcome.projects.show');
+Route::get('welcome/projects/{project:url}', [WelcomeController::class, 'showProject'])->name('welcome.projects.show');
 Route::get('welcome/grants/{grant}', [WelcomeController::class, 'showGrant'])->name('welcome.grants.show');
 
 Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
@@ -137,6 +139,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/faculty-admin/export/excel', [FacultyAdminController::class, 'exportExcel'])->name('faculty-admin.export.excel');
 });
 
+// Connection Management Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/connections', [App\Http\Controllers\ConnectionController::class, 'index'])->name('connections.index');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -178,7 +184,7 @@ Route::resource('projects', ShowProjectController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::get('projects/{project}', [ShowProjectController::class, 'show'])->name('projects.show');
+Route::get('projects/{project:url}', [ShowProjectController::class, 'show'])->name('projects.show');
 Route::post('projects/{url}/toggle-like', [ShowProjectController::class, 'toggleLike'])->name('projects.toggleLike');
 Route::post('projects/{url}/share', [ShowProjectController::class, 'share'])->name('projects.share');
 
@@ -315,7 +321,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/project-hub', [ProjectHubController::class, 'index'])->name('project-hub.index');
     Route::post('/project-hub/workspaces', [ProjectHubController::class, 'storeWorkspace'])->name('project-hub.workspaces.store');
+    Route::post('/project-hub/projects', [ProjectHubController::class, 'storeProject'])->name('project-hub.projects.store');
     Route::get('/project-hub/workspaces/{workspace}', [ProjectHubController::class, 'showWorkspace'])->name('project-hub.workspaces.show');
+    Route::get('/project-hub/projects/{scholar_project}', [ProjectHubController::class, 'showProject'])->name('project-hub.projects.show');
+    Route::delete('/project-hub/projects/{scholar_project}', [ProjectHubController::class, 'destroyProject'])->name('project-hub.projects.destroy');
     Route::get('/project-hub/boards/{board}', [ProjectHubController::class, 'showBoard'])->name('project-hub.boards.show');
 });
 

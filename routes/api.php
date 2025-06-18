@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\V1\BoardController;
 use App\Http\Controllers\Api\V1\BoardListController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaskAttachmentController;
+use App\Http\Controllers\Api\V1\ConnectionController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\ProjectMemberController;
+use App\Http\Controllers\Api\V1\ProjectJoinRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,9 +37,12 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->name('workspaces.members.remove');
     
     // Board routes nested under workspaces
-    Route::apiResource('workspaces.boards', BoardController::class)
-        ->only(['store'])
-        ->scoped();
+    Route::post('workspaces/{workspace}/boards', [BoardController::class, 'storeForWorkspace'])
+        ->name('workspaces.boards.store');
+    
+    // Board routes nested under projects
+    Route::post('projects/{project}/boards', [BoardController::class, 'storeForProject'])
+        ->name('projects.boards.store');
     
     Route::apiResource('boards', BoardController::class)
         ->only(['show', 'update', 'destroy']);
@@ -71,4 +78,36 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->name('tasks.attachments.store');
     Route::delete('attachments/{attachment}', [TaskAttachmentController::class, 'destroy'])
         ->name('attachments.destroy');
+    
+    // Connection Routes
+    Route::post('/connections/{user}', [ConnectionController::class, 'store'])
+        ->name('connections.store');
+    Route::patch('/connections/{connection}/accept', [ConnectionController::class, 'accept'])
+        ->name('connections.accept');
+    Route::delete('/connections/{connection}/reject', [ConnectionController::class, 'reject'])
+        ->name('connections.reject');
+    Route::delete('/connections/{connection}', [ConnectionController::class, 'destroy'])
+        ->name('connections.destroy');
+    
+    // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.mark-all-as-read');
+        
+    // Project Member Routes
+    Route::post('/projects/{project}/members', [ProjectMemberController::class, 'store'])
+        ->name('projects.members.store');
+    Route::delete('/projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])
+        ->name('projects.members.destroy');
+    
+    // Project Join Request Routes
+    Route::post('/projects/{project}/join-request', [ProjectJoinRequestController::class, 'store'])
+        ->name('projects.join.request');
+    Route::patch('/project-join-requests/{projectJoinRequest}/accept', [ProjectJoinRequestController::class, 'accept'])
+        ->name('projects.join.accept');
+    Route::patch('/project-join-requests/{projectJoinRequest}/reject', [ProjectJoinRequestController::class, 'reject'])
+        ->name('projects.join.reject');
 }); 

@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\RedirectIfMotivationNotCollected::class,
+            \App\Http\Middleware\ShareInertiaData::class,
         ]);
 
         // Register the QdrantRolloutMiddleware as a global middleware

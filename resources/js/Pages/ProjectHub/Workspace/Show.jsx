@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Link, useForm, router } from '@inertiajs/react';
+import { Link, useForm, router, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
-import { ChevronLeft, Plus, LayoutGrid, Trash2 } from 'lucide-react';
+import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
+import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus } from 'lucide-react';
 
-export default function Show({ workspace }) {
+export default function Show({ workspace, connections }) {
+    const { auth } = usePage().props;
     const [isCreatingBoard, setIsCreatingBoard] = useState(false);
     const [confirmingBoardDeletion, setConfirmingBoardDeletion] = useState(null);
+    const [isCollaboratorsModalOpen, setIsCollaboratorsModalOpen] = useState(false);
     
     // Form for creating a new board
     const form = useForm({
@@ -23,8 +26,8 @@ export default function Show({ workspace }) {
             return;
         }
         
-        // Post to the boards endpoint for this workspace
-        form.post(`/api/v1/workspaces/${workspace.data.id}/boards`, {
+        // Post to the boards endpoint for this workspace using the named route
+        form.post(route('workspaces.boards.store', workspace.data.id), {
             onSuccess: () => {
                 // Close the form
                 setIsCreatingBoard(false);
@@ -52,6 +55,9 @@ export default function Show({ workspace }) {
         });
     };
 
+    // Check if the current user is the workspace owner
+    const isWorkspaceOwner = auth.user.id === workspace.data.owner_id;
+
     return (
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 py-6">
             {/* Workspace header */}
@@ -62,6 +68,17 @@ export default function Show({ workspace }) {
                 </Link>
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-900">{workspace.data.name}</h1>
+                    
+                    {/* Manage Collaborators button - only visible to workspace owner */}
+                    {isWorkspaceOwner && (
+                        <button
+                            onClick={() => setIsCollaboratorsModalOpen(true)}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Manage Members
+                        </button>
+                    )}
                 </div>
                 {workspace.data.description && (
                     <p className="mt-1 text-gray-500">{workspace.data.description}</p>
@@ -171,6 +188,15 @@ export default function Show({ workspace }) {
                 onConfirm={confirmDeleteBoard}
                 title="Delete Board"
                 message={confirmingBoardDeletion ? `Are you sure you want to delete the board "${confirmingBoardDeletion.name}"? This action cannot be undone and will delete all lists and tasks within this board.` : ''}
+            />
+            
+            {/* Manage Collaborators Modal */}
+            <ManageCollaboratorsModal
+                show={isCollaboratorsModalOpen}
+                onClose={() => setIsCollaboratorsModalOpen(false)}
+                context={workspace}
+                contextType="workspace"
+                connections={connections || []}
             />
         </div>
     );

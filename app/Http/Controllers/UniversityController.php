@@ -49,20 +49,21 @@ class UniversityController extends Controller
 
         // Get only academicians with complete profiles
         $academicians = $faculty->academicians()
+            ->with('user')
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->whereNotNull('research_expertise')
             ->where('research_expertise', '!=', '[]')
             ->get();
             
-        return inertia('Universities/AcademicianList', 
-        ['academicians' => $academicians,
-                'universities' => UniversityList::all(),
-                'faculties' => FacultyList::all(),
-                'faculty' => $faculty,
-                'university' => $faculty->university,
-                'researchOptions' => $researchOptions,
-                'users' => User::all(),
-            ]);
+        return inertia('Universities/AcademicianList', [
+            'academicians'   => $academicians,
+            'universities'   => UniversityList::all(),
+            'faculties'      => FacultyList::all(),
+            'faculty'        => $faculty,
+            'university'     => $faculty->university,
+            'researchOptions'=> $researchOptions,
+            'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
+        ]);
     }
 
     public function undergraduates(FacultyList $faculty)
@@ -86,6 +87,7 @@ class UniversityController extends Controller
 
         // Get only undergraduates with complete profiles
         $undergraduates = $faculty->undergraduates()
+            ->with('user')
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->get();
             
@@ -96,7 +98,7 @@ class UniversityController extends Controller
             'faculty'        => $faculty,
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
-            'users'          => User::all(),
+            'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
             'skills' => Skill::all(),
         ]);
     }
@@ -122,6 +124,7 @@ class UniversityController extends Controller
 
         // Get only postgraduates with complete profiles
         $postgraduates = $faculty->postgraduates()
+            ->with('user')
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->whereNotNull('field_of_research')
             ->where('field_of_research', '!=', '[]')
@@ -134,7 +137,7 @@ class UniversityController extends Controller
             'faculty'        => $faculty,
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
-            'users'          => User::all(),
+            'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
             'skills'        => Skill::all(),
         ]);
     }

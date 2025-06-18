@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Notifications;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use App\Models\User;
+use App\Models\Connection;
+
+class ConnectionRequestReceived extends Notification
+{
+    use Queueable;
+
+    protected $connection;
+    protected $requester;
+
+    /**
+     * Create a new notification instance.
+     * 
+     * @param \App\Models\Connection|object $connection
+     * @param \App\Models\User $requester
+     */
+    public function __construct($connection, User $requester)
+    {
+        $this->connection = $connection;
+        $this->requester = $requester;
+    }
+
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
+    {
+        return ['database'];
+    }
+
+    /**
+     * Get the array representation of the notification for storage in the database.
+     *
+     * @param  mixed  $notifiable
+     * @return array<string, mixed>
+     */
+    public function toDatabase($notifiable): array
+    {
+        return [
+            'connection_id' => $this->connection->id ?? '',
+            'requester_id' => $this->requester->id,
+            'requester_name' => $this->requester->name,
+            'type' => 'connection_request',
+            'message' => "{$this->requester->name} sent you a connection request."
+        ];
+    }
+
+    /**
+     * Get the array representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return array<string, mixed>
+     */
+    public function toArray($notifiable): array
+    {
+        return [
+            'connection_id' => $this->connection->id ?? '',
+            'requester_id' => $this->requester->id,
+            'requester_name' => $this->requester->name,
+            'type' => 'connection_request',
+            'message' => "{$this->requester->name} sent you a connection request."
+        ];
+    }
+}

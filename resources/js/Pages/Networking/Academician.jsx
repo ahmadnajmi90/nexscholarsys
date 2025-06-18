@@ -1,6 +1,6 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import AcademicianProfileCard from '@/Components/AcademicianProfileCard';
+import AcademicianProfileCard from '@/Pages/Networking/partials/AcademicianProfileCard';
 import useRoles from '@/Hooks/useRoles';
 
 

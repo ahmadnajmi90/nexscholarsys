@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BoardResource;
 use App\Models\Board;
 use App\Models\Workspace;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -14,7 +15,7 @@ class BoardController extends Controller
     /**
      * Store a newly created board in the workspace.
      */
-    public function store(Request $request, Workspace $workspace)
+    public function storeForWorkspace(Request $request, Workspace $workspace)
     {
         $this->authorize('create', [Board::class, $workspace]);
         
@@ -23,6 +24,24 @@ class BoardController extends Controller
         ]);
         
         $board = $workspace->boards()->create([
+            'name' => $validated['name'],
+        ]);
+        
+        return redirect()->route('project-hub.boards.show', $board)->with('success', 'Board created successfully.');
+    }
+    
+    /**
+     * Store a newly created board in the project.
+     */
+    public function storeForProject(Request $request, Project $project)
+    {
+        $this->authorize('create', [Board::class, $project]);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        
+        $board = $project->boards()->create([
             'name' => $validated['name'],
         ]);
         

@@ -35,18 +35,19 @@ class UndergraduateController extends Controller
         }
         
         // Get only undergraduates with complete profiles
-        $undergraduates = Undergraduate::where(function($query) {
-            $query->where('profile_picture', '!=', 'profile_pictures/default.jpg');
-                //   ->whereNotNull('bio')
-                //   ->where('bio', '!=', '');
-        })->get();
+        $undergraduates = Undergraduate::with('user')
+            ->where(function($query) {
+                $query->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                    //   ->whereNotNull('bio')
+                    //   ->where('bio', '!=', '');
+            })->get();
         
         return Inertia::render('Networking/Undergraduate', [
             // Pass any data you want to the component here
             'undergraduates' => $undergraduates,
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
-            'users' => User::all(),
+            'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
             'skills' => Skill::all(),
         ]);

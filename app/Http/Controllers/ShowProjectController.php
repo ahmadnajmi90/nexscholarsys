@@ -93,6 +93,30 @@ class ShowProjectController extends Controller
             'locale' => 'en_US'
         ];
 
+        // Check if this post project has an associated ScholarLab project
+        $scholarLabProject = null;
+        $joinRequestStatus = null;
+        $isMember = false;
+        
+        if ($project->scholarLabProject) {
+            $scholarLabProject = $project->scholarLabProject;
+            
+            // Check if the user is already a member of the project
+            if ($user) {
+                $isMember = $scholarLabProject->members()->where('user_id', $user->id)->exists() || 
+                           $scholarLabProject->owner_id === $user->id;
+                
+                // If not a member, check if they've sent a join request
+                if (!$isMember) {
+                    $joinRequest = \App\Models\ProjectJoinRequest::where('project_id', $scholarLabProject->id)
+                        ->where('user_id', $user->id)
+                        ->first();
+                    
+                    $joinRequestStatus = $joinRequest ? $joinRequest->status : null;
+                }
+            }
+        }
+
         return Inertia::render('Project/Show', [
             'project' => $project,
             'users' => User::all(),
@@ -100,7 +124,10 @@ class ShowProjectController extends Controller
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
             'metaTags' => $metaTags,
-            'relatedProjects' => $relatedProjects
+            'relatedProjects' => $relatedProjects,
+            'scholarLabProject' => $scholarLabProject,
+            'joinRequestStatus' => $joinRequestStatus,
+            'isMember' => $isMember
         ])->with([
             'meta' => $metaTags
         ]);

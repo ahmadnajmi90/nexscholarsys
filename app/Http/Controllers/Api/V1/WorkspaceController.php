@@ -114,21 +114,33 @@ class WorkspaceController extends Controller
      */
     public function addMember(Request $request, Workspace $workspace)
     {
+        // 1. Enforce the "owner-only" rule from the policy
         $this->authorize('addMember', $workspace);
         
+        // 2. Validate the incoming data, including the role
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'role' => 'required|in:admin,member',
+            'role' => 'required|string|in:admin,member',
         ]);
         
-        // Check if the user is already a member
+        // Optional: Prevent adding the owner as a member again
+        if ($workspace->owner_id == $validated['user_id']) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'The owner is already a member of this workspace.'], 422);
+            }
+            return back()->with('error', 'The owner is already a member of this workspace.');
+        }
+
+        // 3. Attach the new member with their assigned role
         $workspace->members()->syncWithoutDetaching([
             $validated['user_id'] => ['role' => $validated['role']]
         ]);
         
-        return response()->json([
-            'message' => 'Member added successfully',
-        ]);
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Member added successfully.']);
+        }
+        
+        return back()->with('success', 'Member added successfully.');
     }
 
     /**
@@ -140,15 +152,22 @@ class WorkspaceController extends Controller
         
         // Prevent removing the owner
         if ($member->id === $workspace->owner_id) {
+            if ($request->wantsJson()) {
             return response()->json([
                 'message' => 'Cannot remove the workspace owner',
             ], Response::HTTP_FORBIDDEN);
+            }
+            return back()->with('error', 'Cannot remove the workspace owner.');
         }
         
         $workspace->members()->detach($member->id);
         
+        if ($request->wantsJson()) {
         return response()->json([
             'message' => 'Member removed successfully',
         ]);
+        }
+        
+        return back()->with('success', 'Member removed successfully.');
     }
 } 

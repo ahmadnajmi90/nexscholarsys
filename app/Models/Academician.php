@@ -225,4 +225,14 @@ class Academician extends Model
     {
         return $this->morphMany(Bookmark::class, 'bookmarkable');
     }
+    
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'url';
+    }
 }

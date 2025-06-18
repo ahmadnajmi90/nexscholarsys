@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Workspace extends Model
 {
@@ -44,8 +45,8 @@ class Workspace extends Model
     /**
      * Get the boards for the workspace.
      */
-    public function boards(): HasMany
+    public function boards(): MorphMany
     {
-        return $this->hasMany(Board::class);
+        return $this->morphMany(Board::class, 'boardable');
     }
 } 

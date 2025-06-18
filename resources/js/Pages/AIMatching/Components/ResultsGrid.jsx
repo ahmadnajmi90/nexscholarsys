@@ -7,6 +7,7 @@ import RecommendationDisplay from "@/Components/RecommendationDisplay";
 import BookmarkButton from "@/Components/BookmarkButton";
 import MatchIndicator from "@/Components/MatchIndicator";
 import ProgressiveLoadingResults from "@/Components/ProgressiveLoadingResults";
+import ConnectionButton from "@/Components/ConnectionButton";
 
 export default function ResultsGrid({
   searchType,
@@ -564,13 +565,7 @@ export default function ResultsGrid({
 
                   {/* Social Action Links */}
                   <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-                    <a
-                      href="#"
-                      className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                      title="Add Friend"
-                    >
-                      <FaUserPlus className="text-lg" />
-                    </a>
+                    <ConnectionButton user={profile.user} />
                     <Link
                       href={route('email.compose', { 
                         to: users.find(
@@ -597,8 +592,6 @@ export default function ResultsGrid({
                       bookmarkableType={isAcademician ? "academician" : match.result_type} 
                       bookmarkableId={profileId}
                       category={isAcademician ? "Academicians" : "Students"} 
-                      iconSize="text-lg"
-                      tooltipPosition="top"
                     />
                   </div>
                 </div>

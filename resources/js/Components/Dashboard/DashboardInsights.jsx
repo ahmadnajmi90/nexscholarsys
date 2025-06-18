@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import QuickActions from "./QuickActions";
 import UpcomingEvents from "./UpcomingEvents";
 import RegisteredUser from "./RegisteredUser";
-import ProfileCard from "../ProfileCard";
+import ProfileCard from "../../Pages/Networking/partials/StudentProfileCard";
 import useRoles from "../../Hooks/useRoles";
 import Carousel from "./Carousel"; // Adjust the import path if needed
 import { FaEye, FaHeart, FaShareAlt, FaUser, FaUserShield, FaUsers } from 'react-icons/fa';

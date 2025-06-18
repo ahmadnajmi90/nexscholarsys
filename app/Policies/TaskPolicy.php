@@ -12,12 +12,22 @@ class TaskPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can create a task in the given list.
+     * Determine whether the user can create tasks in a given list.
      */
     public function create(User $user, BoardList $list): bool
     {
-        // User can create a task if they are a member of the list's board's workspace
-        return $list->board->workspace->members->contains($user);
+        // Get the parent of the board (which can be a Workspace or a Project)
+        $boardable = $list->board->boardable;
+
+        // If for some reason the parent doesn't exist, deny.
+        if (!$boardable) {
+            return false;
+        }
+
+        // A user can create a task if they are allowed to view the parent entity.
+        // Laravel's Gate will automatically use the correct Policy (WorkspacePolicy or ProjectPolicy)
+        // based on the model type of $boardable.
+        return $user->can('view', $boardable);
     }
 
     /**
@@ -34,7 +44,7 @@ class TaskPolicy
      */
     public function update(User $user, Task $task): bool
     {
-        // Any member of the workspace can update a task
+        // Any member of the parent entity can update a task
         return $user->can('view', $task->list->board);
     }
 
@@ -43,7 +53,7 @@ class TaskPolicy
      */
     public function delete(User $user, Task $task): bool
     {
-        // Any member of the workspace can delete a task
+        // Any member of the parent entity can delete a task
         return $user->can('view', $task->list->board);
     }
 
@@ -52,7 +62,7 @@ class TaskPolicy
      */
     public function addComment(User $user, Task $task): bool
     {
-        // Any member of the workspace can add a comment
+        // Any member of the parent entity can add a comment
         return $user->can('view', $task->list->board);
     }
 } 

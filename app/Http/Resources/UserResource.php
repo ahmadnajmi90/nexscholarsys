@@ -14,7 +14,8 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [
+        // Define the base user attributes
+        $attributes = [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
@@ -22,5 +23,13 @@ class UserResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+        
+        // Merge with conditionally loaded relationships
+        return array_merge($attributes, [
+            // Conditionally include each role profile ONLY if it was loaded by the controller
+            'academician' => $this->whenLoaded('academician'),
+            'postgraduate' => $this->whenLoaded('postgraduate'),
+            'undergraduate' => $this->whenLoaded('undergraduate'),
+        ]);
     }
 }

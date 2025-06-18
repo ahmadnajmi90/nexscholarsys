@@ -155,5 +155,13 @@ class PostProject extends Model
     {
         return $this->morphMany(Bookmark::class, 'bookmarkable');
     }
+
+    /**
+     * Get the Scholar Lab project associated with this post project.
+     */
+    public function scholarLabProject()
+    {
+        return $this->hasOne(Project::class);
+    }
 }
 

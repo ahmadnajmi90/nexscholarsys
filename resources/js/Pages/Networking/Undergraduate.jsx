@@ -1,6 +1,6 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import ProfileCard from '@/Components/ProfileCard';
+import ProfileCard from '@/Pages/Networking/partials/StudentProfileCard';
 import useRoles from '@/Hooks/useRoles';
 
 const Undergraduate = ( { undergraduates, universities, faculties, users, researchOptions, skills } ) => {

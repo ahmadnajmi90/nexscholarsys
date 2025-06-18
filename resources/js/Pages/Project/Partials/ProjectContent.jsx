@@ -3,7 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { 
   FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, 
-  FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes
+  FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes,
+  FaUsers
 } from 'react-icons/fa';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
@@ -11,6 +12,7 @@ import { Helmet } from 'react-helmet';
 import { trackEvent, trackPageView } from '@/Utils/analytics';
 import BookmarkButton from '@/Components/BookmarkButton';
 import DOMPurify from 'dompurify';
+import { toast } from 'react-hot-toast';
 
 // Helper component for safely rendering HTML content
 const SafeHTML = ({ html, className }) => {
@@ -32,7 +34,7 @@ const SafeHTML = ({ html, className }) => {
   );
 };
 
-export default function ProjectContent({ project, previous, next, academicians, researchOptions, universities, auth, isWelcome, relatedProjects }) {
+export default function ProjectContent({ project, previous, next, academicians, researchOptions, universities, auth, isWelcome, relatedProjects, scholarLabProject, joinRequestStatus, isMember }) {
   const { isAcademician } = useRoles();
 
   // State for like/share features.
@@ -40,6 +42,8 @@ export default function ProjectContent({ project, previous, next, academicians, 
   const [shares, setShares] = useState(project.total_shares || 0);
   const [liked, setLiked] = useState(project.liked || false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestStatus, setRequestStatus] = useState(joinRequestStatus);
   const shareMenuRef = useRef(null);
   console.log(relatedProjects);
 
@@ -144,6 +148,70 @@ export default function ProjectContent({ project, previous, next, academicians, 
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert("Link copied to clipboard");
     });
+  };
+
+  // Handle join request
+  const handleJoinRequest = () => {
+    if (!auth) {
+      // Redirect to login page if not logged in
+      window.location.href = route('login');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    axios.post(route('projects.join.request', scholarLabProject.id))
+      .then(response => {
+        toast.success(response.data.message);
+        setRequestStatus('pending');
+      })
+      .catch(error => {
+        const message = error.response?.data?.message || 'Failed to send join request';
+        toast.error(message);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
+
+  // Determine join button status
+  const renderJoinButton = () => {
+    if (!scholarLabProject) return null;
+    
+    if (isMember) return null;
+    
+    if (requestStatus === 'pending') {
+      return (
+        <button 
+          disabled 
+          className="mt-4 px-6 py-2 bg-gray-300 text-gray-700 rounded-md flex items-center justify-center"
+        >
+          <FaUsers className="mr-2" /> Request Sent
+        </button>
+      );
+    }
+    
+    if (requestStatus === 'rejected') {
+      return (
+        <button 
+          onClick={handleJoinRequest} 
+          disabled={isSubmitting}
+          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center"
+        >
+          <FaUsers className="mr-2" /> Request Again
+        </button>
+      );
+    }
+    
+    return (
+      <button 
+        onClick={handleJoinRequest} 
+        disabled={isSubmitting}
+        className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center"
+      >
+        <FaUsers className="mr-2" /> Request to Join Project
+      </button>
+    );
   };
 
   return (
@@ -281,6 +349,11 @@ export default function ProjectContent({ project, previous, next, academicians, 
             />
           </div>
           <hr />
+        </div>
+
+        {/* Request to Join Project Button */}
+        <div className="my-4">
+          {renderJoinButton()}
         </div>
 
         {/* Banner */}

@@ -11,6 +11,10 @@ use App\Models\BoardList;
 use App\Policies\BoardListPolicy;
 use App\Models\Task;
 use App\Policies\TaskPolicy;
+use App\Models\Connection;
+use App\Policies\ConnectionPolicy;
+use App\Models\Project;
+use App\Policies\ProjectPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -25,6 +29,8 @@ class AuthServiceProvider extends ServiceProvider
         Board::class => BoardPolicy::class,
         BoardList::class => BoardListPolicy::class,
         Task::class => TaskPolicy::class,
+        Connection::class => ConnectionPolicy::class,
+        Project::class => ProjectPolicy::class,
     ];
 
     /**

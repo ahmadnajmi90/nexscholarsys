@@ -17,7 +17,10 @@ use App\Models\Undergraduate;
 use App\Models\CreatePost;
 use App\Models\Bookmark;
 use App\Models\UserMotivation;
+use App\Models\Connection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -49,6 +52,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
     ];
+
+    /**
+     * The attributes that should be appended to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['connection_status_with_auth_user'];
 
     /**
      * Get the attributes that should be cast.
@@ -152,5 +162,115 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Workspace::class, 'workspace_members')
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the projects the user is a member of.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all connection requests sent by the user.
+     */
+    public function sentRequests(): HasMany
+    {
+        return $this->hasMany(Connection::class, 'requester_id');
+    }
+
+    /**
+     * Get all connection requests received by the user.
+     */
+    public function receivedRequests(): HasMany
+    {
+        return $this->hasMany(Connection::class, 'recipient_id');
+    }
+
+    /**
+     * Get the connection status between the authenticated user and this user.
+     *
+     * @return array Array containing the connection status and connection ID if applicable
+     */
+    public function getConnectionStatusWithAuthUserAttribute()
+    {
+        if (!Auth::check()) {
+            return [
+                'status' => 'not_connected',
+                'connection_id' => null
+            ];
+        }
+
+        $currentUser = Auth::user();
+
+        if ($currentUser->id === $this->id) {
+            return [
+                'status' => 'is_self',
+                'connection_id' => null
+            ];
+        }
+
+        // Check if a connection exists between the two users
+        $connection = Connection::where(function ($query) use ($currentUser) {
+            $query->where('requester_id', $currentUser->id)
+                  ->where('recipient_id', $this->id);
+        })->orWhere(function ($query) use ($currentUser) {
+            $query->where('requester_id', $this->id)
+                  ->where('recipient_id', $currentUser->id);
+        })->first();
+
+        if (!$connection) {
+            return [
+                'status' => 'not_connected',
+                'connection_id' => null
+            ];
+        }
+
+        if ($connection->status === 'accepted') {
+            return [
+                'status' => 'connected',
+                'connection_id' => $connection->id
+            ];
+        }
+
+        if ($connection->status === 'pending') {
+            return [
+                'status' => $connection->requester_id === $currentUser->id ? 'pending_sent' : 'pending_received',
+                'connection_id' => $connection->id
+            ];
+        }
+
+        return [
+            'status' => 'not_connected',
+            'connection_id' => null
+        ]; // Default case
+    }
+    
+    /**
+     * Get all accepted connections (friends) of the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getFriends()
+    {
+        // Get connections where this user is the requester and status is accepted
+        $requestedConnections = Connection::where('requester_id', $this->id)
+            ->where('status', 'accepted')
+            ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+            ->get()
+            ->pluck('recipient');
+            
+        // Get connections where this user is the recipient and status is accepted
+        $receivedConnections = Connection::where('recipient_id', $this->id)
+            ->where('status', 'accepted')
+            ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+            ->get()
+            ->pluck('requester');
+            
+        // Merge both collections
+        return $requestedConnections->merge($receivedConnections);
     }
 }

@@ -24,7 +24,8 @@ import useRoles from '@/Hooks/useRoles';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
-    const user = usePage().props.auth.user;
+    const { auth, pendingRequestCount } = usePage().props;
+    const user = auth.user;
 
     const [menuOpen, setMenuOpen] = useState({
         networking: false,
@@ -141,7 +142,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             }`}
                         >
                             <LayoutGrid className="w-5 h-5 text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Project Hub</span>
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Scholar Lab</span>
                         </Link>
                         
                         <button
@@ -154,6 +155,14 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </button>
                         {menuOpen.networking && (
                             <div className={`${!isOpen && 'hidden'} ml-6`}>
+                                <Link href={route('connections.index')} className="flex items-center justify-between py-2 hover:bg-gray-100 rounded">
+                                    <span>My Connections</span>
+                                    {pendingRequestCount > 0 && (
+                                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                            {pendingRequestCount}
+                                        </span>
+                                    )}
+                                </Link>
                                 <Link href="/postgraduates" className="block py-2 hover:bg-gray-100 rounded">Postgraduate</Link>
                                 <Link href="/undergraduates" className="block py-2 hover:bg-gray-100 rounded">Undergraduate</Link>
                                 <Link href="/academicians" className="block py-2 hover:bg-gray-100 rounded">Academician</Link>
