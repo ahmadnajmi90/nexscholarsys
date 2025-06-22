@@ -4,6 +4,9 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import Modal from '@/Components/Modal';
 import { format } from 'date-fns';
+import { BookOpen } from 'lucide-react';
+import clsx from 'clsx';
+import { isTaskCompleted } from '@/Utils/utils';
 
 export default function CalendarView({ tasks }) {
     // State for managing the task detail modal
@@ -15,20 +18,27 @@ export default function CalendarView({ tasks }) {
     const events = useMemo(() => {
         return tasks
             .filter(task => task.due_date)
-            .map(task => ({
-                id: `task-${task.id}`,
-                title: task.title,
-                start: task.due_date,
-                end: task.due_date,
-                allDay: false,
-                display: 'list-item', // Force list-item display to prevent multi-day spanning
-                backgroundColor: getPriorityColor(task.priority),
-                borderColor: getPriorityColor(task.priority),
-                textColor: '#fff',
-                extendedProps: {
-                    taskObject: task
-                }
-            }));
+            .map(task => {
+                const isCompleted = isTaskCompleted(task);
+                const priorityColor = getPriorityColor(task.priority);
+                
+                return {
+                    id: `task-${task.id}`,
+                    title: `${task.paper_writing_task ? '📖 ' : ''}${task.title}`,
+                    start: task.due_date,
+                    end: task.due_date,
+                    allDay: false,
+                    display: 'list-item', // Force list-item display to prevent multi-day spanning
+                    backgroundColor: isCompleted ? 'rgba(107, 114, 128, 0.6)' : priorityColor, // Gray and transparent if completed
+                    borderColor: isCompleted ? 'rgba(107, 114, 128, 0.6)' : priorityColor,
+                    textColor: '#fff',
+                    className: isCompleted ? 'task-completed' : '',
+                    extendedProps: {
+                        taskObject: task,
+                        isCompleted: isCompleted
+                    }
+                };
+            });
     }, [tasks]);
 
     // Get color based on task priority
@@ -85,7 +95,23 @@ export default function CalendarView({ tasks }) {
                 {selectedTask && (
                     <div className="p-6">
                         <div className="flex justify-between items-start mb-4">
-                            <h2 className="text-xl font-bold text-gray-900">{selectedTask.title}</h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className={clsx(
+                                    "text-xl font-bold",
+                                    {
+                                        "text-gray-500 line-through": isTaskCompleted(selectedTask),
+                                        "text-gray-900": !isTaskCompleted(selectedTask)
+                                    }
+                                )}>
+                                    {selectedTask.title}
+                                </h2>
+                                {selectedTask.paper_writing_task && (
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                        <BookOpen className="w-3 h-3 mr-1" />
+                                        Paper
+                                    </span>
+                                )}
+                            </div>
                             <button
                                 onClick={closeModal}
                                 className="text-gray-400 hover:text-gray-500"

@@ -61,6 +61,28 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - Visualize data with charts and graphs
 - Monitor upcoming events and recent activities
 
+### Hierarchical Research Field Structure
+
+The Nexscholar platform employs a sophisticated three-tier hierarchical system for organizing and managing research fields, ensuring data consistency and enabling powerful, structured filtering across the platform.
+
+**Three-Tier Architecture:**
+- **Field of Research** (Top Level): Broad academic disciplines (e.g., "Computer Science", "Biological Sciences", "Engineering")
+- **Research Area** (Middle Level): Specialized areas within each field (e.g., "Artificial Intelligence", "Machine Learning", "Data Science")
+- **Niche Domain** (Bottom Level): Specific specializations within each area (e.g., "Natural Language Processing", "Computer Vision", "Deep Learning")
+
+**Normalized Database Design:**
+Each level of the hierarchy is stored in its own dedicated database table (`field_of_research`, `research_area`, `niche_domain`) with proper foreign key relationships. This normalized approach ensures data integrity, eliminates redundancy, and enables efficient querying and management.
+
+**ID-Based Storage System:**
+User profiles do not store raw text for their research interests. Instead, they store combinations of IDs corresponding to their selections from the three hierarchical tables. For example, a user's research expertise might be stored as `["1-5-12", "2-8-23"]`, where each string represents `field_id-area_id-domain_id`.
+
+**Benefits:**
+- **Data Consistency**: Standardized terminology across all user profiles
+- **Efficient Filtering**: Fast, structured queries for finding users by specific research areas
+- **Scalability**: Easy addition of new research fields without affecting existing data
+- **Multilingual Support**: Text translations can be managed at the database level
+- **Analytics**: Precise tracking of research field popularity and trends
+
 ### Semantic Supervisor Matching
 - Find research supervisors using AI-powered semantic search
 - Match students with supervisors based on research interests
@@ -100,6 +122,16 @@ The Project Hub is a versatile task management system integrated into the Nexsch
   * **Attachments**: Upload and manage research files, papers, and documents
   * **Task History**: Track task creation and updates with timestamps and user information
 
+* **Specialized Task Types**
+  * **Normal Tasks**: Standard tasks with basic tracking capabilities
+  * **Paper Writing Tasks**: Specialized tasks for academic paper writing with additional fields:
+    * Area of Study: Field or discipline of the paper
+    * Paper Type: Research paper, review, case study, etc.
+    * Publication Type: Journal, conference, book chapter, etc.
+    * Scopus Info: Indexing information for academic tracking
+    * Progress: Structured workflow stages (Not Started, Planning, Researching, Drafting, Revising, Final Review, Completed)
+    * PDF Attachment: Upload and track paper drafts directly within the task
+
 * **Real-Time Collaboration**
   * Live updates synchronized across all users viewing the same board
   * Clear visual indicators when tasks are modified by collaborators
@@ -131,7 +163,9 @@ The Project Hub is a versatile task management system integrated into the Nexsch
 
 5. **Task Management**:
    * Create tasks within any list using the "Add Task" button
-   * Provide a title and optional details like description, due date, and priority
+   * Choose between normal tasks and paper writing tasks based on your needs
+   * For normal tasks: Provide a title, description, due date, priority, and assignees
+   * For paper writing tasks: Add academic-specific details like area of study, paper type, and progress tracking
    * Move tasks between lists by dragging and dropping them
    * Click on a task to view and edit its details, add comments, or upload attachments
 
@@ -145,6 +179,27 @@ The Project Hub is a versatile task management system integrated into the Nexsch
    * Share workspace access with team members for collaborative work
    * Comment on tasks to discuss specific items
    * Track updates and changes in real-time as collaborators modify the board
+
+#### Paper Writing Task Workflow
+
+The specialized paper writing task feature is designed to support the academic publication process:
+
+1. **Creating a Paper Task**:
+   * Click "Add a task" in any list
+   * Select "Paper Writing Task" from the task type options
+   * Fill in both standard task fields and paper-specific fields
+   * Upload PDF drafts directly to the task for easy access
+
+2. **Tracking Progress**:
+   * Use the dedicated "Progress" field to track the paper through its lifecycle
+   * Move the paper task between lists as it progresses through different phases
+   * Update paper details as they evolve (e.g., publication type, scopus info)
+
+3. **Collaboration on Papers**:
+   * Assign multiple team members to collaborate on the paper
+   * Use comments to discuss specific aspects of the paper
+   * Share drafts through the PDF attachment feature
+   * Track version history through multiple uploads
 
 The Project Hub seamlessly integrates with the rest of the Nexscholar platform, allowing for efficient academic project management while maintaining connection to research profiles, publications, and other scholarly activities.
 
@@ -550,17 +605,44 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
 
 ### How It Works
 
-1. When an academician profile is created or updated, an embedding is automatically generated and stored in Qdrant
-2. When a student updates their research fields, an embedding is generated from their profile and stored in Qdrant
-3. Student search queries are converted to embeddings
-4. When students search with specific queries, results combine:
+The semantic search system uses a sophisticated multi-step process to generate high-quality embeddings from the structured research field data:
+
+**Embedding Generation Process:**
+
+1. **ID Resolution**: When generating embeddings for user profiles, the system first retrieves the stored research field IDs from the user's profile (e.g., `["1-5-12", "2-8-23"]`)
+
+2. **Dynamic Text Construction**: For each ID combination, the system:
+   - Fetches the corresponding text names from the three database tables (`field_of_research`, `research_area`, `niche_domain`)
+   - Constructs hierarchical text representations (e.g., "Computer Science - Artificial Intelligence - Natural Language Processing")
+   - Creates multiple text variations for enhanced matching:
+     - Full hierarchical format: `"Computer Science - Artificial Intelligence - Natural Language Processing"`
+     - Individual components: `"Fields: Computer Science"`, `"Areas: Artificial Intelligence"`, `"Domains: Natural Language Processing"`
+     - Useful combinations: `"Computer Science Artificial Intelligence"`, `"Artificial Intelligence Natural Language Processing"`
+
+3. **Text Concatenation**: The system combines all research field text representations with other profile information (bio, position, department) to create a comprehensive text string
+
+4. **OpenAI Embedding Generation**: This dynamically generated, structured text is sent to OpenAI's `text-embedding-3-small` model to create the final embedding vector
+
+5. **Vector Storage**: The resulting high-dimensional embedding vector is stored in Qdrant vector database for fast similarity search
+
+**Search and Matching Process:**
+
+6. **Query Processing**: Student search queries are enhanced with academic context and converted to embeddings using the same OpenAI model
+
+7. **Semantic Matching**: The system performs vector similarity search in Qdrant to find academicians with the most semantically similar research profiles
+
+8. **Hybrid Scoring**: When students search with specific queries, results combine:
    - 60% weight from query-supervisor semantic matching
-   - 40% weight from student profile-supervisor matching
-5. Students can search with "Find supervisor suitable for me" to use only their profile for matching
-6. Results are ranked by semantic relevance, not just keyword matching
-7. GPT-4o generates insights explaining why each supervisor is a good match for:
-   - The student's search query
-   - The student's research profile (if available)
+   - 40% weight from student profile-supervisor matching (if student profile data is available)
+
+9. **AI-Generated Insights**: GPT-4o analyzes the match context and generates personalized explanations of why each supervisor is a good fit
+
+**Advantages of This Approach:**
+
+- **Higher Quality Embeddings**: Structured, normalized text produces more consistent and meaningful embeddings compared to raw user input
+- **Comprehensive Matching**: Multiple text representations ensure matches across different levels of specificity
+- **Consistent Terminology**: Standardized research field names eliminate variations in how users describe the same concepts
+- **Scalable Performance**: Vector similarity search in Qdrant enables millisecond response times even with thousands of profiles
 
 ### AI Matching Feature
 

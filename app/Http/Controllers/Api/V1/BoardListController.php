@@ -8,6 +8,7 @@ use App\Models\Board;
 use App\Models\BoardList;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class BoardListController extends Controller
 {
@@ -61,5 +62,42 @@ class BoardListController extends Controller
         $boardList->delete();
         
         return back()->with('success', 'List deleted successfully.');
+    }
+    
+    /**
+     * Update the order of multiple board lists.
+     */
+    public function updateOrder(Request $request)
+    {
+        $validated = $request->validate([
+            'lists' => 'required|array',
+            'lists.*.id' => 'required|integer|exists:board_lists,id',
+            'lists.*.order' => 'required|integer|min:1',
+        ]);
+        
+        // Use a database transaction to ensure all updates succeed or fail together
+        DB::beginTransaction();
+        
+        try {
+            foreach ($validated['lists'] as $listData) {
+                $boardList = BoardList::findOrFail($listData['id']);
+                
+                // Authorize the update for each list
+                $this->authorize('update', $boardList);
+                
+                // Update the order
+                $boardList->update(['order' => $listData['order']]);
+            }
+            
+            DB::commit();
+            
+            // Return a JSON response for API requests
+            return response()->json(['success' => true, 'message' => 'List order updated successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            // Return a JSON error response
+            return response()->json(['success' => false, 'message' => 'Failed to update list order'], 500);
+        }
     }
 } 

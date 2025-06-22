@@ -8,9 +8,11 @@ use App\Http\Resources\WorkspaceResource;
 use App\Models\Workspace;
 use App\Models\Board;
 use App\Models\Connection;
+use App\Models\FieldOfResearch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 
 class ProjectHubController extends Controller
@@ -77,7 +79,7 @@ class ProjectHubController extends Controller
     public function index(Request $request)
     {
         $user = $request->user()->load('academician'); // Load auth user's profile
-
+        
         // Fetch WORKSPACES with all necessary nested data
         $workspaces = $user->workspaces()
             ->with([
@@ -86,7 +88,7 @@ class ProjectHubController extends Controller
             ])
             ->latest()
             ->get();
-
+        
         // Fetch PROJECTS with all necessary nested data
         $projects = \App\Models\Project::where('owner_id', $user->id)
             ->with([
@@ -97,12 +99,12 @@ class ProjectHubController extends Controller
             ])
             ->latest()
             ->get();
-
+        
         // Fetch other necessary data
         $linkableProjects = \App\Models\PostProject::where('author_id', $user->unique_id)
             ->whereDoesntHave('scholarLabProject')
             ->get();
-
+            
         // Get the authenticated user's accepted connections
         // First get the friends with their IDs
         $friendIds = $user->getFriends()->pluck('id');
@@ -111,7 +113,7 @@ class ProjectHubController extends Controller
         $connections = \App\Models\User::whereIn('id', $friendIds)
             ->with(['academician', 'postgraduate', 'undergraduate'])
             ->get();
-
+        
         // RETURN THE RAW COLLECTIONS. NO API RESOURCES.
         return Inertia::render('ProjectHub/Index', [
             'workspaces' => $workspaces,
@@ -228,25 +230,30 @@ class ProjectHubController extends Controller
             'lists.tasks' => function($query) {
                 $query->orderBy('order');
             },
-            'lists.tasks.assignees',
+            'lists.tasks.assignees.academician',
+            'lists.tasks.assignees.postgraduate', 
+            'lists.tasks.assignees.undergraduate',
             'lists.tasks.comments.user.academician',
             'lists.tasks.comments.user.postgraduate',
             'lists.tasks.comments.user.undergraduate',
-            'lists.tasks.creator',
-            'lists.tasks.attachments'
+            'lists.tasks.creator.academician',
+            'lists.tasks.creator.postgraduate',
+            'lists.tasks.creator.undergraduate',
+            'lists.tasks.attachments',
+            'lists.tasks.paperWritingTask'
         ]);
         
         // Get the parent entity (workspace or project)
         $parentEntity = $board->boardable;
         $parentType = class_basename($parentEntity);
         
-        // Get members based on the parent entity type
+        // Get members based on the parent entity type with role-specific relationships
         $members = [];
         if ($parentType === 'Workspace') {
-            $parentEntity->load('members');
+            $parentEntity->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
             $members = $parentEntity->members;
         } elseif ($parentType === 'Project') {
-            $parentEntity->load('members');
+            $parentEntity->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
             $members = $parentEntity->members;
         }
         
@@ -264,6 +271,18 @@ class ProjectHubController extends Controller
                         'name' => $member->name,
                         'email' => $member->email,
                         'avatar_url' => $member->profile_photo_url,
+                        'academician' => $member->academician ? [
+                            'full_name' => $member->academician->full_name,
+                            'profile_picture' => $member->academician->profile_picture,
+                        ] : null,
+                        'postgraduate' => $member->postgraduate ? [
+                            'full_name' => $member->postgraduate->full_name,
+                            'profile_picture' => $member->postgraduate->profile_picture,
+                        ] : null,
+                        'undergraduate' => $member->undergraduate ? [
+                            'full_name' => $member->undergraduate->full_name,
+                            'profile_picture' => $member->undergraduate->profile_picture,
+                        ] : null,
                     ];
                 })
             ],
@@ -280,11 +299,56 @@ class ProjectHubController extends Controller
                             'order' => $task->order,
                             'due_date' => $task->due_date,
                             'priority' => $task->priority,
-                            'assignees' => $task->assignees,
+                            'assignees' => $task->assignees->map(function($assignee) {
+                                return [
+                                    'id' => $assignee->id,
+                                    'name' => $assignee->name,
+                                    'email' => $assignee->email,
+                                    'avatar_url' => $assignee->profile_photo_url,
+                                    'academician' => $assignee->academician ? [
+                                        'full_name' => $assignee->academician->full_name,
+                                        'profile_picture' => $assignee->academician->profile_picture,
+                                    ] : null,
+                                    'postgraduate' => $assignee->postgraduate ? [
+                                        'full_name' => $assignee->postgraduate->full_name,
+                                        'profile_picture' => $assignee->postgraduate->profile_picture,
+                                    ] : null,
+                                    'undergraduate' => $assignee->undergraduate ? [
+                                        'full_name' => $assignee->undergraduate->full_name,
+                                        'profile_picture' => $assignee->undergraduate->profile_picture,
+                                    ] : null,
+                                ];
+                            }),
                             'creator' => $task->creator ? [
                                 'id' => $task->creator->id,
                                 'name' => $task->creator->name,
                                 'avatar_url' => $task->creator->profile_photo_url,
+                                'full_name' => $task->creator->academician->full_name 
+                                            ?? $task->creator->postgraduate->full_name 
+                                            ?? $task->creator->undergraduate->full_name 
+                                            ?? $task->creator->name,
+                                'academician' => $task->creator->academician ? [
+                                    'full_name' => $task->creator->academician->full_name,
+                                    'profile_picture' => $task->creator->academician->profile_picture,
+                                ] : null,
+                                'postgraduate' => $task->creator->postgraduate ? [
+                                    'full_name' => $task->creator->postgraduate->full_name,
+                                    'profile_picture' => $task->creator->postgraduate->profile_picture,
+                                ] : null,
+                                'undergraduate' => $task->creator->undergraduate ? [
+                                    'full_name' => $task->creator->undergraduate->full_name,
+                                    'profile_picture' => $task->creator->undergraduate->profile_picture,
+                                ] : null,
+                            ] : null,
+                            'paper_writing_task' => $task->paperWritingTask ? [
+                                'id' => $task->paperWritingTask->id,
+                                'area_of_study' => $task->paperWritingTask->area_of_study,
+                                'paper_type' => $task->paperWritingTask->paper_type,
+                                'publication_type' => $task->paperWritingTask->publication_type,
+                                'scopus_info' => $task->paperWritingTask->scopus_info,
+                                'progress' => $task->paperWritingTask->progress,
+                                'created_at' => $task->paperWritingTask->created_at,
+                                'updated_at' => $task->paperWritingTask->updated_at,
                             ] : null,
                             'comments' => $task->comments->map(function($comment) {
                                 $profile = $comment->user->academician ?? $comment->user->postgraduate ?? $comment->user->undergraduate ?? null;
@@ -327,6 +391,7 @@ class ProjectHubController extends Controller
                             'list_id' => $task->board_list_id,
                             'created_at' => $task->created_at,
                             'updated_at' => $task->updated_at,
+                            'completed_at' => $task->completed_at,
                         ];
                     })
                 ];
@@ -343,10 +408,29 @@ class ProjectHubController extends Controller
             $parentResource = $parentEntity;
         }
         
+        // Load research field options for Paper Writing Tasks
+        $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
+        $researchOptions = [];
+        foreach ($fieldOfResearches as $field) {
+            foreach ($field->researchAreas as $area) {
+                foreach ($area->nicheDomains as $domain) {
+                    $researchOptions[] = [
+                        'field_of_research_id' => $field->id,
+                        'field_of_research_name' => $field->name,
+                        'research_area_id' => $area->id,
+                        'research_area_name' => $area->name,
+                        'niche_domain_id' => $domain->id,
+                        'niche_domain_name' => $domain->name,
+                    ];
+                }
+            }
+        }
+        
         return Inertia::render('ProjectHub/Board/Show', [
             'initialBoardData' => $initialBoardData,
             'parentEntity' => $parentResource,
             'parentType' => $parentType,
+            'researchOptions' => $researchOptions,
         ]);
     }
     
@@ -431,7 +515,7 @@ class ProjectHubController extends Controller
         $scholar_project->load([
             'owner', 
             'boards' => function($query) {
-                $query->orderBy('created_at');
+            $query->orderBy('created_at');
             },
             'members.academician', 'members.postgraduate', 'members.undergraduate'
         ]);

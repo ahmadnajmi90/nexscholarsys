@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Gantt from 'frappe-gantt';
 import { format, addDays, isValid } from 'date-fns';
+import { isTaskCompleted } from '@/Utils/utils';
 
 export default function TimelineView({ board, onTaskClick }) {
+    console.log("2. Board data received as props by TimelineView:", board);
+    
     const ganttContainer = useRef(null);
     const [ganttChart, setGanttChart] = useState(null);
     
@@ -10,7 +13,12 @@ export default function TimelineView({ board, onTaskClick }) {
         // Transform tasks into the format frappe-gantt expects
         const tasks = transformTasksForGantt(board);
         
+        console.log("4. Transformed tasks for Gantt chart:", tasks);
+        console.log("4a. Gantt container exists:", !!ganttContainer.current);
+        console.log("4b. Tasks length:", tasks.length);
+        
         if (ganttContainer.current && tasks.length > 0) {
+            console.log("4c. Initializing Gantt chart with tasks:", tasks);
             try {
                 // Initialize the Gantt chart
                 const gantt = new Gantt(ganttContainer.current, tasks, {
@@ -83,6 +91,8 @@ export default function TimelineView({ board, onTaskClick }) {
             } catch (error) {
                 console.error('Error initializing Gantt chart:', error);
             }
+        } else {
+            console.log("4d. Gantt chart NOT initialized - Container exists:", !!ganttContainer.current, "Tasks length:", tasks.length);
         }
     }, [board, onTaskClick]);
     
@@ -99,7 +109,11 @@ export default function TimelineView({ board, onTaskClick }) {
     const transformTasksForGantt = (board) => {
         const ganttTasks = [];
         
+        console.log("3. Starting task transformation. Board lists:", board.lists);
+        
         board.lists.forEach(list => {
+            console.log(`3a. Processing list "${list.name}" with ${list.tasks.length} tasks:`, list.tasks);
+            
             list.tasks.forEach(task => {
                 // Skip tasks without necessary data
                 if (!task || !task.id || !task.title) {
@@ -137,23 +151,28 @@ export default function TimelineView({ board, onTaskClick }) {
                 
                 // Generate a color based on task priority
                 const color = getPriorityColor(task.priority);
+                const isCompleted = isTaskCompleted(task);
                 
-                ganttTasks.push({
+                const ganttTask = {
                     id: `task-${task.id}`,
                     name: task.title,
                     start: startDate,
                     end: endDate,
                     progress: 0, // We don't track progress yet
                     dependencies: '', // We don't have dependencies yet
-                    custom_class: task.priority || 'default',
+                    custom_class: isCompleted ? 'task-completed' : (task.priority || 'default'),
                     color: color,
                     original_task: task, // Store reference to original task
                     list_id: list.id,
                     list_name: list.name
-                });
+                };
+                
+                console.log(`3b. Adding task "${task.title}" to gantt:`, ganttTask);
+                ganttTasks.push(ganttTask);
             });
         });
         
+        console.log("3c. Final gantt tasks array:", ganttTasks);
         return ganttTasks;
     };
     

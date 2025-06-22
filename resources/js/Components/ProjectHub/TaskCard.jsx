@@ -1,11 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Calendar, MessageSquare, Paperclip, Clock, Trash2 } from 'lucide-react';
-import { format, isToday, isTomorrow, isPast, parseISO } from 'date-fns';
+import { format, isToday, isTomorrow, isPast, isAfter } from 'date-fns';
+import { router } from '@inertiajs/react';
+import toast from 'react-hot-toast';
+import clsx from 'clsx';
+import axios from 'axios';
+import PaperTaskBadge from './PaperTaskBadge';
+import { isTaskCompleted } from '@/Utils/utils';
 
 const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
     const [showDeleteButton, setShowDeleteButton] = useState(false);
+    const [isCompleting, setIsCompleting] = useState(false);
+
     
     // Set up drag-and-drop functionality with dnd-kit
     const {
@@ -14,6 +22,7 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
         setNodeRef,
         transform,
         transition,
+        isDragging,
     } = useSortable({ 
         id: `task-${task.id}`,
         data: { 
@@ -25,16 +34,18 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
+        opacity: isDragging ? 0.5 : 1,
     };
 
     // Function to get initials from a name
     const getInitials = (name) => {
+        if (!name) return '??';
         return name
             .split(' ')
-            .map(part => part[0])
+            .map(word => word.charAt(0))
             .join('')
             .toUpperCase()
-            .substring(0, 2);
+            .slice(0, 2);
     };
 
     // Enhanced date formatting using date-fns
@@ -43,9 +54,8 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
 
         try {
             const date = new Date(task.due_date);
-            if (isNaN(date)) return null;
-            
-            const overdue = isPast(date) && !isToday(date);
+            const now = new Date();
+            const overdue = isAfter(now, date);
             
             let dateString;
             if (isToday(date)) {
@@ -84,24 +94,56 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
     // Handle card click to open details modal
     const handleCardClick = (e) => {
         // Prevent click from triggering drag events
-        if (onClick && !e.target.closest('button')) {
+        if (onClick && !e.target.closest('button') && !e.target.closest('input[type="checkbox"]')) {
             e.preventDefault();
             e.stopPropagation();
             onClick(task);
         }
     };
+
+    // Handle task completion toggle
+    const handleToggleCompletion = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isCompleting) {
+            return;
+        }
+
+        setIsCompleting(true);
+
+        try {
+            await axios.post(route('api.tasks.toggleCompletion', task.id));
+            
+            toast.success('Task status updated!');
+
+            // THE CRITICAL FIX:
+            // This tells Inertia to refetch only the 'initialBoardData' prop 
+            // from the server. It's a highly efficient partial reload, 
+            // not a full page refresh.
+            router.reload({ only: ['initialBoardData'] });
+        } catch (error) {
+            console.error('Error toggling task completion:', error);
+            toast.error('Failed to update task status.');
+        } finally {
+            setIsCompleting(false);
+        }
+    };
     
+    console.log(task);
     return (
         <div
             ref={setNodeRef}
             style={style}
             {...attributes}
             {...listeners}
-            className={`
-                relative bg-white rounded-md shadow-sm border border-gray-200 p-3 mb-2 cursor-pointer
-                hover:shadow-md transition-all duration-200
-                ${isRecentlyUpdated ? 'ring-2 ring-indigo-500 ring-opacity-50' : ''}
-            `}
+            className={clsx(
+                "relative bg-white rounded-md shadow-sm border border-gray-200 p-3 mb-2 cursor-pointer hover:shadow-md transition-all duration-200",
+                {
+                    "ring-2 ring-indigo-500 ring-opacity-50": isRecentlyUpdated,
+                    "opacity-60": isTaskCompleted(task)
+                }
+            )}
             onMouseEnter={() => setShowDeleteButton(true)}
             onMouseLeave={() => setShowDeleteButton(false)}
             onClick={handleCardClick}
@@ -135,7 +177,30 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
             )}
             
             {/* Task Title */}
-            <h3 className="font-medium text-gray-900 mb-1 line-clamp-2 pr-5">{task.title}</h3>
+            <div className="flex items-center gap-2 mb-1">
+                <input
+                    type="checkbox"
+                    checked={isTaskCompleted(task)}
+                    disabled={isCompleting}
+                    onChange={handleToggleCompletion}
+                    className={clsx(
+                        "w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2",
+                        {
+                            "opacity-50 cursor-not-allowed": isCompleting
+                        }
+                    )}
+                />
+                <h3 className={clsx(
+                    "font-medium line-clamp-2 pr-5 flex-1",
+                    {
+                        "text-gray-500 line-through": isTaskCompleted(task),
+                        "text-gray-900": !isTaskCompleted(task)
+                    }
+                )}>
+                    {task.title}
+                </h3>
+                {task.paper_writing_task && <PaperTaskBadge />}
+            </div>
             
             {/* Task Description - truncated */}
             {task.description && (

@@ -74,9 +74,15 @@ class ProjectPolicy
 
     /**
      * Determine whether the user can remove a member from the project.
+     * 
+     * @param User $user The authenticated user
+     * @param Project $project The project
+     * @param User $memberToRemove The user to be removed
+     * @return bool
      */
-    public function removeMember(User $user, Project $project): bool
+    public function removeMember(User $user, Project $project, User $memberToRemove): bool
     {
-        return $user->id === $project->owner_id; // Only the owner can remove members
+        // Only the owner can remove members, and they cannot remove themselves
+        return $user->id === $project->owner_id && $user->id !== $memberToRemove->id;
     }
 }

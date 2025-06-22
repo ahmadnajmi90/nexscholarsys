@@ -7,11 +7,14 @@ use App\Http\Resources\TaskResource;
 use App\Http\Resources\TaskCommentResource;
 use App\Models\BoardList;
 use App\Models\Task;
+use App\Models\PaperWritingTask;
 use App\Models\TaskComment;
 use App\Events\TaskMoved;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class TaskController extends Controller
 {
@@ -22,11 +25,14 @@ class TaskController extends Controller
     {
         $this->authorize('create', [Task::class, $list]);
         
+        // Validate common fields and task type
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
             'priority' => 'sometimes|string|in:Low,Medium,High,Urgent',
+            'task_type' => ['required', 'string', Rule::in(['normal', 'paper'])],
+            'attachment' => 'nullable|file|max:10240', // 10MB max file size
         ]);
         
         // Calculate the next order value
@@ -42,6 +48,46 @@ class TaskController extends Controller
             'order' => $order,
         ]);
         
+        // If this is a paper writing task, create the associated record
+        if ($validated['task_type'] === 'paper') {
+            // Validate paper-specific fields
+            $paperValidated = $request->validate([
+                'area_of_study' => 'nullable|array',
+                'area_of_study.*' => 'string',
+                'paper_type' => 'nullable|string|max:255',
+                'publication_type' => 'nullable|string|max:255',
+                'scopus_info' => 'nullable|string|max:255',
+                'progress' => 'nullable|string|max:255',
+                'pdf_attachment_path' => 'nullable|string|max:255',
+            ]);
+            
+            // Create the paper writing task record
+            $task->paperWritingTask()->create([
+                'area_of_study' => $paperValidated['area_of_study'] ?? null,
+                'paper_type' => $paperValidated['paper_type'] ?? null,
+                'publication_type' => $paperValidated['publication_type'] ?? null,
+                'scopus_info' => $paperValidated['scopus_info'] ?? null,
+                'progress' => $paperValidated['progress'] ?? null,
+                'pdf_attachment_path' => $paperValidated['pdf_attachment_path'] ?? null,
+            ]);
+        }
+        
+        // Handle file attachment if provided
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('attachments', $fileName, 'public');
+            
+            // Create attachment record
+            $task->attachments()->create([
+                'original_name' => $file->getClientOriginalName(),
+                'file_path' => $filePath,
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'user_id' => $request->user()->id,
+            ]);
+        }
+        
         return back()->with('success', 'Task created successfully.');
     }
     
@@ -52,8 +98,8 @@ class TaskController extends Controller
     {
         $this->authorize('view', $task);
         
-        // Eager load relationships
-        $task->load(['assignees', 'comments.user', 'creator', 'attachments.user']);
+        // Eager load relationships including paperWritingTask if it exists
+        $task->load(['assignees.academician', 'assignees.postgraduate', 'assignees.undergraduate', 'comments.user', 'creator', 'attachments.user', 'paperWritingTask']);
         
         return new TaskResource($task);
     }
@@ -65,6 +111,7 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
         
+        // Validate common task fields
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -72,8 +119,10 @@ class TaskController extends Controller
             'priority' => 'sometimes|string|in:Low,Medium,High,Urgent',
             'assignees' => 'sometimes|array',
             'assignees.*' => 'exists:users,id',
+            'attachment' => 'nullable|file|max:10240', // 10MB max file size
         ]);
         
+        // Update the base task
         $task->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
@@ -86,8 +135,48 @@ class TaskController extends Controller
             $task->assignees()->sync($request->input('assignees'));
         }
         
-        // Load relationships for the response
-        $task->load(['assignees', 'comments.user', 'creator', 'attachments.user']);
+        // If this is a paper writing task, update the associated record
+        if ($task->paperWritingTask) {
+            // Validate paper-specific fields
+            $paperValidated = $request->validate([
+                'area_of_study' => 'nullable|array',
+                'area_of_study.*' => 'string',
+                'paper_type' => 'nullable|string|max:255',
+                'publication_type' => 'nullable|string|max:255',
+                'scopus_info' => 'nullable|string|max:255',
+                'progress' => 'nullable|string|max:255',
+                'pdf_attachment_path' => 'nullable|string|max:255',
+            ]);
+            
+            // Update the paper writing task record
+            $task->paperWritingTask->update([
+                'area_of_study' => $paperValidated['area_of_study'] ?? $task->paperWritingTask->area_of_study,
+                'paper_type' => $paperValidated['paper_type'] ?? $task->paperWritingTask->paper_type,
+                'publication_type' => $paperValidated['publication_type'] ?? $task->paperWritingTask->publication_type,
+                'scopus_info' => $paperValidated['scopus_info'] ?? $task->paperWritingTask->scopus_info,
+                'progress' => $paperValidated['progress'] ?? $task->paperWritingTask->progress,
+                'pdf_attachment_path' => $paperValidated['pdf_attachment_path'] ?? $task->paperWritingTask->pdf_attachment_path,
+            ]);
+        }
+        
+        // Handle file attachment if provided
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('attachments', $fileName, 'public');
+            
+            // Create attachment record
+            $task->attachments()->create([
+                'original_name' => $file->getClientOriginalName(),
+                'file_path' => $filePath,
+                'size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'user_id' => $request->user()->id,
+            ]);
+        }
+        
+        // Load relationships for the response including paperWritingTask if it exists
+        $task->load(['assignees.academician', 'assignees.postgraduate', 'assignees.undergraduate', 'comments.user', 'creator', 'attachments.user', 'paperWritingTask']);
         
         return back()->with('success', 'Task updated successfully.');
     }
@@ -211,5 +300,25 @@ class TaskController extends Controller
         $task->load('assignees');
         
         return new TaskResource($task);
+    }
+
+    /**
+     * Toggle the completion status of a task.
+     */
+    public function toggleCompletion(Request $request, Task $task)
+    {
+        // Optional: You can add an authorization check here
+        $this->authorize('update', $task);
+
+        $task->completed_at = $task->completed_at ? null : now();
+        $task->save();
+
+        // Return the updated task data using our existing resource.
+        // We load the relationships to ensure the frontend gets the full object back.
+        return new TaskResource($task->load([
+            'assignees.academician', 'assignees.postgraduate', 'assignees.undergraduate',
+            'creator.academician', 'creator.postgraduate', 'creator.undergraduate',
+            'comments.user', 'attachments', 'paperWritingTask'
+        ]));
     }
 } 

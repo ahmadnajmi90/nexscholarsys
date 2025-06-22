@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\TaskCommentResource;
 use App\Http\Resources\TaskAttachmentResource;
+use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\Log;
 
 class TaskResource extends JsonResource
 {
@@ -23,28 +25,21 @@ class TaskResource extends JsonResource
             'description' => $this->description,
             'due_date' => $this->due_date,
             'order' => $this->order,
-            'creator' => $this->whenLoaded('creator', function () {
-                return [
-                    'id' => $this->creator->id,
-                    'name' => $this->creator->name,
-                ];
-            }),
-            'assignees' => $this->whenLoaded('assignees', function () {
-                return $this->assignees->map(function ($assignee) {
-                    return [
-                        'id' => $assignee->id,
-                        'name' => $assignee->name,
-                    ];
-                });
-            }),
-            'comments' => $this->whenLoaded('comments', function () {
-                return TaskCommentResource::collection($this->comments);
-            }),
-            'attachments' => $this->whenLoaded('attachments', function () {
-                return TaskAttachmentResource::collection($this->attachments);
-            }),
+            'priority' => $this->priority,
+
+            // --- Relationships ---
+            'creator' => new UserResource($this->whenLoaded('creator')),
+            'assignees' => UserResource::collection($this->whenLoaded('assignees')),
+            'comments' => TaskCommentResource::collection($this->whenLoaded('comments')),
+            'attachments' => TaskAttachmentResource::collection($this->whenLoaded('attachments')),
+            'paper_writing_task' => $this->whenLoaded('paperWritingTask'),
+
+            // --- Timestamps ---
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            // --- THE CRITICAL MISSING FIELD ---
+            'completed_at' => $this->completed_at,
         ];
     }
 } 

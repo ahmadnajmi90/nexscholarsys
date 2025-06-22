@@ -7,12 +7,16 @@ import ListView from '@/Components/ProjectHub/ListView';
 import TableView from '@/Components/ProjectHub/TableView';
 import TimelineView from '@/Components/ProjectHub/TimelineView';
 import { DndContext, DragOverlay, closestCorners, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import TaskCard from '@/Components/ProjectHub/TaskCard';
 import TaskDetailsModal from '@/Components/ProjectHub/TaskDetailsModal';
+import PaperTaskCreateModal from '@/Components/ProjectHub/PaperTaskCreateModal';
+import ChooseTaskTypeModal from '@/Components/ProjectHub/ChooseTaskTypeModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal } from 'lucide-react';
+import axios from 'axios';
 
-export default function Show({ initialBoardData, parentEntity, parentType }) {
+export default function Show({ initialBoardData, parentEntity, parentType, researchOptions = [] }) {
     // Initialize board state from props
     const [boardState, setBoardState] = useState(initialBoardData);
     // Track the active dragging task
@@ -30,6 +34,12 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
     const [confirmingTaskDeletion, setConfirmingTaskDeletion] = useState(null);
     // State for task details modal
     const [viewingTask, setViewingTask] = useState(null);
+    // State for choose task type modal
+    const [choosingTaskType, setChoosingTaskType] = useState(false);
+    // State for paper task modal
+    const [creatingPaperTask, setCreatingPaperTask] = useState(false);
+    // State to track the current list ID for task creation
+    const [currentListId, setCurrentListId] = useState(null);
     
     // Form for creating a new list
     const form = useForm({
@@ -211,13 +221,13 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
     const handleDragStart = (event) => {
         const { active } = event;
         
-        // Extract task ID from the active draggable item
-        const taskId = active.id;
+        // Extract ID from the active draggable item
+        const activeId = active.id;
         
-        // If it's a task, find and set the active task
-        if (taskId && taskId.toString().startsWith('task-')) {
+        // Check if it's a task or a list
+        if (activeId && activeId.toString().startsWith('task-')) {
             const listId = active.data.current.task.list_id;
-            const taskIdNumber = parseInt(taskId.replace('task-', ''));
+            const taskIdNumber = parseInt(activeId.replace('task-', ''));
             
             // Find the task in the board state
             const list = boardState.lists.find(list => list.id === listId);
@@ -228,6 +238,7 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
                 }
             }
         }
+        // No need to set active list, as we'll just show the overlay for tasks
     };
 
     // Handle drag end event
@@ -246,10 +257,9 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
         const activeId = active.id;
         const overId = over.id;
         
-        // Only proceed if it's a task being dragged
-        if (!activeId.toString().startsWith('task-')) {
-            return;
-        }
+        // Check if we're dealing with a task or a list
+        if (activeId.toString().startsWith('task-')) {
+            // This is a task being dragged
         
         // Get the list ID from over data (where the task was dropped)
         const overListId = parseInt(overId.replace('list-', ''));
@@ -304,18 +314,77 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
         }, 2000);
         
         // Send the update to the server
-        router.post(`/api/v1/tasks/${taskId}/move`, {
+            axios.post(`/api/v1/tasks/${taskId}/move`, {
             new_list_id: destinationList.id,
             order: newOrder
         }, {
-            preserveScroll: true,
-            preserveState: true,
-            // In case of error, revert back to the original state
-            onError: () => {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => {
+                if (response.data.success) {
+                    // Successfully moved the task
+                } else {
+                    // Handle error
+                    setBoardState(boardState);
+                    alert('An error occurred while moving the task. Please try again.');
+                }
+            })
+            .catch(error => {
+                // Handle error
                 setBoardState(boardState);
                 alert('An error occurred while moving the task. Please try again.');
+            });
+        } else if (activeId.toString().startsWith('list-')) {
+            // This is a list being reordered
+            
+            // Extract list IDs
+            const activeListId = parseInt(activeId.replace('list-', ''));
+            const overListId = parseInt(overId.replace('list-', ''));
+            
+            // Find the indices of the active and over lists
+            const activeListIndex = boardState.lists.findIndex(list => list.id === activeListId);
+            const overListIndex = boardState.lists.findIndex(list => list.id === overListId);
+            
+            // If either list is not found, do nothing
+            if (activeListIndex === -1 || overListIndex === -1) {
+                return;
             }
-        });
+            
+            // If the lists are the same, do nothing
+            if (activeListIndex === overListIndex) {
+                return;
+            }
+            
+            // Create a new board state with the reordered lists
+            const newBoardState = structuredClone(boardState);
+            newBoardState.lists = arrayMove(newBoardState.lists, activeListIndex, overListIndex);
+            
+            // Update the local state immediately for a responsive UI
+            setBoardState(newBoardState);
+            
+            // Prepare data for the API call
+            const updatedLists = newBoardState.lists.map((list, index) => ({
+                id: list.id,
+                order: index + 1 // Order starts at 1
+            }));
+            
+            // Use axios for this specific API call instead of Inertia
+            axios.post('/api/v1/lists/update-order', {
+                lists: updatedLists
+            }, {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .catch(error => {
+                console.error('Error updating list order:', error);
+                // Revert back to the original state on error
+                setBoardState(boardState);
+                alert('An error occurred while reordering the lists. Please try again.');
+            });
+        }
     };
 
     // Handle list creation
@@ -348,10 +417,22 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
     const confirmDeleteList = () => {
         if (!confirmingListDeletion) return;
         
-        router.delete(route('lists.destroy', confirmingListDeletion.id), {
-            onSuccess: () => {
+        axios.delete(route('lists.destroy', confirmingListDeletion.id), {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (response.data.success) {
                 setConfirmingListDeletion(null);
-            },
+            } else {
+                // Handle error
+                alert('An error occurred while deleting the list. Please try again.');
+            }
+        })
+        .catch(error => {
+            // Handle error
+            alert('An error occurred while deleting the list. Please try again.');
         });
     };
     
@@ -365,10 +446,72 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
         if (!confirmingTaskDeletion) return;
         
         router.delete(route('tasks.destroy', confirmingTaskDeletion.id), {
+            preserveScroll: true,
             onSuccess: () => {
                 setConfirmingTaskDeletion(null);
+                // Refresh the board data to reflect the deletion
+                router.reload({ only: ['initialBoardData'] });
             },
+            onError: (errors) => {
+                console.error('Error deleting task:', errors);
+                alert('An error occurred while deleting the task. Please try again.');
+            }
         });
+    };
+
+    // Handle task click - determine which modal to show
+    const handleTaskClick = (task) => {
+        // Check if it's a paper task
+        if (task.paperWritingTask) {
+            // Open the paper task modal in edit mode
+            setViewingTask(task);
+            setCreatingPaperTask(true);
+        } else {
+            // Open the normal task modal
+            setViewingTask(task);
+        }
+    };
+
+    // Handle add task button click
+    const handleAddTask = (listId) => {
+        console.log("handleAddTask called with listId:", listId);
+        setCurrentListId(listId);
+        setChoosingTaskType(true);
+    };
+
+    // Handle task type selection
+    const handleTaskTypeSelect = (taskType) => {
+        console.log("handleTaskTypeSelect called with taskType:", taskType);
+        console.log("currentListId when selecting task type:", currentListId);
+        setChoosingTaskType(false);
+        
+        if (taskType === 'paper') {
+            // Open paper task creation modal
+            setCreatingPaperTask(true);
+        } else {
+            // Open normal task creation modal
+            setViewingTask(null); // Ensure we're creating a new task, not editing
+            
+            // Show the TaskDetailsModal for normal task creation
+            // We need to create a temporary task object with the list_id to pass to the modal
+            const tempTask = {
+                board_list_id: currentListId,
+                title: '',
+                description: '',
+                due_date: '',
+                priority: 'Medium',
+                assignees: [],
+                task_type: 'normal', // Explicitly set task_type to 'normal'
+            };
+            console.log("Creating temporary task with board_list_id:", currentListId);
+            setViewingTask(tempTask);
+        }
+    };
+
+    // Handle closing the paper task modal
+    const handleClosePaperTask = () => {
+        setCreatingPaperTask(false);
+        setViewingTask(null);
     };
 
     // Enhance the BoardColumn component with info about recently updated tasks and delete handlers
@@ -386,21 +529,30 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
                 tasks={enhancedTasks}
                 onDeleteList={() => handleDeleteList(list)}
                 onDeleteTask={handleDeleteTask}
-                onTaskClick={setViewingTask}
+                onTaskClick={handleTaskClick}
+                onAddTask={handleAddTask}
+                className="board-column"
             />
         );
     };
 
     // Render the Board View
-    const renderBoardView = () => (
-        <div className="overflow-x-auto pb-4">
+    const renderBoardView = () => {
+        // Create an array of list IDs for the SortableContext
+        const listIds = boardState.lists.map(list => `list-${list.id}`);
+        
+        return (
+            <div className="board-container w-full overflow-hidden flex flex-col">
+                {/* Scrollable container for lists - limited to show ~3 columns */}
+                <div className="board-scroll-container overflow-x-auto">
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
-                <div className="flex min-h-[calc(100vh-200px)]">
+                        <div className="board-lists-row flex flex-nowrap gap-4 pb-4 pr-4">
+                            <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
                     {/* Render columns */}
                     {boardState.lists.map(list => (
                         <EnhancedBoardColumn
@@ -409,6 +561,68 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
                             tasks={list.tasks || []}
                         />
                     ))}
+                            </SortableContext>
+                            
+                            {/* Add List button/form at the end of the row */}
+                            {isCreatingList ? (
+                                <div className="w-72 flex-shrink-0 bg-white shadow rounded-lg p-4">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <h3 className="text-md font-medium text-gray-900">Create a new list</h3>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => {
+                                                setIsCreatingList(false);
+                                                form.reset();
+                                            }}
+                                            className="text-gray-400 hover:text-gray-500"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <form onSubmit={handleCreateList} className="space-y-3">
+                                        <div>
+                                            <input
+                                                type="text"
+                                                value={form.data.name}
+                                                onChange={e => form.setData('name', e.target.value)}
+                                                className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                                placeholder="List name"
+                                                disabled={form.processing}
+                                                autoFocus
+                                            />
+                                            {form.errors.name && <div className="text-red-500 text-xs mt-1">{form.errors.name}</div>}
+                                        </div>
+                                        <div className="flex justify-end space-x-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsCreatingList(false);
+                                                    form.reset();
+                                                }}
+                                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                                disabled={form.processing}
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                                                disabled={form.processing || !form.data.name.trim()}
+                                            >
+                                                {form.processing ? 'Creating...' : 'Create List'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCreatingList(true)}
+                                    className="w-72 flex-shrink-0 h-16 flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                                >
+                                    <Plus className="w-5 h-5 mr-2" /> Add List
+                                </button>
+                            )}
                 </div>
 
                 {/* Drag overlay - shows the task being dragged */}
@@ -416,8 +630,10 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
                     {activeTask ? <TaskCard task={activeTask} /> : null}
                 </DragOverlay>
             </DndContext>
+                </div>
         </div>
     );
+    };
 
     // Render the Calendar View
     const renderCalendarView = () => (
@@ -435,9 +651,13 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
     );
     
     // Render the Timeline View
-    const renderTimelineView = () => (
-        <TimelineView board={boardState} onTaskClick={setViewingTask} />
-    );
+    const renderTimelineView = () => {
+        // Debug: Log all tasks passed as props to TimelineView
+        console.log("1. All tasks passed as props to TimelineView:", allTasks);
+        console.log("1b. Board state passed to TimelineView:", boardState);
+        
+        return <TimelineView board={boardState} onTaskClick={setViewingTask} />;
+    };
 
     // If we're loading or don't have board data yet
     if (isLoading || !boardState) {
@@ -452,7 +672,7 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
     }
 
     return (
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-2 py-6">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-2 py-6 overflow-x-hidden">
             {/* Board header */}
             <div className="mb-6">
                 {/* Use the helper function to get the correct back link */}
@@ -548,59 +768,8 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
             </div>
             
             {/* Add List button (only show in Board view) */}
-            {currentView === 'board' && (
-                <div className="mb-6">
-                    {isCreatingList ? (
-                        <div className="bg-white shadow rounded-lg p-4">
-                            <div className="flex justify-between items-center mb-3">
-                                <h3 className="text-md font-medium text-gray-900">Create a new list</h3>
-                                <button 
-                                    type="button" 
-                                    onClick={() => {
-                                        setIsCreatingList(false);
-                                        form.reset();
-                                    }}
-                                    className="text-gray-400 hover:text-gray-500"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                            <form onSubmit={handleCreateList} className="space-y-3">
-                                <div>
-                                    <input
-                                        type="text"
-                                        value={form.data.name}
-                                        onChange={e => form.setData('name', e.target.value)}
-                                        className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                                        placeholder="List name"
-                                        disabled={form.processing}
-                                        autoFocus
-                                    />
-                                    {form.errors.name && <div className="text-red-500 text-xs mt-1">{form.errors.name}</div>}
-                                </div>
-                                <div className="flex justify-end space-x-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsCreatingList(false);
-                                            form.reset();
-                                        }}
-                                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                        disabled={form.processing}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                                        disabled={form.processing || !form.data.name.trim()}
-                                    >
-                                        {form.processing ? 'Creating...' : 'Create List'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    ) : (
+            {currentView === 'board' && !isCreatingList && (
+                <div className="mb-4">
                         <button
                             type="button"
                             onClick={() => setIsCreatingList(true)}
@@ -608,12 +777,11 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
                         >
                             <Plus className="w-4 h-4 mr-2" /> Add List
                         </button>
-                    )}
                 </div>
             )}
             
             {/* Board content */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-4 h-[35.2rem] overflow-hidden">
                 {/* Conditional rendering based on the current view */}
                 {currentView === 'board' && renderBoardView()}
                 {currentView === 'list' && renderListView()}
@@ -639,18 +807,126 @@ export default function Show({ initialBoardData, parentEntity, parentType }) {
                 message={confirmingTaskDeletion ? `Are you sure you want to delete the task "${confirmingTaskDeletion.title}"? This action cannot be undone.` : ''}
             />
             
-            {/* Task Details Modal */}
-            {viewingTask && (
+            {/* Task Details Modal (for normal tasks) */}
                 <TaskDetailsModal
                     task={viewingTask}
-                    show={!!viewingTask}
+                show={!!viewingTask && !creatingPaperTask}
                     onClose={() => setViewingTask(null)}
+                workspaceMembers={boardState.parent?.members || []}
+                researchOptions={researchOptions}
+            />
+            
+            {/* Paper Task Modal (for creating or editing paper tasks) */}
+            <PaperTaskCreateModal
+                task={viewingTask}
+                show={creatingPaperTask}
+                onClose={handleClosePaperTask}
+                listId={currentListId}
                     workspaceMembers={boardState.parent.members}
+                researchOptions={researchOptions}
                 />
-            )}
+            
+            {/* Choose Task Type Modal */}
+            <ChooseTaskTypeModal
+                show={choosingTaskType}
+                onClose={() => setChoosingTaskType(false)}
+                onSelectTaskType={handleTaskTypeSelect}
+            />
         </div>
     );
 }
+
+// Add custom CSS to ensure proper scrolling behavior and limit visible columns
+const style = document.createElement('style');
+style.textContent = `
+    .board-container {
+        height: 100%;
+        min-height: 0;
+    }
+    
+    .board-scroll-container {
+        flex: 1;
+        min-height: 0;
+        overflow-y: hidden;
+        /* Set width to show approximately 3 columns (80px × 3) + gaps */
+        width: calc(70rem + 2rem);
+        max-width: 100%;
+    }
+    
+    .board-lists-row {
+        min-height: 100%;
+    }
+    
+    /* Ensure each column has consistent width */
+    .board-column {
+        width: 20rem;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        max-height: 32rem;
+    }
+    
+    /* Make the task list area scrollable */
+    .board-column-tasks {
+        overflow-y: auto;
+        flex-grow: 1;
+        padding-right: 0.5rem;
+        margin-right: -0.5rem;
+    }
+    
+    /* Add styling for scrollbars */
+    .board-column-tasks::-webkit-scrollbar,
+    .list-view-container::-webkit-scrollbar,
+    .table-view-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .board-column-tasks::-webkit-scrollbar-track,
+    .list-view-container::-webkit-scrollbar-track,
+    .table-view-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .board-column-tasks::-webkit-scrollbar-thumb,
+    .list-view-container::-webkit-scrollbar-thumb,
+    .table-view-container::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+    }
+    
+    .board-column-tasks::-webkit-scrollbar-thumb:hover,
+    .list-view-container::-webkit-scrollbar-thumb:hover,
+    .table-view-container::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+    
+    /* List View Scrolling */
+    .list-view-container {
+        max-height: calc(100vh - 240px);
+        overflow-y: auto;
+    }
+    
+    /* Table View Scrolling */
+    .table-view-container {
+        max-height: calc(100vh - 320px);
+        overflow-y: auto;
+    }
+    
+    /* Adjust for smaller screens */
+    @media (max-width: 1280px) {
+        .board-scroll-container {
+            width: calc(60rem + 1.5rem);
+        }
+    }
+    
+    @media (max-width: 1024px) {
+        .board-scroll-container {
+            width: calc(40rem + 1rem);
+        }
+    }
+`;
+document.head.appendChild(style);
 
 // Set the layout for this page
 Show.layout = page => <MainLayout title="Board View" children={page} TopMenuOpen={false} />; 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\WorkspaceResource;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Notifications\WorkspaceInvitationReceived;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -135,6 +136,10 @@ class WorkspaceController extends Controller
         $workspace->members()->syncWithoutDetaching([
             $validated['user_id'] => ['role' => $validated['role']]
         ]);
+
+        // 4. Send invitation notification to the invited user
+        $invitedUser = User::find($validated['user_id']);
+        $invitedUser->notify(new WorkspaceInvitationReceived($workspace, $request->user()));
         
         if ($request->wantsJson()) {
             return response()->json(['message' => 'Member added successfully.']);
@@ -148,7 +153,7 @@ class WorkspaceController extends Controller
      */
     public function removeMember(Request $request, Workspace $workspace, User $member)
     {
-        $this->authorize('removeMember', $workspace);
+        $this->authorize('removeMember', [$workspace, $member]);
         
         // Prevent removing the owner
         if ($member->id === $workspace->owner_id) {

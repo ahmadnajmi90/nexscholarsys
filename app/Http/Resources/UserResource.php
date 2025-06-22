@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
 class UserResource extends JsonResource
 {
@@ -14,22 +15,25 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Define the base user attributes
-        $attributes = [
+        // Add this at the top of the toArray method
+        $computed_full_name = $this->academician->full_name 
+                            ?? $this->postgraduate->full_name 
+                            ?? $this->undergraduate->full_name 
+                            ?? $this->name;
+
+        return [
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => $this->name, // Keep as a fallback
             'email' => $this->email,
             'avatar_url' => $this->avatar_url ?? asset('images/default-avatar.png'),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-        ];
-        
-        // Merge with conditionally loaded relationships
-        return array_merge($attributes, [
-            // Conditionally include each role profile ONLY if it was loaded by the controller
+            
+            // ADD THIS COMPUTED ATTRIBUTE
+            'full_name' => $computed_full_name,
+
+            // Keep the conditionally loaded relationships
             'academician' => $this->whenLoaded('academician'),
             'postgraduate' => $this->whenLoaded('postgraduate'),
             'undergraduate' => $this->whenLoaded('undergraduate'),
-        ]);
+        ];
     }
 }

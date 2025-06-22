@@ -77,8 +77,8 @@ class PostProjectController extends Controller
 
     public function store(StorePostProjectRequest $request)
     {
-        try {
-            logger('Store method reached');
+            try {
+                logger('Store method reached');
             
             // Get validated data
             $validated = $request->validated();
@@ -94,48 +94,48 @@ class PostProjectController extends Controller
             }
             
             // Handle image upload
-            if ($request->hasFile('image')) {
-                logger('Image: Im here ');
-                
-                // Define the destination path directly in the public directory
-                $destinationPath = public_path('storage/project_images');
-                
-                // Ensure the directory exists
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
+                if ($request->hasFile('image')) {
+                    logger('Image: Im here ');
+                    
+                    // Define the destination path directly in the public directory
+                    $destinationPath = public_path('storage/project_images');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    // Store the uploaded file in the public/storage/event_images folder
+                    $image = $request->file('image');
+                    $imageName = time() . '_' . $image->getClientOriginalName();
+                    $image->move($destinationPath, $imageName);
+                    
+                    // Save the path relative to public/storage
+                    $validated['image'] = 'project_images/' . $imageName;
+                    logger('Image: Im here ', ['path' => $validated['image']]);
                 }
                 
-                // Store the uploaded file in the public/storage/event_images folder
-                $image = $request->file('image');
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->move($destinationPath, $imageName);
-                
-                // Save the path relative to public/storage
-                $validated['image'] = 'project_images/' . $imageName;
-                logger('Image: Im here ', ['path' => $validated['image']]);
-            }
-            
-            // Handle attachment upload
-            if ($request->hasFile('attachment')) {
-                logger('Attachment: Im here ');
-                
-                // Define the destination path directly in the public directory
-                $destinationPath = public_path('storage/project_attachments');
-                
-                // Ensure the directory exists
-                if (!file_exists($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
+                // Handle attachment upload
+                if ($request->hasFile('attachment')) {
+                    logger('Attachment: Im here ');
+                    
+                    // Define the destination path directly in the public directory
+                    $destinationPath = public_path('storage/project_attachments');
+                    
+                    // Ensure the directory exists
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+                    
+                    // Store the uploaded file in the public/storage/event_images folder
+                    $attachment = $request->file('attachment');
+                    $attachmentName = time() . '_' . $attachment->getClientOriginalName();
+                    $attachment->move($destinationPath, $attachmentName);
+                    
+                    // Save the path relative to public/storage
+                    $validated['attachment'] = 'project_attachments/' . $attachmentName;
+                    logger('Attachment: Im here ', ['path' => $validated['attachment']]);
                 }
-                
-                // Store the uploaded file in the public/storage/event_images folder
-                $attachment = $request->file('attachment');
-                $attachmentName = time() . '_' . $attachment->getClientOriginalName();
-                $attachment->move($destinationPath, $attachmentName);
-                
-                // Save the path relative to public/storage
-                $validated['attachment'] = 'project_attachments/' . $attachmentName;
-                logger('Attachment: Im here ', ['path' => $validated['attachment']]);
-            }
 
             // Process JSON fields
             foreach (['purpose', 'student_level', 'student_mode_study', 'field_of_research'] as $field) {
@@ -143,61 +143,61 @@ class PostProjectController extends Controller
                     $validated[$field] = json_decode($validated[$field], true);
                     logger()->info(ucfirst($field) . ':', $validated[$field] ?? []);
                 }
-            }
+                }
 
-            // Log validated data
-            logger('Validated Data:', $validated);
+                // Log validated data
+                logger('Validated Data:', $validated);
 
             // Create the post project with explicit author_id
             $postProject = new PostProject($validated);
             $postProject->author_id = $validated['author_id'];
             $postProject->save();
 
-            // Check if the user opted-in to create a ScholarLab project
-            if ($request->boolean('create_scholarlab_project')) {
-                logger('Creating ScholarLab project for post project ID: ' . $postProject->id);
-                
-                // Create the linked ScholarLab Project
-                $project = \App\Models\Project::create([
-                    'name' => $postProject->title, // Use the post's title as the project name
-                    'description' => 'Research project based on: ' . $postProject->title,
-                    'owner_id' => Auth::id(),
-                    'post_project_id' => $postProject->id, // Link to the post we just created
-                ]);
-                
-                // Create a default board for the project
-                $board = new \App\Models\Board([
-                    'name' => 'Main Board',
-                ]);
-                
-                // Save the board with the polymorphic relationship
-                $project->boards()->save($board);
-                
-                // Create some default lists for the board
-                $board->lists()->create([
-                    'name' => 'To Do',
-                    'order' => 1,
-                ]);
-                
-                $board->lists()->create([
-                    'name' => 'In Progress',
-                    'order' => 2,
-                ]);
-                
-                $board->lists()->create([
-                    'name' => 'Done',
-                    'order' => 3,
-                ]);
-                
-                logger('ScholarLab project created successfully with ID: ' . $project->id);
-            }
+                // Check if the user opted-in to create a ScholarLab project
+                if ($request->boolean('create_scholarlab_project')) {
+                    logger('Creating ScholarLab project for post project ID: ' . $postProject->id);
+                    
+                    // Create the linked ScholarLab Project
+                    $project = \App\Models\Project::create([
+                        'name' => $postProject->title, // Use the post's title as the project name
+                        'description' => 'Research project based on: ' . $postProject->title,
+                        'owner_id' => Auth::id(),
+                        'post_project_id' => $postProject->id, // Link to the post we just created
+                    ]);
+                    
+                    // Create a default board for the project
+                    $board = new \App\Models\Board([
+                        'name' => 'Main Board',
+                    ]);
+                    
+                    // Save the board with the polymorphic relationship
+                    $project->boards()->save($board);
+                    
+                    // Create some default lists for the board
+                    $board->lists()->create([
+                        'name' => 'To Do',
+                        'order' => 1,
+                    ]);
+                    
+                    $board->lists()->create([
+                        'name' => 'In Progress',
+                        'order' => 2,
+                    ]);
+                    
+                    $board->lists()->create([
+                        'name' => 'Done',
+                        'order' => 3,
+                    ]);
+                    
+                    logger('ScholarLab project created successfully with ID: ' . $project->id);
+                }
 
-            return redirect()->route('post-projects.index')->with('success', 'Project posted successfully.');
-    
-        } catch (ValidationException $e) {
-            logger('Validation Errors:', $e->errors());
-            // Return back with validation errors
-            return redirect()->back()->withErrors($e->errors())->withInput();
+                return redirect()->route('post-projects.index')->with('success', 'Project posted successfully.');
+        
+            } catch (ValidationException $e) {
+                logger('Validation Errors:', $e->errors());
+                // Return back with validation errors
+                return redirect()->back()->withErrors($e->errors())->withInput();
         }
     }
 

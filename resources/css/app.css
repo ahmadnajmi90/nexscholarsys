@@ -63,3 +63,22 @@
 .gantt .bar-wrapper[data-custom-class="default"] .bar {
     fill: #6b7280;
 }
+
+/* Completed task styles */
+.gantt .bar-wrapper.task-completed .bar {
+    opacity: 0.6;
+}
+
+.gantt .bar-wrapper.task-completed .bar-label {
+    text-decoration: line-through;
+    font-style: italic;
+}
+
+/* Calendar view completed task styles */
+.fc-event.task-completed {
+    opacity: 0.6;
+}
+
+.fc-event.task-completed .fc-event-title {
+    text-decoration: line-through;
+}

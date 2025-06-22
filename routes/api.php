@@ -56,6 +56,10 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->only(['update', 'destroy'])
         ->parameters(['lists' => 'boardList']);
     
+    // New route for updating list order
+    Route::post('/lists/update-order', [BoardListController::class, 'updateOrder'])
+        ->name('lists.updateOrder');
+    
     // Task routes nested under lists
     Route::apiResource('lists.tasks', TaskController::class)
         ->only(['store'])
@@ -72,6 +76,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->name('tasks.comments.add');
     Route::post('tasks/{task}/assignees', [TaskController::class, 'assignUsers'])
         ->name('tasks.assignees');
+    Route::post('tasks/{task}/toggle-completion', [TaskController::class, 'toggleCompletion'])
+        ->name('api.tasks.toggleCompletion');
         
     // Task attachment routes
     Route::post('tasks/{task}/attachments', [TaskAttachmentController::class, 'store'])

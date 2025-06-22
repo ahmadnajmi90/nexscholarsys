@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\ProjectInvitationReceived;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\User;
@@ -40,6 +41,10 @@ class ProjectMemberController extends Controller
         $project->members()->attach($validated['user_id'], [
             'role' => $validated['role'],
         ]);
+
+        // Send invitation notification to the invited user
+        $invitedUser = User::find($validated['user_id']);
+        $invitedUser->notify(new ProjectInvitationReceived($project, $request->user()));
         
         return response()->json([
             'message' => 'Member added successfully',

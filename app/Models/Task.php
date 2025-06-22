@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Task extends Model
 {
@@ -25,6 +26,7 @@ class Task extends Model
         'due_date',
         'order',
         'priority',
+        'completed_at',
     ];
 
     /**
@@ -34,6 +36,7 @@ class Task extends Model
      */
     protected $casts = [
         'due_date' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     /**
@@ -74,5 +77,13 @@ class Task extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(TaskAttachment::class)->latest();
+    }
+
+    /**
+     * Get the paper writing task associated with this task.
+     */
+    public function paperWritingTask(): HasOne
+    {
+        return $this->hasOne(PaperWritingTask::class);
     }
 } 

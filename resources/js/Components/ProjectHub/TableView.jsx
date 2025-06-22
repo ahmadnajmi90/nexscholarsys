@@ -8,11 +8,21 @@ import {
     createColumnHelper 
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ChevronUp, ChevronDown, Search } from 'lucide-react';
+import { ChevronUp, ChevronDown, Search, BookOpen } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import toast from 'react-hot-toast';
+import clsx from 'clsx';
+import axios from 'axios';
+import Pagination from '@/Components/Pagination';
+import { isTaskCompleted } from '@/Utils/utils';
 
 export default function TableView({ board, onTaskClick }) {
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(15);
+    const [showCompleted, setShowCompleted] = useState(false);
+    const [completingTasks, setCompletingTasks] = useState(new Set());
     
     // Flatten all tasks from all lists
     const data = useMemo(() => {
@@ -26,20 +36,95 @@ export default function TableView({ board, onTaskClick }) {
     }, [board]);
     
     const columnHelper = createColumnHelper();
+
+    // Handle task completion toggle
+    const handleToggleCompletion = async (task, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Prevent multiple simultaneous requests for the same task
+        if (completingTasks.has(task.id)) {
+            return;
+        }
+
+        setCompletingTasks(prev => new Set(prev).add(task.id));
+
+        try {
+            await axios.post(route('api.tasks.toggleCompletion', task.id));
+            
+            toast.success('Task status updated!');
+
+            // THE CRITICAL FIX:
+            // This tells Inertia to refetch only the 'initialBoardData' prop 
+            // from the server. It's a highly efficient partial reload, 
+            // not a full page refresh.
+            router.reload({ only: ['initialBoardData'] });
+        } catch (error) {
+            console.error('Error toggling task completion:', error);
+            toast.error('Failed to update task status.');
+        } finally {
+            setCompletingTasks(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(task.id);
+                return newSet;
+            });
+        }
+    };
     
     // Define table columns
     const columns = useMemo(() => [
+        columnHelper.accessor('completed_at', {
+            header: '',
+            cell: info => (
+                <input
+                    type="checkbox"
+                    checked={isTaskCompleted(info.row.original)}
+                    disabled={completingTasks.has(info.row.original.id)}
+                    onChange={(e) => handleToggleCompletion(info.row.original, e)}
+                    className={clsx(
+                        "w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2",
+                        {
+                            "opacity-50 cursor-not-allowed": completingTasks.has(info.row.original.id)
+                        }
+                    )}
+                />
+            ),
+            enableSorting: false,
+            size: 50
+        }),
         columnHelper.accessor('title', {
             header: 'Task',
             cell: info => (
                 <div 
-                    className="font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                    className={clsx(
+                        "font-medium cursor-pointer flex items-center gap-2",
+                        {
+                            "text-gray-500 line-through": isTaskCompleted(info.row.original),
+                            "text-indigo-600 hover:text-indigo-800": !isTaskCompleted(info.row.original)
+                        }
+                    )}
                     onClick={() => onTaskClick(info.row.original)}
                 >
+                    {info.row.original.paper_writing_task && (
+                        <BookOpen className="w-4 h-4 text-blue-600" />
+                    )}
                     {info.getValue()}
                 </div>
             ),
             sortingFn: 'alphanumeric'
+        }),
+        columnHelper.accessor('paper_writing_task', {
+            header: 'Type',
+            cell: info => (
+                <span className="text-sm">
+                    {info.getValue() ? 'Paper' : 'Normal'}
+                </span>
+            ),
+            sortingFn: (rowA, rowB) => {
+                const typeA = rowA.original.paper_writing_task ? 'Paper' : 'Normal';
+                const typeB = rowB.original.paper_writing_task ? 'Paper' : 'Normal';
+                return typeA.localeCompare(typeB);
+            }
         }),
         columnHelper.accessor('list_name', {
             header: 'List',
@@ -125,7 +210,7 @@ export default function TableView({ board, onTaskClick }) {
             },
             enableSorting: false
         })
-    ], [columnHelper, onTaskClick]);
+    ], [columnHelper, onTaskClick, handleToggleCompletion, completingTasks]);
     
     // Create table instance
     const table = useReactTable({
@@ -135,31 +220,72 @@ export default function TableView({ board, onTaskClick }) {
             sorting,
             globalFilter
         },
-        onSortingChange: setSorting,
-        onGlobalFilterChange: setGlobalFilter,
+        onSortingChange: (sorting) => {
+            setSorting(sorting);
+            setCurrentPage(1); // Reset to first page when sorting
+        },
+        onGlobalFilterChange: (value) => {
+            setGlobalFilter(value);
+            setCurrentPage(1); // Reset to first page when filtering
+        },
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getCoreRowModel: getCoreRowModel()
     });
+
+    // Apply completion filter first, then pagination
+    const filteredRows = table.getFilteredRowModel().rows;
+    
+    // Filter tasks based on showCompleted state
+    const filteredTasks = filteredRows.filter(row => {
+        return showCompleted ? true : !isTaskCompleted(row.original);
+    });
+    
+    const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+    
+    // Get current page rows from filtered tasks
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentPageRows = filteredTasks.slice(startIndex, endIndex);
     
     return (
         <div className="bg-white rounded-lg shadow p-4">
-            {/* Search input */}
-            <div className="mb-4 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
+            {/* Controls Row */}
+            <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between">
+                {/* Search input */}
+                <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        value={globalFilter || ''}
+                        onChange={e => setGlobalFilter(e.target.value)}
+                        placeholder="Search tasks..."
+                        className="pl-10 pr-3 py-2 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                    />
                 </div>
-                <input
-                    type="text"
-                    value={globalFilter || ''}
-                    onChange={e => setGlobalFilter(e.target.value)}
-                    placeholder="Search tasks..."
-                    className="pl-10 pr-3 py-2 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                />
+
+                {/* Show Completed Tasks Toggle */}
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="show-completed-table"
+                        checked={showCompleted}
+                        onChange={(e) => {
+                            setShowCompleted(e.target.checked);
+                            setCurrentPage(1); // Reset to first page when toggling
+                        }}
+                        className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                    />
+                    <label htmlFor="show-completed-table" className="ml-2 text-sm font-medium text-gray-700 whitespace-nowrap">
+                        Show Completed Tasks
+                    </label>
+                </div>
             </div>
             
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="table-view-container overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         {table.getHeaderGroups().map(headerGroup => (
@@ -192,11 +318,16 @@ export default function TableView({ board, onTaskClick }) {
                         ))}
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {table.getRowModel().rows.length > 0 ? (
-                            table.getRowModel().rows.map(row => (
+                        {currentPageRows.length > 0 ? (
+                            currentPageRows.map(row => (
                                 <tr 
                                     key={row.id}
-                                    className="hover:bg-gray-50"
+                                    className={clsx(
+                                        "hover:bg-gray-50",
+                                        {
+                                            "opacity-60": isTaskCompleted(row.original)
+                                        }
+                                    )}
                                 >
                                     {row.getVisibleCells().map(cell => (
                                         <td 
@@ -217,7 +348,7 @@ export default function TableView({ board, onTaskClick }) {
                                     colSpan={columns.length}
                                     className="px-4 py-3 text-center text-sm text-gray-500"
                                 >
-                                    No tasks found
+                                    {showCompleted || data.length === 0 ? 'No tasks found' : 'No active tasks found'}
                                 </td>
                             </tr>
                         )}
@@ -227,7 +358,18 @@ export default function TableView({ board, onTaskClick }) {
             
             {/* Table footer with stats */}
             <div className="mt-3 text-sm text-gray-500">
-                Showing {table.getRowModel().rows.length} of {data.length} tasks
+                Showing {Math.min(startIndex + 1, filteredTasks.length)}-{Math.min(endIndex, filteredTasks.length)} of {filteredTasks.length} tasks
+                {globalFilter && ` (filtered from ${data.length} total)`}
+                {!showCompleted && ` • Completed tasks hidden`}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="mt-4">
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => setCurrentPage(page)}
+                />
             </div>
         </div>
     );
