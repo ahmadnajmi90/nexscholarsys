@@ -11,7 +11,7 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - [Usage](#usage)
 - [AI Integration](#ai-integration)
 - [Semantic Search](#semantic-search)
-- [Project Hub](#project-hub-task-management)
+- [Project Hub](#project-hub)
 - [Google Services](#google-services)
 - [Contributing](#contributing)
 - [Changelog](#changelog)
@@ -90,118 +90,155 @@ User profiles do not store raw text for their research interests. Instead, they 
 - Filter results by university, availability, and research fields
 - Cache and store supervisor-student match insights for analytics
 
-### Project Hub (Task Management)
+## Project Hub
 
-The Project Hub is a versatile task management system integrated into the Nexscholar platform, designed specifically for academic and research collaboration. It provides researchers, academicians, and students with a centralized workspace to organize projects, track tasks, and collaborate effectively with team members throughout the research and academic workflow.
+The **Project Hub** is Nexscholar's comprehensive task management and collaboration platform designed specifically for academic and research projects. It provides a centralized workspace where teams can organize, track, and collaborate on various tasks using multiple visualization methods and real-time updates.
 
-#### Key Features
+### Key Features
 
-* **Hierarchical Organization Structure**
-  * **Workspaces**: Create dedicated environments for different research projects, labs, or departments
-  * **Boards**: Organize work into separate boards for specific research initiatives or academic collaborations
-  * **Lists**: Structure your workflow with customizable lists (e.g., "Planning", "In Progress", "Literature Review", "Experiments", "Completed")
-  * **Tasks**: Break down your work into manageable tasks with detailed information
+- **Multiple View Options**: Five distinct views (Kanban Board, List, Table, Calendar, Timeline) to suit different workflow preferences
+- **Hierarchical Organization**: Structured workspace → board → list → task organization for optimal project management
+- **Real-Time Collaboration**: Live updates and synchronization across team members using WebSocket technology
+- **Specialized Task Types**: Support for both normal tasks and specialized "Paper Writing Tasks" with academic-specific fields
+- **Advanced Task Management**: Complete CRUD operations, drag-and-drop functionality, priority levels, due dates, and assignee management
+- **Task Completion Workflow**: Visual completion indicators with filtering options to show/hide completed tasks
+- **File Attachments**: Support for task-related document uploads and management
+- **Comments System**: Threaded discussions on individual tasks for team communication
+- **Member Management**: Invite collaborators to workspaces and projects with role-based permissions
 
-* **Interactive Kanban Board**
-  * Intuitive drag-and-drop interface for moving tasks between lists
-  * Real-time updates via Laravel Reverb, ensuring all team members see changes instantly
-  * Visual indicators highlighting recently moved or updated tasks
-  * Customizable lists to adapt to different workflow stages
+### Hierarchical Organization
 
-* **Multiple View Options**
-  * **Board View (Kanban)**: Default view with draggable cards in columns for visual task management
-  * **Calendar View**: Timeline-based visualization of tasks with due dates for deadline management
-  * **List View**: Compact, grouped representation of tasks organized by list for quick scanning
-  * **Table View**: Sortable and filterable tabular display with advanced filtering capabilities
-  * **Timeline View**: Gantt-style chart showing task durations and deadlines
+The Project Hub follows a four-level hierarchical structure:
 
-* **Comprehensive Task Management**
-  * **Task Details**: Edit titles, descriptions, due dates, and priorities
-  * **Priority Levels**: Assign importance (Low, Medium, High, Urgent) with color-coding across all views
-  * **Comments**: Discuss tasks with team members through threaded comments
-  * **Attachments**: Upload and manage research files, papers, and documents
-  * **Task History**: Track task creation and updates with timestamps and user information
+1. **Workspace** - Top-level container for organizing related projects and boards
+2. **Board** - Individual project boards within workspaces (can also belong directly to projects)
+3. **List** - Columns or categories within boards (e.g., "To Do", "In Progress", "Done")
+4. **Task** - Individual work items within lists
 
-* **Specialized Task Types**
-  * **Normal Tasks**: Standard tasks with basic tracking capabilities
-  * **Paper Writing Tasks**: Specialized tasks for academic paper writing with additional fields:
-    * Area of Study: Field or discipline of the paper
-    * Paper Type: Research paper, review, case study, etc.
-    * Publication Type: Journal, conference, book chapter, etc.
-    * Scopus Info: Indexing information for academic tracking
-    * Progress: Structured workflow stages (Not Started, Planning, Researching, Drafting, Revising, Final Review, Completed)
-    * PDF Attachment: Upload and track paper drafts directly within the task
+This structure allows for flexible organization where teams can create multiple workspaces for different research areas, with each workspace containing multiple boards for specific projects or topics.
 
-* **Real-Time Collaboration**
-  * Live updates synchronized across all users viewing the same board
-  * Clear visual indicators when tasks are modified by collaborators
-  * Collaborative commenting system for discussions within task context
+### Multiple View Options
 
-* **Workspace Administration**
-  * Create and manage multiple workspaces for different projects or research groups
-  * Invite collaborators to specific workspaces with appropriate permissions
-  * Control who can view, edit, and administer project boards
+#### 1. **Board View (Kanban)**
+- **Primary Use Case**: Visual workflow management and task progression tracking
+- **Features**: Drag-and-drop task movement between lists, real-time updates, visual task cards
+- **Best For**: Teams following agile methodologies or visual project management approaches
 
-#### How to Use
+#### 2. **List View**
+- **Primary Use Case**: Compact overview of all tasks organized by lists
+- **Features**: Checkbox completion, priority indicators, assignee avatars, completion filtering
+- **Best For**: Quick task reviews and status updates across multiple lists
 
-1. **Access Project Hub**: Navigate to "Project Hub" from the main sidebar navigation.
+#### 3. **Table View**
+- **Primary Use Case**: Detailed task analysis and bulk operations
+- **Features**: Sortable columns, global search, pagination (15 items per page), advanced filtering
+- **Best For**: Data analysis, reporting, and managing large numbers of tasks
 
-2. **Workspace Management**:
-   * Create a new workspace by clicking the "New Workspace" button
-   * Enter a name and optional description for your workspace
-   * Access existing workspaces from the dashboard
+#### 4. **Calendar View**
+- **Primary Use Case**: Deadline management and scheduling
+- **Features**: Monthly/weekly views, due date visualization, priority-based color coding
+- **Best For**: Deadline tracking and schedule coordination
 
-3. **Board Creation and Management**:
-   * Within a workspace, create new boards by clicking "Create new board"
-   * Name your board according to your research project or academic initiative
-   * Navigate between boards within the workspace
+#### 5. **Timeline View (Gantt Chart)**
+- **Primary Use Case**: Project timeline visualization and dependency tracking
+- **Features**: Interactive Gantt charts, task duration visualization, priority-based coloring
+- **Best For**: Long-term project planning and timeline management
 
-4. **Working with Lists**:
-   * Each board starts empty and ready for customization
-   * Create lists to represent your workflow stages (e.g., "To Do", "In Progress", "Review", "Complete")
-   * Arrange lists in the order that matches your process
+### Comprehensive Task Management
 
-5. **Task Management**:
-   * Create tasks within any list using the "Add Task" button
-   * Choose between normal tasks and paper writing tasks based on your needs
-   * For normal tasks: Provide a title, description, due date, priority, and assignees
-   * For paper writing tasks: Add academic-specific details like area of study, paper type, and progress tracking
-   * Move tasks between lists by dragging and dropping them
-   * Click on a task to view and edit its details, add comments, or upload attachments
+Users can perform the following actions on tasks:
 
-6. **Changing Views**:
-   * Switch between different views using the view selector in the top navigation
-   * Use Calendar view for deadline-focused planning
-   * Use Table view for sorting and filtering tasks by various criteria
-   * Use Timeline view for visualizing task durations and timelines
+#### Core Task Operations
+- **Create Tasks**: Add new tasks with title, description, due date, and priority
+- **Edit Details**: Modify all task properties including specialized fields for paper tasks
+- **Delete Tasks**: Remove tasks with confirmation prompts
+- **Move Tasks**: Drag-and-drop between lists or use the move functionality
+- **Duplicate Tasks**: Create copies of existing tasks (where applicable)
 
-7. **Collaboration**:
-   * Share workspace access with team members for collaborative work
-   * Comment on tasks to discuss specific items
-   * Track updates and changes in real-time as collaborators modify the board
+#### Task Properties
+- **Basic Information**: Title, description, due date, priority (Low, Medium, High, Urgent)
+- **Assignment**: Assign multiple team members to tasks
+- **Completion Status**: Mark tasks as complete/incomplete with visual indicators
+- **Comments**: Add threaded discussions and updates
+- **Attachments**: Upload and manage files (up to 10MB per file)
 
-#### Paper Writing Task Workflow
+#### Advanced Features
+- **Real-Time Updates**: Changes sync instantly across all team members
+- **Visual Indicators**: Priority badges, completion status, and task type indicators
+- **Filtering**: Show/hide completed tasks in List and Table views
+- **Search**: Global search functionality in Table view
+- **Sorting**: Multi-column sorting in Table view
 
-The specialized paper writing task feature is designed to support the academic publication process:
+### Specialized Task Types
 
-1. **Creating a Paper Task**:
-   * Click "Add a task" in any list
-   * Select "Paper Writing Task" from the task type options
-   * Fill in both standard task fields and paper-specific fields
-   * Upload PDF drafts directly to the task for easy access
+#### Normal Tasks
+Standard task type with basic properties:
+- Title and description
+- Due date and priority
+- Assignees and comments
+- File attachments
+- Completion status via `completed_at` timestamp
 
-2. **Tracking Progress**:
-   * Use the dedicated "Progress" field to track the paper through its lifecycle
-   * Move the paper task between lists as it progresses through different phases
-   * Update paper details as they evolve (e.g., publication type, scopus info)
+#### Paper Writing Tasks
+Academic-focused tasks with specialized fields:
+- **Area of Study**: Research domains and fields (structured taxonomy)
+- **Paper Type**: Type of academic paper (research article, review, etc.)
+- **Publication Type**: Target publication venue
+- **Scopus Information**: Scopus-related metadata
+- **Progress Status**: Academic-specific progress tracking ('Completed', 'Published')
+- **PDF Attachment**: Dedicated field for paper drafts and final versions
 
-3. **Collaboration on Papers**:
-   * Assign multiple team members to collaborate on the paper
-   * Use comments to discuss specific aspects of the paper
-   * Share drafts through the PDF attachment feature
-   * Track version history through multiple uploads
+Paper Writing Tasks are visually distinguished with:
+- Blue "Paper" badges with book icon
+- Special progress-based completion logic
+- Enhanced forms with academic-specific fields
 
-The Project Hub seamlessly integrates with the rest of the Nexscholar platform, allowing for efficient academic project management while maintaining connection to research profiles, publications, and other scholarly activities.
+### Task Completion Workflow
+
+#### Completion Mechanics
+- **Normal Tasks**: Completed when `completed_at` timestamp is set
+- **Paper Writing Tasks**: Completed when progress status is 'Completed' or 'Published'
+- **Toggle Functionality**: Click checkbox to mark complete/incomplete
+- **Visual Feedback**: Loading states during API calls, success/error notifications
+
+#### Visual Indicators
+- **Completed Tasks**: 60% opacity, strikethrough text, grayed appearance
+- **Active Tasks**: Full opacity, normal styling
+- **Consistent Styling**: Applied across all five views (Board, List, Table, Calendar, Timeline)
+
+#### Filtering Options
+- **List View**: "Show Completed Tasks" checkbox toggle
+- **Table View**: "Show Completed Tasks" toggle with pagination reset
+- **Smart Messaging**: Different empty state messages for "no tasks" vs "no active tasks"
+
+### How to Use
+
+#### Getting Started
+1. **Access Project Hub**: Navigate to the main Project Hub from the dashboard
+2. **Create Workspace**: Click "Create Workspace" to establish a new collaborative space
+3. **Add Board**: Create boards within workspaces for specific projects
+4. **Set Up Lists**: Add lists to organize task workflow (e.g., "To Do", "In Progress", "Review", "Done")
+
+#### Managing Tasks
+1. **Add Tasks**: Click the "+" button in any list to create new tasks
+2. **Choose Task Type**: Select between Normal Task or Paper Writing Task
+3. **Fill Details**: Add title, description, due date, priority, and assignees
+4. **Attach Files**: Upload relevant documents using the attachment feature
+5. **Track Progress**: Use checkboxes to mark tasks complete and monitor progress
+
+#### Team Collaboration
+1. **Invite Members**: Use the collaboration modal to invite team members
+2. **Assign Tasks**: Assign specific tasks to team members
+3. **Add Comments**: Use the comment system for task-specific discussions
+4. **Monitor Updates**: Watch for real-time updates as team members make changes
+
+#### View Management
+1. **Switch Views**: Use the view selector to change between Board, List, Table, Calendar, and Timeline
+2. **Filter Content**: Toggle completed task visibility in List and Table views
+3. **Search Tasks**: Use the global search in Table view to find specific tasks
+4. **Sort Data**: Click column headers in Table view to sort by different criteria
+
+The Project Hub provides a comprehensive solution for academic project management, combining the flexibility of multiple views with specialized features for research and academic collaboration.
 
 ## System Requirements
 
