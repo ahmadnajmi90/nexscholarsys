@@ -7,7 +7,7 @@ import ListView from '@/Components/ProjectHub/ListView';
 import TableView from '@/Components/ProjectHub/TableView';
 import TimelineView from '@/Components/ProjectHub/TimelineView';
 import { DndContext, DragOverlay, closestCorners, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import TaskCard from '@/Components/ProjectHub/TaskCard';
 import TaskDetailsModal from '@/Components/ProjectHub/TaskDetailsModal';
 import PaperTaskCreateModal from '@/Components/ProjectHub/PaperTaskCreateModal';
@@ -200,19 +200,17 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
         }
     };
 
-    // Set up drag sensors for mouse and touch
+    // Set up sensors for both mouse and touch (important for mobile drag & drop)
     const sensors = useSensors(
         useSensor(MouseSensor, {
-            // Require the mouse to move by 10px before activating
             activationConstraint: {
-                distance: 10,
+                distance: 8,
             },
         }),
         useSensor(TouchSensor, {
-            // Press delay to differentiate from scroll
             activationConstraint: {
-                delay: 250,
-                tolerance: 5,
+                delay: 200,
+                tolerance: 8,
             },
         })
     );
@@ -543,29 +541,34 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
         
         return (
             <div className="board-container w-full overflow-hidden flex flex-col">
-                {/* Scrollable container for lists - limited to show ~3 columns */}
-                <div className="board-scroll-container overflow-x-auto">
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCorners}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-            >
-                        <div className="board-lists-row flex flex-nowrap gap-4 pb-4 pr-4">
-                            <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
-                    {/* Render columns */}
-                    {boardState.lists.map(list => (
-                        <EnhancedBoardColumn
-                            key={list.id}
-                            list={list}
-                            tasks={list.tasks || []}
-                        />
-                    ))}
+                {/* Mobile: Vertical scrolling container, Desktop: Horizontal scrolling */}
+                <div className="board-scroll-container overflow-y-auto md:overflow-y-hidden md:overflow-x-auto">
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCorners}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                    >
+                        {/* Mobile: Vertical stack, Desktop: Horizontal row */}
+                        <div className="board-lists-container flex flex-col gap-4 md:flex-row md:flex-nowrap md:gap-4 pb-4 md:pr-4 lg:w-full w-[24.5rem]">
+                            <SortableContext 
+                                items={listIds} 
+                                strategy={verticalListSortingStrategy} // Mobile: vertical strategy
+                                // strategy will be overridden for desktop in CSS
+                            >
+                                {/* Render columns */}
+                                {boardState.lists.map(list => (
+                                    <EnhancedBoardColumn
+                                        key={list.id}
+                                        list={list}
+                                        tasks={list.tasks || []}
+                                    />
+                                ))}
                             </SortableContext>
                             
-                            {/* Add List button/form at the end of the row */}
+                            {/* Add List button/form at the end */}
                             {isCreatingList ? (
-                                <div className="w-72 flex-shrink-0 bg-white shadow rounded-lg p-4">
+                                <div className="w-full md:w-64 md:flex-shrink-0 bg-white shadow rounded-lg p-4">
                                     <div className="flex justify-between items-center mb-3">
                                         <h3 className="text-md font-medium text-gray-900">Create a new list</h3>
                                         <button 
@@ -618,21 +621,21 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                                 <button
                                     type="button"
                                     onClick={() => setIsCreatingList(true)}
-                                    className="w-72 flex-shrink-0 h-16 flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                                    className="w-full md:w-64 md:flex-shrink-0 h-16 flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 hover:border-gray-400 transition-colors"
                                 >
                                     <Plus className="w-5 h-5 mr-2" /> Add List
                                 </button>
                             )}
-                </div>
+                        </div>
 
-                {/* Drag overlay - shows the task being dragged */}
-                <DragOverlay>
-                    {activeTask ? <TaskCard task={activeTask} /> : null}
-                </DragOverlay>
-            </DndContext>
+                        {/* Drag overlay - shows the task being dragged */}
+                        <DragOverlay>
+                            {activeTask ? <TaskCard task={activeTask} /> : null}
+                        </DragOverlay>
+                    </DndContext>
                 </div>
-        </div>
-    );
+            </div>
+        );
     };
 
     // Render the Calendar View
@@ -672,10 +675,10 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     }
 
     return (
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-2 py-6 overflow-x-hidden">
+        <div className="w-[26rem] lg:w-full md:max-w-full lg:mx-auto mx-1 px-1 md:px-4 py-4 md:py-6 overflow-x-hidden lg:mt-2 mt-6">
             {/* Board header */}
-            <div className="mb-6">
-                {/* Use the helper function to get the correct back link */}
+            <div className="mb-4 md:mb-6">
+                {/* Back link */}
                 {(() => {
                     const backLink = getBackLinkDetails();
                     return (
@@ -683,105 +686,109 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                             href={backLink.href}
                             className="flex items-center text-gray-500 hover:text-gray-700 mb-2"
                         >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
+                            <ChevronLeft className="w-4 h-4 mr-1" />
                             <span className="text-sm">Back to {backLink.text}</span>
-                </Link>
+                        </Link>
                     );
                 })()}
-                <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">{boardState.name}</h1>
+                
+                {/* Title and View Switcher */}
+                <div className="flex flex-col space-y-3 md:flex-row md:justify-between md:items-center md:space-y-0">
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">{boardState.name}</h1>
                     
-                    {/* View Switcher */}
-                    <div className="flex bg-gray-100 rounded-md p-1">
-                        <button
-                            type="button"
-                            onClick={() => setCurrentView('board')}
-                            className={`
-                                flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                                ${currentView === 'board' 
-                                    ? 'bg-white shadow text-indigo-600' 
-                                    : 'text-gray-700 hover:text-gray-900'
-                                }
-                            `}
-                        >
-                            <Kanban className="w-4 h-4 mr-1.5" />
-                            Board
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setCurrentView('list')}
-                            className={`
-                                flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                                ${currentView === 'list' 
-                                    ? 'bg-white shadow text-indigo-600' 
-                                    : 'text-gray-700 hover:text-gray-900'
-                                }
-                            `}
-                        >
-                            <List className="w-4 h-4 mr-1.5" />
-                            List
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setCurrentView('table')}
-                            className={`
-                                flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                                ${currentView === 'table' 
-                                    ? 'bg-white shadow text-indigo-600' 
-                                    : 'text-gray-700 hover:text-gray-900'
-                                }
-                            `}
-                        >
-                            <Table className="w-4 h-4 mr-1.5" />
-                            Table
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setCurrentView('calendar')}
-                            className={`
-                                flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                                ${currentView === 'calendar' 
-                                    ? 'bg-white shadow text-indigo-600' 
-                                    : 'text-gray-700 hover:text-gray-900'
-                                }
-                            `}
-                        >
-                            <Calendar className="w-4 h-4 mr-1.5" />
-                            Calendar
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setCurrentView('timeline')}
-                            className={`
-                                flex items-center px-3 py-1.5 rounded-md text-sm font-medium
-                                ${currentView === 'timeline' 
-                                    ? 'bg-white shadow text-indigo-600' 
-                                    : 'text-gray-700 hover:text-gray-900'
-                                }
-                            `}
-                        >
-                            <BarChartHorizontal className="w-4 h-4 mr-1.5" />
-                            Timeline
-                        </button>
+                    {/* Mobile-Responsive View Switcher */}
+                    <div className="bg-gray-100 rounded-md p-1 overflow-x-auto">
+                        <div className="flex space-x-1 min-w-max">
+                            <button
+                                type="button"
+                                onClick={() => setCurrentView('board')}
+                                className={`
+                                    flex items-center px-2 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium whitespace-nowrap
+                                    ${currentView === 'board' 
+                                        ? 'bg-white shadow text-indigo-600' 
+                                        : 'text-gray-700 hover:text-gray-900'
+                                    }
+                                `}
+                            >
+                                <Kanban className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
+                                Board
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentView('list')}
+                                className={`
+                                    flex items-center px-2 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium whitespace-nowrap
+                                    ${currentView === 'list' 
+                                        ? 'bg-white shadow text-indigo-600' 
+                                        : 'text-gray-700 hover:text-gray-900'
+                                    }
+                                `}
+                            >
+                                <List className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
+                                List
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentView('table')}
+                                className={`
+                                    flex items-center px-2 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium whitespace-nowrap
+                                    ${currentView === 'table' 
+                                        ? 'bg-white shadow text-indigo-600' 
+                                        : 'text-gray-700 hover:text-gray-900'
+                                    }
+                                `}
+                            >
+                                <Table className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
+                                Table
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentView('calendar')}
+                                className={`
+                                    flex items-center px-2 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium whitespace-nowrap
+                                    ${currentView === 'calendar' 
+                                        ? 'bg-white shadow text-indigo-600' 
+                                        : 'text-gray-700 hover:text-gray-900'
+                                    }
+                                `}
+                            >
+                                <Calendar className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
+                                Calendar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setCurrentView('timeline')}
+                                className={`
+                                    flex items-center px-2 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium whitespace-nowrap
+                                    ${currentView === 'timeline' 
+                                        ? 'bg-white shadow text-indigo-600' 
+                                        : 'text-gray-700 hover:text-gray-900'
+                                    }
+                                `}
+                            >
+                                <BarChartHorizontal className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
+                                Timeline
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            {/* Add List button (only show in Board view) */}
+            {/* Add List button (only show in Board view) - Mobile positioned above content */}
             {currentView === 'board' && !isCreatingList && (
                 <div className="mb-4">
-                        <button
-                            type="button"
-                            onClick={() => setIsCreatingList(true)}
-                            className="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                        >
-                            <Plus className="w-4 h-4 mr-2" /> Add List
-                        </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsCreatingList(true)}
+                        className="inline-flex items-center px-3 md:px-4 py-2 bg-gray-100 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    >
+                        <Plus className="w-4 h-4 mr-2" /> Add List
+                    </button>
                 </div>
             )}
             
-            {/* Board content */}
-            <div className="bg-gray-50 rounded-lg p-4 h-[35.2rem] overflow-hidden">
+            {/* Board content - Responsive height */}
+            <div className="bg-gray-50 rounded-lg p-2 md:p-4 min-h-[calc(100vh-12rem)] md:h-[35.2rem] overflow-hidden">
                 {/* Conditional rendering based on the current view */}
                 {currentView === 'board' && renderBoardView()}
                 {currentView === 'list' && renderListView()}
@@ -808,10 +815,10 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
             />
             
             {/* Task Details Modal (for normal tasks) */}
-                <TaskDetailsModal
-                    task={viewingTask}
+            <TaskDetailsModal
+                task={viewingTask}
                 show={!!viewingTask && !creatingPaperTask}
-                    onClose={() => setViewingTask(null)}
+                onClose={() => setViewingTask(null)}
                 workspaceMembers={boardState.parent?.members || []}
                 researchOptions={researchOptions}
             />
@@ -822,9 +829,9 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                 show={creatingPaperTask}
                 onClose={handleClosePaperTask}
                 listId={currentListId}
-                    workspaceMembers={boardState.parent.members}
+                workspaceMembers={boardState.parent.members}
                 researchOptions={researchOptions}
-                />
+            />
             
             {/* Choose Task Type Modal */}
             <ChooseTaskTypeModal
@@ -836,7 +843,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     );
 }
 
-// Add custom CSS to ensure proper scrolling behavior and limit visible columns
+// Updated CSS for mobile-responsive behavior
 const style = document.createElement('style');
 style.textContent = `
     .board-container {
@@ -844,29 +851,56 @@ style.textContent = `
         min-height: 0;
     }
     
+    /* Mobile: Vertical scrolling, Desktop: Horizontal scrolling */
     .board-scroll-container {
         flex: 1;
         min-height: 0;
-        overflow-y: hidden;
-        /* Set width to show approximately 3 columns (80px × 3) + gaps */
-        width: calc(70rem + 2rem);
-        max-width: 100%;
     }
     
-    .board-lists-row {
-        min-height: 100%;
+    /* Mobile: Full height for vertical scroll, Desktop: Horizontal scroll */
+    @media (max-width: 768px) {
+        .board-scroll-container {
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: calc(100vh - 16rem);
+        }
+        
+        .board-lists-container {
+            flex-direction: column !important;
+        }
+        
+        /* Mobile board columns take full width */
+        .board-column {
+            width: 100% !important;
+            flex-shrink: 0;
+            margin: 0 !important;
+        }
     }
     
-    /* Ensure each column has consistent width */
-    .board-column {
-        width: 20rem;
-        flex-shrink: 0;
-        display: flex;
-        flex-direction: column;
-        max-height: 32rem;
+    /* Desktop behavior */
+    @media (min-width: 769px) {
+        .board-scroll-container {
+            overflow-y: hidden;
+            overflow-x: auto;
+            width: calc(70rem + 2rem);
+            max-width: 100%;
+        }
+        
+        .board-lists-container {
+            min-height: 100%;
+        }
+        
+        /* Desktop columns have fixed width */
+        .board-column {
+            width: 16rem;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            max-height: 32rem;
+        }
     }
     
-    /* Make the task list area scrollable */
+    /* Task list scrolling */
     .board-column-tasks {
         overflow-y: auto;
         flex-grow: 1;
@@ -874,7 +908,7 @@ style.textContent = `
         margin-right: -0.5rem;
     }
     
-    /* Add styling for scrollbars */
+    /* Scrollbar styling */
     .board-column-tasks::-webkit-scrollbar,
     .list-view-container::-webkit-scrollbar,
     .table-view-container::-webkit-scrollbar {
@@ -901,19 +935,19 @@ style.textContent = `
         background: #9ca3af;
     }
     
-    /* List View Scrolling */
+    /* List View mobile optimization */
     .list-view-container {
         max-height: calc(100vh - 240px);
         overflow-y: auto;
     }
     
-    /* Table View Scrolling */
+    /* Table View mobile optimization */
     .table-view-container {
         max-height: calc(100vh - 320px);
         overflow-y: auto;
     }
     
-    /* Adjust for smaller screens */
+    /* Mobile responsive adjustments */
     @media (max-width: 1280px) {
         .board-scroll-container {
             width: calc(60rem + 1.5rem);

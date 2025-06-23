@@ -20,10 +20,9 @@ import {
 import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
-const MobileSidebar = () => {
+const MobileSidebar = ({ isOpen, toggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const { pendingRequestCount } = usePage().props;
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState({
         networking: false,
         grant: false,
@@ -34,10 +33,6 @@ const MobileSidebar = () => {
         admin: false,
     });
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
-
     const toggleMenu = (menu) => {
         setMenuOpen((prevState) => ({
             ...prevState,
@@ -47,18 +42,10 @@ const MobileSidebar = () => {
 
     return (
         <>
-            {/* Toggle Button - visible below lg */}
-            <button
-                className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-md shadow-md lg:hidden"
-                onClick={toggleSidebar}
-            >
-                {isSidebarOpen ? '✕' : '☰'}
-            </button>
-
             {/* Sidebar */}
             <div
                 className={`fixed top-0 left-0 h-full w-64 bg-white shadow-md z-40 transform transition-transform duration-300 ${
-                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    isOpen ? 'translate-x-0' : '-translate-x-full'
                 } lg:translate-x-0`}
             >
                 <div className="p-4 h-full overflow-auto">
@@ -379,7 +366,7 @@ const MobileSidebar = () => {
             </div>
 
             {/* Overlay for Mobile */}
-            {isSidebarOpen && (
+            {isOpen && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
                     onClick={toggleSidebar}

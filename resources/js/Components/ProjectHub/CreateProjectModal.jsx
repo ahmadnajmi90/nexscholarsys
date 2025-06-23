@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, Link } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -49,9 +49,17 @@ export default function CreateProjectModal({ show, onClose, linkableProjects = [
                             </p>
                         </>
                     ) : (
-                        <p className="text-amber-600 py-2 px-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <div className="text-amber-600 py-4 px-3 bg-amber-50 border border-amber-200 rounded-md">
+                            <p className="mb-3">
                             You don't have any projects available for linking. Please create a project first.
                         </p>
+                            <Link
+                                href={route('post-projects.create')}
+                                className="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 focus:bg-amber-700 active:bg-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            >
+                                Create Project
+                            </Link>
+                        </div>
                     )}
                     <InputError message={errors.post_project_id} className="mt-2" />
                 </div>
@@ -64,7 +72,7 @@ export default function CreateProjectModal({ show, onClose, linkableProjects = [
                         type="submit" 
                         disabled={processing || linkableProjects.length === 0}
                     >
-                        Create Project
+                        Create Workspace
                     </PrimaryButton>
                 </div>
             </form>

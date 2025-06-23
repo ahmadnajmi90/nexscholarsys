@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { FaUserFriends, FaUserPlus, FaUserClock, FaSearch } from 'react-icons/fa';
+import { MoreVertical } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ConnectionButton from '@/Components/ConnectionButton';
+import Dropdown from '@/Components/Dropdown';
 
 const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) => {
     const [activeTab, setActiveTab] = useState('connections');
@@ -88,19 +90,20 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
     const renderTabs = () => {
         return (
             <div className="border-b border-gray-200">
-                <nav className="flex space-x-8" aria-label="Tabs">
+                <nav className="flex overflow-x-auto scrollbar-hide" aria-label="Tabs">
                     <button
                         onClick={() => setActiveTab('connections')}
-                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                        className={`py-4 px-2 md:px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
                             activeTab === 'connections'
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         }`}
                     >
                         <div className="flex items-center">
-                            <FaUserFriends className="mr-2" />
-                            Connections
-                            <span className="ml-2 bg-gray-100 text-gray-700 py-0.5 px-2.5 rounded-full text-xs">
+                            <FaUserFriends className="mr-1 md:mr-2" />
+                            <span className="hidden sm:inline">Connections</span>
+                            <span className="sm:hidden">Connect</span>
+                            <span className="ml-1 md:ml-2 bg-gray-100 text-gray-700 py-0.5 px-1.5 md:px-2.5 rounded-full text-xs">
                                 {acceptedConnections.length}
                             </span>
                         </div>
@@ -108,16 +111,17 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                     
                     <button
                         onClick={() => setActiveTab('received')}
-                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                        className={`py-4 px-2 md:px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
                             activeTab === 'received'
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         }`}
                     >
                         <div className="flex items-center">
-                            <FaUserPlus className="mr-2" />
-                            Received Requests
-                            <span className="ml-2 bg-gray-100 text-gray-700 py-0.5 px-2.5 rounded-full text-xs">
+                            <FaUserPlus className="mr-1 md:mr-2" />
+                            <span className="hidden sm:inline">Received Requests</span>
+                            <span className="sm:hidden">Received</span>
+                            <span className="ml-1 md:ml-2 bg-gray-100 text-gray-700 py-0.5 px-1.5 md:px-2.5 rounded-full text-xs">
                                 {receivedRequests.length}
                             </span>
                         </div>
@@ -125,16 +129,17 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                     
                     <button
                         onClick={() => setActiveTab('sent')}
-                        className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                        className={`py-4 px-2 md:px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
                             activeTab === 'sent'
                                 ? 'border-blue-500 text-blue-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                         }`}
                     >
                         <div className="flex items-center">
-                            <FaUserClock className="mr-2" />
-                            Sent Requests
-                            <span className="ml-2 bg-gray-100 text-gray-700 py-0.5 px-2.5 rounded-full text-xs">
+                            <FaUserClock className="mr-1 md:mr-2" />
+                            <span className="hidden sm:inline">Sent Requests</span>
+                            <span className="sm:hidden">Sent</span>
+                            <span className="ml-1 md:ml-2 bg-gray-100 text-gray-700 py-0.5 px-1.5 md:px-2.5 rounded-full text-xs">
                                 {sentRequests.length}
                             </span>
                         </div>
@@ -146,7 +151,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
     
     const renderSearchBar = () => {
         return (
-            <div className="relative w-full md:w-64 mb-4">
+            <div className="relative w-full md:w-96 w-[25rem] mb-4">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FaSearch className="h-5 w-5 text-gray-400" />
                 </div>
@@ -160,58 +165,120 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
             </div>
         );
     };
+
+    const renderMobileActionMenu = (connection) => {
+        const { user, connection_id } = connection;
+        const isProcessing = processingIds.includes(connection_id);
+
+        return (
+            <div className="md:hidden">
+                <Dropdown>
+                    <Dropdown.Trigger>
+                        <button
+                            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={isProcessing}
+                        >
+                            <MoreVertical className="w-5 h-5 text-gray-500" />
+                        </button>
+                    </Dropdown.Trigger>
+
+                    <Dropdown.Content align="right" width="48">
+                        {/* View Profile - Always available */}
+                        <Dropdown.Link href={getProfileUrl(user)}>
+                            View Profile
+                        </Dropdown.Link>
+
+                        {/* Tab-specific actions */}
+                        {activeTab === 'connections' && (
+                            <button
+                                onClick={() => promptForRemoval({ connection_id })}
+                                disabled={isProcessing}
+                                className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none disabled:opacity-50"
+                            >
+                                {isProcessing ? 'Processing...' : 'Remove Connection'}
+                            </button>
+                        )}
+
+                        {activeTab === 'received' && (
+                            <>
+                                <button
+                                    onClick={() => handleConnectionAction(connection_id, 'accept')}
+                                    disabled={isProcessing}
+                                    className="block w-full px-4 py-2 text-start text-sm text-green-600 hover:bg-green-50 focus:bg-green-50 focus:outline-none disabled:opacity-50"
+                                >
+                                    {isProcessing ? 'Processing...' : 'Accept Request'}
+                                </button>
+                                <button
+                                    onClick={() => handleConnectionAction(connection_id, 'reject')}
+                                    disabled={isProcessing}
+                                    className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none disabled:opacity-50"
+                                >
+                                    {isProcessing ? 'Processing...' : 'Reject Request'}
+                                </button>
+                            </>
+                        )}
+
+                        {activeTab === 'sent' && (
+                            <button
+                                onClick={() => promptForRemoval({ connection_id })}
+                                disabled={isProcessing}
+                                className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none disabled:opacity-50"
+                            >
+                                {isProcessing ? 'Processing...' : 'Cancel Request'}
+                            </button>
+                        )}
+                    </Dropdown.Content>
+                </Dropdown>
+            </div>
+        );
+    };
     
     const renderConnectionCard = (connection) => {
         const { user, connection_id, status } = connection;
         const isProcessing = processingIds.includes(connection_id);
         
         return (
-            <div key={connection_id} className="bg-white shadow rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                <div className="flex items-center mb-4 md:mb-0">
-                    <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                        {user.profile_photo_url ? (
-                            <img 
-                                src={user.profile_photo_url} 
-                                alt={`${user.name}'s profile`}
-                                className="h-full w-full object-cover"
-                            />
-                        ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-blue-100 text-blue-500">
-                                {user.name.charAt(0).toUpperCase()}
+            <div key={connection_id} className="bg-white shadow rounded-lg p-4 mb-4">
+                {/* Mobile Layout: Vertical Card */}
+                <div className="md:hidden">
+                    <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center flex-1 min-w-0">
+                            <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                {user.profile_photo_url ? (
+                                    <img 
+                                        src={user.profile_photo_url} 
+                                        alt={`${user.name}'s profile`}
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="h-full w-full flex items-center justify-center bg-blue-100 text-blue-500">
+                                        {user.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                            
+                            <div className="ml-3 flex-1 min-w-0">
+                                <h3 className="text-base font-medium text-gray-900 truncate">{user.name}</h3>
+                                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                {user.role && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                        {user.role}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        
+                        {/* Mobile Actions Menu */}
+                        {renderMobileActionMenu(connection)}
                     </div>
-                    
-                    <div className="ml-4">
-                        <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                        {user.role && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
-                                {user.role}
-                            </span>
-                        )}
-                    </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                    {activeTab === 'connections' && (
-                        <button
-                            onClick={() => promptForRemoval({ connection_id })}
-                            disabled={isProcessing}
-                            className={`inline-flex items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
-                                isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
-                        >
-                            {isProcessing ? 'Processing...' : 'Remove Connection'}
-                        </button>
-                    )}
-                    
+
+                    {/* Mobile Primary Actions (for received requests) */}
                     {activeTab === 'received' && (
-                        <>
+                        <div className="flex space-x-2 mt-3">
                             <button
                                 onClick={() => handleConnectionAction(connection_id, 'accept')}
                                 disabled={isProcessing}
-                                className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                                className={`flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                                     isProcessing ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
                             >
@@ -221,33 +288,101 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                             <button
                                 onClick={() => handleConnectionAction(connection_id, 'reject')}
                                 disabled={isProcessing}
-                                className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                className={`flex-1 inline-flex justify-center items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                                     isProcessing ? 'opacity-50 cursor-not-allowed' : ''
                                 }`}
                             >
                                 {isProcessing ? 'Processing...' : 'Reject'}
                             </button>
-                        </>
+                        </div>
                     )}
+                </div>
+
+                {/* Desktop Layout: Horizontal Card */}
+                <div className="hidden md:flex md:items-center md:justify-between">
+                    <div className="flex items-center">
+                        <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                            {user.profile_photo_url ? (
+                                <img 
+                                    src={user.profile_photo_url} 
+                                    alt={`${user.name}'s profile`}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-blue-100 text-blue-500">
+                                    {user.name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="ml-4">
+                            <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
+                            <p className="text-sm text-gray-500">{user.email}</p>
+                            {user.role && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                    {user.role}
+                                </span>
+                            )}
+                        </div>
+                    </div>
                     
-                    {activeTab === 'sent' && (
-                        <button
-                            onClick={() => promptForRemoval({ connection_id })}
-                            disabled={isProcessing}
-                            className={`inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                                isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                    {/* Desktop Action Buttons */}
+                    <div className="flex space-x-2">
+                        {activeTab === 'connections' && (
+                            <button
+                                onClick={() => promptForRemoval({ connection_id })}
+                                disabled={isProcessing}
+                                className={`inline-flex items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                {isProcessing ? 'Processing...' : 'Remove Connection'}
+                            </button>
+                        )}
+                        
+                        {activeTab === 'received' && (
+                            <>
+                                <button
+                                    onClick={() => handleConnectionAction(connection_id, 'accept')}
+                                    disabled={isProcessing}
+                                    className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                                        isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                >
+                                    {isProcessing ? 'Processing...' : 'Accept'}
+                                </button>
+                                
+                                <button
+                                    onClick={() => handleConnectionAction(connection_id, 'reject')}
+                                    disabled={isProcessing}
+                                    className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                        isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                >
+                                    {isProcessing ? 'Processing...' : 'Reject'}
+                                </button>
+                            </>
+                        )}
+                        
+                        {activeTab === 'sent' && (
+                            <button
+                                onClick={() => promptForRemoval({ connection_id })}
+                                disabled={isProcessing}
+                                className={`inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                            >
+                                {isProcessing ? 'Processing...' : 'Cancel Request'}
+                            </button>
+                        )}
+                        
+                        <Link
+                            href={getProfileUrl(user)}
+                            className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
-                            {isProcessing ? 'Processing...' : 'Cancel Request'}
-                        </button>
-                    )}
-                    
-                    <Link
-                        href={getProfileUrl(user)}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                        View Profile
-                    </Link>
+                            View Profile
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
@@ -311,7 +446,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
         <MainLayout title="My Network">
             <Head title="My Network" />
             
-            <div className="mt-6">
+            <div className="md:mt-6 px-2 md:px-0 mt-20 ml-1">
                 {renderSearchBar()}
                 {renderTabs()}
                 {renderContent()}

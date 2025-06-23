@@ -19,6 +19,21 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 
 ## Features
 
+### Enhanced User Experience with Framer Motion Animations
+- Professional page transitions and loading animations
+- Staggered entry animations for improved visual hierarchy
+- Interactive hover effects on buttons and interactive elements
+- Smooth scroll-triggered animations using viewport detection
+- Optimized performance with spring-based transitions
+- Mobile-responsive animation behavior
+
+**Animation Implementation:**
+- **Welcome Page**: Comprehensive animation suite including hero section staggered entry, service card hover effects, and scroll-based section reveals
+- **Navigation**: Animated navbar with smooth logo and button interactions
+- **Service Cards**: Hover animations with subtle scaling, shadow enhancements, and icon rotation effects
+- **Call-to-Action Buttons**: Spring-based hover and tap feedback with optimized performance
+- **Section Transitions**: Viewport-based fade-in animations for content sections as users scroll
+
 ### Content Management
 - Create and manage academic posts, research projects, events, and grants
 - Track content views, likes, and sharing metrics
@@ -275,6 +290,9 @@ The Project Hub provides a comprehensive solution for academic project managemen
 3. Install JavaScript dependencies:
    ```bash
    npm install
+
+# Install Framer Motion for enhanced animations
+npm install framer-motion
    ```
 
 4. Copy environment file and configure your environment:

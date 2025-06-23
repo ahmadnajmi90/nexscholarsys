@@ -8,6 +8,8 @@
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
         "@inertiajs/react": "^1.0.0",
+        "@stagewise-plugins/react": "^0.4.8",
+        "@stagewise/toolbar-react": "^0.4.8",
         "@tailwindcss/forms": "^0.5.3",
         "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.12",
@@ -39,6 +41,7 @@
         "echarts": "^5.5.1",
         "echarts-for-react": "^3.0.2",
         "express": "latest",
+        "framer-motion": "^12.19.1",
         "frappe-gantt": "^1.0.3",
         "lucide-react": "^0.474.0",
         "mysql-mcp": "^1.1.1",

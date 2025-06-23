@@ -136,7 +136,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                         <div className="flex justify-between items-center mb-4">
                             <h1 className="text-2xl font-semibold pt-2 pl-2">{title}</h1>
                             <div className="flex items-center space-x-4">
-                                <NotificationBell />
+                                {/* <NotificationBell /> */}
                             </div>
                         </div>
                         {children}
@@ -147,11 +147,14 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 <div>
                     <Head title={title} />
                     <div className="pb-20">
-                        {/* Mobile Header with Notification Bell */}
-                        <div className="sticky top-0 z-50 bg-white shadow-sm px-4 py-2 flex justify-between items-center">
-                            <h1 className="text-xl font-semibold">{title}</h1>
-                            <NotificationBell />
-                        </div>
+                        {/* Fixed sidebar toggle button for mobile */}
+                        <button
+                            className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-md shadow-md lg:hidden"
+                            onClick={toggleSidebar}
+                        >
+                            {isSidebarOpen ? '✕' : '☰'}
+                        </button>
+                        
                         {children}
                     </div>
 

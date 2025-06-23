@@ -65,9 +65,9 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 lg:mt-2 mt-20">
             {/* Workspaces Section */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:mx-0 mx-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-900 pl-2">Your Workspaces</h2>
                     <div className="space-x-2">
@@ -169,7 +169,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
             </div>
 
             {/* Projects Section */}
-            <div className="space-y-6">
+            <div className="space-y-6 lg:mx-0 mx-4">
                 <div className="flex justify-between items-center">
                     <h2 className="text-lg font-semibold text-gray-900 pl-2">Your Projects</h2>
                     <div className="space-x-2">

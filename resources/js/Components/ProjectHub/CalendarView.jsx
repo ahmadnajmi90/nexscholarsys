@@ -70,7 +70,7 @@ export default function CalendarView({ tasks }) {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-3 md:p-6 rounded-lg shadow">
             <FullCalendar
                 plugins={[dayGridPlugin, interactionPlugin]}
                 initialView="dayGridMonth"
@@ -88,16 +88,23 @@ export default function CalendarView({ tasks }) {
                     month: 'Month',
                     week: 'Week'
                 }}
+                // Mobile-responsive configuration
+                aspectRatio={window.innerWidth < 768 ? 1.2 : 1.35}
+                eventMaxStack={2}
+                moreLinkClick="popover"
+                dayMaxEvents={3}
+                eventDisplay="block"
+                eventClassNames="touch-manipulation"
             />
 
-            {/* Task Detail Modal */}
-            <Modal show={isModalOpen} onClose={closeModal} maxWidth="md">
+            {/* Task Detail Modal - Mobile-optimized */}
+            <Modal show={isModalOpen} onClose={closeModal} maxWidth={window.innerWidth < 768 ? "sm" : "md"}>
                 {selectedTask && (
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                         <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 pr-4">
                                 <h2 className={clsx(
-                                    "text-xl font-bold",
+                                    "text-lg md:text-xl font-bold break-words",
                                     {
                                         "text-gray-500 line-through": isTaskCompleted(selectedTask),
                                         "text-gray-900": !isTaskCompleted(selectedTask)
@@ -106,7 +113,7 @@ export default function CalendarView({ tasks }) {
                                     {selectedTask.title}
                                 </h2>
                                 {selectedTask.paper_writing_task && (
-                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full flex-shrink-0">
                                         <BookOpen className="w-3 h-3 mr-1" />
                                         Paper
                                     </span>
@@ -114,9 +121,9 @@ export default function CalendarView({ tasks }) {
                             </div>
                             <button
                                 onClick={closeModal}
-                                className="text-gray-400 hover:text-gray-500"
+                                className="text-gray-400 hover:text-gray-500 p-1 touch-manipulation flex-shrink-0"
                             >
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
@@ -124,16 +131,17 @@ export default function CalendarView({ tasks }) {
                         
                         {selectedTask.description && (
                             <div className="mb-4">
-                                <h3 className="text-sm font-medium text-gray-700 mb-1">Description</h3>
-                                <p className="text-gray-600">{selectedTask.description}</p>
+                                <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
+                                <p className="text-gray-600 text-sm md:text-base break-words">{selectedTask.description}</p>
                             </div>
                         )}
                         
-                        <div className="grid grid-cols-2 gap-4 mb-4">
+                        {/* Mobile: Stack items vertically, Desktop: Use grid */}
+                        <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 md:gap-4 mb-4">
                             {selectedTask.due_date && (
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-700 mb-1">Due Date</h3>
-                                    <p className="text-gray-600">
+                                    <p className="text-gray-600 text-sm">
                                         {format(new Date(selectedTask.due_date), "MMM d, yyyy 'at' h:mm a")}
                                     </p>
                                 </div>
@@ -144,16 +152,49 @@ export default function CalendarView({ tasks }) {
                                     <h3 className="text-sm font-medium text-gray-700 mb-1">Priority</h3>
                                     <span className={`
                                         px-2 py-1 text-xs font-medium rounded-full
-                                        ${selectedTask.priority === 'high' ? 'bg-red-100 text-red-800' : ''}
-                                        ${selectedTask.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : ''}
-                                        ${selectedTask.priority === 'low' ? 'bg-blue-100 text-blue-800' : ''}
+                                        ${selectedTask.priority === 'Urgent' ? 'bg-red-100 text-red-800' : ''}
+                                        ${selectedTask.priority === 'High' ? 'bg-orange-100 text-orange-800' : ''}
+                                        ${selectedTask.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' : ''}
+                                        ${selectedTask.priority === 'Low' ? 'bg-blue-100 text-blue-800' : ''}
                                         ${!selectedTask.priority ? 'bg-gray-100 text-gray-800' : ''}
                                     `}>
-                                        {selectedTask.priority ? selectedTask.priority.charAt(0).toUpperCase() + selectedTask.priority.slice(1) : 'None'}
+                                        {selectedTask.priority || 'None'}
                                     </span>
                                 </div>
                             )}
+                            
+                            {selectedTask.list_name && (
+                                <div className="md:col-span-2">
+                                    <h3 className="text-sm font-medium text-gray-700 mb-1">List</h3>
+                                    <p className="text-gray-600 text-sm">{selectedTask.list_name}</p>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Assignees section */}
+                        {selectedTask.assignees && selectedTask.assignees.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-medium text-gray-700 mb-2">Assignees</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedTask.assignees.map(assignee => (
+                                        <div key={assignee.id} className="flex items-center gap-2 bg-gray-50 rounded-md px-2 py-1">
+                                            <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs overflow-hidden">
+                                                {assignee.avatar ? (
+                                                    <img 
+                                                        src={assignee.avatar} 
+                                                        alt={assignee.name} 
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    assignee.name.charAt(0)
+                                                )}
+                                            </div>
+                                            <span className="text-sm text-gray-700">{assignee.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>

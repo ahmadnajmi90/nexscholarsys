@@ -8,6 +8,7 @@ export default function TimelineView({ board, onTaskClick }) {
     
     const ganttContainer = useRef(null);
     const [ganttChart, setGanttChart] = useState(null);
+    const [currentViewMode, setCurrentViewMode] = useState('Week');
     
     useEffect(() => {
         // Transform tasks into the format frappe-gantt expects
@@ -20,17 +21,20 @@ export default function TimelineView({ board, onTaskClick }) {
         if (ganttContainer.current && tasks.length > 0) {
             console.log("4c. Initializing Gantt chart with tasks:", tasks);
             try {
-                // Initialize the Gantt chart
+                // Get window width for mobile optimization
+                const isMobile = window.innerWidth < 768;
+                
+                // Initialize the Gantt chart with responsive settings
                 const gantt = new Gantt(ganttContainer.current, tasks, {
-                    header_height: 50,
-                    column_width: 30,
+                    header_height: isMobile ? 40 : 50,
+                    column_width: isMobile ? 20 : 30,
                     step: 24,
                     view_modes: ['Day', 'Week', 'Month'],
-                    bar_height: 20,
+                    bar_height: isMobile ? 16 : 20,
                     bar_corner_radius: 3,
                     arrow_curve: 5,
-                    padding: 18,
-                    view_mode: 'Week',
+                    padding: isMobile ? 12 : 18,
+                    view_mode: currentViewMode,
                     date_format: 'MMM d, yyyy',
                     custom_popup_html: task => {
                         try {
@@ -42,8 +46,8 @@ export default function TimelineView({ board, onTaskClick }) {
                             const listName = task.list_name || '';
                             
                             return `
-                                <div class="gantt-tooltip p-3 bg-white shadow-lg rounded-md border border-gray-200">
-                                    <h4 class="text-sm font-semibold text-gray-900 mb-1">${task.name || 'Unnamed Task'}</h4>
+                                <div class="gantt-tooltip p-2 md:p-3 bg-white shadow-lg rounded-md border border-gray-200 max-w-xs">
+                                    <h4 class="text-xs md:text-sm font-semibold text-gray-900 mb-1">${task.name || 'Unnamed Task'}</h4>
                                     <div class="text-xs text-gray-600 mb-2">
                                         ${listName ? `List: ${listName}` : ''}
                                     </div>
@@ -56,7 +60,7 @@ export default function TimelineView({ board, onTaskClick }) {
                             `;
                         } catch (error) {
                             console.error('Error generating tooltip:', error);
-                            return `<div class="gantt-tooltip p-3 bg-white shadow-lg rounded-md border border-gray-200">
+                            return `<div class="gantt-tooltip p-2 md:p-3 bg-white shadow-lg rounded-md border border-gray-200">
                                 Task details unavailable
                             </div>`;
                         }
@@ -94,7 +98,7 @@ export default function TimelineView({ board, onTaskClick }) {
         } else {
             console.log("4d. Gantt chart NOT initialized - Container exists:", !!ganttContainer.current, "Tasks length:", tasks.length);
         }
-    }, [board, onTaskClick]);
+    }, [board, onTaskClick, currentViewMode]);
     
     // Find a task by ID in the board data
     const findTaskById = (board, taskId) => {
@@ -192,69 +196,82 @@ export default function TimelineView({ board, onTaskClick }) {
         }
     };
     
+    // Handle view mode change
+    const handleViewModeChange = (mode) => {
+        setCurrentViewMode(mode);
+        if (ganttChart) {
+            ganttChart.change_view_mode(mode);
+        }
+    };
+    
     // Render toolbar with view mode buttons
     const renderToolbar = () => {
         if (!ganttChart) return null;
         
         return (
-            <div className="flex space-x-2 mb-4">
-                <button
-                    type="button"
-                    onClick={() => ganttChart.change_view_mode('Day')}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
-                >
-                    Day
-                </button>
-                <button
-                    type="button"
-                    onClick={() => ganttChart.change_view_mode('Week')}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
-                >
-                    Week
-                </button>
-                <button
-                    type="button"
-                    onClick={() => ganttChart.change_view_mode('Month')}
-                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200"
-                >
-                    Month
-                </button>
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
+                <h3 className="text-sm md:text-base font-medium text-gray-900">Timeline View</h3>
+                
+                {/* Mobile: Horizontal scroll container for buttons */}
+                <div className="overflow-x-auto">
+                    <div className="flex space-x-2 min-w-max">
+                        {['Day', 'Week', 'Month'].map(mode => (
+                            <button
+                                key={mode}
+                                type="button"
+                                onClick={() => handleViewModeChange(mode)}
+                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors touch-manipulation whitespace-nowrap ${
+                                    currentViewMode === mode
+                                        ? 'bg-indigo-100 text-indigo-700'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                {mode}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     };
     
     return (
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-lg shadow p-3 md:p-4">
             {/* Toolbar for view modes */}
             {renderToolbar()}
             
-            {/* Container for the Gantt chart */}
-            <div className="overflow-x-auto">
-                <div ref={ganttContainer} className="gantt-container"></div>
+            {/* Container for the Gantt chart with horizontal scroll */}
+            <div className="overflow-x-auto border border-gray-200 rounded-md mb-4">
+                <div 
+                    ref={ganttContainer} 
+                    className="gantt-container min-w-max"
+                    style={{ minWidth: window.innerWidth < 768 ? '600px' : '800px' }}
+                ></div>
             </div>
             
-            {/* Legend */}
-            <div className="mt-4 pt-3 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Priority Legend:</h4>
-                <div className="flex space-x-4">
+            {/* Mobile-responsive Legend */}
+            <div className="pt-3 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Priority Legend:</h4>
+                {/* Mobile: 2 columns, Desktop: single row */}
+                <div className="grid grid-cols-2 md:flex md:flex-wrap gap-x-4 gap-y-2">
                     <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full bg-red-600 mr-1"></div>
+                        <div className="w-3 h-3 rounded-full bg-red-600 mr-2 flex-shrink-0"></div>
                         <span className="text-xs text-gray-600">Urgent</span>
                     </div>
                     <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full bg-orange-600 mr-1"></div>
+                        <div className="w-3 h-3 rounded-full bg-orange-600 mr-2 flex-shrink-0"></div>
                         <span className="text-xs text-gray-600">High</span>
                     </div>
                     <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full bg-amber-500 mr-1"></div>
+                        <div className="w-3 h-3 rounded-full bg-amber-500 mr-2 flex-shrink-0"></div>
                         <span className="text-xs text-gray-600">Medium</span>
                     </div>
                     <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
+                        <div className="w-3 h-3 rounded-full bg-blue-500 mr-2 flex-shrink-0"></div>
                         <span className="text-xs text-gray-600">Low</span>
                     </div>
-                    <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full bg-gray-500 mr-1"></div>
+                    <div className="flex items-center md:col-span-1 col-span-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-500 mr-2 flex-shrink-0"></div>
                         <span className="text-xs text-gray-600">No Priority</span>
                     </div>
                 </div>

@@ -71,7 +71,7 @@ export default function TableView({ board, onTaskClick }) {
         }
     };
     
-    // Define table columns
+    // Define table columns with responsive sizing
     const columns = useMemo(() => [
         columnHelper.accessor('completed_at', {
             header: '',
@@ -82,7 +82,7 @@ export default function TableView({ board, onTaskClick }) {
                     disabled={completingTasks.has(info.row.original.id)}
                     onChange={(e) => handleToggleCompletion(info.row.original, e)}
                     className={clsx(
-                        "w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2",
+                        "w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 touch-manipulation",
                         {
                             "opacity-50 cursor-not-allowed": completingTasks.has(info.row.original.id)
                         }
@@ -90,14 +90,16 @@ export default function TableView({ board, onTaskClick }) {
                 />
             ),
             enableSorting: false,
-            size: 50
+            size: 40,
+            minSize: 40,
+            maxSize: 40
         }),
         columnHelper.accessor('title', {
             header: 'Task',
             cell: info => (
                 <div 
                     className={clsx(
-                        "font-medium cursor-pointer flex items-center gap-2",
+                        "font-medium cursor-pointer flex items-center gap-2 py-1 touch-manipulation",
                         {
                             "text-gray-500 line-through": isTaskCompleted(info.row.original),
                             "text-indigo-600 hover:text-indigo-800": !isTaskCompleted(info.row.original)
@@ -106,17 +108,19 @@ export default function TableView({ board, onTaskClick }) {
                     onClick={() => onTaskClick(info.row.original)}
                 >
                     {info.row.original.paper_writing_task && (
-                        <BookOpen className="w-4 h-4 text-blue-600" />
+                        <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
                     )}
-                    {info.getValue()}
+                    <span className="truncate">{info.getValue()}</span>
                 </div>
             ),
-            sortingFn: 'alphanumeric'
+            sortingFn: 'alphanumeric',
+            size: 200,
+            minSize: 150
         }),
         columnHelper.accessor('paper_writing_task', {
             header: 'Type',
             cell: info => (
-                <span className="text-sm">
+                <span className="text-sm whitespace-nowrap">
                     {info.getValue() ? 'Paper' : 'Normal'}
                 </span>
             ),
@@ -124,19 +128,25 @@ export default function TableView({ board, onTaskClick }) {
                 const typeA = rowA.original.paper_writing_task ? 'Paper' : 'Normal';
                 const typeB = rowB.original.paper_writing_task ? 'Paper' : 'Normal';
                 return typeA.localeCompare(typeB);
-            }
+            },
+            size: 80,
+            minSize: 70
         }),
         columnHelper.accessor('list_name', {
             header: 'List',
-            cell: info => info.getValue(),
-            sortingFn: 'alphanumeric'
+            cell: info => <span className="text-sm truncate">{info.getValue()}</span>,
+            sortingFn: 'alphanumeric',
+            size: 100,
+            minSize: 80
         }),
         columnHelper.accessor('description', {
             header: 'Description',
             cell: info => info.getValue() 
                 ? <span className="line-clamp-2 text-sm">{info.getValue()}</span> 
                 : <span className="text-gray-400 italic text-sm">No description</span>,
-            enableSorting: false
+            enableSorting: false,
+            size: 150,
+            minSize: 120
         }),
         columnHelper.accessor('priority', {
             header: 'Priority',
@@ -152,7 +162,7 @@ export default function TableView({ board, onTaskClick }) {
                 }[priority] || 'bg-gray-100 text-gray-800';
                 
                 return (
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colorClass}`}>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${colorClass}`}>
                         {priority}
                     </span>
                 );
@@ -162,16 +172,20 @@ export default function TableView({ board, onTaskClick }) {
                 const priorityA = priorities[rowA.original.priority] || 0;
                 const priorityB = priorities[rowB.original.priority] || 0;
                 return priorityB - priorityA; // Sort higher priorities first
-            }
+            },
+            size: 90,
+            minSize: 80
         }),
         columnHelper.accessor('due_date', {
             header: 'Due Date',
             cell: info => {
                 const date = info.getValue();
                 if (!date) return <span className="text-gray-400 italic text-sm">None</span>;
-                return <span className="text-sm">{format(new Date(date), "MMM d, yyyy 'at' h:mm a")}</span>;
+                return <span className="text-sm whitespace-nowrap">{format(new Date(date), "MMM d, yyyy")}</span>;
             },
-            sortingFn: 'datetime'
+            sortingFn: 'datetime',
+            size: 110,
+            minSize: 100
         }),
         columnHelper.accessor('assignees', {
             header: 'Assignees',
@@ -186,7 +200,7 @@ export default function TableView({ board, onTaskClick }) {
                         {assignees.slice(0, 3).map(assignee => (
                             <div 
                                 key={assignee.id} 
-                                className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs overflow-hidden border border-white"
+                                className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs overflow-hidden border border-white flex-shrink-0"
                                 title={assignee.name}
                             >
                                 {assignee.avatar ? (
@@ -201,16 +215,18 @@ export default function TableView({ board, onTaskClick }) {
                             </div>
                         ))}
                         {assignees.length > 3 && (
-                            <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs border border-white">
+                            <div className="h-6 w-6 rounded-full bg-gray-300 flex items-center justify-center text-xs border border-white">
                                 +{assignees.length - 3}
                             </div>
                         )}
                     </div>
                 );
             },
-            enableSorting: false
+            enableSorting: false,
+            size: 100,
+            minSize: 80
         })
-    ], [columnHelper, onTaskClick, handleToggleCompletion, completingTasks]);
+    ], [completingTasks, onTaskClick]);
     
     // Create table instance
     const table = useReactTable({
@@ -249,79 +265,80 @@ export default function TableView({ board, onTaskClick }) {
     const currentPageRows = filteredTasks.slice(startIndex, endIndex);
     
     return (
-        <div className="bg-white rounded-lg shadow p-4">
-            {/* Controls Row */}
-            <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between">
-                {/* Search input */}
-                <div className="relative flex-1">
+        <div className="table-view-container bg-white rounded-lg shadow">
+            {/* Mobile-responsive controls */}
+            <div className="px-3 md:px-4 py-3 border-b bg-gray-50 space-y-3 md:space-y-0 md:flex md:items-center md:justify-between">
+                {/* Search Input */}
+                <div className="relative flex-1 max-w-md">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Search className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                         type="text"
-                        value={globalFilter || ''}
-                        onChange={e => setGlobalFilter(e.target.value)}
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
                         placeholder="Search tasks..."
-                        className="pl-10 pr-3 py-2 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                        value={globalFilter ?? ''}
+                        onChange={e => setGlobalFilter(String(e.target.value))}
                     />
                 </div>
-
-                {/* Show Completed Tasks Toggle */}
+                
+                {/* Show Completed Toggle */}
                 <div className="flex items-center">
                     <input
                         type="checkbox"
                         id="show-completed-table"
                         checked={showCompleted}
-                        onChange={(e) => {
-                            setShowCompleted(e.target.checked);
-                            setCurrentPage(1); // Reset to first page when toggling
-                        }}
+                        onChange={(e) => setShowCompleted(e.target.checked)}
                         className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
                     />
-                    <label htmlFor="show-completed-table" className="ml-2 text-sm font-medium text-gray-700 whitespace-nowrap">
-                        Show Completed Tasks
+                    <label htmlFor="show-completed-table" className="ml-2 text-sm font-medium text-gray-700">
+                        Show Completed
                     </label>
                 </div>
             </div>
-            
-            {/* Table */}
-            <div className="table-view-container overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+
+            {/* Mobile-responsive table container with horizontal scroll */}
+            <div className="overflow-x-auto">
+                <table className="w-full divide-y divide-gray-200" style={{ minWidth: '800px' }}>
+                    {/* Table Header */}
                     <thead className="bg-gray-50">
                         {table.getHeaderGroups().map(headerGroup => (
                             <tr key={headerGroup.id}>
                                 {headerGroup.headers.map(header => (
-                                    <th 
+                                    <th
                                         key={header.id}
-                                        scope="col" 
-                                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        scope="col"
+                                        className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 touch-manipulation"
+                                        style={{ 
+                                            width: header.getSize(),
+                                            minWidth: header.column.columnDef.minSize || header.getSize()
+                                        }}
+                                        onClick={header.column.getToggleSortingHandler()}
                                     >
-                                        {header.isPlaceholder ? null : (
-                                            <div
-                                                className={`flex items-center ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                {flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                                
-                                                {{
-                                                    asc: <ChevronUp className="ml-1 h-4 w-4" />,
-                                                    desc: <ChevronDown className="ml-1 h-4 w-4" />
-                                                }[header.column.getIsSorted()] ?? null}
-                                            </div>
-                                        )}
+                                        <div className="flex items-center space-x-1">
+                                            <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                                            {header.column.getIsSorted() && (
+                                                <span className="flex-shrink-0">
+                                                    {header.column.getIsSorted() === 'desc' ? (
+                                                        <ChevronDown className="w-4 h-4" />
+                                                    ) : (
+                                                        <ChevronUp className="w-4 h-4" />
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
                                     </th>
                                 ))}
                             </tr>
                         ))}
                     </thead>
+                    
+                    {/* Table Body */}
                     <tbody className="bg-white divide-y divide-gray-200">
                         {currentPageRows.length > 0 ? (
                             currentPageRows.map(row => (
                                 <tr 
-                                    key={row.id}
+                                    key={row.id} 
                                     className={clsx(
                                         "hover:bg-gray-50",
                                         {
@@ -331,13 +348,14 @@ export default function TableView({ board, onTaskClick }) {
                                 >
                                     {row.getVisibleCells().map(cell => (
                                         <td 
-                                            key={cell.id}
-                                            className="px-4 py-3 whitespace-nowrap"
+                                            key={cell.id} 
+                                            className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-sm text-gray-900"
+                                            style={{ 
+                                                width: cell.column.getSize(),
+                                                minWidth: cell.column.columnDef.minSize || cell.column.getSize()
+                                            }}
                                         >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </td>
                                     ))}
                                 </tr>
@@ -346,31 +364,31 @@ export default function TableView({ board, onTaskClick }) {
                             <tr>
                                 <td 
                                     colSpan={columns.length}
-                                    className="px-4 py-3 text-center text-sm text-gray-500"
+                                    className="px-4 py-8 text-center text-sm text-gray-500"
                                 >
-                                    {showCompleted || data.length === 0 ? 'No tasks found' : 'No active tasks found'}
+                                    {globalFilter 
+                                        ? 'No tasks match your search criteria'
+                                        : showCompleted || data.length === 0 
+                                            ? 'No tasks found' 
+                                            : 'No active tasks found'
+                                    }
                                 </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
-            
-            {/* Table footer with stats */}
-            <div className="mt-3 text-sm text-gray-500">
-                Showing {Math.min(startIndex + 1, filteredTasks.length)}-{Math.min(endIndex, filteredTasks.length)} of {filteredTasks.length} tasks
-                {globalFilter && ` (filtered from ${data.length} total)`}
-                {!showCompleted && ` • Completed tasks hidden`}
-            </div>
 
-            {/* Pagination Controls */}
-            <div className="mt-4">
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => setCurrentPage(page)}
-                />
-            </div>
+            {/* Pagination */}
+            {filteredTasks.length > itemsPerPage && (
+                <div className="px-4 py-3 border-t">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
         </div>
     );
 } 
