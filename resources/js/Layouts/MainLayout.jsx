@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
@@ -57,14 +57,19 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         }, 250); // Slightly longer delay to ensure title is updated
     }, [url, title]);
 
-    // Effect to determine screen size for responsiveness
+    // Combined effect to handle responsive logic and localStorage with proper precedence
     useEffect(() => {
         const handleResize = () => {
-            setIsDesktop(window.innerWidth >= 1024);
-            if (window.innerWidth >= 1024) {
-                setIsSidebarOpen(true); // Sidebar always open on desktop
+            const isCurrentlyDesktop = window.innerWidth >= 1024;
+            setIsDesktop(isCurrentlyDesktop);
+            
+            if (isCurrentlyDesktop) {
+                // Desktop: Load from localStorage or default to true
+                const savedSidebarState = localStorage.getItem('isSidebarOpen');
+                setIsSidebarOpen(savedSidebarState !== null ? savedSidebarState === 'true' : true);
             } else {
-                setIsSidebarOpen(false); // Sidebar hidden by default on mobile
+                // Mobile: Always start closed, ignore localStorage
+                setIsSidebarOpen(false);
             }
         };
 
@@ -73,15 +78,28 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         window.addEventListener('resize', handleResize);
 
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, []); // Empty dependencies - runs only once on mount
 
-    // Effect to load the sidebar state from localStorage
+    // Effect to close sidebar when navigation starts (using Inertia events)
     useEffect(() => {
-        const savedSidebarState = localStorage.getItem('isSidebarOpen');
-        if (savedSidebarState !== null) {
-            setIsSidebarOpen(savedSidebarState === 'true');
-        }
-    }, []); // This runs only on the initial render
+        // This function will be called whenever a new Inertia visit starts
+        const handleStart = () => {
+            // Check current screen size at the time of navigation (not stale closure)
+            const isCurrentlyDesktop = window.innerWidth >= 1024;
+            
+            // Only close sidebar on mobile (when not desktop)
+            if (!isCurrentlyDesktop) {
+                setIsSidebarOpen(false);
+            }
+        };
+
+        // Set up the event listener on component mount
+        const removeListener = router.on('start', handleStart);
+
+        // Return a cleanup function to remove the event listener 
+        // when the component unmounts to prevent memory leaks
+        return removeListener;
+    }, []); // Empty dependencies are safe now since we check screen size directly
 
     const isActive = (route) => url.startsWith(route); // Check if the current route matches
 
