@@ -14,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Project;
 
 class ProjectHubController extends Controller
 {
@@ -89,8 +90,9 @@ class ProjectHubController extends Controller
             ->latest()
             ->get();
         
-        // Fetch PROJECTS with all necessary nested data (including invited projects)
-        $projects = $user->projects()
+        // Fetch PROJECTS with all necessary nested data (including owned projects)
+        // Get projects where user is a member
+        $memberProjects = $user->projects()
             ->with([
                 'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
                 'postProject',
@@ -99,6 +101,20 @@ class ProjectHubController extends Controller
             ])
             ->latest()
             ->get();
+        
+        // Get projects where user is the owner
+        $ownedProjects = Project::where('owner_id', $user->id)
+            ->with([
+                'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'postProject',
+                'boards',
+                'members.academician', 'members.postgraduate', 'members.undergraduate'
+            ])
+            ->latest()
+            ->get();
+        
+        // Merge owned and member projects, removing duplicates by ID
+        $projects = $ownedProjects->merge($memberProjects)->unique('id')->values();
         
         // Fetch other necessary data
         $linkableProjects = \App\Models\PostProject::where('author_id', $user->unique_id)

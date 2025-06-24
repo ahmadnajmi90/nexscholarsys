@@ -196,21 +196,20 @@ const HeroSection = ({ auth, posts, events, projects, grants }) => {
             <motion.div whileHover="hover" whileTap="tap" variants={buttonHoverVariants}>
               <Link
                 href={route('register')}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring focus-visible:ring-blue-500"
+                className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring focus-visible:ring-blue-500"
               >
                 Get Started
               </Link>
             </motion.div>
 
-            <motion.a 
-              href="#" 
-              className="px-8 py-3 border border-white text-white rounded-lg hover:bg-white hover:text-blue-600"
-              whileHover="hover" 
-              whileTap="tap" 
-              variants={buttonHoverVariants}
-            >
-              Learn More
-            </motion.a>
+            <motion.div whileHover="hover" whileTap="tap" variants={buttonHoverVariants}>
+              <a 
+                href="#" 
+                className="inline-block px-8 py-3 border border-white text-white rounded-lg hover:bg-white hover:text-blue-600"
+              >
+                Learn More
+              </a>
+            </motion.div>
           </motion.div>
         </motion.div>
       </section>

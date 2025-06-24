@@ -919,6 +919,12 @@ This integration provides administrators with valuable insights about platform u
 
 ## Changelog
 
+### 2024-12-19
+- Fixed Project Hub dashboard bug where owned projects were not displaying alongside member projects
+- Modified ProjectHubController to fetch both owned and member projects, matching the comprehensive approach used for workspaces
+- Projects list now properly shows all projects a user has access to (owned + member projects)
+- Ensured consistent data loading patterns between workspaces and projects in the Project Hub
+
 ### 2024-07-26
 - Updated AI services to use OpenAI API directly instead of GitHub OpenAI
 - Modified AIProfileService to use OpenAI's endpoint and API key
