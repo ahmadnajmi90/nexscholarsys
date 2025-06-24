@@ -89,8 +89,8 @@ class ProjectHubController extends Controller
             ->latest()
             ->get();
         
-        // Fetch PROJECTS with all necessary nested data
-        $projects = \App\Models\Project::where('owner_id', $user->id)
+        // Fetch PROJECTS with all necessary nested data (including invited projects)
+        $projects = $user->projects()
             ->with([
                 'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
                 'postProject',
