@@ -34,7 +34,9 @@ class WorkspaceController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255',
+                      \Illuminate\Validation\Rule::unique('workspaces')
+                          ->where('owner_id', $request->user()->id)],
             'description' => 'nullable|string',
         ]);
         
@@ -83,7 +85,10 @@ class WorkspaceController extends Controller
         $this->authorize('update', $workspace);
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255',
+                      \Illuminate\Validation\Rule::unique('workspaces')
+                          ->where('owner_id', $request->user()->id)
+                          ->ignore($workspace->id)],
             'description' => 'nullable|string',
         ]);
         
@@ -138,11 +143,19 @@ class WorkspaceController extends Controller
         ]);
 
         // 4. Send invitation notification to the invited user
-        $invitedUser = User::find($validated['user_id']);
+        $invitedUser = User::with(['academician', 'postgraduate', 'undergraduate'])
+            ->find($validated['user_id']);
+            
         $invitedUser->notify(new WorkspaceInvitationReceived($workspace, $request->user()));
         
+        // 5. Reload the workspace with all members and their profile data
+        $workspace->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
+        
         if ($request->wantsJson()) {
-            return response()->json(['message' => 'Member added successfully.']);
+            return response()->json([
+                'message' => 'Member added successfully.',
+                'members' => $workspace->members
+            ]);
         }
         
         return back()->with('success', 'Member added successfully.');

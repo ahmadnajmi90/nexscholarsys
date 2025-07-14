@@ -43,11 +43,17 @@ class ProjectMemberController extends Controller
         ]);
 
         // Send invitation notification to the invited user
-        $invitedUser = User::find($validated['user_id']);
+        $invitedUser = User::with(['academician', 'postgraduate', 'undergraduate'])
+            ->find($validated['user_id']);
+            
         $invitedUser->notify(new ProjectInvitationReceived($project, $request->user()));
+        
+        // Reload the project with all members and their profile data
+        $project->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
         
         return response()->json([
             'message' => 'Member added successfully',
+            'members' => $project->members
         ], 201);
     }
     

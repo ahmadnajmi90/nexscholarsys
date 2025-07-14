@@ -10,8 +10,10 @@ import { Plus, Users, Calendar, Clock, Trash2, Briefcase, UserPlus } from 'lucid
 import DOMPurify from 'dompurify';
 
 export default function Index({ workspaces, projects, linkableProjects, connections }) {
-    console.log(workspaces);
-    console.log(projects);
+    // Ensure workspaces and projects are arrays
+    const workspacesArray = Array.isArray(workspaces) ? workspaces : workspaces?.data || [];
+    const projectsArray = Array.isArray(projects) ? projects : projects?.data || [];
+    
     const { auth } = usePage().props;
     const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] = useState(false);
     const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
@@ -82,7 +84,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                     </div>
             </div>
 
-            {workspaces.length === 0 ? (
+            {workspacesArray.length === 0 ? (
                 <div className="bg-white shadow rounded-lg p-6 text-center">
                     <div className="mb-4">
                         <div className="mx-auto bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center">
@@ -106,7 +108,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {workspaces.map((workspace) => {
+                        {workspacesArray.map((workspace) => {
                             // Find the owner's specific profile
                             const ownerProfile = workspace.owner.academician || workspace.owner.postgraduate || workspace.owner.undergraduate;
                             // Use the profile's full_name if it exists, otherwise fall back to the base name
@@ -121,18 +123,18 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                 href={route('project-hub.workspaces.show', workspace.id)}
                                 className="block p-5"
                             >
-                                <h3 className="text-lg font-semibold text-gray-900 mb-1">{workspace.name}</h3>
-                                {workspace.description && (
+                                <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate pr-12">{workspace.name}</h3>
+                                {/* {workspace.description && (
                                     <p className="text-gray-500 text-sm mb-3 line-clamp-2">{workspace.description}</p>
-                                )}
+                                )} */}
                                 <div className="flex items-center text-sm text-gray-500 mt-3">
-                                    <div className="flex items-center mr-4">
+                                    <div className="flex items-center mr-4 truncate">
                                         <Users className="w-4 h-4 mr-1" />
                                                 <span>Owner: {ownerName}</span>
                                     </div>
-                                    <div className="flex items-center">
+                                    <div className="flex items-center ml-auto">
                                         <Clock className="w-4 h-4 mr-1" />
-                                        <span>{new Date(workspace.created_at).toLocaleDateString()}</span>
+                                        <span>{new Date(workspace.created_at).toLocaleDateString('en-GB')}</span>
                                     </div>
                                 </div>
                             </Link>
@@ -181,7 +183,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                     </div>
                 </div>
 
-                {projects.length === 0 ? (
+                {projectsArray.length === 0 ? (
                     <div className="bg-white shadow rounded-lg p-6 text-center">
                         <div className="mb-4">
                             <div className="mx-auto bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center">
@@ -202,7 +204,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {projects.map((project) => {
+                        {projectsArray.map((project) => {
                             // Find the owner's specific profile
                             const ownerProfile = project.owner.academician || project.owner.postgraduate || project.owner.undergraduate;
                             // Use the profile's full_name if it exists, otherwise fall back to the base name
@@ -217,27 +219,27 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                         href={route('project-hub.projects.show', project.id)}
                                         className="block p-5"
                                     >
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{project.name}</h3>
-                                        {project.description && (
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate pr-12">{project.name}</h3>
+                                        {/* {project.description && (
                                             <p 
                                                 className="text-gray-500 text-sm mb-3 line-clamp-2"
                                                 dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.description) }}
                                             />
-                                        )}
+                                        )} */}
                                         <div className="flex items-center text-sm text-gray-500 mt-3">
-                                            <div className="flex items-center mr-4">
+                                            <div className="flex items-center mr-4 truncate">
                                                 <Users className="w-4 h-4 mr-1" />
                                                 <span>Owner: {ownerName}</span>
                                             </div>
-                                            {project.post_project_id && (
+                                            {/* {project.post_project_id && (
                                                 <div className="flex items-center mr-4">
                                                     <Briefcase className="w-4 h-4 mr-1" />
                                                     <span>Linked Project</span>
                                                 </div>
-                                            )}
-                                            <div className="flex items-center">
+                                            )} */}
+                                            <div className="flex items-center ml-auto">
                                                 <Clock className="w-4 h-4 mr-1" />
-                                                <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                                                <span>{new Date(project.created_at).toLocaleDateString('en-GB')}</span>
                                             </div>
                                         </div>
                                     </Link>

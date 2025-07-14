@@ -3,13 +3,15 @@ import { Link, useForm, router, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
-import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus } from 'lucide-react';
+import ManageBoardMembersModal from '@/Components/ProjectHub/ManageBoardMembersModal';
+import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus, Users } from 'lucide-react';
 
 export default function Show({ workspace, connections }) {
     const { auth } = usePage().props;
     const [isCreatingBoard, setIsCreatingBoard] = useState(false);
     const [confirmingBoardDeletion, setConfirmingBoardDeletion] = useState(null);
     const [isCollaboratorsModalOpen, setIsCollaboratorsModalOpen] = useState(false);
+    const [managingBoard, setManagingBoard] = useState(null);
     
     // Form for creating a new board
     const form = useForm({
@@ -54,6 +56,13 @@ export default function Show({ workspace, connections }) {
             },
         });
     };
+    
+    // Handle manage board access
+    const handleManageBoardAccess = (e, board) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setManagingBoard(board);
+    };
 
     // Check if the current user is the workspace owner
     const isWorkspaceOwner = auth.user.id === workspace.data.owner_id;
@@ -67,7 +76,7 @@ export default function Show({ workspace, connections }) {
                     <span className="text-sm">Back to workspaces</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">{workspace.data.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate">{workspace.data.name}</h1>
                     
                     {/* Manage Collaborators button - only visible to workspace owner */}
                     {isWorkspaceOwner && (
@@ -155,20 +164,32 @@ export default function Show({ workspace, connections }) {
                                 >
                                     <div className="flex items-center mb-2">
                                         <LayoutGrid className="w-5 h-5 text-indigo-500 mr-2" />
-                                        <h3 className="text-lg font-semibold text-gray-900">{board.name}</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 truncate">{board.name}</h3>
                                     </div>
                                     <div className="flex items-center text-sm text-gray-500 mt-3">
-                                        <span>Created {new Date(board.created_at).toLocaleDateString()}</span>
+                                        <span>Created {new Date(board.created_at).toLocaleDateString('en-GB')}</span>
                                     </div>
                                 </Link>
-                                {/* Delete button */}
-                                <button
-                                    onClick={(e) => handleDeleteBoard(e, board)}
-                                    className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
-                                    title="Delete board"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="absolute top-2 right-2 flex space-x-1">
+                                    {/* Manage Access button - only visible to workspace owner */}
+                                    {isWorkspaceOwner && (
+                                        <button
+                                            onClick={(e) => handleManageBoardAccess(e, board)}
+                                            className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-gray-100 rounded-full"
+                                            title="Manage board access"
+                                        >
+                                            <Users className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {/* Delete button */}
+                                    <button
+                                        onClick={(e) => handleDeleteBoard(e, board)}
+                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
+                                        title="Delete board"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -198,6 +219,16 @@ export default function Show({ workspace, connections }) {
                 contextType="workspace"
                 connections={connections || []}
             />
+            
+            {/* Manage Board Members Modal */}
+            {managingBoard && (
+                <ManageBoardMembersModal
+                    show={!!managingBoard}
+                    onClose={() => setManagingBoard(null)}
+                    board={managingBoard}
+                    workspaceMembers={workspace.data.members || []}
+                />
+            )}
         </div>
     );
 }

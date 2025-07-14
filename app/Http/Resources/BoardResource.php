@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\BoardListResource;
+use App\Http\Resources\UserResource;
 
 class BoardResource extends JsonResource
 {
@@ -23,6 +24,9 @@ class BoardResource extends JsonResource
             'updated_at' => $this->updated_at,
             'lists' => $this->whenLoaded('lists', function () {
                 return BoardListResource::collection($this->lists);
+            }),
+            'members' => $this->whenLoaded('members', function () {
+                return UserResource::collection($this->members);
             }),
         ];
     }

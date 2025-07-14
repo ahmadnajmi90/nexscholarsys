@@ -399,14 +399,24 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
                                                 <label htmlFor="paper_type" className="block text-sm font-medium text-gray-700">
                                                     Paper Type
                                                 </label>
-                                                <input
-                                                    type="text"
+                                                <select
                                                     id="paper_type"
                                                     value={form.data.paper_type || ''}
                                                     onChange={e => form.setData('paper_type', e.target.value)}
                                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                    placeholder="e.g. Research Paper, Review, Case Study"
-                                                />
+                                                >
+                                                    <option value="">Select a paper type</option>
+                                                    <option value="Experimental Paper">Experimental Paper</option>
+                                                    <option value="Systematic Literature Review">Systematic Literature Review</option>
+                                                    <option value="Conceptual Paper">Conceptual Paper</option>
+                                                    <option value="Literature Review">Literature Review</option>
+                                                    <option value="Thesis">Thesis</option>
+                                                    <option value="Book Chapter">Book Chapter</option>
+                                                    <option value="Research Proposal">Research Proposal</option>
+                                                    <option value="Conference Paper">Conference Paper</option>
+                                                    <option value="Conference Abstract">Conference Abstract</option>
+                                                    <option value="Poster Presentation">Poster Presentation</option>
+                                                </select>
                                             </div>
 
                                             <div>
@@ -419,9 +429,14 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
                                                     onChange={e => form.setData('publication_type', e.target.value)}
                                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                 >
-                                                    <option value="">Select publication type...</option>
-                                                    <option value="Journal">Journal</option>
+                                                    <option value="">Select a publication type</option>
+                                                    <option value="Journal Article">Journal Article</option>
                                                     <option value="Conference">Conference</option>
+                                                    <option value="Book">Book</option>
+                                                    <option value="Book Chapter">Book Chapter</option>
+                                                    <option value="Technical Report">Technical Report</option>
+                                                    <option value="Dataset">Dataset</option>
+                                                    <option value="Software / Code">Software / Code</option>
                                                 </select>
                                             </div>
 

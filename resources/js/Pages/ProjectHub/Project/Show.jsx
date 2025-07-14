@@ -3,7 +3,8 @@ import { Link, useForm, router, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
-import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus } from 'lucide-react';
+import ManageBoardMembersModal from '@/Components/ProjectHub/ManageBoardMembersModal';
+import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import DOMPurify from 'dompurify';
 
 export default function Show({ project, connections }) {
@@ -11,6 +12,8 @@ export default function Show({ project, connections }) {
     const [isCreatingBoard, setIsCreatingBoard] = useState(false);
     const [confirmingBoardDeletion, setConfirmingBoardDeletion] = useState(null);
     const [isCollaboratorsModalOpen, setIsCollaboratorsModalOpen] = useState(false);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [managingBoard, setManagingBoard] = useState(null);
     
     // Form for creating a new board
     const form = useForm({
@@ -55,10 +58,17 @@ export default function Show({ project, connections }) {
             },
         });
     };
+    
+    // Handle manage board access
+    const handleManageBoardAccess = (e, board) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setManagingBoard(board);
+    };
 
     // Check if the current user is the project owner
     const isProjectOwner = auth.user.id === project.owner_id;
-
+    
     return (
         <div className="w-full md:max-w-8xl md:mx-auto px-4 md:px-4 lg:px-2 py-4 md:py-6 lg:mt-2 mt-6">
             {/* Project header */}
@@ -68,7 +78,7 @@ export default function Show({ project, connections }) {
                     <span className="text-sm">Back to projects</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate">{project.name}</h1>
                     
                     {/* Manage Collaborators button - only visible to project owner */}
                     {isProjectOwner && (
@@ -82,10 +92,28 @@ export default function Show({ project, connections }) {
                     )}
                 </div>
                 {project.description && (
-                    <p 
-                        className="mt-1 text-gray-500"
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.description) }}
-                    />
+                    <>
+                        <div 
+                            className={`mt-1 text-gray-500 ${!isDescriptionExpanded ? 'line-clamp-2' : ''}`}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.description) }}
+                        />
+                        <button
+                            onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                            className="mt-1 text-indigo-600 hover:text-indigo-800 text-sm flex items-center"
+                        >
+                            {isDescriptionExpanded ? (
+                                <>
+                                    <ChevronUp className="w-4 h-4 mr-1" />
+                                    Show Less
+                                </>
+                            ) : (
+                                <>
+                                    <ChevronDown className="w-4 h-4 mr-1" />
+                                    Show More
+                                </>
+                            )}
+                        </button>
+                    </>
                 )}
             </div>
             
@@ -159,20 +187,32 @@ export default function Show({ project, connections }) {
                                 >
                                     <div className="flex items-center mb-2">
                                         <LayoutGrid className="w-5 h-5 text-indigo-500 mr-2" />
-                                        <h3 className="text-lg font-semibold text-gray-900">{board.name}</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 truncate">{board.name}</h3>
                                     </div>
                                     <div className="flex items-center text-sm text-gray-500 mt-3">
-                                        <span>Created {new Date(board.created_at).toLocaleDateString()}</span>
+                                        <span>Created {new Date(board.created_at).toLocaleDateString('en-GB')}</span>
                                     </div>
                                 </Link>
-                                {/* Delete button */}
-                                <button
-                                    onClick={(e) => handleDeleteBoard(e, board)}
-                                    className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
-                                    title="Delete board"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="absolute top-2 right-2 flex space-x-1">
+                                    {/* Manage Access button - only visible to project owner */}
+                                    {isProjectOwner && (
+                                        <button
+                                            onClick={(e) => handleManageBoardAccess(e, board)}
+                                            className="p-1.5 text-gray-400 hover:text-indigo-500 hover:bg-gray-100 rounded-full"
+                                            title="Manage board access"
+                                        >
+                                            <Users className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {/* Delete button */}
+                                    <button
+                                        onClick={(e) => handleDeleteBoard(e, board)}
+                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
+                                        title="Delete board"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -202,6 +242,16 @@ export default function Show({ project, connections }) {
                 contextType="project"
                 connections={connections || []}
             />
+            
+            {/* Manage Board Members Modal */}
+            {managingBoard && (
+                <ManageBoardMembersModal
+                    show={!!managingBoard}
+                    onClose={() => setManagingBoard(null)}
+                    board={managingBoard}
+                    workspaceMembers={project.members || []}
+                />
+            )}
         </div>
     );
 }

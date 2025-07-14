@@ -21,6 +21,8 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     const [boardState, setBoardState] = useState(initialBoardData);
     // Track the active dragging task
     const [activeTask, setActiveTask] = useState(null);
+    // Track the active dragging list
+    const [activeList, setActiveList] = useState(null);
     // State to track real-time updates for animation purposes
     const [recentlyUpdatedTaskId, setRecentlyUpdatedTaskId] = useState(null);
     // State to track the current view (board or calendar)
@@ -235,153 +237,145 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                     setActiveTask(task);
                 }
             }
+        } else if (activeId && activeId.toString().startsWith('list-')) {
+            // This is a list being dragged
+            const listIdNumber = parseInt(activeId.replace('list-', ''));
+            
+            // Find the list in the board state
+            const list = boardState.lists.find(list => list.id === listIdNumber);
+            if (list) {
+                // Set the active list with its tasks
+                setActiveList({
+                    ...list,
+                    tasks: list.tasks || []
+                });
+            }
         }
-        // No need to set active list, as we'll just show the overlay for tasks
     };
 
     // Handle drag end event
     const handleDragEnd = (event) => {
         const { active, over } = event;
         
-        // Clear the active task
+        // Clear the active task and list
         setActiveTask(null);
+        setActiveList(null);
         
         // If not dropped in a droppable area, do nothing
-        if (!over) {
-            return;
-        }
-        
-        // Extract IDs from the event
+        if (!over) return;
+
         const activeId = active.id;
         const overId = over.id;
-        
-        // Check if we're dealing with a task or a list
+
+        // Handle task movement
         if (activeId.toString().startsWith('task-')) {
-            // This is a task being dragged
-        
-        // Get the list ID from over data (where the task was dropped)
-        const overListId = parseInt(overId.replace('list-', ''));
-        // Get the task ID
-        const taskId = parseInt(activeId.replace('task-', ''));
-        
-        // Find the source list (where the task came from)
-        const sourceList = boardState.lists.find(list => 
-            list.tasks.some(task => task.id === taskId)
-        );
-        
-        // Find the destination list
-        const destinationList = boardState.lists.find(list => list.id === overListId);
-        
-        // If the source or destination list is not found, do nothing
-        if (!sourceList || !destinationList) {
-            return;
+            const taskId = parseInt(activeId.replace('task-', ''));
+            const sourceListId = active.data.current.task.list_id;
+            const destinationListId = parseInt(overId.replace('list-', ''));
+
+            // If task was dropped in a different list
+            if (sourceListId !== destinationListId) {
+                // Find the source and destination lists
+                const sourceList = boardState.lists.find(list => list.id === sourceListId);
+                const destinationList = boardState.lists.find(list => list.id === destinationListId);
+                
+                if (!sourceList || !destinationList) return;
+
+                // Find the task in the source list
+                const taskIndex = sourceList.tasks.findIndex(task => task.id === taskId);
+                if (taskIndex === -1) return;
+
+                // Create a new board state
+                const newBoardState = structuredClone(boardState);
+                
+                // Remove task from source list
+                const [movedTask] = newBoardState.lists
+                    .find(list => list.id === sourceListId)
+                    .tasks.splice(taskIndex, 1);
+
+                // Calculate new order for the task
+                const destinationTasks = newBoardState.lists.find(list => list.id === destinationListId).tasks;
+                const newOrder = destinationTasks.length > 0
+                    ? destinationTasks[destinationTasks.length - 1].order + 1
+                    : 1;
+
+                // Add task to destination list
+                newBoardState.lists
+                    .find(list => list.id === destinationListId)
+                    .tasks.push({
+                        ...movedTask,
+                        list_id: destinationListId,
+                        order: newOrder
+                    });
+
+                // Update the state optimistically
+                setBoardState(newBoardState);
+
+                // Send the update to the server
+                router.post(route('api.tasks.move'), {
+                    task_id: taskId,
+                    source_list_id: sourceListId,
+                    destination_list_id: destinationListId,
+                    order: newOrder
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        // Reload only the board data to ensure frontend state is in sync
+                        router.reload({ only: ['initialBoardData'] });
+                    },
+                    onError: (errors) => {
+                        console.error('Error moving task:', errors);
+                        // Revert to the server state on error
+                        router.reload({ only: ['initialBoardData'] });
+                    }
+                });
+            }
         }
         
-        // Clone the current state to avoid direct mutation
-        const newBoardState = structuredClone(boardState);
-        
-        // Find the task in the source list
-        const sourceListIndex = newBoardState.lists.findIndex(list => list.id === sourceList.id);
-        const taskIndex = newBoardState.lists[sourceListIndex].tasks.findIndex(task => task.id === taskId);
-        const taskToMove = newBoardState.lists[sourceListIndex].tasks[taskIndex];
-        
-        // Remove the task from the source list
-        newBoardState.lists[sourceListIndex].tasks.splice(taskIndex, 1);
-        
-        // Add the task to the destination list
-        const destinationListIndex = newBoardState.lists.findIndex(list => list.id === destinationList.id);
-        
-        // Update the task's list_id property
-        taskToMove.list_id = destinationList.id;
-        
-        // Add the task to the end of the destination list
-        newBoardState.lists[destinationListIndex].tasks.push(taskToMove);
-        
-        // Calculate the new order (position) for the task
-        const newOrder = newBoardState.lists[destinationListIndex].tasks.length - 1;
-        
-        // Update the local state immediately for a responsive UI
-        setBoardState(newBoardState);
-        
-        // Set this task as recently updated for animation
-        setRecentlyUpdatedTaskId(taskId);
-        
-        // Clear the animation highlight after 2 seconds
-        setTimeout(() => {
-            setRecentlyUpdatedTaskId(null);
-        }, 2000);
-        
-        // Send the update to the server
-            axios.post(`/api/v1/tasks/${taskId}/move`, {
-            new_list_id: destinationList.id,
-            order: newOrder
-        }, {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => {
-                if (response.data.success) {
-                    // Successfully moved the task
-                } else {
-                    // Handle error
-                    setBoardState(boardState);
-                    alert('An error occurred while moving the task. Please try again.');
-                }
-            })
-            .catch(error => {
-                // Handle error
-                setBoardState(boardState);
-                alert('An error occurred while moving the task. Please try again.');
-            });
-        } else if (activeId.toString().startsWith('list-')) {
-            // This is a list being reordered
-            
-            // Extract list IDs
-            const activeListId = parseInt(activeId.replace('list-', ''));
-            const overListId = parseInt(overId.replace('list-', ''));
-            
-            // Find the indices of the active and over lists
-            const activeListIndex = boardState.lists.findIndex(list => list.id === activeListId);
-            const overListIndex = boardState.lists.findIndex(list => list.id === overListId);
-            
-            // If either list is not found, do nothing
-            if (activeListIndex === -1 || overListIndex === -1) {
-                return;
+        // Handle list reordering
+        if (activeId.toString().startsWith('list-') && overId.toString().startsWith('list-')) {
+            const oldIndex = boardState.lists.findIndex(
+                list => list.id === parseInt(activeId.replace('list-', ''))
+            );
+            const newIndex = boardState.lists.findIndex(
+                list => list.id === parseInt(overId.replace('list-', ''))
+            );
+
+            if (oldIndex !== newIndex) {
+                const newBoardState = structuredClone(boardState);
+                newBoardState.lists = arrayMove(newBoardState.lists, oldIndex, newIndex);
+                
+                // Update the state optimistically
+                setBoardState(newBoardState);
+
+                // Calculate new order values
+                const newOrder = newBoardState.lists.map((list, index) => ({
+                    id: list.id,
+                    order: index
+                }));
+
+                // Send the update to the server
+                router.post(route('api.lists.reorder'), {
+                    lists: newOrder
+                }, {
+                    preserveScroll: true,
+                    preserveState: true,
+                    headers: {
+                        'X-Inertia': false,
+                        'Accept': 'application/json',
+                    },
+                    onSuccess: () => {
+                        // Reload only the board data to ensure frontend state is in sync
+                        router.reload({ only: ['initialBoardData'] });
+                    },
+                    onError: (errors) => {
+                        console.error('Error reordering lists:', errors);
+                        // Revert to the server state on error
+                        router.reload({ only: ['initialBoardData'] });
+                    }
+                });
             }
-            
-            // If the lists are the same, do nothing
-            if (activeListIndex === overListIndex) {
-                return;
-            }
-            
-            // Create a new board state with the reordered lists
-            const newBoardState = structuredClone(boardState);
-            newBoardState.lists = arrayMove(newBoardState.lists, activeListIndex, overListIndex);
-            
-            // Update the local state immediately for a responsive UI
-            setBoardState(newBoardState);
-            
-            // Prepare data for the API call
-            const updatedLists = newBoardState.lists.map((list, index) => ({
-                id: list.id,
-                order: index + 1 // Order starts at 1
-            }));
-            
-            // Use axios for this specific API call instead of Inertia
-            axios.post('/api/v1/lists/update-order', {
-                lists: updatedLists
-            }, {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .catch(error => {
-                console.error('Error updating list order:', error);
-                // Revert back to the original state on error
-                setBoardState(boardState);
-                alert('An error occurred while reordering the lists. Please try again.');
-            });
         }
     };
 
@@ -415,22 +409,17 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     const confirmDeleteList = () => {
         if (!confirmingListDeletion) return;
         
-        axios.delete(route('lists.destroy', confirmingListDeletion.id), {
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => {
-            if (response.data.success) {
+        router.delete(route('lists.destroy', confirmingListDeletion.id), {
+            preserveScroll: true,
+            onSuccess: () => {
                 setConfirmingListDeletion(null);
-            } else {
-                // Handle error
+                // Refresh the board data to reflect the deletion
+                router.reload({ only: ['initialBoardData'] });
+            },
+            onError: (errors) => {
+                console.error('Error deleting list:', errors);
                 alert('An error occurred while deleting the list. Please try again.');
             }
-        })
-        .catch(error => {
-            // Handle error
-            alert('An error occurred while deleting the list. Please try again.');
         });
     };
     
@@ -520,6 +509,9 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
             isRecentlyUpdated: task.id === recentlyUpdatedTaskId
         }));
         
+        // Check if this list is currently being dragged
+        const isDragging = activeList?.id === list.id;
+        
         return (
             <BoardColumn
                 key={list.id}
@@ -530,6 +522,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                 onTaskClick={handleTaskClick}
                 onAddTask={handleAddTask}
                 className="board-column"
+                isDragging={isDragging}
             />
         );
     };
@@ -628,9 +621,18 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                             )}
                         </div>
 
-                        {/* Drag overlay - shows the task being dragged */}
+                        {/* Drag overlay - shows the task or list being dragged */}
                         <DragOverlay>
-                            {activeTask ? <TaskCard task={activeTask} /> : null}
+                            {activeTask ? (
+                                <TaskCard task={activeTask} />
+                            ) : activeList ? (
+                                <BoardColumn
+                                    list={activeList}
+                                    tasks={activeList.tasks || []}
+                                    className="opacity-90 shadow-xl scale-[1.02] board-column"
+                                    isOverlay={true}
+                                />
+                            ) : null}
                         </DragOverlay>
                     </DndContext>
                 </div>

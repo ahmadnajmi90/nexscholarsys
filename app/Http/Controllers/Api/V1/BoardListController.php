@@ -20,7 +20,9 @@ class BoardListController extends Controller
         $this->authorize('create', [BoardList::class, $board]);
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255',
+                      \Illuminate\Validation\Rule::unique('board_lists')
+                          ->where('board_id', $board->id)],
         ]);
         
         // Calculate the next order value
@@ -43,7 +45,10 @@ class BoardListController extends Controller
         $this->authorize('update', $boardList);
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255',
+                      \Illuminate\Validation\Rule::unique('board_lists')
+                          ->where('board_id', $boardList->board_id)
+                          ->ignore($boardList->id)],
             'order' => 'sometimes|integer|min:1',
         ]);
         
@@ -72,7 +77,7 @@ class BoardListController extends Controller
         $validated = $request->validate([
             'lists' => 'required|array',
             'lists.*.id' => 'required|integer|exists:board_lists,id',
-            'lists.*.order' => 'required|integer|min:1',
+            'lists.*.order' => 'required|integer|min:0',
         ]);
         
         // Use a database transaction to ensure all updates succeed or fail together
@@ -91,13 +96,25 @@ class BoardListController extends Controller
             
             DB::commit();
             
-            // Return a JSON response for API requests
-            return response()->json(['success' => true, 'message' => 'List order updated successfully']);
+            // Check if this is an Inertia request
+            if ($request->wantsJson()) {
+                // Return a JSON response for API requests
+                return response()->json(['success' => true, 'message' => 'List order updated successfully']);
+            }
+            
+            // Return a redirect response for Inertia requests
+            return back()->with('success', 'List order updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
             
-            // Return a JSON error response
-            return response()->json(['success' => false, 'message' => 'Failed to update list order'], 500);
+            // Check if this is an Inertia request
+            if ($request->wantsJson()) {
+                // Return a JSON error response for API requests
+                return response()->json(['success' => false, 'message' => 'Failed to update list order: ' . $e->getMessage()], 500);
+            }
+            
+            // Return a redirect response with error for Inertia requests
+            return back()->with('error', 'Failed to update list order: ' . $e->getMessage());
         }
     }
 } 

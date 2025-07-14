@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Resources\WorkspaceResource;
+use App\Http\Resources\ProjectResource;
 use App\Models\Workspace;
 use App\Models\Board;
 use App\Models\Connection;
@@ -85,6 +86,9 @@ class ProjectHubController extends Controller
         $workspaces = $user->workspaces()
             ->with([
                 'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'members' => function($query) {
+                    $query->withPivot('role');
+                },
                 'members.academician', 'members.postgraduate', 'members.undergraduate'
             ])
             ->latest()
@@ -96,7 +100,10 @@ class ProjectHubController extends Controller
             ->with([
                 'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
                 'postProject',
-                'boards',
+                'boards.members', // Add eager loading for board members
+                'members' => function($query) {
+                    $query->withPivot('role');
+                },
                 'members.academician', 'members.postgraduate', 'members.undergraduate'
             ])
             ->latest()
@@ -107,7 +114,10 @@ class ProjectHubController extends Controller
             ->with([
                 'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
                 'postProject',
-                'boards',
+                'boards.members', // Add eager loading for board members
+                'members' => function($query) {
+                    $query->withPivot('role');
+                },
                 'members.academician', 'members.postgraduate', 'members.undergraduate'
             ])
             ->latest()
@@ -119,6 +129,7 @@ class ProjectHubController extends Controller
         // Fetch other necessary data
         $linkableProjects = \App\Models\PostProject::where('author_id', $user->unique_id)
             ->whereDoesntHave('scholarLabProject')
+            ->whereJsonDoesntContain('purpose', 'For Showcase')
             ->get();
             
         // Get the authenticated user's accepted connections
@@ -130,10 +141,10 @@ class ProjectHubController extends Controller
             ->with(['academician', 'postgraduate', 'undergraduate'])
             ->get();
         
-        // RETURN THE RAW COLLECTIONS. NO API RESOURCES.
+        // Transform collections using API Resources
         return Inertia::render('ProjectHub/Index', [
-            'workspaces' => $workspaces,
-            'projects' => $projects,
+            'workspaces' => WorkspaceResource::collection($workspaces),
+            'projects' => ProjectResource::collection($projects),
             'linkableProjects' => $linkableProjects,
             'connections' => $connections,
         ]);
@@ -186,10 +197,23 @@ class ProjectHubController extends Controller
         // Authorize that the user can view this workspace
         $this->authorize('view', $workspace);
         
+        $userId = Auth::id();
+        
         // Load the workspace with all its boards and owners
-        $workspace->load(['owner', 'boards' => function($query) {
-            $query->orderBy('created_at');
-        }]);
+        $workspace->load([
+            'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+            'boards' => function($query) use ($userId) {
+                $query->orderBy('created_at')
+                      ->whereHas('members', function ($query) use ($userId) {
+                          $query->where('user_id', $userId);
+                      })
+                      ->with('members'); // Add eager loading for board members
+            },
+            'members' => function($query) {
+                $query->withPivot('role');
+            },
+            'members.academician', 'members.postgraduate', 'members.undergraduate'
+        ]);
         
         // Get the auth user's accepted connections to populate the invite list
         $userId = Auth::id();
@@ -527,11 +551,20 @@ class ProjectHubController extends Controller
         // Authorize that the user can view this project
         $this->authorize('view', $scholar_project);
         
+        $userId = Auth::id();
+        
         // Load the project's members and boards
         $scholar_project->load([
-            'owner', 
-            'boards' => function($query) {
-            $query->orderBy('created_at');
+            'owner.academician', 'owner.postgraduate', 'owner.undergraduate', 
+            'boards' => function($query) use ($userId) {
+                $query->orderBy('created_at')
+                      ->whereHas('members', function ($query) use ($userId) {
+                          $query->where('user_id', $userId);
+                      })
+                      ->with('members'); // Add eager loading for board members
+            },
+            'members' => function($query) {
+                $query->withPivot('role');
             },
             'members.academician', 'members.postgraduate', 'members.undergraduate'
         ]);
@@ -558,7 +591,7 @@ class ProjectHubController extends Controller
         $connections = $requestedConnections->merge($receivedConnections);
         
         return Inertia::render('ProjectHub/Project/Show', [
-            'project' => $scholar_project,
+            'project' => new ProjectResource($scholar_project),
             'connections' => $connections, // Pass connections to the view
         ]);
     }

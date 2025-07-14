@@ -173,6 +173,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot('role')
             ->withTimestamps();
     }
+    
+    /**
+     * The boards that the user has access to.
+     */
+    public function boards(): BelongsToMany
+    {
+        return $this->belongsToMany(Board::class, 'board_user')->withTimestamps();
+    }
 
     /**
      * Get all connection requests sent by the user.

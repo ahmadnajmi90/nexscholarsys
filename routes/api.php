@@ -47,6 +47,10 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
     Route::apiResource('boards', BoardController::class)
         ->only(['show', 'update', 'destroy']);
     
+    // Board members management
+    Route::post('/boards/{board}/sync-members', [BoardController::class, 'syncMembers'])
+        ->name('api.boards.syncMembers');
+    
     // Board List routes nested under boards
     Route::apiResource('boards.lists', BoardListController::class)
         ->only(['store'])
@@ -58,7 +62,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
     
     // New route for updating list order
     Route::post('/lists/update-order', [BoardListController::class, 'updateOrder'])
-        ->name('lists.updateOrder');
+        ->name('api.lists.reorder');
     
     // Task routes nested under lists
     Route::apiResource('lists.tasks', TaskController::class)

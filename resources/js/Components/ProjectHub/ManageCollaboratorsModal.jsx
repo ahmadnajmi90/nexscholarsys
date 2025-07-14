@@ -104,6 +104,22 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
         return profile?.full_name || user.name;
     };
     
+    // Helper function to get the avatar URL from a user's profile
+    const getAvatarUrl = (user) => {
+        if (!user) return null;
+        
+        const profilePicPath = user.academician?.profile_picture || 
+                              user.postgraduate?.profile_picture || 
+                              user.undergraduate?.profile_picture;
+        
+        if (profilePicPath) {
+            // Return the full path to the profile picture
+            return `/storage/${profilePicPath}`;
+        }
+        
+        return null;
+    };
+    
     // Get the title based on context type
     const title = contextType === 'workspace' ? 'Manage Workspace Members' : 'Manage Project Members';
     
@@ -124,13 +140,15 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
                                     .map(member => {
                                     // Determine if the member is the owner
                                     const isContextOwner = member.id === (context?.owner_id || (contextType === 'workspace' && context?.data?.owner_id));
+                                    // Get the avatar URL using the helper function
+                                    const avatarUrl = getAvatarUrl(member);
                                     
                                     return (
                                         <div key={member.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                                             <div className="flex items-center">
                                                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                                    {member.profile_photo_url ? (
-                                                        <img src={member.profile_photo_url} alt={getFullName(member)} className="h-full w-full object-cover" />
+                                                    {avatarUrl ? (
+                                                        <img src={avatarUrl} alt={getFullName(member)} className="h-full w-full object-cover" />
                                                     ) : (
                                                         <span className="text-gray-500 text-sm">{getFullName(member).charAt(0)}</span>
                                                     )}
@@ -138,7 +156,7 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
                                                 <div className="ml-3">
                                                     <p className="text-sm font-medium text-gray-900">{getFullName(member)}</p>
                                                     <p className="text-xs text-gray-500">
-                                                        {isContextOwner ? 'Owner' : member.pivot?.role || 'Member'}
+                                                        {isContextOwner ? 'Owner' : member.pivot?.role?.charAt(0).toUpperCase() + member.pivot?.role?.slice(1) || 'Member'}
                                                     </p>
                                                 </div>
                                             </div>

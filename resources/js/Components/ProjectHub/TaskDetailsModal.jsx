@@ -425,14 +425,24 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                                     Paper Type
                                                                 </span>
                                                             </label>
-                                                            <input
-                                                                type="text"
+                                                            <select
                                                                 id="paper_type"
                                                                 value={form.data.paper_type}
                                                                 onChange={e => form.setData('paper_type', e.target.value)}
                                                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                placeholder="e.g., Research Paper, Review Article, Case Study"
-                                                            />
+                                                            >
+                                                                <option value="">Select a paper type</option>
+                                                                <option value="Experimental Paper">Experimental Paper</option>
+                                                                <option value="Systematic Literature Review">Systematic Literature Review</option>
+                                                                <option value="Conceptual Paper">Conceptual Paper</option>
+                                                                <option value="Literature Review">Literature Review</option>
+                                                                <option value="Thesis">Thesis</option>
+                                                                <option value="Book Chapter">Book Chapter</option>
+                                                                <option value="Research Proposal">Research Proposal</option>
+                                                                <option value="Conference Paper">Conference Paper</option>
+                                                                <option value="Conference Abstract">Conference Abstract</option>
+                                                                <option value="Poster Presentation">Poster Presentation</option>
+                                                            </select>
                                                             {form.errors.paper_type && (
                                                                 <p className="mt-1 text-sm text-red-600">{form.errors.paper_type}</p>
                                                             )}
@@ -441,7 +451,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                         <div>
                                                             <label htmlFor="publication_type" className="block text-sm font-medium text-gray-700">
                                                                 <span className="flex items-center">
-                                                                    <FileText className="w-4 h-4 mr-1" />
+                                                                    <BookOpen className="w-4 h-4 mr-1" />
                                                                     Publication Type
                                                                 </span>
                                                             </label>
@@ -451,8 +461,14 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                                 onChange={e => form.setData('publication_type', e.target.value)}
                                                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                             >
-                                                                <option value="Journal">Journal</option>
+                                                                <option value="">Select a publication type</option>
+                                                                <option value="Journal Article">Journal Article</option>
                                                                 <option value="Conference">Conference</option>
+                                                                <option value="Book">Book</option>
+                                                                <option value="Book Chapter">Book Chapter</option>
+                                                                <option value="Technical Report">Technical Report</option>
+                                                                <option value="Dataset">Dataset</option>
+                                                                <option value="Software / Code">Software / Code</option>
                                                             </select>
                                                             {form.errors.publication_type && (
                                                                 <p className="mt-1 text-sm text-red-600">{form.errors.publication_type}</p>
