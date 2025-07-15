@@ -78,7 +78,7 @@ export default function Show({ project, connections }) {
                     <span className="text-sm">Back to projects</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate">{project.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate">{project.data.name}</h1>
                     
                     {/* Manage Collaborators button - only visible to project owner */}
                     {isProjectOwner && (
@@ -91,11 +91,11 @@ export default function Show({ project, connections }) {
                         </button>
                     )}
                 </div>
-                {project.description && (
+                {project.data.description && (
                     <>
                         <div 
                             className={`mt-1 text-gray-500 ${!isDescriptionExpanded ? 'line-clamp-2' : ''}`}
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.description) }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.data.description) }}
                         />
                         <button
                             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}

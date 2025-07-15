@@ -10,7 +10,7 @@ import { toast } from 'react-hot-toast';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 
-export default function ManageCollaboratorsModal({ show, onClose, context, contextType, connections }) {
+export default function ManageCollaboratorsModal({ show, onClose, context, contextType, connections = [] }) {
     const { auth } = usePage().props;
     const [confirmingRemoval, setConfirmingRemoval] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,10 +32,12 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
     
     // Filter connections to exclude existing members whenever the modal is shown
     useEffect(() => {
-        if (show && connections && members) {
+        if (show && Array.isArray(connections) && Array.isArray(members)) {
             const memberIds = members.map(member => member.id);
             const filteredConnections = connections.filter(connection => !memberIds.includes(connection.id));
             setAvailableConnections(filteredConnections);
+        } else {
+            setAvailableConnections([]);
         }
     }, [show, connections, context, members]);
     
