@@ -215,6 +215,15 @@ class ProjectHubController extends Controller
             'members.academician', 'members.postgraduate', 'members.undergraduate'
         ]);
         
+        // Filter out the workspace owner from the members collection
+        // This creates a new filtered collection that excludes the owner
+        $manageableMembers = $workspace->members->filter(function ($member) use ($workspace) {
+            return $member->id !== $workspace->owner_id;
+        })->values(); // Reset array keys
+        
+        // Replace the members collection with the filtered one
+        $workspace->setRelation('members', $manageableMembers);
+        
         // Get the auth user's accepted connections to populate the invite list
         $userId = Auth::id();
         
@@ -568,6 +577,15 @@ class ProjectHubController extends Controller
             },
             'members.academician', 'members.postgraduate', 'members.undergraduate'
         ]);
+        
+        // Filter out the project owner from the members collection
+        // This creates a new filtered collection that excludes the owner
+        $manageableMembers = $scholar_project->members->filter(function ($member) use ($scholar_project) {
+            return $member->id !== $scholar_project->owner_id;
+        })->values(); // Reset array keys
+        
+        // Replace the members collection with the filtered one
+        $scholar_project->setRelation('members', $manageableMembers);
         
         // Get the authenticated user
         $user = Auth::user();

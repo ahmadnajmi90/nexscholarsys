@@ -22,6 +22,7 @@ class Board extends Model
         'boardable_id',
         'boardable_type',
         'name',
+        'creator_id', // Add creator_id to fillable
     ];
 
     /**
@@ -46,5 +47,15 @@ class Board extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'board_user')->withTimestamps();
+    }
+
+    /**
+     * Get the user who created the board.
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id')->withDefault([
+            'name' => 'Unknown User',
+        ]);
     }
 } 

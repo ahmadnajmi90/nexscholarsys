@@ -28,6 +28,9 @@ class BoardResource extends JsonResource
             'members' => $this->whenLoaded('members', function () {
                 return UserResource::collection($this->members);
             }),
+            'can' => [
+                'delete' => $request->user() ? $request->user()->can('delete', $this->resource) : false,
+            ],
         ];
     }
 } 

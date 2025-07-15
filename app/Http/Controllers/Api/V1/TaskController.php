@@ -10,6 +10,8 @@ use App\Models\Task;
 use App\Models\PaperWritingTask;
 use App\Models\TaskComment;
 use App\Events\TaskMoved;
+use App\Notifications\TaskAssignedNotification;
+use App\Notifications\TaskDueDateChangedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -122,6 +124,11 @@ class TaskController extends Controller
             'attachment' => 'nullable|file|max:10240', // 10MB max file size
         ]);
         
+        // Check if due date is being changed
+        $oldDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
+        $newDueDate = $validated['due_date'] ?? null;
+        $dueDateChanged = $oldDueDate !== $newDueDate && ($oldDueDate !== null || $newDueDate !== null);
+        
         // Update the base task
         $task->update([
             'title' => $validated['title'],
@@ -132,7 +139,31 @@ class TaskController extends Controller
         
         // Handle assignees if provided
         if ($request->has('assignees')) {
+            // Get current assignees before syncing
+            $currentAssignees = $task->assignees->pluck('id')->toArray();
+            $newAssignees = collect($request->input('assignees'));
+            
+            // Sync assignees
             $task->assignees()->sync($request->input('assignees'));
+            
+            // Find newly added assignees
+            $addedAssignees = $newAssignees->diff($currentAssignees);
+            
+            // Notify newly added assignees
+            if ($addedAssignees->count() > 0) {
+                $task->load('list.board'); // Make sure board is loaded for the URL
+                foreach ($task->assignees()->whereIn('users.id', $addedAssignees)->get() as $assignee) {
+                    $assignee->notify(new TaskAssignedNotification($task, $request->user()));
+                }
+            }
+        }
+        
+        // Notify about due date change if it changed and there are assignees
+        if ($dueDateChanged && $task->assignees()->count() > 0) {
+            $task->load('list.board'); // Make sure board is loaded for the URL
+            foreach ($task->assignees as $assignee) {
+                $assignee->notify(new TaskDueDateChangedNotification($task, $oldDueDate));
+            }
         }
         
         // If this is a paper writing task, update the associated record
@@ -293,8 +324,23 @@ class TaskController extends Controller
             'user_ids.*' => 'exists:users,id',
         ]);
         
+        // Get current assignees before syncing
+        $currentAssignees = $task->assignees->pluck('id')->toArray();
+        $newAssigneeIds = collect($validated['user_ids']);
+        
         // Sync the assignees
         $task->assignees()->sync($validated['user_ids']);
+        
+        // Find newly added assignees
+        $addedAssigneeIds = $newAssigneeIds->diff($currentAssignees);
+        
+        // Notify newly added assignees
+        if ($addedAssigneeIds->count() > 0) {
+            $task->load('list.board'); // Make sure board is loaded for the URL
+            foreach ($task->assignees()->whereIn('users.id', $addedAssigneeIds)->get() as $assignee) {
+                $assignee->notify(new TaskAssignedNotification($task, $request->user()));
+            }
+        }
         
         // Load the assignees for the response
         $task->load('assignees');

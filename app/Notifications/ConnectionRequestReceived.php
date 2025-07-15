@@ -13,7 +13,7 @@ class ConnectionRequestReceived extends Notification
 {
     use Queueable;
 
-    protected $connection;
+    protected $connectionRequest;
     protected $requester;
 
     /**
@@ -24,7 +24,7 @@ class ConnectionRequestReceived extends Notification
      */
     public function __construct($connection, User $requester)
     {
-        $this->connection = $connection;
+        $this->connectionRequest = $connection;
         $this->requester = $requester;
     }
 
@@ -47,11 +47,11 @@ class ConnectionRequestReceived extends Notification
     public function toDatabase($notifiable): array
     {
         return [
-            'connection_id' => $this->connection->id ?? '',
+            'connection_id' => $this->connectionRequest->id ?? '',
             'requester_id' => $this->requester->id,
-            'requester_name' => $this->requester->name,
+            'requester_name' => $this->requester->full_name,
             'type' => 'connection_request',
-            'message' => "{$this->requester->name} sent you a connection request."
+            'message' => "{$this->requester->full_name} sent you a connection request."
         ];
     }
 
@@ -64,11 +64,11 @@ class ConnectionRequestReceived extends Notification
     public function toArray($notifiable): array
     {
         return [
-            'connection_id' => $this->connection->id ?? '',
+            'connection_id' => $this->connectionRequest->id ?? '',
             'requester_id' => $this->requester->id,
-            'requester_name' => $this->requester->name,
+            'requester_name' => $this->requester->full_name,
             'type' => 'connection_request',
-            'message' => "{$this->requester->name} sent you a connection request."
+            'message' => "{$this->requester->full_name} sent you a connection request."
         ];
     }
 }

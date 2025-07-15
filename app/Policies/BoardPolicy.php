@@ -82,8 +82,13 @@ class BoardPolicy
             $member = $boardable->members()->where('user_id', $user->id)->first();
             return $member && $member->pivot->role === 'admin';
         } elseif ($boardable instanceof Project) {
-            // Only the project owner can delete boards
-            return $user->id === $boardable->owner_id;
+            // User can delete a board if they are the project owner or an admin
+            if ($user->id === $boardable->owner_id) {
+                return true;
+            }
+            
+            $member = $boardable->members()->where('user_id', $user->id)->first();
+            return $member && $member->pivot->role === 'admin';
         }
         
         return false;

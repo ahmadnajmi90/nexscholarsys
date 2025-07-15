@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Notifications\ProjectInvitationReceived;
+use App\Notifications\RoleChangedNotification;
+use App\Notifications\RemovedFromWorkspaceNotification;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\User;
@@ -83,11 +85,76 @@ class ProjectMemberController extends Controller
             ], 404);
         }
         
+        // Store project name before detaching the member
+        $projectName = $project->name;
+        
         // Detach the member from the project
         $project->members()->detach($member->id);
         
+        // Notify the member about being removed
+        $member->notify(new RemovedFromWorkspaceNotification(
+            $projectName,
+            'project',
+            request()->user()->name
+        ));
+        
         return response()->json([
             'message' => 'Member removed successfully',
+        ], 200);
+    }
+    
+    /**
+     * Update a member's role in the project.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Project  $project
+     * @param  \App\Models\User  $member
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateRole(Request $request, Project $project, User $member): JsonResponse
+    {
+        // Authorize the action using the policy
+        $this->authorize('addMember', $project);
+        
+        // Validate the incoming role
+        $validated = $request->validate([
+            'role' => 'required|string|in:admin,member',
+        ]);
+        
+        // Prevent changing the owner's role
+        if ($member->id === $project->owner_id) {
+            return response()->json([
+                'message' => 'Cannot change the project owner\'s role',
+            ], 422);
+        }
+        
+        // Check if the user is actually a member of the project
+        if (!$project->members()->where('user_id', $member->id)->exists()) {
+            return response()->json([
+                'message' => 'User is not a member of this project',
+            ], 404);
+        }
+        
+        // Update the role in the pivot table
+        $project->members()->updateExistingPivot($member->id, [
+            'role' => $validated['role']
+        ]);
+        
+        // Notify the member about their role change
+        $member->notify(new RoleChangedNotification(
+            $project->name,
+            'project',
+            $validated['role'],
+            $request->user()->name,
+            $project->id
+        ));
+        
+        // Reload the project with members
+        $project->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
+        
+        return response()->json([
+            'message' => 'Member role updated successfully',
+            'members' => $project->members
         ], 200);
     }
 }

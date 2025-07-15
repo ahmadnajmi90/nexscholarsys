@@ -7,6 +7,7 @@ use App\Http\Resources\BoardResource;
 use App\Models\Board;
 use App\Models\Workspace;
 use App\Models\Project;
+use App\Notifications\BoardDeletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -29,10 +30,14 @@ class BoardController extends Controller
         
         $board = $workspace->boards()->create([
             'name' => $validated['name'],
+            'creator_id' => Auth::id(),
         ]);
         
-        // Auto-assign the creator to the board
-        $board->members()->attach(Auth::id());
+        // Auto-assign both the creator and workspace owner to the board
+        $board->members()->syncWithoutDetaching([
+            Auth::id(),
+            $workspace->owner_id
+        ]);
         
         return redirect()->back()->with('success', 'Board created successfully.');
     }
@@ -50,15 +55,22 @@ class BoardController extends Controller
         }
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255',
+                      \Illuminate\Validation\Rule::unique('boards')
+                          ->where('boardable_id', $project->id)
+                          ->where('boardable_type', get_class($project))],
         ]);
         
         $board = $project->boards()->create([
             'name' => $validated['name'],
+            'creator_id' => Auth::id(),
         ]);
         
-        // Auto-assign the creator to the board
-        $board->members()->attach(Auth::id());
+        // Auto-assign both the creator and project owner to the board
+        $board->members()->syncWithoutDetaching([
+            Auth::id(),
+            $project->owner_id
+        ]);
         
         return redirect()->back()->with('success', 'Board created successfully.');
     }
@@ -105,7 +117,34 @@ class BoardController extends Controller
     {
         $this->authorize('delete', $board);
         
+        // Get board details before deletion
+        $boardName = $board->name;
+        $deletedByUser = request()->user();
+        
+        // Get the parent entity (workspace or project)
+        $boardable = $board->boardable;
+        $parentName = $boardable ? $boardable->name : 'Unknown';
+        $parentType = $boardable instanceof Workspace ? 'workspace' : 'project';
+        $parentId = $boardable ? $boardable->id : 0;
+        
+        // Get board members to notify (excluding the user who is deleting)
+        $membersToNotify = $board->members()
+            ->where('users.id', '!=', $deletedByUser->id)
+            ->get();
+        
+        // Delete the board
         $board->delete();
+        
+        // Notify members about the deletion
+        foreach ($membersToNotify as $member) {
+            $member->notify(new BoardDeletedNotification(
+                $boardName,
+                $parentName,
+                $parentType,
+                $deletedByUser->name,
+                $parentId
+            ));
+        }
         
         return back()->with('success', 'Board deleted successfully.');
     }
@@ -129,8 +168,13 @@ class BoardController extends Controller
             'user_ids.*' => 'exists:users,id'
         ]);
 
+        // Always include the owner of the parent entity in the sync
+        $userIds = array_unique(
+            array_merge($validated['user_ids'], [$boardable->owner_id])
+        );
+
         // sync() is perfect: it adds new users, removes unchecked ones, and leaves existing ones.
-        $board->members()->sync($validated['user_ids']);
+        $board->members()->sync($userIds);
 
         return response()->json(['message' => 'Board access updated successfully.']);
     }

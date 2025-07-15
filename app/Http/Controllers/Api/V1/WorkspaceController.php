@@ -7,6 +7,9 @@ use App\Http\Resources\WorkspaceResource;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Notifications\WorkspaceInvitationReceived;
+use App\Notifications\WorkspaceDeletedNotification;
+use App\Notifications\RoleChangedNotification;
+use App\Notifications\RemovedFromWorkspaceNotification;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -110,7 +113,25 @@ class WorkspaceController extends Controller
     {
         $this->authorize('delete', $workspace);
         
+        // Get workspace name and current user before deletion
+        $workspaceName = $workspace->name;
+        $deletedByUser = request()->user();
+        
+        // Get members to notify (excluding the current user who is deleting)
+        $membersToNotify = $workspace->members()
+            ->where('users.id', '!=', $deletedByUser->id)
+            ->get();
+        
+        // Delete the workspace
         $workspace->delete();
+        
+        // Notify members about the deletion
+        foreach ($membersToNotify as $member) {
+            $member->notify(new \App\Notifications\WorkspaceDeletedNotification(
+                $workspaceName, 
+                $deletedByUser->name
+            ));
+        }
         
         return back()->with('success', 'Workspace deleted successfully.');
     }
@@ -178,7 +199,18 @@ class WorkspaceController extends Controller
             return back()->with('error', 'Cannot remove the workspace owner.');
         }
         
+        // Store workspace name before detaching the member
+        $workspaceName = $workspace->name;
+        
+        // Remove the member
         $workspace->members()->detach($member->id);
+        
+        // Notify the member about being removed
+        $member->notify(new \App\Notifications\RemovedFromWorkspaceNotification(
+            $workspaceName,
+            'workspace',
+            $request->user()->name
+        ));
         
         if ($request->wantsJson()) {
         return response()->json([
@@ -187,5 +219,48 @@ class WorkspaceController extends Controller
         }
         
         return back()->with('success', 'Member removed successfully.');
+    }
+    
+    /**
+     * Update a member's role in the workspace.
+     */
+    public function updateMemberRole(Request $request, Workspace $workspace, User $member)
+    {
+        // Authorize that the authenticated user is the owner
+        $this->authorize('addMember', $workspace);
+        
+        // Validate the incoming role
+        $validated = $request->validate([
+            'role' => 'required|string|in:admin,member',
+        ]);
+        
+        // Prevent changing the owner's role
+        if ($member->id === $workspace->owner_id) {
+            return response()->json([
+                'message' => 'Cannot change the workspace owner\'s role',
+            ], Response::HTTP_FORBIDDEN);
+        }
+        
+        // Update the role in the pivot table
+        $workspace->members()->updateExistingPivot($member->id, [
+            'role' => $validated['role']
+        ]);
+        
+        // Notify the member about their role change
+        $member->notify(new \App\Notifications\RoleChangedNotification(
+            $workspace->name,
+            'workspace',
+            $validated['role'],
+            $request->user()->name,
+            $workspace->id
+        ));
+        
+        // Reload the workspace with members
+        $workspace->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
+        
+        return response()->json([
+            'message' => 'Member role updated successfully',
+            'members' => $workspace->members
+        ]);
     }
 } 

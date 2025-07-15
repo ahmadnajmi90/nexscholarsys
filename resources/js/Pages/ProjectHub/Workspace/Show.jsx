@@ -181,14 +181,16 @@ export default function Show({ workspace, connections }) {
                                             <Users className="w-4 h-4" />
                                         </button>
                                     )}
-                                    {/* Delete button */}
-                                    <button
-                                        onClick={(e) => handleDeleteBoard(e, board)}
-                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
-                                        title="Delete board"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    {/* Delete button - only visible to users with delete permission */}
+                                    {board.can && board.can.delete && (
+                                        <button
+                                            onClick={(e) => handleDeleteBoard(e, board)}
+                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
+                                            title="Delete board"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

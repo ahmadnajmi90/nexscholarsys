@@ -13,7 +13,7 @@ class ConnectionRequestAccepted extends Notification
 {
     use Queueable;
 
-    protected $connection;
+    protected $acceptedConnection;
     protected $recipient;
 
     /**
@@ -24,7 +24,7 @@ class ConnectionRequestAccepted extends Notification
      */
     public function __construct($connection, User $recipient)
     {
-        $this->connection = $connection;
+        $this->acceptedConnection = $connection;
         $this->recipient = $recipient;
     }
 
@@ -47,11 +47,11 @@ class ConnectionRequestAccepted extends Notification
     public function toDatabase($notifiable): array
     {
         return [
-            'connection_id' => $this->connection->id ?? '',
+            'connection_id' => $this->acceptedConnection->id ?? '',
             'recipient_id' => $this->recipient->id,
-            'recipient_name' => $this->recipient->name,
+            'recipient_name' => $this->recipient->full_name,
             'type' => 'connection_accepted',
-            'message' => "{$this->recipient->name} accepted your connection request."
+            'message' => "{$this->recipient->full_name} accepted your connection request."
         ];
     }
 
@@ -64,11 +64,11 @@ class ConnectionRequestAccepted extends Notification
     public function toArray($notifiable): array
     {
         return [
-            'connection_id' => $this->connection->id ?? '',
+            'connection_id' => $this->acceptedConnection->id ?? '',
             'recipient_id' => $this->recipient->id,
-            'recipient_name' => $this->recipient->name,
+            'recipient_name' => $this->recipient->full_name,
             'type' => 'connection_accepted',
-            'message' => "{$this->recipient->name} accepted your connection request."
+            'message' => "{$this->recipient->full_name} accepted your connection request."
         ];
     }
 }

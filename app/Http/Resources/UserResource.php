@@ -30,10 +30,7 @@ class UserResource extends JsonResource
             'name' => $this->name, // Fallback name
             'email' => $this->email,
             'avatar_url' => $profilePicture ?? $this->avatar_url ?? asset('images/default-avatar.png'),
-            'full_name' => $this->academician->full_name 
-                            ?? $this->postgraduate->full_name 
-                            ?? $this->undergraduate->full_name 
-                            ?? $this->name,
+            'full_name' => $this->full_name,
             'academician' => $this->whenLoaded('academician'),
             'postgraduate' => $this->whenLoaded('postgraduate'),
             'undergraduate' => $this->whenLoaded('undergraduate'),

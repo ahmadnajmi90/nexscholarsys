@@ -58,7 +58,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array<int, string>
      */
-    protected $appends = ['connection_status_with_auth_user'];
+    protected $appends = ['connection_status_with_auth_user', 'full_name'];
 
     /**
      * Get the attributes that should be cast.
@@ -71,6 +71,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's full name by checking their role-specific profile.
+     *
+     * @return string
+     */
+    public function getFullNameAttribute(): string
+    {
+        // This ensures relationships are loaded efficiently if they haven't been already
+        $this->loadMissing(['academician', 'postgraduate', 'undergraduate']);
+
+        return $this->academician->full_name 
+               ?? $this->postgraduate->full_name 
+               ?? $this->undergraduate->full_name 
+               ?? $this->name;
     }
 
     public function academician()

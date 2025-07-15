@@ -3,6 +3,7 @@ import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'react-hot-toast';
+import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { UserCheck, UserX } from 'lucide-react';
 
@@ -37,14 +38,25 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
             user_ids: selectedMemberIds
         })
         .then(response => {
+            // First show the success message
             toast.success('Board access updated successfully');
-            onClose();
+            
+            // Then trigger Inertia reload and close modal after it's done
+            router.reload({
+                preserveScroll: true,
+                onSuccess: () => {
+                    onClose();
+                },
+                onError: () => {
+                    // If reload fails, still close the modal but show an error
+                    onClose();
+                    toast.error('Changes saved but page refresh failed. Please reload the page.');
+                }
+            });
         })
         .catch(error => {
             const message = error.response?.data?.message || 'Failed to update board access';
             toast.error(message);
-        })
-        .finally(() => {
             setIsSubmitting(false);
         });
     };
@@ -78,7 +90,7 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
                 <h2 className="text-lg font-medium text-gray-900 mb-6">Manage Board Access</h2>
                 
                 <p className="text-sm text-gray-600 mb-4">
-                    Select which workspace members should have access to the <strong>{board?.name}</strong> board.
+                    Select which members should have access to the <strong>{board?.name}</strong> board.
                 </p>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -111,7 +123,7 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
                                             <div className="ml-3">
                                                 <p className="text-sm font-medium text-gray-900">{getFullName(member)}</p>
                                                 <p className="text-xs text-gray-500">
-                                                    {member.pivot?.role || 'Member'}
+                                                    {(member.pivot?.role || 'Member').charAt(0).toUpperCase() + (member.pivot?.role || 'Member').slice(1)}
                                                 </p>
                                             </div>
                                         </div>
@@ -126,7 +138,7 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
                                                     disabled={isSubmitting}
                                                 />
                                                 {selectedMemberIds.includes(member.id) ? (
-                                                    <span className="p-1.5 text-indigo-600 bg-indigo-100 rounded-md">
+                                                    <span className="p-1.5 bg-indigo-100 rounded-md text-indigo-600">
                                                         <UserCheck className="w-5 h-5" />
                                                     </span>
                                                 ) : (
@@ -141,7 +153,7 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
                             </div>
                         ) : (
                             <div className="text-center p-4">
-                                <p className="text-gray-500">No workspace members available.</p>
+                                <p className="text-gray-500">No members available to manage.</p>
                             </div>
                         )}
                     </div>

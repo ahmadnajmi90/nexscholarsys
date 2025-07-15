@@ -35,6 +35,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->name('workspaces.members.add');
     Route::delete('workspaces/{workspace}/members/{member}', [WorkspaceController::class, 'removeMember'])
         ->name('workspaces.members.remove');
+    Route::put('workspaces/{workspace}/members/{member}', [WorkspaceController::class, 'updateMemberRole'])
+        ->name('workspaces.members.update-role');
     
     // Board routes nested under workspaces
     Route::post('workspaces/{workspace}/boards', [BoardController::class, 'storeForWorkspace'])
@@ -112,6 +114,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->name('projects.members.store');
     Route::delete('/projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])
         ->name('projects.members.destroy');
+    Route::put('/projects/{project}/members/{member}', [ProjectMemberController::class, 'updateRole'])
+        ->name('projects.members.update-role');
     
     // Project Join Request Routes
     Route::post('/projects/{project}/join-request', [ProjectJoinRequestController::class, 'store'])

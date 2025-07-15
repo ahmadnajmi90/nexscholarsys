@@ -25,13 +25,13 @@ export default function Show({ project, connections }) {
         e.preventDefault();
         
         // Make sure project data exists
-        if (!project || !project.id) {
+        if (!project || !project.data || !project.data.id) {
             console.error("Project ID is missing, cannot create board.");
             return;
         }
         
         // Post to the boards endpoint for this project using the named route
-        form.post(route('projects.boards.store', project.id), {
+        form.post(route('projects.boards.store', project.data.id), {
             onSuccess: () => {
                 // Close the form
                 setIsCreatingBoard(false);
@@ -67,7 +67,7 @@ export default function Show({ project, connections }) {
     };
 
     // Check if the current user is the project owner
-    const isProjectOwner = auth.user.id === project.owner_id;
+    const isProjectOwner = auth.user.id === project.data.owner_id;
     
     return (
         <div className="w-full md:max-w-8xl md:mx-auto px-4 md:px-4 lg:px-2 py-4 md:py-6 lg:mt-2 mt-6">
@@ -174,9 +174,9 @@ export default function Show({ project, connections }) {
                 )}
                 
                 {/* Boards grid */}
-                {project.boards && project.boards.length > 0 ? (
+                {project.data.boards && project.data.boards.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {project.boards.map((board) => (
+                        {project.data.boards.map((board) => (
                             <div 
                                 key={board.id}
                                 className="relative bg-white shadow rounded-lg hover:shadow-md transition-shadow duration-200"
@@ -204,14 +204,16 @@ export default function Show({ project, connections }) {
                                             <Users className="w-4 h-4" />
                                         </button>
                                     )}
-                                    {/* Delete button */}
-                                    <button
-                                        onClick={(e) => handleDeleteBoard(e, board)}
-                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
-                                        title="Delete board"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    {/* Delete button - only visible to users with delete permission */}
+                                    {board.can && board.can.delete && (
+                                        <button
+                                            onClick={(e) => handleDeleteBoard(e, board)}
+                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
+                                            title="Delete board"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -249,7 +251,7 @@ export default function Show({ project, connections }) {
                     show={!!managingBoard}
                     onClose={() => setManagingBoard(null)}
                     board={managingBoard}
-                    workspaceMembers={project.members || []}
+                    workspaceMembers={project.data.members || []}
                 />
             )}
         </div>

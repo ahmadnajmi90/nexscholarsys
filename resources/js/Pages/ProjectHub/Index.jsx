@@ -130,7 +130,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                 <div className="flex items-center text-sm text-gray-500 mt-3">
                                     <div className="flex items-center mr-4 truncate">
                                         <Users className="w-4 h-4 mr-1" />
-                                                <span>Owner: {ownerName}</span>
+                                                <span>Owner: {auth.user.id === workspace.owner_id ? 'You' : ownerName}</span>
                                     </div>
                                     <div className="flex items-center ml-auto">
                                         <Clock className="w-4 h-4 mr-1" />
@@ -152,17 +152,25 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                             </button>
                                         )} */}
                                         
-                            {/* Delete button */}
-                            {auth.user.id === workspace.owner_id && 
-                            <button
-                                onClick={(e) => handleDeleteWorkspace(e, workspace)}
+                                        {/* Owner badge */}
+                                        {auth.user.id === workspace.owner_id && (
+                                            <div className="bg-indigo-100 text-indigo-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
+                                                <span className="mr-1">👑</span>
+                                                <span>Owner</span>
+                                            </div>
+                                        )}
+                            
+                                        {/* Delete button */}
+                                        {auth.user.id === workspace.owner_id && 
+                                        <button
+                                            onClick={(e) => handleDeleteWorkspace(e, workspace)}
                                             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
-                                title="Delete workspace"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                            }
-                        </div>
+                                            title="Delete workspace"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        }
+                                    </div>
                                 </div>
                             );
                         })}
@@ -219,7 +227,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                         href={route('project-hub.projects.show', project.id)}
                                         className="block p-5"
                                     >
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate pr-12">{project.name}</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate pr-24">{project.name}</h3>
                                         {/* {project.description && (
                                             <p 
                                                 className="text-gray-500 text-sm mb-3 line-clamp-2"
@@ -229,7 +237,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                         <div className="flex items-center text-sm text-gray-500 mt-3">
                                             <div className="flex items-center mr-4 truncate">
                                                 <Users className="w-4 h-4 mr-1" />
-                                                <span>Owner: {ownerName}</span>
+                                                <span>Owner: {auth.user.id === project.owner_id ? 'You' : ownerName}</span>
                                             </div>
                                             {/* {project.post_project_id && (
                                                 <div className="flex items-center mr-4">
@@ -247,7 +255,7 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                     {/* Action buttons */}
                                     <div className="absolute top-2 right-2 flex space-x-1">
                                         {/* Manage Members button (only for project owner) */}
-                                        {auth.user.id === project.owner_id && (
+                                        {/* {auth.user.id === project.owner_id && (
                                             <button
                                                 onClick={(e) => handleManageCollaborators(e, project, 'project')}
                                                 className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-100 rounded-full"
@@ -255,6 +263,14 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
                                             >
                                                 <UserPlus className="w-4 h-4" />
                                             </button>
+                                        )} */}
+                                        
+                                        {/* Owner badge */}
+                                        {auth.user.id === project.owner_id && (
+                                            <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
+                                                <span className="mr-1">👑</span>
+                                                <span>Owner</span>
+                                            </div>
                                         )}
                                         
                                         {/* Delete button */}

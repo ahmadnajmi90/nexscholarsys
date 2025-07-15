@@ -8,8 +8,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
-class WorkspaceInvitationReceived extends Notification implements ShouldQueue
+class WorkspaceInvitationReceived extends Notification
 {
     use Queueable;
 
@@ -59,13 +60,61 @@ class WorkspaceInvitationReceived extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
-            ->subject('Workspace Invitation - ' . $this->workspace->name)
-            ->greeting('Hello ' . $notifiable->name . '!')
-            ->line('You have been invited to join the workspace "' . $this->workspace->name . '" by ' . $this->inviter->name . '.')
-            ->line('This workspace will allow you to collaborate on projects and tasks with other team members.')
-            ->action('View Workspace', route('project-hub.workspace.show', $this->workspace))
-            ->line('Thank you for using Nexscholar!');
+        Log::info('Attempting to send WorkspaceInvitationReceived email to: ' . ($notifiable->email ?? 'unknown email'));
+        
+        try {
+            // Check if required data exists
+            if (!$this->workspace || !$this->inviter || !$notifiable) {
+                Log::error('WorkspaceInvitationReceived: Missing required data', [
+                    'workspace_exists' => (bool)$this->workspace,
+                    'inviter_exists' => (bool)$this->inviter,
+                    'notifiable_exists' => (bool)$notifiable
+                ]);
+                
+                // Log the error but continue with a generic message
+                return (new MailMessage)
+                    ->subject('Workspace Invitation')
+                    ->line('You have received a workspace invitation, but some details are missing.')
+                    ->line('Please contact support if you have questions.');
+            }
+            
+            $workspaceName = $this->workspace->name ?? 'Unknown Workspace';
+            $inviterName = $this->inviter->full_name ?? 'Unknown User';
+            $notifiableName = $notifiable->full_name ?? 'User';
+            
+            // Use the correct route name (workspaces plural, not workspace singular)
+            $routeName = 'project-hub.workspaces.show';
+            
+            // Pass the ID instead of the whole object to avoid serialization issues
+            $workspaceId = $this->workspace->id ?? null;
+            
+            if (!$workspaceId) {
+                Log::error('WorkspaceInvitationReceived: Missing workspace ID');
+                return (new MailMessage)
+                    ->subject('Workspace Invitation')
+                    ->line('You have received a workspace invitation, but some details are missing.')
+                    ->line('Please contact support if you have questions.');
+            }
+            
+            return (new MailMessage)
+                ->subject('Workspace Invitation - ' . $workspaceName)
+                ->greeting('Hello ' . $notifiableName . '!')
+                ->line('You have been invited to join the workspace "' . $workspaceName . '" by ' . $inviterName . '.')
+                ->line('This workspace will allow you to collaborate on projects and tasks with other team members.')
+                ->action('View Workspace', route($routeName, $workspaceId))
+                ->line('Thank you for using Nexscholar!');
+        } catch (\Exception $e) {
+            Log::error('WorkspaceInvitationReceived: Exception in toMail', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return a generic message instead of failing
+            return (new MailMessage)
+                ->subject('Workspace Invitation')
+                ->line('You have received a workspace invitation, but we encountered an error processing it.')
+                ->line('Please contact support if you have questions.');
+        }
     }
 
     /**
@@ -76,12 +125,24 @@ class WorkspaceInvitationReceived extends Notification implements ShouldQueue
      */
     public function toArray($notifiable)
     {
-        return [
-            'workspace_id' => $this->workspace->id,
-            'workspace_name' => $this->workspace->name,
-            'inviter_id' => $this->inviter->id,
-            'inviter_name' => $this->inviter->name,
-            'message' => 'You have been invited to join workspace "' . $this->workspace->name . '" by ' . $this->inviter->name,
-        ];
+        try {
+            return [
+                'workspace_id' => $this->workspace->id ?? null,
+                'workspace_name' => $this->workspace->name ?? 'Unknown Workspace',
+                'inviter_id' => $this->inviter->id ?? null,
+                'inviter_name' => $this->inviter->full_name ?? 'Unknown User',
+                'message' => 'You have been invited to join workspace "' . 
+                    ($this->workspace->name ?? 'Unknown Workspace') . '" by ' . 
+                    ($this->inviter->full_name ?? 'Unknown User'),
+            ];
+        } catch (\Exception $e) {
+            Log::error('WorkspaceInvitationReceived: Exception in toArray', [
+                'exception' => $e->getMessage()
+            ]);
+            
+            return [
+                'message' => 'You have received a workspace invitation.',
+            ];
+        }
     }
 }
