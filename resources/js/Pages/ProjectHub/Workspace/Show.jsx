@@ -101,53 +101,55 @@ export default function Show({ workspace, connections }) {
                 </div>
                 
                 {/* Create board form */}
-                {isCreatingBoard ? (
-                    <div className="bg-white shadow rounded-lg p-4 mb-6">
-                        <h3 className="text-md font-medium text-gray-900 mb-3">Create a new board</h3>
-                        <form onSubmit={handleCreateBoard} className="space-y-3">
-                            <div>
-                                <input
-                                    type="text"
-                                    value={form.data.name}
-                                    onChange={e => form.setData('name', e.target.value)}
-                                    className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                                    placeholder="Board name"
-                                    disabled={form.processing}
-                                    autoFocus
-                                />
-                                {form.errors.name && <div className="text-red-500 text-xs mt-1">{form.errors.name}</div>}
-                            </div>
-                            <div className="flex justify-between">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsCreatingBoard(false);
-                                        form.reset();
-                                    }}
-                                    className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-                                    disabled={form.processing}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                                    disabled={form.processing || !form.data.name.trim()}
-                                >
-                                    {form.processing ? 'Creating...' : 'Create Board'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setIsCreatingBoard(true)}
-                        className="inline-flex items-center px-4 py-2 mb-6 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create new board
-                    </button>
+                {workspace.data.can.create_board && (
+                    isCreatingBoard ? (
+                        <div className="bg-white shadow rounded-lg p-4 mb-6">
+                            <h3 className="text-md font-medium text-gray-900 mb-3">Create a new board</h3>
+                            <form onSubmit={handleCreateBoard} className="space-y-3">
+                                <div>
+                                    <input
+                                        type="text"
+                                        value={form.data.name}
+                                        onChange={e => form.setData('name', e.target.value)}
+                                        className="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                        placeholder="Board name"
+                                        disabled={form.processing}
+                                        autoFocus
+                                    />
+                                    {form.errors.name && <div className="text-red-500 text-xs mt-1">{form.errors.name}</div>}
+                                </div>
+                                <div className="flex justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsCreatingBoard(false);
+                                            form.reset();
+                                        }}
+                                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                        disabled={form.processing}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                                        disabled={form.processing || !form.data.name.trim()}
+                                    >
+                                        {form.processing ? 'Creating...' : 'Create Board'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setIsCreatingBoard(true)}
+                            className="inline-flex items-center px-4 py-2 mb-6 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create new board
+                        </button>
+                    )
                 )}
                 
                 {/* Boards grid */}

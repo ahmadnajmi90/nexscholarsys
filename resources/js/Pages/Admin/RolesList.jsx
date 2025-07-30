@@ -12,7 +12,6 @@ const RolesList = ({ roles, abilities }) => {
 
     const handleCreateAbility = (e) => {
         e.preventDefault();
-        console.log('data', data);
         post(route('abilities.store'), {
             data,
             onSuccess: () => {

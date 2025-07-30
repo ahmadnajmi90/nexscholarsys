@@ -108,9 +108,6 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
         // Ensure task_type is set to 'paper'
         form.setData('task_type', 'paper');
         
-        // Log form data for debugging
-        console.log("Form data being submitted:", form.data);
-        
         if (isEditMode) {
             // Update existing task - use the proper URL
             form.put(`/api/v1/tasks/${task.id}`, {
@@ -442,16 +439,24 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
 
                                             <div>
                                                 <label htmlFor="scopus_info" className="block text-sm font-medium text-gray-700">
-                                                    Scopus Info
+                                                    Scopus/ WOS Quartile
                                                 </label>
-                                                <input
-                                                    type="text"
+                                                <select
                                                     id="scopus_info"
                                                     value={form.data.scopus_info || ''}
                                                     onChange={e => form.setData('scopus_info', e.target.value)}
                                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                    placeholder="Scopus indexing information"
-                                                />
+                                                >
+                                                    <option value="">Select a quartile</option>
+                                                    <option value="WOS Q1">WOS Q1</option>
+                                                    <option value="WOS Q2">WOS Q2</option>
+                                                    <option value="WOS Q3">WOS Q3</option>
+                                                    <option value="WOS Q4">WOS Q4</option>
+                                                    <option value="Scopus Q1">Scopus Q1</option>
+                                                    <option value="Scopus Q2">Scopus Q2</option>
+                                                    <option value="Scopus Q3">Scopus Q3</option>
+                                                    <option value="Scopus Q4">Scopus Q4</option>
+                                                </select>
                                             </div>
 
                                             <div>

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\BoardResource;
 use App\Http\Resources\UserResource;
+use App\Models\Board;
 
 class ProjectResource extends JsonResource
 {
@@ -28,6 +29,9 @@ class ProjectResource extends JsonResource
             'boards' => BoardResource::collection($this->whenLoaded('boards')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'can' => [
+                'create_board' => $request->user()->can('create', [Board::class, $this->resource]),
+            ],
         ];
     }
 } 

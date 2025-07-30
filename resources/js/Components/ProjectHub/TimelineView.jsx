@@ -4,8 +4,6 @@ import { format, addDays, isValid } from 'date-fns';
 import { isTaskCompleted } from '@/Utils/utils';
 
 export default function TimelineView({ board, onTaskClick }) {
-    console.log("2. Board data received as props by TimelineView:", board);
-    
     const ganttContainer = useRef(null);
     const [ganttChart, setGanttChart] = useState(null);
     const [currentViewMode, setCurrentViewMode] = useState('Week');
@@ -14,12 +12,7 @@ export default function TimelineView({ board, onTaskClick }) {
         // Transform tasks into the format frappe-gantt expects
         const tasks = transformTasksForGantt(board);
         
-        console.log("4. Transformed tasks for Gantt chart:", tasks);
-        console.log("4a. Gantt container exists:", !!ganttContainer.current);
-        console.log("4b. Tasks length:", tasks.length);
-        
         if (ganttContainer.current && tasks.length > 0) {
-            console.log("4c. Initializing Gantt chart with tasks:", tasks);
             try {
                 // Get window width for mobile optimization
                 const isMobile = window.innerWidth < 768;

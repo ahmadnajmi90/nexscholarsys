@@ -6,6 +6,7 @@ use App\Models\Board;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\Project;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class BoardPolicy
@@ -13,18 +14,25 @@ class BoardPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can create a board in the workspace.
+     * Determine whether the user can create a board within the given parent entity.
+     *
+     * @param  \App\Models\User  $user
+     * @param  \Illuminate\Database\Eloquent\Model  $parent
+     * @return bool
      */
-    public function create(User $user, $boardable): bool
+    public function create(User $user, Model $parent): bool
     {
-        // User can create a board if they are a member of the parent entity
-        if ($boardable instanceof Workspace) {
-            return $boardable->members->contains($user);
-        } elseif ($boardable instanceof Project) {
-            return $user->id === $boardable->owner_id || $boardable->members->contains($user);
+        // Rule 1: The owner can always create a board
+        if ($user->id === $parent->owner_id) {
+            return true;
         }
-        
-        return false;
+
+        // Rule 2: An 'admin' can also create a board
+        // First, check if the user is a member at all
+        $member = $parent->members()->where('user_id', $user->id)->first();
+
+        // Return true only if they are a member AND their role is 'admin'
+        return $member && $member->pivot->role === 'admin';
     }
 
     /**

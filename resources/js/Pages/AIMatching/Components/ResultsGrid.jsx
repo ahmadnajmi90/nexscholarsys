@@ -48,10 +48,6 @@ export default function ResultsGrid({
   // Progressive loading of profile cards when results change
   useEffect(() => {
     if (searchResults && searchResults.matches) {
-      // Debug: Log search results structure
-      console.log('Search results structure:', searchResults);
-      console.log('First match example:', searchResults.matches[0]);
-      
       // Reset loaded profiles when new results arrive
       setLoadedProfiles([]);
       
@@ -102,9 +98,6 @@ export default function ResultsGrid({
   if (!searchResults || !searchResults.matches || searchResults.matches.length === 0) {
     return null;
   }
-  
-  // Debug: Log the first match to see its structure
-  console.log('Match object structure:', searchResults.matches[0]);
   
   // Filter results based on selected filters
   const filteredResults = searchResults.matches.filter(match => {
@@ -212,7 +205,6 @@ export default function ResultsGrid({
     
     // If profile doesn't have AI insights, try to find the matching result
     if (!briefInsights) {
-      console.log('No ai_insights in profile, searching in matches...');
       const matchingResult = searchResults.matches.find(match => {
         const matchProfile = match.academician || match.student || {};
         const matchProfileId = matchProfile.id || matchProfile.academician_id || 
@@ -222,10 +214,7 @@ export default function ResultsGrid({
       
       // Get AI insights from matching result if found
       briefInsights = matchingResult?.ai_insights || '';
-      console.log('Match object found:', matchingResult);
     }
-    
-    console.log('AI Insights to use:', briefInsights);
     
     // Process the insights to replace field IDs with readable names
     let processedInsights = briefInsights;

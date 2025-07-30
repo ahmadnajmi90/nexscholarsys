@@ -8,7 +8,6 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
     const [batchSending, setBatchSending] = useState(false);
     const [batchSent, setBatchSent] = useState(false);
     const [expandedIds, setExpandedIds] = useState({});
-    console.log(undergraduates);
     
     const handleSendReminder = async (userId) => {
         setSentStatus(prev => ({ ...prev, [userId]: 'sending' }));

@@ -107,9 +107,6 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
         const taskType = task && task.paper_writing_task ? 'paper' : 'normal';
         form.setData('task_type', taskType);
         
-        // Log form data for debugging
-        console.log("TaskDetailsModal - Form data being submitted:", form.data);
-        
         if (isNewTask) {
             // Get the list_id from the task object
             const list_id = form.data.list_id || task.board_list_id;
@@ -248,8 +245,6 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     if (!task || !show) {
         return null;
     }
-
-    console.log("Task object received by frontend:", task);
     
     return (
         <>
@@ -478,16 +473,24 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
 
                                                     <div>
                                                         <label htmlFor="scopus_info" className="block text-sm font-medium text-gray-700">
-                                                            Scopus Information
+                                                            Scopus/ WOS Quartile
                                                         </label>
-                                                        <textarea
+                                                        <select
                                                             id="scopus_info"
                                                             value={form.data.scopus_info}
                                                             onChange={e => form.setData('scopus_info', e.target.value)}
-                                                            rows={2}
                                                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                            placeholder="Target journal, impact factor, indexing information, etc."
-                                                        />
+                                                        >
+                                                            <option value="">Select a quartile</option>
+                                                            <option value="WOS Q1">WOS Q1</option>
+                                                            <option value="WOS Q2">WOS Q2</option>
+                                                            <option value="WOS Q3">WOS Q3</option>
+                                                            <option value="WOS Q4">WOS Q4</option>
+                                                            <option value="Scopus Q1">Scopus Q1</option>
+                                                            <option value="Scopus Q2">Scopus Q2</option>
+                                                            <option value="Scopus Q3">Scopus Q3</option>
+                                                            <option value="Scopus Q4">Scopus Q4</option>
+                                                        </select>
                                                         {form.errors.scopus_info && (
                                                             <p className="mt-1 text-sm text-red-600">{form.errors.scopus_info}</p>
                                                         )}

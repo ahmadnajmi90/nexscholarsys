@@ -60,7 +60,6 @@ export default function Index({ auth, universities, faculties, users, researchOp
       
       // Process results
       if (response.data && response.data.matches) {
-        console.log('Search results:', response.data);
         // Process the results based on the search type
         setSearchResults(response.data);
       } else {

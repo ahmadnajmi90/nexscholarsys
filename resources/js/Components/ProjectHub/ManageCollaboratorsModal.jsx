@@ -115,12 +115,6 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
         }
     }, [show, connections, context, members]);
     
-    // Debug logging
-    console.log('Context:', context);
-    console.log('Context Type:', contextType);
-    console.log('Context ID:', contextId);
-    console.log('Members:', members);
-    
     const handleSubmit = (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -228,10 +222,6 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
                 project: contextId, 
                 member: confirmingRemoval.id 
             };
-            
-            // Debug the project ID
-            console.log('Project ID for removal:', contextId);
-            console.log('Route params:', routeParams);
         }
         
         axios.delete(route(routeName, routeParams))

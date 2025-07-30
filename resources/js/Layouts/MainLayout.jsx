@@ -50,8 +50,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     }
                 }
             }
-            
-            console.log(`MainLayout tracking: ${pageTitle || 'Unknown'} at ${url}`);
+
             // Pass both URL and explicit title to ensure correct tracking
             trackPageView(url, pageTitle);
         }, 250); // Slightly longer delay to ensure title is updated
