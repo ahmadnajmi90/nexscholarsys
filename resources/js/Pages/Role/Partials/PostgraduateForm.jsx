@@ -598,7 +598,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {/* Full Name */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                         <div className="w-full">
-                            <InputLabel htmlFor="full_name" value="Full Name" required />
+                            <InputLabel htmlFor="full_name" value={<>Full Name <span className="text-red-600">*</span></>} required/>
                             <TextInput
                                 id="full_name"
                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -614,7 +614,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {/* Bio */}
                     <div className="grid grid-cols-1 gap-6 w-full">
                         <div className="w-full">
-                            <InputLabel htmlFor="bio" value="Short Bio" />
+                            <InputLabel htmlFor="bio" value={<>Short Bio <span className="text-red-600">*</span></>} />
                             <textarea
                                 id="bio"
                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-4"
@@ -752,7 +752,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {/* Contact Details */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                         <div className="w-full">
-                            <InputLabel htmlFor="phone_number" value="Phone Number" required />
+                            <InputLabel htmlFor="phone_number" value="Phone Number" />
                             <TextInput
                                 id="phone_number"
                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -763,14 +763,14 @@ export default function PostgraduateForm({ universities, faculties, className = 
                             <InputError className="mt-2" message={errors.phone_number} />
                         </div>
                         <div>
-                            <NationalityForm title="Nationality" value={data.nationality} onChange={(value) => setData('nationality', value)} />
+                            <NationalityForm title="Nationality" value={data.nationality} onChange={(value) => setData('nationality', value)} errors={errors} />
                         </div>
                     </div>
 
                     {/* English Proficiency & Funding Requirement */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                         <div>
-                            <InputLabel htmlFor="english_proficiency_level" value="English Proficiency Level" />
+                            <InputLabel htmlFor="english_proficiency_level" value={<>English Proficiency Level <span className="text-red-600">*</span></>} required/>
                             <select
                                 id="english_proficiency_level"
                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -787,7 +787,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                             <InputError className="mt-2" message={errors.english_proficiency_level} />
                         </div>
                         <div>
-                            <InputLabel htmlFor="funding_requirement" value="Funding Requirement" />
+                            <InputLabel htmlFor="funding_requirement" value={<>Funding Requirement <span className="text-red-600">*</span></>} required/>
                             <select
                                 id="funding_requirement"
                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -807,7 +807,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                         <div>
                             <InputLabel htmlFor="current_postgraduate_status">
-                                Current Postgraduate Status
+                                Current Postgraduate Status <span className="text-red-600">*</span>
                             </InputLabel>
                             <select
                                 id="current_postgraduate_status"
@@ -821,7 +821,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                             </select>
                         </div>
                         <div className="w-full">
-                            <InputLabel htmlFor="skills" value="Skills" />
+                            <InputLabel htmlFor="skills" value={<>Skills <span className="text-red-600">*</span></>} required/>
                             <Select
                                 id="skills"
                                 isMulti
@@ -844,7 +844,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {data.current_postgraduate_status === "Registered" && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                             <div>
-                                <InputLabel htmlFor="university" value="University" required />
+                                <InputLabel htmlFor="university" value={<>University <span className="text-red-600">*</span></>} required />
                                 <select
                                     id="university"
                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -863,7 +863,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 <InputError className="mt-2" message={errors.university} />
                             </div>
                             <div className="w-full">
-                                <InputLabel htmlFor="faculty" value="Faculty" required />
+                                <InputLabel htmlFor="faculty" value={<>Faculty <span className="text-red-600">*</span></>} required />
                                 <select
                                     id="faculty"
                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -883,7 +883,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {data.current_postgraduate_status === "Registered" && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                             <div>
-                                <InputLabel htmlFor="matric_no" value="Matric No." required />
+                                <InputLabel htmlFor="matric_no" value={<>Matric No. <span className="text-red-600">*</span></>} required />
                                 <TextInput
                                     id="matric_no"
                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -895,7 +895,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 <InputError className="mt-2" message={errors.matric_no} />
                             </div>
                             <div>
-                                <InputLabel htmlFor="supervisorAvailability" value="Looking for a Supervisor?" />
+                                <InputLabel htmlFor="supervisorAvailability" value={<>Looking for a Supervisor? <span className="text-red-600">*</span></>} required/>
                                 <select
                                     id="supervisorAvailability"
                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -963,7 +963,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {showResearchForm && (
                         <div className="w-full space-y-4">
                             <div>
-                                <InputLabel htmlFor="suggested_research_title" value="Suggested Research Title" required />
+                                <InputLabel htmlFor="suggested_research_title" value="Suggested Research Title" />
                                 <TextInput
                                     id="suggested_research_title"
                                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -991,7 +991,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                     {/* Research Expertise Searchable Dropdown */}
                     <div className="w-full">
                         <InputLabel htmlFor="field_of_research">
-                            Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
+                            Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain <span className="text-red-600">*</span>
                         </InputLabel>
                         <Select
                             id="field_of_research"

@@ -913,7 +913,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
               {/* Full Name and Phone Number */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div className="w-full">
-                  <InputLabel htmlFor="full_name" value="Full Name (Without Salutation)" required />
+                  <InputLabel htmlFor="full_name" value={<>Full Name (Without Salutation) <span className="text-red-600">*</span></>} required />
                   <TextInput
                     id="full_name"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -926,7 +926,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   <InputError className="mt-2" message={errors.full_name} />
                 </div>
                 <div className="w-full">
-                  <InputLabel htmlFor="phone_number" value="Phone Number" required />
+                  <InputLabel htmlFor="phone_number" value="Phone Number" />
                   <TextInput
                     id="phone_number"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -940,7 +940,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                 <div className="w-full">
-                  <InputLabel htmlFor="highest_degree" value="Highest Degree" required />
+                  <InputLabel htmlFor="highest_degree" value={<>Highest Degree <span className="text-red-600">*</span></>} required />
                   <select
                     id="highest_degree"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -958,7 +958,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   <InputError className="mt-2" message={errors.highest_degree} />
                 </div>
                 <div className="w-full">
-                  <InputLabel htmlFor="field_of_study" value="Field of Study" required />
+                  <InputLabel htmlFor="field_of_study" value={<>Field of Study <span className="text-red-600">*</span></>} required />
                   <TextInput
                     id="field_of_study"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -1019,7 +1019,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
               <div className="grid grid-cols-1 gap-6 w-full">
                 <div className="w-full">
-                  <InputLabel htmlFor="bio" value="Short Bio" />
+                  <InputLabel htmlFor="bio" value={<>Short Bio <span className="text-red-600">*</span></>} required/>
                   <textarea
                     id="bio"
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -1034,7 +1034,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
               {/* Research Expertise Searchable Dropdown */}
               <div className="w-full">
                 <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
-                  Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain
+                  Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain <span className="text-red-600">*</span>
                 </label>
                 <Select
                   id="research_expertise"
@@ -1172,7 +1172,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                     <div className="w-full">
-                      <InputLabel htmlFor="current_position" value="Current Position" required />
+                      <InputLabel htmlFor="current_position" value={<>Current Position <span className="text-red-600">*</span></>} required />
                       <select
                         id="current_position"
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -1190,7 +1190,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                       <InputError className="mt-2" message={errors.current_position} />
                     </div>
                     <div className="w-full">
-                      <InputLabel htmlFor="department" value="Department" required />
+                      <InputLabel htmlFor="department" value={<>Department <span className="text-red-600">*</span></>} required />
                       <TextInput
                         id="department"
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -1203,7 +1203,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
                     <div className="w-full">
-                      <InputLabel htmlFor="availability_as_supervisor" value="Availability as Supervisor" required />
+                      <InputLabel htmlFor="availability_as_supervisor" value={<>Availability as Supervisor <span className="text-red-600">*</span></>} required />
                       <select
                         id="availability_as_supervisor"
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -1217,7 +1217,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                     </div>
                     <div className="w-full">
                       <div className="flex items-center gap-2">
-                        <InputLabel htmlFor="style_of_supervision" value="Style of Supervision" />
+                        <InputLabel htmlFor="style_of_supervision" value={<>Style of Supervision <span className="text-red-600">*</span></>} required />
                         <div className="group relative">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500 hover:text-gray-700 cursor-help">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />

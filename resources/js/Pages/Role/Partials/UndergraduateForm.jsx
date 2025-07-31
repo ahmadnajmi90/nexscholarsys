@@ -547,7 +547,7 @@ export default function UndergraduateForm({ universities, faculties, className =
           {/* Full Name */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
             <div className="w-full">
-              <InputLabel htmlFor="full_name" value="Full Name" required />
+              <InputLabel htmlFor="full_name" value={<>Full Name <span className="text-red-600">*</span></>} required/>
               <TextInput
                 id="full_name"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -563,7 +563,7 @@ export default function UndergraduateForm({ universities, faculties, className =
           {/* Bio */}
           <div className="grid grid-cols-1 gap-6 w-full">
             <div className="w-full">
-              <InputLabel htmlFor="bio" value="Short Bio" />
+              <InputLabel htmlFor="bio" value={<>Short Bio <span className="text-red-600">*</span></>} required/>
               <textarea
                 id="bio"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-4"
@@ -575,52 +575,11 @@ export default function UndergraduateForm({ universities, faculties, className =
             </div>
           </div>
 
-          {/* Degree Details: Bachelor and CGPA */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-            <div>
-              <InputLabel htmlFor="bachelor" value="Name of Bachelor Degree" />
-              <TextInput
-                id="bachelor"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                value={data.bachelor}
-                onChange={e => setData('bachelor', e.target.value)}
-              />
-              <InputError className="mt-2" message={errors.bachelor} />
-            </div>
-            <div>
-              <InputLabel htmlFor="CGPA_bachelor" value="CGPA Bachelor" />
-              <TextInput
-                id="CGPA_bachelor"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                value={data.CGPA_bachelor}
-                onChange={e => setData('CGPA_bachelor', e.target.value)}
-              />
-              <InputError className="mt-2" message={errors.CGPA_bachelor} />
-            </div>
-          </div>
-
-          {/* Contact Details: Phone and Nationality */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-            <div>
-              <InputLabel htmlFor="phone_number" value="Phone Number" required />
-              <TextInput
-                id="phone_number"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                value={data.phone_number}
-                onChange={e => setData('phone_number', e.target.value)}
-                autoComplete="tel"
-              />
-              <InputError className="mt-2" message={errors.phone_number} />
-            </div>
-            <div>
-              <NationalityForm title="Nationality" value={data.nationality} onChange={value => setData('nationality', value)} />
-            </div>
-          </div>
-
+          
           {/* English Proficiency & Current Undergraduate Status */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
             <div>
-              <InputLabel htmlFor="english_proficiency_level" value="English Proficiency Level" />
+              <InputLabel htmlFor="english_proficiency_level" value={<>English Proficiency Level <span className="text-red-600">*</span></>} required/>
               <select
                 id="english_proficiency_level"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -637,7 +596,7 @@ export default function UndergraduateForm({ universities, faculties, className =
               <InputError className="mt-2" message={errors.english_proficiency_level} />
             </div>
             <div>
-              <InputLabel htmlFor="current_undergraduate_status" value="Current Undergraduate Status" />
+              <InputLabel htmlFor="current_undergraduate_status" value={<>Current Undergraduate Status <span className="text-red-600">*</span></>} required/>
               <select
                 id="current_undergraduate_status"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -651,11 +610,55 @@ export default function UndergraduateForm({ universities, faculties, className =
             </div>
           </div>
 
+          {/* Degree Details: Bachelor and CGPA */}
+          {data.current_undergraduate_status === "Registered" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+              <div>
+                <InputLabel htmlFor="bachelor" value={<>Name of Bachelor Degree <span className="text-red-600">*</span></>} required/>
+                <TextInput
+                  id="bachelor"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  value={data.bachelor}
+                  onChange={e => setData('bachelor', e.target.value)}
+                />
+                <InputError className="mt-2" message={errors.bachelor} />
+              </div>
+              <div>
+                <InputLabel htmlFor="CGPA_bachelor" value={<>CGPA Bachelor <span className="text-red-600">*</span></>} required/>
+                <TextInput
+                  id="CGPA_bachelor"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  value={data.CGPA_bachelor}
+                  onChange={e => setData('CGPA_bachelor', e.target.value)}
+                />
+                <InputError className="mt-2" message={errors.CGPA_bachelor} />
+              </div>
+            </div>
+          )}
+
+          {/* Contact Details: Phone and Nationality */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <div>
+              <InputLabel htmlFor="phone_number" value={<>Phone Number <span className="text-red-600">*</span></>} required/>
+              <TextInput
+                id="phone_number"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                value={data.phone_number}
+                onChange={e => setData('phone_number', e.target.value)}
+                autoComplete="tel"
+              />
+              <InputError className="mt-2" message={errors.phone_number} />
+            </div>
+            <div>
+              <NationalityForm title="Nationality" value={data.nationality} onChange={value => setData('nationality', value)} errors={errors}/>
+            </div>
+          </div>
+
           {/* University and Matric No (if Registered) */}
           {data.current_undergraduate_status === "Registered" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
               <div>
-                <InputLabel htmlFor="university" value="University" required />
+                <InputLabel htmlFor="university" value={<>University <span className="text-red-600">*</span></>} required />
                 <select
                   id="university"
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -675,7 +678,7 @@ export default function UndergraduateForm({ universities, faculties, className =
               </div>
 
               <div className="w-full">
-                <InputLabel htmlFor="faculty" value="Faculty" required />
+                <InputLabel htmlFor="faculty" value={<>Faculty <span className="text-red-600">*</span></>} required />
                 <select
                   id="faculty"
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -696,7 +699,7 @@ export default function UndergraduateForm({ universities, faculties, className =
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
             {data.current_undergraduate_status === "Registered" && (
               <div>
-                <InputLabel htmlFor="matric_no" value="Matric No." required />
+                <InputLabel htmlFor="matric_no" value={<>Matric No. <span className="text-red-600">*</span></>} required />
                 <TextInput
                   id="matric_no"
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -709,7 +712,7 @@ export default function UndergraduateForm({ universities, faculties, className =
               </div>
             )}
             <div className="w-full">
-              <InputLabel htmlFor="skills" value="Skills" />
+              <InputLabel htmlFor="skills" value={<>Skills <span className="text-red-600">*</span></>} required/>
               <Select
                 id="skills"
                 isMulti
@@ -732,7 +735,7 @@ export default function UndergraduateForm({ universities, faculties, className =
           {/* Interested to do research and Expected Graduate */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
             <div>
-              <InputLabel htmlFor="interested_do_research" value="Interested to do research after bachelor degree?" />
+              <InputLabel htmlFor="interested_do_research" value={<>Interested to do research after bachelor degree? <span className="text-red-600">*</span></>} required/>
               <select
                 id="interested_do_research"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -743,18 +746,20 @@ export default function UndergraduateForm({ universities, faculties, className =
                 <option value="true">Yes</option>
               </select>
             </div>
-            <div>
-              <InputLabel htmlFor="expected_graduate" value="Expected Graduate (Month/Year)" required />
-              <TextInput
-                id="expected_graduate"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                value={data.expected_graduate}
-                onChange={e => setData('expected_graduate', e.target.value)}
-                required
-                autoComplete="expected_graduate"
-              />
-              <InputError className="mt-2" message={errors.expected_graduate} />
-            </div>
+            {data.current_undergraduate_status === "Registered" && (
+              <div>
+                <InputLabel htmlFor="expected_graduate" value={<>Expected Graduate (Month/Year) <span className="text-red-600">*</span></>} required/>
+                <TextInput
+                  id="expected_graduate"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  value={data.expected_graduate}
+                  onChange={e => setData('expected_graduate', e.target.value)}
+                  required
+                  autoComplete="expected_graduate"
+                />
+                <InputError className="mt-2" message={errors.expected_graduate} />
+              </div>
+            )}
           </div>
 
           {/* If interested in research, show Research Preference Multiselect */}

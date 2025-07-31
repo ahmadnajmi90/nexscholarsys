@@ -130,7 +130,7 @@ export default function Create() {
 
           {/* Grant Name */}
           <div>
-            <InputLabel htmlFor="title" value="Grant Name" required />
+            <InputLabel htmlFor="title" value={<>Grant Name <span className="text-red-600">*</span></>} />
             <input
               id="title"
               type="text"
@@ -146,7 +146,7 @@ export default function Create() {
 
           {/* Description */}
           <div>
-            <InputLabel htmlFor="description" value="Grant Description" required />
+            <InputLabel htmlFor="description" value={<>Grant Description <span className="text-red-600">*</span></>} />
             <div
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               style={{
@@ -173,7 +173,7 @@ export default function Create() {
           {/* Start and End Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
-              <InputLabel htmlFor="start_date" value="Start Date (Grant)" />
+              <InputLabel htmlFor="start_date" value={<>Start Date (Grant) <span className="text-red-600">*</span></>} />
               <input
                 id="start_date"
                 type="date"
@@ -186,7 +186,7 @@ export default function Create() {
               )}
             </div>
             <div>
-              <InputLabel htmlFor="end_date" value="End Date (Grant)" />
+              <InputLabel htmlFor="end_date" value={<>End Date (Grant) <span className="text-red-600">*</span></>} />
               <input
                 id="end_date"
                 type="date"
@@ -204,7 +204,7 @@ export default function Create() {
           {/* Application Deadline and Grant Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
-              <InputLabel htmlFor="application_deadline" value="Application Deadline" />
+              <InputLabel htmlFor="application_deadline" value={<>Application Deadline <span className="text-red-600">*</span></>} />
               <input
                 id="application_deadline"
                 type="date"
@@ -217,7 +217,7 @@ export default function Create() {
               )}
             </div>
             <div>
-              <InputLabel htmlFor="grant_type" value="Grant Type" />
+              <InputLabel htmlFor="grant_type" value={<>Grant Type <span className="text-red-600">*</span></>} />
               <select
                 id="grant_type"
                 value={data.grant_type}
@@ -255,7 +255,7 @@ export default function Create() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div ref={grantThemeRef}>
-              <InputLabel value="Grant Theme (Multiselect)" />
+              <InputLabel value={<>Grant Theme (Multiselect) <span className="text-red-600">*</span></>} />
               <div
                 className={`relative mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 px-2.5 cursor-pointer bg-white ${
                   dropdownOpen ? "shadow-lg" : ""
@@ -298,7 +298,7 @@ export default function Create() {
             </div>
 
             <div>
-              <InputLabel htmlFor="cycle" value="Cycle" />
+              <InputLabel htmlFor="cycle" value={<>Cycle <span className="text-red-600">*</span></>} />
               <select
                 id="cycle"
                 value={data.cycle}
@@ -322,7 +322,7 @@ export default function Create() {
           {/* Sponsored By and Contact Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
-              <InputLabel htmlFor="sponsored_by" value="Sponsored By" />
+              <InputLabel htmlFor="sponsored_by" value={<>Sponsored By <span className="text-red-600">*</span></>} />
               <input
                 id="sponsored_by"
                 type="text"
@@ -336,7 +336,7 @@ export default function Create() {
               )}
             </div>
             <div>
-              <InputLabel htmlFor="email" value="Contact Email" />
+              <InputLabel htmlFor="email" value={<>Contact Email <span className="text-red-600">*</span></>} />
               <input
                 id="email"
                 type="email"
@@ -387,10 +387,11 @@ export default function Create() {
             </div>
             <div>
               <NationalityForm
-                title="Country"
+                title={"Country"}
                 value={data.country}
                 isNotSpecify={true}
                 onChange={(value) => setData("country", value)}
+                errors={errors}
               />
               {errors.country && (
                 <p className="text-red-500 text-xs mt-1">{errors.country}</p>

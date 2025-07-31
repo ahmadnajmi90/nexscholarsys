@@ -76,7 +76,7 @@ export default function Create() {
           {/* Event Name */}
           <div>
             <InputLabel>
-              Event Name <span className="text-red-500">*</span>
+              Event Name <span className="text-red-600">*</span>
             </InputLabel>
             <input
               type="text"
@@ -91,7 +91,7 @@ export default function Create() {
           {/* Description */}
           <div>
             <InputLabel>
-              Event Description <span className="text-red-500">*</span>
+              Event Description <span className="text-red-600">*</span>
             </InputLabel>
             <div
               className="mt-1 w-full rounded-lg border border-gray-200"
@@ -117,7 +117,7 @@ export default function Create() {
           {/* Event Type and Mode */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
-              <InputLabel>Event Type</InputLabel>
+              <InputLabel>Event Type <span className="text-red-600">*</span></InputLabel>
               <select
                 id="event_type"
                 name="event_type"
@@ -138,7 +138,7 @@ export default function Create() {
             </div>
 
             <div>
-              <InputLabel>Event Mode</InputLabel>
+              <InputLabel>Event Mode <span className="text-red-600">*</span></InputLabel>
               <select
                 id="event_mode"
                 name="event_mode"
@@ -160,7 +160,7 @@ export default function Create() {
           {/* Start and End Date */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
-              <InputLabel>Start Date</InputLabel>
+              <InputLabel>Start Date <span className="text-red-600">*</span></InputLabel>
               <input
                 type="date"
                 value={data.start_date}
@@ -170,7 +170,7 @@ export default function Create() {
               {errors.start_date && <p className="text-red-500 text-xs mt-1">{errors.start_date}</p>}
             </div>
             <div>
-              <InputLabel>End Date</InputLabel>
+              <InputLabel>End Date <span className="text-red-600">*</span></InputLabel>
               <input
                 type="date"
                 value={data.end_date}
@@ -185,7 +185,7 @@ export default function Create() {
           {/* Start and End Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
-              <InputLabel>Start Time</InputLabel>
+              <InputLabel>Start Time <span className="text-red-600">*</span></InputLabel>
               <input
                 type="time"
                 value={data.start_time}
@@ -195,7 +195,7 @@ export default function Create() {
               {errors.start_time && <p className="text-red-500 text-xs mt-1">{errors.start_time}</p>}
             </div>
             <div>
-              <InputLabel>End Time</InputLabel>
+              <InputLabel>End Time <span className="text-red-600">*</span></InputLabel>
               <input
                 type="time"
                 value={data.end_time}
@@ -209,7 +209,7 @@ export default function Create() {
           {/* Event Theme and Field of Research */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
-              <InputLabel>Event Theme</InputLabel>
+              <InputLabel>Event Theme <span className="text-red-600">*</span></InputLabel>
               <select
                 id="event_theme"
                 name="event_theme"
@@ -226,7 +226,7 @@ export default function Create() {
               {errors.event_theme && <p className="text-red-500 text-xs mt-1">{errors.event_theme}</p>}
             </div>
             <div>
-              <InputLabel>Field of Research</InputLabel>
+              <InputLabel>Field of Research <span className="text-red-600">*</span></InputLabel>
               <Select
                 id="field_of_research"
                 isMulti
@@ -273,7 +273,7 @@ export default function Create() {
               {errors.registration_url && <p className="text-red-500 text-xs mt-1">{errors.registration_url}</p>}
             </div>
             <div>
-              <InputLabel>Registration Deadline</InputLabel>
+              <InputLabel>Registration Deadline <span className="text-red-600">*</span></InputLabel>
               <input
                 type="date"
                 value={data.registration_deadline}
@@ -285,9 +285,10 @@ export default function Create() {
           </div>
 
           {/* Venue, City and Country */}
+          {data.event_mode != "Online" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <div>
-              <InputLabel>Venue</InputLabel>
+              <InputLabel>Venue <span className="text-red-600">*</span></InputLabel>
               <input
                 type="text"
                 value={data.venue}
@@ -298,7 +299,7 @@ export default function Create() {
               {errors.venue && <p className="text-red-500 text-xs mt-1">{errors.venue}</p>}
             </div>
             <div>
-              <InputLabel>City</InputLabel>
+              <InputLabel>City <span className="text-red-600">*</span></InputLabel>
               <input
                 type="text"
                 value={data.city}
@@ -309,15 +310,16 @@ export default function Create() {
               {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
             </div>
             <div>
-              <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} />
+              <NationalityForm title={"Country"} value={data.country} onChange={(value) => setData('country', value)} errors={errors} />
               {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
             </div>
           </div>
+          )}
 
           {/* Contact Email and Upload Image */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
             <div>
-              <InputLabel>Contact Email</InputLabel>
+              <InputLabel>Contact Email <span className="text-red-600">*</span></InputLabel>
               <input
                 type="email"
                 value={data.contact_email}

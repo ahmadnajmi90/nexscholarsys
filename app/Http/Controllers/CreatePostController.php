@@ -57,8 +57,8 @@ class CreatePostController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'url' => 'nullable|max:255',
-                'content' => 'nullable|string',
-                'category' => 'nullable|string|max:255',
+                'content' => 'required|string',
+                'category' => 'required|string|max:255',
                 'tags' => 'nullable|array',
                 'images' => 'nullable|array',
                 'images.*' => 'image|max:2048', // Each image must be less than 2MB
@@ -156,8 +156,8 @@ class CreatePostController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'url' => 'nullable|max:255',
-                'content' => 'nullable|string',
-                'category' => 'nullable|string|max:255',
+                'content' => 'required|string',
+                'category' => 'required|string|max:255',
                 'tags' => 'nullable|array',
                 'images' => 'nullable|array',
                 'images.*' => 'image|max:2048', // Each image must be less than 2MB

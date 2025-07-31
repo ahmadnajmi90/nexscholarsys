@@ -169,7 +169,7 @@ export default function Create() {
           {/* Project Name */}
           <div>
             <InputLabel className="block text-gray-700 font-medium">
-              Project Name <span className="text-red-500">*</span>
+              Project Name <span className="text-red-600">*</span>
             </InputLabel>
             <input
               type="text"
@@ -184,7 +184,7 @@ export default function Create() {
           {/* Project Description */}
           <div>
             <InputLabel className="block text-gray-700 font-medium">
-              Project Description <span className="text-red-500">*</span>
+              Project Description <span className="text-red-600">*</span>
             </InputLabel>
             <div className="mt-1 w-full rounded-lg border border-gray-200" style={{ height: "300px", overflowY: "auto" }}>
               <ReactQuill
@@ -202,7 +202,7 @@ export default function Create() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">
-                Project Theme
+                Project Theme <span className="text-red-600">*</span>
               </InputLabel>
               <select
                 value={data.project_theme}
@@ -220,7 +220,7 @@ export default function Create() {
 
             <div>
               <InputLabel className="block text-gray-700 font-medium">
-                Purpose (Multiselect)
+                Purpose (Multiselect) <span className="text-red-600">*</span>
               </InputLabel>
               <Select
                 isMulti
@@ -248,7 +248,7 @@ export default function Create() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
-                    Start Date
+                    Start Date <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="date"
@@ -260,7 +260,7 @@ export default function Create() {
                 </div>
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
-                    End Date
+                    End Date <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="date"
@@ -275,7 +275,7 @@ export default function Create() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel className="mt-1 block text-gray-700 font-medium">
-                    Application Deadline
+                    Application Deadline <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="date"
@@ -287,7 +287,7 @@ export default function Create() {
                 </div>
                 <div>
                   <InputLabel className="mt-1 block text-gray-700 font-medium">
-                    Duration (in months)
+                    Duration (in months) <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="number"
@@ -306,7 +306,7 @@ export default function Create() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel className="block text-gray-700 font-medium">
-                Sponsored By
+                Sponsored By <span className="text-red-600">*</span>
               </InputLabel>
               <input
                 type="text"
@@ -319,7 +319,7 @@ export default function Create() {
             </div>
             <div>
               <InputLabel htmlFor="category" className="block text-gray-700 font-medium">
-                Category
+                Category <span className="text-red-600">*</span>
               </InputLabel>
               <select
                 id="category"
@@ -348,7 +348,7 @@ export default function Create() {
               data.category === "Fundamental + Applied") && (
               <div className="w-full">
                 <InputLabel htmlFor="field_of_research" className="block text-sm font-medium text-gray-700">
-                  Field of Research Structure: Field of Research - Research Area - Niche Domain
+                  Field of Research Structure: Field of Research - Research Area - Niche Domain <span className="text-red-600">*</span>
                 </InputLabel>
                 <Select
                   id="field_of_research"
@@ -383,7 +383,7 @@ export default function Create() {
 
             <div>
               <InputLabel className="block text-gray-700 font-medium">
-                Project Supervisor / Project Leader
+                Project Supervisor / Project Leader <span className="text-red-600">*</span>
               </InputLabel>
               <select
                 value={data.supervisor_category}
@@ -401,7 +401,7 @@ export default function Create() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
               <div>
                 <InputLabel className="mt-1 block text-gray-700 font-medium">
-                  Supervisor / Project Leader Name
+                  Supervisor / Project Leader Name <span className="text-red-600">*</span>
                 </InputLabel>
                 <input
                   type="text"
@@ -414,7 +414,7 @@ export default function Create() {
 
               <div>
                 <InputLabel className="mt-1 block text-gray-700 font-medium">
-                  University
+                  University <span className="text-red-600">*</span>
                 </InputLabel>
                 <select
                   id="university"
@@ -443,7 +443,7 @@ export default function Create() {
           {/* Email and Origin Country */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
-              <InputLabel className="block text-gray-700 font-medium">Email</InputLabel>
+              <InputLabel className="block text-gray-700 font-medium">Email <span className="text-red-600">*</span></InputLabel>
               <input
                 type="email"
                 value={data.email}
@@ -477,6 +477,7 @@ export default function Create() {
                 title={"Project Origin Country"}
                 value={data.origin_country}
                 onChange={(value) => setData("origin_country", value)}
+                errors={errors}
               />
               {errors.origin_country && <p className="text-red-500 text-xs mt-1">{errors.origin_country}</p>}
             </div>
@@ -494,13 +495,14 @@ export default function Create() {
                     value={data.student_nationality}
                     isNotSpecify={true}
                     onChange={(value) => setData("student_nationality", value)}
+                    errors={errors}
                   />
                   {errors.student_nationality && <p className="text-red-500 text-xs mt-1">{errors.student_nationality}</p>}
                 </div>
 
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
-                    This project is for?
+                    This project is for? <span className="text-red-600">*</span>
                   </InputLabel>
                   <Select
                     isMulti
@@ -525,7 +527,7 @@ export default function Create() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel className="block text-gray-700 font-medium">
-                    Mode of Study
+                    Mode of Study <span className="text-red-600">*</span>
                   </InputLabel>
                   <Select
                     isMulti
@@ -558,7 +560,7 @@ export default function Create() {
                 {data.purpose.includes("Seek for Postgraduate") && (
               <div>
                 <InputLabel className="block text-gray-700 font-medium">
-                      Appointment Type (For Postgraduate)
+                      Appointment Type (For Postgraduate) <span className="text-red-600">*</span>
                 </InputLabel>
                 <select
                   value={data.appointment_type}
@@ -589,7 +591,7 @@ export default function Create() {
             data.purpose.includes("Seek for Industrial Collaboration")) && (
             <div>
               <InputLabel className="block text-gray-700 font-medium">
-                Purpose of Collaboration
+                Purpose of Collaboration <span className="text-red-600">*</span>
               </InputLabel>
               <textarea
                 value={data.purpose_of_collaboration}
@@ -629,7 +631,7 @@ export default function Create() {
             {data.purpose !== "Seek for Postgraduate" && (
               <div>
                 <InputLabel className="block text-gray-700 font-medium">
-                  Approved Project Amount
+                  Approved Project Amount <span className="text-red-600">*</span>
                 </InputLabel>
                 <input
                   type="number"

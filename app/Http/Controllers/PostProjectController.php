@@ -12,7 +12,6 @@ use Silber\Bouncer\BouncerFacade as Bouncer;
 use Illuminate\Support\Facades\DB;
 use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
-use App\Http\Requests\StorePostProjectRequest;
 
 class PostProjectController extends Controller
 {
@@ -75,23 +74,64 @@ class PostProjectController extends Controller
         }   
     }
 
-    public function store(StorePostProjectRequest $request)
+    public function store(Request $request)
     {
             try {
                 logger('Store method reached');
-            
-            // Get validated data
-            $validated = $request->validated();
-            
-            // Ensure author_id is set
-            if (!isset($validated['author_id']) || empty($validated['author_id'])) {
+                
+                // Validate the request
+                $validated = $request->validate([
+                    'title' => 'required|string|max:255',
+                    'description' => 'required|string',
+                    'project_theme' => 'required|string|max:255',
+                    'purpose' => 'required|max:255',
+                    'start_date' => 'nullable|date',
+                    'end_date' => 'nullable|date',
+                    'application_deadline' => 'nullable|date',
+                    'duration' => 'nullable|string|max:255',
+                    'sponsored_by' => 'required|string|max:255',
+                    'category' => 'required|string|max:255',
+                    'field_of_research' => 'required',
+                    'supervisor_category' => 'nullable|string|max:255',
+                    'supervisor_name' => 'nullable|string|max:255',
+                    'university' => 'nullable|exists:university_list,id',
+                    'email' => 'required|email|max:255',
+                    'origin_country' => 'required|string|max:255',
+                    'student_nationality' => 'nullable|string|max:255',
+                    'student_level' => 'nullable',
+                    'student_mode_study' => 'nullable',
+                    'appointment_type' => 'nullable|string|max:255',
+                    'purpose_of_collaboration' => 'nullable|string|max:255',
+                    'image' => 'nullable|image|max:2048',
+                    'attachment' => 'nullable|file|max:5120',
+                    'amount' => 'required|numeric|min:0',
+                    'application_url' => 'nullable|url|max:255',
+                    'project_status' => 'nullable',
+                    'create_scholarlab_project' => 'sometimes|boolean',
+                    'tags' => 'nullable|array'
+                ]);
+                
+                // Get the authenticated user
                 $user = Auth::user();
                 if (!$user) {
                     abort(403, 'User not authenticated');
                 }
+                
+                // Set author_id
                 $validated['author_id'] = $user->unique_id;
-                logger('Setting author_id explicitly', ['author_id' => $validated['author_id']]);
-            }
+                
+                // Convert create_scholarlab_project to boolean if present
+                if ($request->has('create_scholarlab_project')) {
+                    $validated['create_scholarlab_project'] = filter_var($request->create_scholarlab_project, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                }
+                
+                // Handle tags if present
+                if ($request->has('tags') && is_array($request->tags)) {
+                    $validated['tags'] = json_encode($request->tags);
+                }
+                
+                // Log the author_id we're using
+                logger('Using author_id', ['author_id' => $validated['author_id']]);
             
             // Handle image upload
                 if ($request->hasFile('image')) {
@@ -260,20 +300,20 @@ class PostProjectController extends Controller
                     'end_date' => 'nullable|date',
                     'application_deadline' => 'nullable|date',
                     'duration' => 'nullable|string|max:255',
-                    'sponsored_by' => 'nullable|string|max:255',
-                    'category' => 'nullable|string|max:255',
-                    'field_of_research' => 'nullable',
+                    'sponsored_by' => 'required|string|max:255',
+                    'category' => 'required|string|max:255',
+                    'field_of_research' => 'required',
                     'supervisor_category' => 'nullable|string|max:255',
                     'supervisor_name' => 'nullable|string|max:255',
                     'university' => 'nullable|exists:university_list,id',
-                    'email' => 'nullable|email|max:255',
-                    'origin_country' => 'nullable|string|max:255',
+                    'email' => 'required|email|max:255',
+                    'origin_country' => 'required|string|max:255',
                     'student_nationality' => 'nullable|string|max:255',
                     'student_level' => 'nullable',
                     'student_mode_study' => 'nullable',
                     'appointment_type' => 'nullable|string|max:255',
                     'purpose_of_collaboration' => 'nullable|string|max:255',
-                    'amount' => 'nullable|numeric|min:0',
+                    'amount' => 'required|numeric|min:0',
                     'application_url' => 'nullable|url|max:255',
                     'project_status' => 'nullable',
 

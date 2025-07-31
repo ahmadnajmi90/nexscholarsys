@@ -143,7 +143,7 @@ export default function Create() {
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-8">
             <div className="lg:col-span-7">
               <label className="block text-gray-700 font-medium">
-                Post Title<span className="text-red-500">*</span>
+                Post Title <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -155,7 +155,7 @@ export default function Create() {
               {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
             <div className="lg:col-span-3">
-              <label className="block text-gray-700 font-medium">Category</label>
+              <label className="block text-gray-700 font-medium">Category <span className="text-red-600">*</span></label>
               <select
                 id="category"
                 name="category"

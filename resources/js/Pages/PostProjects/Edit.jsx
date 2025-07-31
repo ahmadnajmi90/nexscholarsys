@@ -173,7 +173,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           {/* Project Name */}
           <div>
             <InputLabel>
-              Project Name <span className="text-red-500">*</span>
+              Project Name <span className="text-red-600">*</span>
             </InputLabel>
             <input
               type="text"
@@ -188,7 +188,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           {/* Project Description */}
           <div>
             <InputLabel>
-              Project Description <span className="text-red-500">*</span>
+              Project Description <span className="text-red-600">*</span>
             </InputLabel>
             <div
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
@@ -214,7 +214,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel>
-                Project Theme
+                Project Theme <span className="text-red-600">*</span>
               </InputLabel>
               <select
                 value={data.project_theme}
@@ -233,7 +233,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             {/* Purpose (Multiselect) */}
             <div ref={dropdownRef}>
               <InputLabel>
-                Purpose (Multiselect)
+                Purpose (Multiselect) <span className="text-red-600">*</span>
               </InputLabel>
               <Select
                 isMulti
@@ -260,7 +260,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel>
-                    Start Date
+                    Start Date <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="date"
@@ -272,7 +272,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 </div>
                 <div>
                   <InputLabel>
-                    End Date
+                    End Date <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="date"
@@ -288,7 +288,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel>
-                    Application Deadline
+                    Application Deadline <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="date"
@@ -301,7 +301,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
 
                 <div>
                   <InputLabel>
-                    Duration (in months)
+                    Duration (in months) <span className="text-red-600">*</span>
                   </InputLabel>
                   <input
                     type="number"
@@ -319,7 +319,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel>
-                Sponsored By
+                Sponsored By <span className="text-red-600">*</span>
               </InputLabel>
               <input
                 type="text"
@@ -332,7 +332,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             </div>
             <div>
               <InputLabel>
-                Category
+                Category <span className="text-red-600">*</span>
               </InputLabel>
               <select
                 id="category"
@@ -364,7 +364,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               data.category === "Fundamental + Applied") && (
               <div className="w-full">
                 <InputLabel>
-                  Field of Research Structure : Field of Research - Research Area - Niche Domain
+                  Field of Research Structure : Field of Research - Research Area - Niche Domain <span className="text-red-600">*</span>
                 </InputLabel>
                 <Select
                   id="field_of_research"
@@ -400,7 +400,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
 
             <div>
               <InputLabel>
-                Project Supervisor / Project Leader
+                Project Supervisor / Project Leader <span className="text-red-600">*</span>
               </InputLabel>
               <select
                 value={data.supervisor_category}
@@ -418,7 +418,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
               <div>
                 <InputLabel>
-                  Supervisor / Project Leader Name
+                  Supervisor / Project Leader Name <span className="text-red-600">*</span>
                 </InputLabel>
                 <input
                   type="text"
@@ -431,7 +431,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
 
               <div>
                 <InputLabel>
-                  University
+                  University <span className="text-red-600">*</span>
                 </InputLabel>
                 <select
                   id="university"
@@ -460,7 +460,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
             <div>
               <InputLabel>
-                Email
+                Email <span className="text-red-600">*</span>
               </InputLabel>
               <input
                 type="email"
@@ -491,7 +491,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             </div>
 
             <div>
-              <NationalityForm title={"Project Origin Country"} value={data.origin_country} onChange={(value) => setData("origin_country", value)} />
+              <NationalityForm title={<>Project Origin Country</>} value={data.origin_country} onChange={(value) => setData("origin_country", value)} errors={errors}/>
               {errors.origin_country && <p className="text-red-500 text-xs mt-1">{errors.origin_country}</p>}
             </div>
           </div>
@@ -508,13 +508,14 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                     value={data.student_nationality}
                     isNotSpecify={true}
                     onChange={(value) => setData("student_nationality", value)}
+                    errors={errors}
                   />
                   {errors.student_nationality && <p className="text-red-500 text-xs mt-1">{errors.student_nationality}</p>}
                 </div>
 
                 <div>
                   <InputLabel>
-                    This project is for?
+                    This project is for? <span className="text-red-600">*</span>
                   </InputLabel>
                   <Select
                     isMulti
@@ -539,7 +540,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 <div>
                   <InputLabel>
-                    Mode of Study
+                    Mode of Study <span className="text-red-600">*</span>
                   </InputLabel>
                   <Select
                     isMulti
@@ -572,7 +573,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 {data.purpose.includes("Seek for Postgraduate") && (
               <div>
                 <InputLabel>
-                  Appointment Type
+                  Appointment Type <span className="text-red-600">*</span>
                 </InputLabel>
                 <select
                   value={data.appointment_type}
@@ -602,7 +603,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
           {(data.purpose.includes("Seek for Academician Collaboration") || data.purpose.includes("Seek for Industrial Collaboration")) && (
             <div>
               <InputLabel>
-                Purpose of Collaboration
+                Purpose of Collaboration <span className="text-red-600">*</span>
               </InputLabel>
               <textarea
                 value={data.purpose_of_collaboration}
@@ -670,7 +671,7 @@ export default function Edit({ postProject, auth, researchOptions, universities 
             {data.purpose !== "Seek for Postgraduate" && (
               <div>
                 <InputLabel>
-                  Approved Project Amount
+                  Approved Project Amount <span className="text-red-600">*</span>
                 </InputLabel>
                 <input
                   type="number"

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import InputLabel from '@/Components/InputLabel';
 import Select from 'react-select';
+import InputError from '@/Components/InputError';
 
 const nationalities = [
     "Afghanistan",
@@ -198,7 +199,7 @@ const nationalities = [
     "Zimbabwe",
 ];
 
-export default function NationalityForm({ value, onChange, title, isNotSpecify }) {
+export default function NationalityForm({ value, onChange, title, isNotSpecify, errors }) {
     // Transform array to options
     let options = nationalities.map(nat => ({ value: nat, label: nat }));
     // If needed, add extra options at the beginning
@@ -215,7 +216,7 @@ export default function NationalityForm({ value, onChange, title, isNotSpecify }
     return (
         <div>
             <InputLabel htmlFor="nationality" className="block font-medium text-gray-700">
-                {title}
+                {title} <span className="text-red-600">*</span>
             </InputLabel>
             <Select
                 id="nationality"
@@ -227,6 +228,7 @@ export default function NationalityForm({ value, onChange, title, isNotSpecify }
                 classNamePrefix="react-select"
                 isSearchable
             />
+            <InputError className="mt-2" message={errors[title]} />
         </div>
     );
 }
