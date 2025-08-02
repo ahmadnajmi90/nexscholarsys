@@ -441,11 +441,15 @@ export default function ResearchFieldsTab() {
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium text-gray-700">Research Areas</h3>
                         <button
-                            onClick={openAddAreaModal}
-                            className="inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300"
+                            onClick={() => {
+                                // Guard clause to prevent opening the modal if no field is selected
+                                if (!selectedField) return;
+                                openAddAreaModal();
+                            }}
                             disabled={!selectedField}
+                            className={`inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md text-xs text-white uppercase tracking-widest ${!selectedField ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700 active:bg-blue-900'} focus:outline-none focus:border-blue-900 focus:ring ring-blue-300`}
                         >
-                            <FaPlus className="mr-1" /> Add
+                            <FaPlus className="mr-1" /> Add Area
                         </button>
                     </div>
                     
@@ -524,11 +528,15 @@ export default function ResearchFieldsTab() {
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium text-gray-700">Niche Domains</h3>
                         <button
-                            onClick={openAddDomainModal}
-                            className="inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300"
+                            onClick={() => {
+                                // Guard clause to prevent opening the modal if no area is selected
+                                if (!selectedArea) return;
+                                openAddDomainModal();
+                            }}
                             disabled={!selectedArea}
+                            className={`inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md text-xs text-white uppercase tracking-widest ${!selectedArea ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700 active:bg-blue-900'} focus:outline-none focus:border-blue-900 focus:ring ring-blue-300`}
                         >
-                            <FaPlus className="mr-1" /> Add
+                            <FaPlus className="mr-1" /> Add Domain
                         </button>
                     </div>
                     

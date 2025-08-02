@@ -14,16 +14,17 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
 
     useEffect(() => {
         if (isOpen) {
-            if (faculty) {
+            if (mode === 'edit' && faculty) {
                 setData({
                     name: faculty.name || '',
                     university_id: faculty.university_id || '',
                 });
-            } else {
+            } else if (mode === 'create') {
                 reset();
-                if (universityId) {
-                    setData('university_id', universityId);
-                }
+                setData({
+                    name: '',
+                    university_id: universityId || '',
+                });
             }
             
             // Only fetch universities if they're not already loaded
@@ -31,7 +32,7 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
                 fetchUniversities();
             }
         }
-    }, [isOpen, faculty, universityId]);
+    }, [isOpen, faculty, universityId, mode]);
 
     const fetchUniversities = async () => {
         setLoading(true);
@@ -51,36 +52,39 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
         
         const successMessage = mode === 'create' ? 'Faculty created successfully!' : 'Faculty updated successfully!';
         
-        if (mode === 'create') {
-            post('/api/v1/faculties', {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
+        // Determine the correct URL for create or update
+        const url = mode === 'create' 
+            ? '/api/v1/faculties' 
+            : `/api/v1/faculties/${faculty.id}`;
+        
+        // Always use the 'post' method
+        post(url, {
+            onSuccess: () => {
+                toast.success(successMessage);
+                onClose();
+                if (mode === 'create') {
                     reset();
-                },
-                onError: (errors) => {
-                    toast.error('Error saving faculty');
-                    console.error(errors);
                 }
-            });
-        } else {
-            put(`/api/v1/faculties/${faculty.id}`, {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
-                },
-                onError: (errors) => {
-                    toast.error('Error updating faculty');
-                    console.error(errors);
-                }
-            });
-        }
+            },
+            onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} faculty`);
+                console.error(errors);
+            }
+        });
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            onClick={(e) => {
+                // Close the modal only if the click is on the backdrop itself, not the content
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">
@@ -106,7 +110,7 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
                             id="university_id"
                             value={data.university_id}
                             onChange={(e) => setData('university_id', e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${(loading || universityId !== null) ? 'opacity-70 cursor-not-allowed' : ''}`}
                             disabled={loading || universityId !== null}
                         >
                             <option value="">Select University</option>

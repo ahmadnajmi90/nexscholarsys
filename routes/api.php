@@ -32,46 +32,65 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
     
     // Data Management API Routes (Admin Only)
     Route::middleware(['admin'])->group(function () {
-        Route::apiResource('universities', \App\Http\Controllers\Api\V1\UniversityController::class)
-            ->names([
-                'index' => 'api.universities.index',
-                'store' => 'api.universities.store',
-                'show' => 'api.universities.show',
-                'update' => 'api.universities.update',
-                'destroy' => 'api.universities.destroy',
-            ]);
-        Route::apiResource('faculties', \App\Http\Controllers\Api\V1\FacultyController::class)
-            ->names([
-                'index' => 'api.faculties.index',
-                'store' => 'api.faculties.store',
-                'show' => 'api.faculties.show',
-                'update' => 'api.faculties.update',
-                'destroy' => 'api.faculties.destroy',
-            ]);
-        Route::apiResource('fields-of-research', \App\Http\Controllers\Api\V1\FieldOfResearchController::class)
-            ->names([
-                'index' => 'api.fields-of-research.index',
-                'store' => 'api.fields-of-research.store',
-                'show' => 'api.fields-of-research.show',
-                'update' => 'api.fields-of-research.update',
-                'destroy' => 'api.fields-of-research.destroy',
-            ]);
-        Route::apiResource('research-areas', \App\Http\Controllers\Api\V1\ResearchAreaController::class)
-            ->names([
-                'index' => 'api.research-areas.index',
-                'store' => 'api.research-areas.store',
-                'show' => 'api.research-areas.show',
-                'update' => 'api.research-areas.update',
-                'destroy' => 'api.research-areas.destroy',
-            ]);
-        Route::apiResource('niche-domains', \App\Http\Controllers\Api\V1\NicheDomainController::class)
-            ->names([
-                'index' => 'api.niche-domains.index',
-                'store' => 'api.niche-domains.store',
-                'show' => 'api.niche-domains.show',
-                'update' => 'api.niche-domains.update',
-                'destroy' => 'api.niche-domains.destroy',
-            ]);
+        // Universities
+        Route::get('universities', [\App\Http\Controllers\Api\V1\UniversityController::class, 'index'])
+            ->name('api.universities.index');
+        Route::post('universities', [\App\Http\Controllers\Api\V1\UniversityController::class, 'store'])
+            ->name('api.universities.store');
+        Route::get('universities/{university}', [\App\Http\Controllers\Api\V1\UniversityController::class, 'show'])
+            ->name('api.universities.show');
+        Route::post('universities/{university}', [\App\Http\Controllers\Api\V1\UniversityController::class, 'update'])
+            ->name('api.universities.update'); // Changed from PUT to POST
+        Route::delete('universities/{university}', [\App\Http\Controllers\Api\V1\UniversityController::class, 'destroy'])
+            ->name('api.universities.destroy');
+            
+        // Faculties
+        Route::get('faculties', [\App\Http\Controllers\Api\V1\FacultyController::class, 'index'])
+            ->name('api.faculties.index');
+        Route::post('faculties', [\App\Http\Controllers\Api\V1\FacultyController::class, 'store'])
+            ->name('api.faculties.store');
+        Route::get('faculties/{faculty}', [\App\Http\Controllers\Api\V1\FacultyController::class, 'show'])
+            ->name('api.faculties.show');
+        Route::post('faculties/{faculty}', [\App\Http\Controllers\Api\V1\FacultyController::class, 'update'])
+            ->name('api.faculties.update'); // Changed from PUT to POST
+        Route::delete('faculties/{faculty}', [\App\Http\Controllers\Api\V1\FacultyController::class, 'destroy'])
+            ->name('api.faculties.destroy');
+            
+        // Fields of Research
+        Route::get('fields-of-research', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'index'])
+            ->name('api.fields-of-research.index');
+        Route::post('fields-of-research', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'store'])
+            ->name('api.fields-of-research.store');
+        Route::get('fields-of-research/{field_of_research}', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'show'])
+            ->name('api.fields-of-research.show');
+        Route::post('fields-of-research/{field_of_research}', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'update'])
+            ->name('api.fields-of-research.update'); // Changed from PUT to POST
+        Route::delete('fields-of-research/{field_of_research}', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'destroy'])
+            ->name('api.fields-of-research.destroy');
+            
+        // Research Areas
+        Route::get('research-areas', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'index'])
+            ->name('api.research-areas.index');
+        Route::post('research-areas', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'store'])
+            ->name('api.research-areas.store');
+        Route::get('research-areas/{research_area}', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'show'])
+            ->name('api.research-areas.show');
+        Route::post('research-areas/{research_area}', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'update'])
+            ->name('api.research-areas.update'); // Changed from PUT to POST
+        Route::delete('research-areas/{research_area}', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'destroy'])
+            ->name('api.research-areas.destroy');
+            
+        // Niche Domains
+        Route::get('niche-domains', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'index'])
+            ->name('api.niche-domains.index');
+        Route::post('niche-domains', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'store'])
+            ->name('api.niche-domains.store');
+        Route::get('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'show'])
+            ->name('api.niche-domains.show');
+        Route::post('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'update'])
+            ->name('api.niche-domains.update'); // Changed from PUT to POST
+        Route::delete('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'destroy'])
+            ->name('api.niche-domains.destroy');
     });
     // Workspace Routes
     Route::apiResource('workspaces', WorkspaceController::class);
@@ -168,4 +187,4 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         ->name('projects.join.accept');
     Route::patch('/project-join-requests/{projectJoinRequest}/reject', [ProjectJoinRequestController::class, 'reject'])
         ->name('projects.join.reject');
-}); 
+});

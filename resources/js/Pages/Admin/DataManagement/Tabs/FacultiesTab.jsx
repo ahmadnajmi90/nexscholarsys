@@ -8,7 +8,7 @@ import { FaEdit, FaTrash, FaSearch, FaPlus } from 'react-icons/fa';
 
 export default function FacultiesTab() {
     const [universities, setUniversities] = useState([]);
-    const [faculties, setFaculties] = useState([]);
+    const [faculties, setFaculties] = useState({ data: [], meta: {} });
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUniversity, setSelectedUniversity] = useState('');
@@ -33,7 +33,7 @@ export default function FacultiesTab() {
         if (selectedUniversity) {
             fetchFaculties();
         } else {
-            setFaculties([]);
+            setFaculties({ data: [], meta: { from: 0 } });
         }
     }, [selectedUniversity, pagination.current_page, searchQuery]);
 
@@ -64,7 +64,10 @@ export default function FacultiesTab() {
                 }
             });
             
-            setFaculties(response.data.data);
+            setFaculties({
+                data: response.data.data,
+                meta: response.data.meta
+            });
             setPagination({
                 current_page: response.data.meta.current_page,
                 per_page: response.data.meta.per_page,
@@ -162,9 +165,13 @@ export default function FacultiesTab() {
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Faculties</h2>
                 <button
-                    onClick={openAddModal}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300"
+                    onClick={() => {
+                        // Guard clause to prevent opening the modal if no university is selected
+                        if (!selectedUniversity) return;
+                        openAddModal();
+                    }}
                     disabled={!selectedUniversity}
+                    className={`inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest ${!selectedUniversity ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700 active:bg-blue-900'} focus:outline-none focus:border-blue-900 focus:ring ring-blue-300`}
                 >
                     <FaPlus className="mr-2" /> Add Faculty
                 </button>
@@ -181,7 +188,7 @@ export default function FacultiesTab() {
                     onChange={handleUniversityChange}
                     className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                    <option value="">Select a university</option>
+                    <option value="" disabled>Select a university</option>
                     {universities.map((university) => (
                         <option key={university.id} value={university.id}>
                             {university.full_name}
@@ -222,7 +229,7 @@ export default function FacultiesTab() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        ID
+                                        #
                                     </th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Name
@@ -248,17 +255,17 @@ export default function FacultiesTab() {
                                             Loading...
                                         </td>
                                     </tr>
-                                ) : faculties.length === 0 ? (
+                                ) : faculties.data.length === 0 ? (
                                     <tr>
                                         <td colSpan="6" className="px-6 py-4 text-center">
                                             No faculties found
                                         </td>
                                     </tr>
                                 ) : (
-                                    faculties.map((faculty) => (
+                                    faculties.data.map((faculty, index) => (
                                         <tr key={faculty.id}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {faculty.id}
+                                                {faculties.meta.from + index}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {faculty.name}
@@ -294,7 +301,7 @@ export default function FacultiesTab() {
                     </div>
 
                     {/* Pagination */}
-                    {!loading && faculties.length > 0 && (
+                    {!loading && faculties.data.length > 0 && (
                         <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
                             <div className="flex flex-1 justify-between sm:hidden">
                                 <button

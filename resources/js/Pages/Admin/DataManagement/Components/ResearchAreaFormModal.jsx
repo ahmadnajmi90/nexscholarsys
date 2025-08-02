@@ -14,16 +14,17 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
 
     useEffect(() => {
         if (isOpen) {
-            if (area) {
+            if (mode === 'edit' && area) {
                 setData({
                     name: area.name || '',
                     field_of_research_id: area.field_of_research_id || '',
                 });
-            } else {
+            } else if (mode === 'create') {
                 reset();
-                if (fieldId) {
-                    setData('field_of_research_id', fieldId);
-                }
+                setData({
+                    name: '',
+                    field_of_research_id: fieldId || '',
+                });
             }
             
             // Only fetch fields if they're not already loaded
@@ -31,7 +32,7 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
                 fetchFields();
             }
         }
-    }, [isOpen, area, fieldId]);
+    }, [isOpen, area, fieldId, mode]);
 
     const fetchFields = async () => {
         setLoading(true);
@@ -51,36 +52,39 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
         
         const successMessage = mode === 'create' ? 'Research area created successfully!' : 'Research area updated successfully!';
         
-        if (mode === 'create') {
-            post('/api/v1/research-areas', {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
+        // Determine the correct URL for create or update
+        const url = mode === 'create' 
+            ? '/api/v1/research-areas' 
+            : `/api/v1/research-areas/${area.id}`;
+        
+        // Always use the 'post' method
+        post(url, {
+            onSuccess: () => {
+                toast.success(successMessage);
+                onClose();
+                if (mode === 'create') {
                     reset();
-                },
-                onError: (errors) => {
-                    toast.error('Error saving research area');
-                    console.error(errors);
                 }
-            });
-        } else {
-            put(`/api/v1/research-areas/${area.id}`, {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
-                },
-                onError: (errors) => {
-                    toast.error('Error updating research area');
-                    console.error(errors);
-                }
-            });
-        }
+            },
+            onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} research area`);
+                console.error(errors);
+            }
+        });
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            onClick={(e) => {
+                // Close the modal only if the click is on the backdrop itself, not the content
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">
@@ -106,7 +110,7 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
                             id="field_of_research_id"
                             value={data.field_of_research_id}
                             onChange={(e) => setData('field_of_research_id', e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${(loading || fieldId !== null) ? 'opacity-70 cursor-not-allowed' : ''}`}
                             disabled={loading || fieldId !== null}
                         >
                             <option value="">Select Field of Research</option>

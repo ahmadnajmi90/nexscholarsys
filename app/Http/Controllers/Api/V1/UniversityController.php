@@ -49,7 +49,47 @@ class UniversityController extends Controller
      */
     public function store(StoreUniversityRequest $request)
     {
-        $university = UniversityList::create($request->validated());
+        $validated = $request->validated();
+        
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            $profilePicture = $request->file('profile_picture');
+            $profilePictureName = time() . '_' . $profilePicture->getClientOriginalName();
+            $profilePicturePath = 'university_profile_pictures';
+            
+            // Ensure the directory exists
+            $destinationPath = public_path('storage/' . $profilePicturePath);
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            // Move the file
+            $profilePicture->move($destinationPath, $profilePictureName);
+            
+            // Save the relative path
+            $validated['profile_picture'] = $profilePicturePath . '/' . $profilePictureName;
+        }
+        
+        // Handle background image upload
+        if ($request->hasFile('background_image')) {
+            $backgroundImage = $request->file('background_image');
+            $backgroundImageName = time() . '_' . $backgroundImage->getClientOriginalName();
+            $backgroundImagePath = 'university_background_images';
+            
+            // Ensure the directory exists
+            $destinationPath = public_path('storage/' . $backgroundImagePath);
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            // Move the file
+            $backgroundImage->move($destinationPath, $backgroundImageName);
+            
+            // Save the relative path
+            $validated['background_image'] = $backgroundImagePath . '/' . $backgroundImageName;
+        }
+        
+        $university = UniversityList::create($validated);
         
         return Redirect::route('admin.data-management.index')
             ->with('success', 'University created successfully.');
@@ -71,7 +111,71 @@ class UniversityController extends Controller
     public function update(UpdateUniversityRequest $request, string $id)
     {
         $university = UniversityList::findOrFail($id);
-        $university->update($request->validated());
+        $validated = $request->validated();
+        
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if it exists
+            if ($university->profile_picture) {
+                $oldProfilePicturePath = public_path('storage/' . $university->profile_picture);
+                if (file_exists($oldProfilePicturePath)) {
+                    unlink($oldProfilePicturePath);
+                }
+            }
+            
+            $profilePicture = $request->file('profile_picture');
+            $profilePictureName = time() . '_' . $profilePicture->getClientOriginalName();
+            $profilePicturePath = 'university_profile_pictures';
+            
+            // Ensure the directory exists
+            $destinationPath = public_path('storage/' . $profilePicturePath);
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            // Move the file
+            $profilePicture->move($destinationPath, $profilePictureName);
+            
+            // Save the relative path
+            $validated['profile_picture'] = $profilePicturePath . '/' . $profilePictureName;
+        } else {
+            // If no new file is uploaded, remove profile_picture from validated data
+            // to prevent overwriting the existing value with null
+            unset($validated['profile_picture']);
+        }
+        
+        // Handle background image upload
+        if ($request->hasFile('background_image')) {
+            // Delete old background image if it exists
+            if ($university->background_image) {
+                $oldBackgroundImagePath = public_path('storage/' . $university->background_image);
+                if (file_exists($oldBackgroundImagePath)) {
+                    unlink($oldBackgroundImagePath);
+                }
+            }
+            
+            $backgroundImage = $request->file('background_image');
+            $backgroundImageName = time() . '_' . $backgroundImage->getClientOriginalName();
+            $backgroundImagePath = 'university_background_images';
+            
+            // Ensure the directory exists
+            $destinationPath = public_path('storage/' . $backgroundImagePath);
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            
+            // Move the file
+            $backgroundImage->move($destinationPath, $backgroundImageName);
+            
+            // Save the relative path
+            $validated['background_image'] = $backgroundImagePath . '/' . $backgroundImageName;
+        } else {
+            // If no new file is uploaded, remove background_image from validated data
+            // to prevent overwriting the existing value with null
+            unset($validated['background_image']);
+        }
+        
+        $university->update($validated);
         
         return Redirect::route('admin.data-management.index')
             ->with('success', 'University updated successfully.');

@@ -8,48 +8,51 @@ export default function FieldOfResearchFormModal({ isOpen, onClose, field = null
     });
 
     useEffect(() => {
-        if (isOpen && field) {
+        if (isOpen && mode === 'edit' && field) {
             setData({ name: field.name || '' });
-        } else if (isOpen && !field) {
+        } else if (isOpen && mode === 'create') {
             reset();
         }
-    }, [isOpen, field]);
+    }, [isOpen, field, mode]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         
         const successMessage = mode === 'create' ? 'Field of research created successfully!' : 'Field of research updated successfully!';
         
-        if (mode === 'create') {
-            post('/api/v1/fields-of-research', {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
+        // Determine the correct URL for create or update
+        const url = mode === 'create' 
+            ? '/api/v1/fields-of-research' 
+            : `/api/v1/fields-of-research/${field.id}`;
+        
+        // Always use the 'post' method
+        post(url, {
+            onSuccess: () => {
+                toast.success(successMessage);
+                onClose();
+                if (mode === 'create') {
                     reset();
-                },
-                onError: (errors) => {
-                    toast.error('Error saving field of research');
-                    console.error(errors);
                 }
-            });
-        } else {
-            put(`/api/v1/fields-of-research/${field.id}`, {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
-                },
-                onError: (errors) => {
-                    toast.error('Error updating field of research');
-                    console.error(errors);
-                }
-            });
-        }
+            },
+            onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} field of research`);
+                console.error(errors);
+            }
+        });
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            onClick={(e) => {
+                // Close the modal only if the click is on the backdrop itself, not the content
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">

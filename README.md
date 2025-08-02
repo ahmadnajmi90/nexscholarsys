@@ -13,9 +13,11 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - [Semantic Search](#semantic-search)
 - [Project Hub](#project-hub)
 - [Google Services](#google-services)
+- [Admin Data Management](#admin-data-management)
 - [Contributing](#contributing)
 - [Changelog](#changelog)
 - [License](#license)
+- [API Usage with Postman/n8n](#api-usage-with-postmann8n)
 
 ## Features
 
@@ -497,6 +499,34 @@ This workflow ensures that all users have verified emails and role-specific prof
    - Role-based authorization checks prevent unauthorized verification
    - Secure email verification process for faculty admin accounts
 
+### Admin Data Management
+
+The Nexscholar platform includes a dedicated, admin-only interface for managing core directory data. This feature allows administrators to perform CRUD (Create, Read, Update, Delete) operations on universities, faculties, and the three-tiered research field structure, ensuring the platform's foundational data is accurate and up-to-date.
+
+All operations are handled through a secure API, which also allows for integration with external automation tools like n8n or Postman.
+
+#### Key Features:
+-   **Centralized Interface:** A "Data Management" section in the admin panel with tabs for each data type.
+-   **Dynamic Tables:** Paginated and searchable tables for managing large lists of universities and faculties, with continuous row numbering across pages.
+-   **Hierarchical Management:** An intuitive three-column interface for managing the nested structure of Research Fields, Areas, and Domains.
+-   **Modal-Driven Forms:** All creation and editing tasks are handled in modals for a smooth user experience. Modals can be closed by clicking the overlay or using the cancel buttons.
+-   **User Feedback:** All actions provide clear feedback through toast notifications, and destructive operations like deletion require confirmation.
+-   **Conditional UI:** "Add" buttons for dependent data (like faculties) are disabled until a parent item (like a university) is selected, guiding the admin user.
+
+#### Universities Management:
+-   Add, edit, and delete universities.
+-   Update university details, including name, country, category (Research, Comprehensive, N/A), type (Public, Private), profile picture, and background image.
+-   Filter the university list by name.
+
+#### Faculties Management:
+-   Select a university from a dropdown to view and manage its specific faculties.
+-   Add, edit, and delete faculties for the selected university.
+
+#### Research Fields Management:
+-   Manage the three-tier hierarchy in a cascading column view.
+-   Add, edit, and delete items at each level: Fields of Research, Research Areas, and Niche Domains.
+-   The interface enforces the parent-child relationships.
+
 ### Semantic Supervisor Search
 
 1. Navigate to the "Find Supervisor" page
@@ -964,3 +994,53 @@ This integration provides administrators with valuable insights about platform u
 ## License
 
 The Nexscholar platform is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## API Usage with Postman/n8n
+
+The Data Management feature is powered by a RESTful API that can be used by external services. The API is protected by Laravel Sanctum, requiring token-based authentication.
+
+### 1. Generating an API Token
+
+For testing or automation, you first need to generate a secure API token for an admin user. The easiest way is via `php artisan tinker`.
+
+1.  Start Tinker:
+    ```bash
+    php artisan tinker
+    ```
+
+2.  Find your admin user and create a token (replace `1` with the admin user's ID):
+    ```php
+    $user = App\Models\User::find(1);
+    $token = $user->createToken('n8n-automation-token');
+    echo $token->plainTextToken;
+    ```
+
+3.  Copy the generated token string (e.g., `2|aBcDeFgHiJkLmNoPqRsTuVwXyZ...`). You will only see this once.
+
+### 2. Making Authenticated Requests
+
+All API requests must include two specific headers:
+
+-   `Accept`: `application/json`
+-   `Authorization`: `Bearer YOUR_COPIED_TOKEN`
+
+#### Example: Creating a University in Postman
+
+1.  **Method:** `POST`
+2.  **URL:** `http://your-domain.test/api/v1/universities`
+3.  **Headers:**
+    -   `Accept`: `application/json`
+    -   `Authorization`: `Bearer 2|aBcDeFgHiJkLmNoPqRsTuVwXyZ...`
+4.  **Body:**
+    -   Select `form-data`.
+    -   Add key-value pairs for the university data (e.g., `university_name`, `country`, `university_type`). For file uploads, change the key's type from "Text" to "File" and select the image.
+
+#### Example: Deleting a Faculty in Postman
+
+1.  **Method:** `DELETE`
+2.  **URL:** `http://your-domain.test/api/v1/faculties/123` (where 123 is the faculty ID)
+3.  **Headers:**
+    -   `Accept`: `application/json`
+    -   `Authorization`: `Bearer 2|aBcDeFgHiJkLmNoPqRsTuVwXyZ...`
+
+This same pattern applies to all `GET`, `POST`, and `DELETE` requests for all data management endpoints.

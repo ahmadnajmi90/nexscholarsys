@@ -14,24 +14,25 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
 
     useEffect(() => {
         if (isOpen) {
-            if (domain) {
+            if (mode === 'edit' && domain) {
                 setData({
                     name: domain.name || '',
                     research_area_id: domain.research_area_id || '',
                 });
-            } else {
+            } else if (mode === 'create') {
                 reset();
-                if (areaId) {
-                    setData('research_area_id', areaId);
-                }
+                setData({
+                    name: '',
+                    research_area_id: areaId || '',
+                });
             }
             
-            // Only fetch areas if they're not already loaded or if we have a specific area ID
-            if (areas.length === 0 || areaId) {
+            // Only fetch areas if they're not already loaded
+            if (areas.length === 0) {
                 fetchAreas();
             }
         }
-    }, [isOpen, domain, areaId]);
+    }, [isOpen, domain, areaId, mode]);
 
     const fetchAreas = async () => {
         setLoading(true);
@@ -62,36 +63,39 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
         
         const successMessage = mode === 'create' ? 'Niche domain created successfully!' : 'Niche domain updated successfully!';
         
-        if (mode === 'create') {
-            post('/api/v1/niche-domains', {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
+        // Determine the correct URL for create or update
+        const url = mode === 'create' 
+            ? '/api/v1/niche-domains' 
+            : `/api/v1/niche-domains/${domain.id}`;
+        
+        // Always use the 'post' method
+        post(url, {
+            onSuccess: () => {
+                toast.success(successMessage);
+                onClose();
+                if (mode === 'create') {
                     reset();
-                },
-                onError: (errors) => {
-                    toast.error('Error saving niche domain');
-                    console.error(errors);
                 }
-            });
-        } else {
-            put(`/api/v1/niche-domains/${domain.id}`, {
-                onSuccess: () => {
-                    toast.success(successMessage);
-                    onClose();
-                },
-                onError: (errors) => {
-                    toast.error('Error updating niche domain');
-                    console.error(errors);
-                }
-            });
-        }
+            },
+            onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} niche domain`);
+                console.error(errors);
+            }
+        });
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div 
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            onClick={(e) => {
+                // Close the modal only if the click is on the backdrop itself, not the content
+                if (e.target === e.currentTarget) {
+                    onClose();
+                }
+            }}
+        >
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">
@@ -117,7 +121,7 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
                             id="research_area_id"
                             value={data.research_area_id}
                             onChange={(e) => setData('research_area_id', e.target.value)}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            className={`mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${(loading || areaId !== null) ? 'opacity-70 cursor-not-allowed' : ''}`}
                             disabled={loading || areaId !== null}
                         >
                             <option value="">Select Research Area</option>

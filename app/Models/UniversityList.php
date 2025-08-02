@@ -12,6 +12,10 @@ class UniversityList extends Model
         'full_name',
         'short_name',
         'country',
+        'university_category',
+        'university_type',
+        'profile_picture',
+        'background_image',
         // 'state',
     ];
     public function academicians()

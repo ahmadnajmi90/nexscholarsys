@@ -22,8 +22,6 @@ export default function Index() {
         }
     }, [props.flash]);
 
-    console.log(props)
-
     const renderTabContent = () => {
         switch (activeTab) {
             case 'universities':
