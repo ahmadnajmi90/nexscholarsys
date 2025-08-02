@@ -97,6 +97,11 @@ Route::post('/admin/roles/{role}/abilities', [RolePermissionController::class, '
 Route::post('/abilities', [AbilityController::class, 'store'])->name('abilities.store');
 Route::delete('/abilities/{id}', [AbilityController::class, 'destroy'])->name('abilities.destroy');
 
+// Debug route for viewing all available routes
+Route::get('/debug/routes', function() {
+    return Inertia::render('Debug/RouteList');
+})->name('debug.routes');
+
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
@@ -313,8 +318,13 @@ Route::get('/csrf/refresh', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
-    Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
-    Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
+Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
+Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
+
+// Data Management Routes
+Route::get('/admin/data-management', function() {
+    return Inertia::render('Admin/DataManagement/Index');
+})->name('admin.data-management.index');
 });
 
 // Project Hub Routes

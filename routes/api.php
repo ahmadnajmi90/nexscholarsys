@@ -29,6 +29,50 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // V1 API Routes
 Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
+    
+    // Data Management API Routes (Admin Only)
+    Route::middleware(['admin'])->group(function () {
+        Route::apiResource('universities', \App\Http\Controllers\Api\V1\UniversityController::class)
+            ->names([
+                'index' => 'api.universities.index',
+                'store' => 'api.universities.store',
+                'show' => 'api.universities.show',
+                'update' => 'api.universities.update',
+                'destroy' => 'api.universities.destroy',
+            ]);
+        Route::apiResource('faculties', \App\Http\Controllers\Api\V1\FacultyController::class)
+            ->names([
+                'index' => 'api.faculties.index',
+                'store' => 'api.faculties.store',
+                'show' => 'api.faculties.show',
+                'update' => 'api.faculties.update',
+                'destroy' => 'api.faculties.destroy',
+            ]);
+        Route::apiResource('fields-of-research', \App\Http\Controllers\Api\V1\FieldOfResearchController::class)
+            ->names([
+                'index' => 'api.fields-of-research.index',
+                'store' => 'api.fields-of-research.store',
+                'show' => 'api.fields-of-research.show',
+                'update' => 'api.fields-of-research.update',
+                'destroy' => 'api.fields-of-research.destroy',
+            ]);
+        Route::apiResource('research-areas', \App\Http\Controllers\Api\V1\ResearchAreaController::class)
+            ->names([
+                'index' => 'api.research-areas.index',
+                'store' => 'api.research-areas.store',
+                'show' => 'api.research-areas.show',
+                'update' => 'api.research-areas.update',
+                'destroy' => 'api.research-areas.destroy',
+            ]);
+        Route::apiResource('niche-domains', \App\Http\Controllers\Api\V1\NicheDomainController::class)
+            ->names([
+                'index' => 'api.niche-domains.index',
+                'store' => 'api.niche-domains.store',
+                'show' => 'api.niche-domains.show',
+                'update' => 'api.niche-domains.update',
+                'destroy' => 'api.niche-domains.destroy',
+            ]);
+    });
     // Workspace Routes
     Route::apiResource('workspaces', WorkspaceController::class);
     Route::post('workspaces/{workspace}/members', [WorkspaceController::class, 'addMember'])

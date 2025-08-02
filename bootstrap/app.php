@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Optionally create a named middleware alias
         $middleware->alias([
             'qdrant.rollout' => \App\Http\Middleware\QdrantRolloutMiddleware::class,
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

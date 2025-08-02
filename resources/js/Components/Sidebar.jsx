@@ -17,7 +17,8 @@ import {
     FaBookOpen,
     FaRobot,
     FaBookmark,
-    FaUserShield
+    FaUserShield,
+    FaDatabase
 } from 'react-icons/fa';
 import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
@@ -108,11 +109,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                     <FaUsers className="text-gray-600" />
                                     <span className={`ml-2 ${!isOpen && "hidden"}`}>Profile Management</span>
                                 </Link>
+                                <Link href={route('admin.data-management.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
+                                    <FaDatabase className="text-gray-600" />
+                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Data Management</span>
+                                </Link>
                                 {!isOpen && (
                                     <div className="hidden group-hover:block absolute left-full top-0 ml-2 bg-white shadow-md rounded p-2 whitespace-nowrap z-10">
                                         <div className="py-1">Roles & Permissions</div>
                                         <div className="py-1">Faculty Admin</div>
                                         <div className="py-1">Profile Management</div>
+                                        <div className="py-1">Data Management</div>
                                     </div>
                                 )}
                             </div>

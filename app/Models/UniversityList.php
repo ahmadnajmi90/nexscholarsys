@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class UniversityList extends Model
 {
     protected $table = 'university_list'; // Explicitly define the table name
+    
+    protected $fillable = [
+        'full_name',
+        'short_name',
+        'country',
+        // 'state',
+    ];
     public function academicians()
     {
         return $this->hasMany(Academician::class, 'university', 'id');

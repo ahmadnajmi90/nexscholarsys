@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ResearchArea extends Model
 {
+    protected $fillable = ['name', 'field_of_research_id'];
     use HasFactory;
 
     protected $table = 'research_area'; // Define the table name (optional if it follows convention)
