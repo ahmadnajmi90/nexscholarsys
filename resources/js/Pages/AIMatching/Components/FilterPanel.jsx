@@ -172,7 +172,7 @@ export default function FilterPanel({
       {/* Filter Panel Container */}
       <div
         ref={filterContainerRef}
-        className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-white rounded-lg shadow-lg transition-transform duration-300 z-50 ${
+        className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-white rounded-lg shadow-lg transition-transform duration-300 z-30 ${
           showFilters ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 overflow-auto pb-20 lg:pb-0`}
       >
@@ -271,7 +271,7 @@ export default function FilterPanel({
       {/* Overlay for Mobile */}
       {showFilters && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
           onClick={() => {
             setShowFilters(false);
             if (toggleOpen) toggleOpen(false);
@@ -281,4 +281,4 @@ export default function FilterPanel({
       )}
     </>
   );
-} 
+}

@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import GuidedSearchInterface from '@/Components/GuidedSearchInterface';
 import ResultsGrid from './Components/ResultsGrid';
 import SearchTypeSelector from './Components/SearchTypeSelector';
 import FilterPanel from './Components/FilterPanel';
-import { FaFilter } from 'react-icons/fa';
+import { FaFilter, FaLightbulb, FaRobot, FaBrain, FaSearch, FaDatabase } from 'react-icons/fa';
 import axios from 'axios';
 import useRoles from '@/Hooks/useRoles';
 import { isSessionExpired, handlePossibleSessionExpiration } from '@/Utils/csrfHelper';
+import { Sparkles } from 'lucide-react';
 
 export default function Index({ auth, universities, faculties, users, researchOptions, skills }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -18,6 +19,15 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [searchResults, setSearchResults] = useState(null);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  
+  // New state variables for AI Processing Modal
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [processingStep, setProcessingStep] = useState(0);
+  const processingInterval = useRef(null);
+  
+  // New state variables for AI Insight Modal
+  const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
+  const [currentInsight, setCurrentInsight] = useState('');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Filter states
@@ -49,6 +59,31 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setError(null);
     setPage(1); // Reset to first page
     
+    // Show the processing modal
+    setShowProcessingModal(true);
+    setProcessingStep(0);
+    
+    // Set up the processing steps animation
+    const processingSteps = [
+      "Analyzing your query...",
+      "Converting to semantic vectors...",
+      "Searching database for potential matches...",
+      "Generating personalized insights with AI...",
+      "Finalizing results..."
+    ];
+    
+    // Start cycling through processing steps - only advance until the last step
+    processingInterval.current = setInterval(() => {
+      setProcessingStep(prevStep => {
+        // If we are already at the last message, don't advance further
+        if (prevStep >= processingSteps.length - 1) {
+          return prevStep;
+        }
+        // Otherwise, go to the next message
+        return prevStep + 1;
+      });
+    }, 2000); // Change message every 2 seconds
+    
     try {
       // Use the helper function to handle CSRF token refreshing if needed
       const response = await handlePossibleSessionExpiration(() => 
@@ -79,6 +114,12 @@ export default function Index({ auth, universities, faculties, users, researchOp
         setError(error.message || 'Failed to perform search. Please try again later.');
       }
     } finally {
+      // Clear the interval and hide the processing modal
+      if (processingInterval.current) {
+        clearInterval(processingInterval.current);
+        processingInterval.current = null;
+      }
+      setShowProcessingModal(false);
       setIsSearching(false);
     }
   };
@@ -191,12 +232,104 @@ export default function Index({ auth, universities, faculties, users, researchOp
     return 'Enter your search query below to find matches.';
   };
   
+  // AI Processing Modal component
+  const AIProcessingModal = () => {
+    // Processing steps messages
+    const processingSteps = [
+      { text: "Analyzing your query...", icon: <FaSearch className="text-blue-500" /> },
+      { text: "Converting to semantic vectors...", icon: <FaBrain className="text-purple-500" /> },
+      { text: "Searching database for potential matches...", icon: <FaDatabase className="text-green-500" /> },
+      { text: "Generating personalized insights with AI...", icon: <Sparkles className="w-4 h-4 mr-2" /> },
+      { text: "Finalizing results...", icon: <FaRobot className="text-red-500" /> }
+    ];
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <div className="flex flex-col items-center">
+            {/* Animated AI Icon */}
+            <div className="w-20 h-20 mb-6 relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                {processingSteps[processingStep].icon}
+              </div>
+              <div className="absolute inset-0 border-t-4 border-blue-500 rounded-full animate-spin opacity-25"></div>
+            </div>
+            
+            {/* Processing Step Text */}
+            <h3 className="text-xl font-bold mb-2 text-gray-800">AI Processing</h3>
+            <p className="text-gray-600 text-center mb-4 min-h-[24px]">
+              {processingSteps[processingStep].text}
+            </p>
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+                style={{ width: `${(processingStep + 1) * 20}%` }}
+              ></div>
+            </div>
+            
+            <p className="text-sm text-gray-500 italic">
+              Our AI is working to find the best matches for your query...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // AI Insight Modal component
+  const AIInsightModal = ({ insight, onClose }) => {
+    return (
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+        onClick={(e) => {
+          // Close modal only if the click is on the backdrop itself
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+          <div className="flex items-center mb-4">
+            <Sparkles className="w-4 h-4 mr-2" />
+            <h3 className="text-xl font-bold text-gray-800">AI Match Insight</h3>
+          </div>
+          
+          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+            <p className="text-gray-700 whitespace-pre-line">{insight}</p>
+          </div>
+          
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <MainLayout title="AI Matching" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
       <Head>
         <title>AI Matching - Nexscholar</title>
         <meta name="description" content="Find academic matches using AI-powered semantic search" />
       </Head>
+      
+      {/* AI Processing Modal */}
+      {showProcessingModal && <AIProcessingModal />}
+      
+      {/* AI Insight Modal */}
+      {isInsightModalOpen && (
+        <AIInsightModal 
+          insight={currentInsight} 
+          onClose={() => setIsInsightModalOpen(false)} 
+        />
+      )}
       
       <div className="bg-white overflow-hidden shadow-sm rounded-lg">
         <div className="p-6 pb-16">
@@ -260,22 +393,26 @@ export default function Index({ auth, universities, faculties, users, researchOp
               </div>
               
               {/* Results */}
-              <div className="w-full lg:w-3/4 xl:w-4/5">
-                <ResultsGrid
-                  searchType={searchType}
-                  searchResults={searchResults}
-                  selectedArea={selectedArea}
-                  selectedUniversity={selectedUniversity}
-                  selectedAvailability={selectedAvailability}
-                  onLoadMore={handleLoadMore}
-                  isLoadingMore={isLoadingMore}
-                  universitiesList={universities}
-                  faculties={faculties}
-                  researchOptions={researchOptions}
-                  users={users}
-                  skills={skills}
-                />
-              </div>
+                <div className="w-full lg:w-3/4 xl:w-4/5">
+                  <ResultsGrid
+                    searchType={searchType}
+                    searchResults={searchResults}
+                    selectedArea={selectedArea}
+                    selectedUniversity={selectedUniversity}
+                    selectedAvailability={selectedAvailability}
+                    onLoadMore={handleLoadMore}
+                    isLoadingMore={isLoadingMore}
+                    universitiesList={universities}
+                    faculties={faculties}
+                    researchOptions={researchOptions}
+                    users={users}
+                    skills={skills}
+                    onShowInsight={(insight) => {
+                      setCurrentInsight(insight);
+                      setIsInsightModalOpen(true);
+                    }}
+                  />
+                </div>
             </div>
           )}
         </div>

@@ -8,6 +8,7 @@ import BookmarkButton from "@/Components/BookmarkButton";
 import MatchIndicator from "@/Components/MatchIndicator";
 import ProgressiveLoadingResults from "@/Components/ProgressiveLoadingResults";
 import ConnectionButton from "@/Components/ConnectionButton";
+import { Sparkles } from 'lucide-react';
 
 export default function ResultsGrid({
   searchType,
@@ -21,7 +22,8 @@ export default function ResultsGrid({
   selectedUniversity,
   selectedAvailability,
   onLoadMore,
-  isLoadingMore
+  isLoadingMore,
+  onShowInsight
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingProfileData, setLoadingProfileData] = useState(false);
@@ -29,7 +31,6 @@ export default function ResultsGrid({
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [detailedInsights, setDetailedInsights] = useState('');
   const [loadingInsights, setLoadingInsights] = useState(false);
-  const [showFullInsight, setShowFullInsight] = useState(false);
   const [recommendingProfile, setRecommendingProfile] = useState(null);
   const [loadedProfiles, setLoadedProfiles] = useState([]);
   const [isIntersecting, setIsIntersecting] = useState(false);
@@ -486,41 +487,45 @@ export default function ResultsGrid({
                     {/* AI Insights Section */}
                     {aiInsights && (
                       <div className="mt-3 px-4 py-2 bg-blue-50 mx-4 rounded-md">
-                        <div className="flex items-center mb-1 justify-between">
+                        <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-blue-700 flex items-center">
-                            <FaLightbulb className="text-yellow-500 mr-2" />
+                            <Sparkles className="w-4 h-4 mr-2" />
                             AI Match Insights
                           </span>
                           <button 
-                            onClick={() => setShowFullInsight(!showFullInsight)}
-                            className="text-blue-600 text-xs hover:underline"
+                            onClick={() => {
+                              // Process the insights text to replace field IDs with readable names
+                              let processedInsights = aiInsights;
+                              
+                              // Find all patterns like "field_id-area_id-domain_id" in the text
+                              const fieldIdPattern = /\b(\d+-\d+-\d+)\b/g;
+                              const matches = aiInsights.match(fieldIdPattern) || [];
+                              
+                              // Replace each match with the corresponding readable name
+                              matches.forEach(match => {
+                                const matchedOption = researchOptions.find(
+                                  option => `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === match
+                                );
+                                
+                                if (matchedOption) {
+                                  const readableName = `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`;
+                                  processedInsights = processedInsights.replace(new RegExp(match, 'g'), readableName);
+                                }
+                              });
+                              
+                              // Call the parent component's function to show the insight in a modal
+                              onShowInsight(processedInsights);
+                            }}
+                            className="text-blue-600 text-xs hover:underline flex items-center"
                           >
-                            {showFullInsight ? 'Show less' : 'Show more'}
+                            <span>Show Insight</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
                           </button>
                         </div>
-                        <p className={`text-xs text-gray-700 text-left ${showFullInsight ? 'h-auto' : 'h-16 overflow-y-auto'} pr-1`}>
-                          {(() => {
-                            // Process the insights text to replace field IDs with readable names
-                            let processedInsights = aiInsights;
-                            
-                            // Find all patterns like "field_id-area_id-domain_id" in the text
-                            const fieldIdPattern = /\b(\d+-\d+-\d+)\b/g;
-                            const matches = aiInsights.match(fieldIdPattern) || [];
-                            
-                            // Replace each match with the corresponding readable name
-                            matches.forEach(match => {
-                              const matchedOption = researchOptions.find(
-                                option => `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === match
-                              );
-                              
-                              if (matchedOption) {
-                                const readableName = `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`;
-                                processedInsights = processedInsights.replace(new RegExp(match, 'g'), readableName);
-                              }
-                            });
-                            
-                            return processedInsights;
-                          })()}
+                        <p className="text-xs text-gray-700 text-left h-16 overflow-hidden pr-1 mt-1">
+                          {aiInsights.substring(0, 210)}...
                         </p>
                       </div>
                     )}
@@ -674,7 +679,7 @@ export default function ResultsGrid({
                   {/* AI Match Insights - Detailed */}
                   <div className="mb-6 p-4 bg-blue-50 rounded-lg">
                     <h4 className="text-lg font-semibold text-blue-800 mb-2 flex items-center">
-                      <FaLightbulb className="text-yellow-500 mr-2" />
+                      <Sparkles className="w-4 h-4 mr-2" />
                       AI Match Insights
                     </h4>
                     {console.log('Rendering AI insights section with:', {
@@ -959,4 +964,4 @@ export default function ResultsGrid({
       )}
     </div>
   );
-} 
+}
