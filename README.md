@@ -12,6 +12,7 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - [AI Integration](#ai-integration)
 - [Semantic Search](#semantic-search)
 - [Project Hub](#project-hub)
+- [My Network (Connections)](#my-network-connections)
 - [Google Services](#google-services)
 - [Admin Data Management](#admin-data-management)
 - [Contributing](#contributing)
@@ -99,6 +100,41 @@ User profiles do not store raw text for their research interests. Instead, they 
 - **Scalability**: Easy addition of new research fields without affecting existing data
 - **Multilingual Support**: Text translations can be managed at the database level
 - **Analytics**: Precise tracking of research field popularity and trends
+
+### My Network (Connections)
+
+The My Network feature provides a comprehensive social networking system for managing academic and professional connections between users, with advanced organization and filtering capabilities.
+
+**Tabbed Interface:**
+- **My Connections**: View and manage established connections with other users
+- **Received Requests**: Handle incoming connection requests with accept/reject actions
+- **Sent Requests**: Track outgoing connection requests with the ability to cancel them
+
+**Connection Tags System:**
+- **Tag-Based Organization**: Categorize connections using both default and custom tags
+- **Custom Tag Creation**: Users can create their own personalized tags for better organization
+- **Role-Based Tag Access**: Only Academicians can see and assign the "Student" tag, enforced through backend authorization
+- **Tag Filtering**: Filter the connections list by selecting specific tags from the sidebar
+- **Visual Indicators**: Custom tags are marked with "(Custom)" for easy identification
+
+**Bulk Actions:**
+- **Multi-Select**: Choose multiple connections using checkboxes
+- **Bulk Tag Assignment**: Apply tags to multiple connections simultaneously
+- **Floating Action Bar**: Dynamic toolbar appears when multiple connections are selected
+- **Batch Processing**: Efficiently manage large connection networks with bulk operations
+
+**UI Enhancements:**
+- **Icon-Based Actions**: Clean, icon-based action buttons (Manage Tags, Remove, View Profile) with tooltips
+- **Role Badges**: Color-coded badges display each user's role (Academician, Postgraduate, Undergraduate, Industry)
+- **Responsive Design**: Optimized layouts for both desktop and mobile interfaces
+- **Search Functionality**: Quick filtering of connections by name or email
+
+**Pagination:**
+- **Efficient Data Loading**: All connection lists (accepted, received, sent) are paginated
+- **Persistent Filters**: Pagination maintains active tag filters and search queries
+- **Visual Indicators**: Clear display of current page, total items, and navigation controls
+
+The My Network feature seamlessly integrates with other platform components, particularly the Scholar Lab collaboration system, where connections tagged as "Collaborators" can be invited to research projects and workspaces.
 
 ### Semantic Supervisor Matching
 - Find research supervisors using AI-powered semantic search
