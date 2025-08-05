@@ -132,9 +132,38 @@ class ProjectHubController extends Controller
             ->whereJsonDoesntContain('purpose', 'For Showcase')
             ->get();
             
-        // Get the authenticated user's accepted connections
-        // First get the friends with their IDs
-        $friendIds = $user->getFriends()->pluck('id');
+        // Find the Collaborator tag
+        $collaboratorTag = \App\Models\ConnectionTag::where('name', 'Collaborator')->first();
+        
+        if ($collaboratorTag) {
+            // Get connections where this user is the requester, status is accepted, and has Collaborator tag
+            $requestedConnections = \App\Models\Connection::where('requester_id', $user->id)
+                ->where('status', 'accepted')
+                ->whereHas('tags', function($query) use ($user, $collaboratorTag) {
+                    $query->where('connection_tags.id', $collaboratorTag->id)
+                          ->where('connection_tag_user.user_id', $user->id);
+                })
+                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->get()
+                ->pluck('recipient.id');
+                
+            // Get connections where this user is the recipient, status is accepted, and has Collaborator tag
+            $receivedConnections = \App\Models\Connection::where('recipient_id', $user->id)
+                ->where('status', 'accepted')
+                ->whereHas('tags', function($query) use ($user, $collaboratorTag) {
+                    $query->where('connection_tags.id', $collaboratorTag->id)
+                          ->where('connection_tag_user.user_id', $user->id);
+                })
+                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->get()
+                ->pluck('requester.id');
+                
+            // Merge the IDs
+            $friendIds = $requestedConnections->merge($receivedConnections);
+        } else {
+            // Fallback if Collaborator tag doesn't exist - use all connections
+            $friendIds = $user->getFriends()->pluck('id');
+        }
         
         // Then fetch the users with eager loaded relationships
         $connections = \App\Models\User::whereIn('id', $friendIds)
@@ -227,20 +256,46 @@ class ProjectHubController extends Controller
         // Get the auth user's accepted connections to populate the invite list
         $userId = Auth::id();
         
-        // Get connections where this user is the requester and status is accepted
-        $requestedConnections = \App\Models\Connection::where('requester_id', $userId)
-            ->where('status', 'accepted')
-            ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
-            ->get()
-            ->pluck('recipient');
-            
-        // Get connections where this user is the recipient and status is accepted
-        $receivedConnections = \App\Models\Connection::where('recipient_id', $userId)
-            ->where('status', 'accepted')
-            ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
-            ->get()
-            ->pluck('requester');
-            
+        // Find the Collaborator tag
+        $collaboratorTag = \App\Models\ConnectionTag::where('name', 'Collaborator')->first();
+        
+        if ($collaboratorTag) {
+            // Get connections where this user is the requester, status is accepted, and has Collaborator tag
+            $requestedConnections = \App\Models\Connection::where('requester_id', $userId)
+                ->where('status', 'accepted')
+                ->whereHas('tags', function($query) use ($userId, $collaboratorTag) {
+                    $query->where('connection_tags.id', $collaboratorTag->id)
+                          ->where('connection_tag_user.user_id', $userId);
+                })
+                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->get()
+                ->pluck('recipient');
+                
+            // Get connections where this user is the recipient, status is accepted, and has Collaborator tag
+            $receivedConnections = \App\Models\Connection::where('recipient_id', $userId)
+                ->where('status', 'accepted')
+                ->whereHas('tags', function($query) use ($userId, $collaboratorTag) {
+                    $query->where('connection_tags.id', $collaboratorTag->id)
+                          ->where('connection_tag_user.user_id', $userId);
+                })
+                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->get()
+                ->pluck('requester');
+        } else {
+            // Fallback if Collaborator tag doesn't exist - use regular connections
+            $requestedConnections = \App\Models\Connection::where('requester_id', $userId)
+                ->where('status', 'accepted')
+                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->get()
+                ->pluck('recipient');
+                
+            $receivedConnections = \App\Models\Connection::where('recipient_id', $userId)
+                ->where('status', 'accepted')
+                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->get()
+                ->pluck('requester');
+        }
+        
         // Merge both collections
         $connections = $requestedConnections->merge($receivedConnections);
         
@@ -591,20 +646,46 @@ class ProjectHubController extends Controller
         $user = Auth::user();
         $userId = $user->id;
         
-        // Get connections where this user is the requester and status is accepted
-        $requestedConnections = Connection::where('requester_id', $userId)
-            ->where('status', 'accepted')
-            ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
-            ->get()
-            ->pluck('recipient');
-            
-        // Get connections where this user is the recipient and status is accepted
-        $receivedConnections = Connection::where('recipient_id', $userId)
-            ->where('status', 'accepted')
-            ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
-            ->get()
-            ->pluck('requester');
-            
+        // Find the Collaborator tag
+        $collaboratorTag = \App\Models\ConnectionTag::where('name', 'Collaborator')->first();
+        
+        if ($collaboratorTag) {
+            // Get connections where this user is the requester, status is accepted, and has Collaborator tag
+            $requestedConnections = Connection::where('requester_id', $userId)
+                ->where('status', 'accepted')
+                ->whereHas('tags', function($query) use ($userId, $collaboratorTag) {
+                    $query->where('connection_tags.id', $collaboratorTag->id)
+                          ->where('connection_tag_user.user_id', $userId);
+                })
+                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->get()
+                ->pluck('recipient');
+                
+            // Get connections where this user is the recipient, status is accepted, and has Collaborator tag
+            $receivedConnections = Connection::where('recipient_id', $userId)
+                ->where('status', 'accepted')
+                ->whereHas('tags', function($query) use ($userId, $collaboratorTag) {
+                    $query->where('connection_tags.id', $collaboratorTag->id)
+                          ->where('connection_tag_user.user_id', $userId);
+                })
+                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->get()
+                ->pluck('requester');
+        } else {
+            // Fallback if Collaborator tag doesn't exist - use regular connections
+            $requestedConnections = Connection::where('requester_id', $userId)
+                ->where('status', 'accepted')
+                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->get()
+                ->pluck('recipient');
+                
+            $receivedConnections = Connection::where('recipient_id', $userId)
+                ->where('status', 'accepted')
+                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->get()
+                ->pluck('requester');
+        }
+        
         // Merge both collections
         $connections = $requestedConnections->merge($receivedConnections);
         

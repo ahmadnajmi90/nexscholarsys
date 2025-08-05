@@ -181,7 +181,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                             {menuOpen.networking && (
                                 <div className="ml-6">
                                     <Link href={route('connections.index')} className="flex items-center justify-between py-2 hover:bg-gray-100 rounded">
-                                        <span>My Connections</span>
+                                        <span>My Network</span>
                                         {pendingRequestCount > 0 && (
                                             <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
                                                 {pendingRequestCount}

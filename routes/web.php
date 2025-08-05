@@ -147,6 +147,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Connection Management Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/connections', [App\Http\Controllers\ConnectionController::class, 'index'])->name('connections.index');
+    
+    // Connection Tag Routes
+    Route::get('/connection-tags', [App\Http\Controllers\ConnectionTagController::class, 'index'])
+        ->name('connection-tags.index');
+    Route::post('/connection-tags', [App\Http\Controllers\ConnectionTagController::class, 'store'])
+        ->name('connection-tags.store');
+    Route::get('/connections/{connection}/tags', [App\Http\Controllers\ConnectionTagController::class, 'getTags'])
+        ->name('connections.tags.get');
+    Route::post('/connections/tags', [App\Http\Controllers\ConnectionTagController::class, 'assignTags'])
+        ->name('connections.tags.assign');
 });
 
 Route::middleware('auth')->group(function () {

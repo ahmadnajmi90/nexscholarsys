@@ -172,6 +172,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
         ->name('notifications.mark-all-as-read');
         
+    // Connection Tag Routes have been moved to web.php
+        
     // Project Member Routes
     Route::post('/projects/{project}/members', [ProjectMemberController::class, 'store'])
         ->name('projects.members.store');

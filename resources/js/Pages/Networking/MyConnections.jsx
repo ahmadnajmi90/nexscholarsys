@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
-import { FaUserFriends, FaUserPlus, FaUserClock, FaSearch } from 'react-icons/fa';
-import { MoreVertical } from 'lucide-react';
+import { FaUserFriends, FaUserPlus, FaUserClock, FaSearch, FaTags } from 'react-icons/fa';
+import { MoreVertical, CheckSquare, Tags, Trash2, Eye, X, Plus } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ConnectionButton from '@/Components/ConnectionButton';
 import Dropdown from '@/Components/Dropdown';
+import ManageTagsModal from '@/Components/Networking/ManageTagsModal';
+import CreateTagModal from '@/Components/Networking/CreateTagModal';
+import Tooltip from '@/Components/Tooltip';
 
-const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) => {
+const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, tags = [], activeTagId = null }) => {
     const [activeTab, setActiveTab] = useState('connections');
     const [searchQuery, setSearchQuery] = useState('');
     const [processingIds, setProcessingIds] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [connectionToRemove, setConnectionToRemove] = useState(null);
+    const [selectedConnections, setSelectedConnections] = useState([]);
+    const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+    const [isCreateTagModalOpen, setIsCreateTagModalOpen] = useState(false);
+    const [selectAll, setSelectAll] = useState(false);
+    const [selectedConnectionForTags, setSelectedConnectionForTags] = useState(null);
+    const [availableTags, setAvailableTags] = useState(tags);
     
     // Helper function to get the correct profile URL based on user's role
     const getProfileUrl = (user) => {
@@ -41,6 +50,8 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
             onSuccess: () => {
                 // Refresh the page to update the lists
                 router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
+                // Clear selected connections after removal
+                setSelectedConnections([]);
             },
             onFinish: () => {
                 setProcessingIds(prev => prev.filter(id => id !== connectionId));
@@ -50,12 +61,130 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
         });
     };
     
+    // Function to handle checkbox selection for a connection
+    const handleConnectionSelect = (connectionId) => {
+        setSelectedConnections(prev => {
+            if (prev.includes(connectionId)) {
+                return prev.filter(id => id !== connectionId);
+            } else {
+                return [...prev, connectionId];
+            }
+        });
+    };
+    
+    // Function to handle select all checkbox
+    const handleSelectAll = () => {
+        if (selectAll) {
+            // If already all selected, deselect all
+            setSelectedConnections([]);
+        } else {
+            // Otherwise, select all filtered connections
+            const filteredConnections = filterConnections(acceptedConnections);
+            setSelectedConnections(filteredConnections.map(conn => conn.connection_id));
+        }
+        setSelectAll(!selectAll);
+    };
+    
+    // Function to open tag management modal for a single connection
+    const handleManageTags = (connectionId) => {
+        setSelectedConnections([connectionId]);
+        setSelectedConnectionForTags(connectionId);
+        setIsTagModalOpen(true);
+    };
+    
+    // Function to open tag management modal for bulk selected connections
+    const handleBulkManageTags = () => {
+        setSelectedConnectionForTags(null);
+        setIsTagModalOpen(true);
+    };
+    
+    // Reset selections when changing tabs
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setSelectedConnections([]);
+        setSelectAll(false);
+    };
+    
     // Filter connections based on search query
     const filterConnections = (connections) => {
-        if (!searchQuery) return connections;
+        if (!searchQuery) return connections.data || connections;
         
-        return connections.filter(conn => 
-            conn.user.name.toLowerCase().includes(searchQuery.toLowerCase())
+        const dataToFilter = connections.data || connections;
+        
+        return dataToFilter.filter(conn => 
+            conn.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            conn.user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    };
+    
+    // Function to handle tag selection
+    const handleTagSelect = (tagId) => {
+        // If clicking the active tag, clear the filter
+        if (tagId === activeTagId) {
+            router.get(route('connections.index'));
+        } else {
+            router.get(route('connections.index', { tag_id: tagId }));
+        }
+    };
+    
+    // Function to handle tag creation
+    const handleTagCreated = (newTag) => {
+        setAvailableTags(prevTags => [...prevTags, newTag]);
+    };
+    
+    // Function to render the tag filtering sidebar
+    const renderTagSidebar = () => {
+        if (activeTab !== 'connections') return null;
+        
+        return (
+            <div className="w-64 bg-white shadow-sm rounded-lg p-4 mr-4 h-fit">
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium text-gray-900">Filter by Tag</h3>
+                    <Tooltip content="Create New Tag">
+                        <button 
+                            onClick={() => setIsCreateTagModalOpen(true)}
+                            className="p-1 rounded-full text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            <Plus size={18} />
+                        </button>
+                    </Tooltip>
+                </div>
+                
+                <div className="space-y-2">
+                    <button
+                        onClick={() => handleTagSelect(null)}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+                            activeTagId === null 
+                                ? 'bg-blue-100 text-blue-800 font-medium' 
+                                : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                    >
+                        All Connections
+                    </button>
+                    
+                    {availableTags.length > 0 ? (
+                        availableTags.map(tag => (
+                            <button
+                                key={tag.id}
+                                onClick={() => handleTagSelect(tag.id)}
+                                className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center ${
+                                    activeTagId === tag.id 
+                                        ? 'bg-blue-100 text-blue-800 font-medium' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
+                                {tag.name}
+                                {tag.user_id && <span className="ml-auto text-xs text-gray-500">(Custom)</span>}
+                            </button>
+                        ))
+                    ) : (
+                        <div className="text-sm text-gray-500 py-2 text-center">
+                            No tags available
+                        </div>
+                    )}
+                </div>
+            </div>
         );
     };
     
@@ -92,7 +221,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
             <div className="border-b border-gray-200">
                 <nav className="flex overflow-x-auto scrollbar-hide" aria-label="Tabs">
                     <button
-                        onClick={() => setActiveTab('connections')}
+                        onClick={() => handleTabChange('connections')}
                         className={`py-4 px-2 md:px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
                             activeTab === 'connections'
                                 ? 'border-blue-500 text-blue-600'
@@ -110,7 +239,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                     </button>
                     
                     <button
-                        onClick={() => setActiveTab('received')}
+                        onClick={() => handleTabChange('received')}
                         className={`py-4 px-2 md:px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
                             activeTab === 'received'
                                 ? 'border-blue-500 text-blue-600'
@@ -128,7 +257,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                     </button>
                     
                     <button
-                        onClick={() => setActiveTab('sent')}
+                        onClick={() => handleTabChange('sent')}
                         className={`py-4 px-2 md:px-4 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
                             activeTab === 'sent'
                                 ? 'border-blue-500 text-blue-600'
@@ -152,16 +281,50 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
     const renderSearchBar = () => {
         return (
             <div className="relative w-full md:w-96 w-[25rem] mb-4">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaSearch className="h-5 w-5 text-gray-400" />
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                        {activeTab === 'connections' && (
+                            <div className="flex items-center mr-4">
+                                <input
+                                    type="checkbox"
+                                    id="select-all"
+                                    checked={selectAll}
+                                    onChange={handleSelectAll}
+                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <label htmlFor="select-all" className="ml-2 text-sm text-gray-700">
+                                    Select All
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Bulk Actions - Only show when connections are selected */}
+                    {activeTab === 'connections' && selectedConnections.length > 0 && (
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={handleBulkManageTags}
+                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                <FaTags className="mr-1" />
+                                Manage Tags
+                            </button>
+                        </div>
+                    )}
                 </div>
-                <input
-                    type="text"
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Search connections..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FaSearch className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        placeholder="Search connections..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
             </div>
         );
     };
@@ -171,64 +334,107 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
         const isProcessing = processingIds.includes(connection_id);
 
         return (
-            <div className="md:hidden">
-                <Dropdown>
-                    <Dropdown.Trigger>
+            <div className="flex space-x-2">
+                {/* Manage Tags button (only for connections tab) */}
+                {activeTab === 'connections' && (
+                    <Tooltip content="Manage Tags" position="left">
                         <button
-                            className="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            disabled={isProcessing}
+                            onClick={() => handleManageTags(connection_id)}
+                            className="p-1 rounded-full text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
-                            <MoreVertical className="w-5 h-5 text-gray-500" />
+                            <span className="sr-only">Manage Tags</span>
+                            <Tags className="h-5 w-5" />
                         </button>
-                    </Dropdown.Trigger>
-
-                    <Dropdown.Content align="right" width="48">
-                        {/* View Profile - Always available */}
-                        <Dropdown.Link href={getProfileUrl(user)}>
-                            View Profile
-                        </Dropdown.Link>
-
-                        {/* Tab-specific actions */}
-                        {activeTab === 'connections' && (
+                    </Tooltip>
+                )}
+                
+                {/* View Profile button */}
+                <Tooltip content="View Profile" position="left">
+                    <Link
+                        href={getProfileUrl(user)}
+                        className="p-1 rounded-full text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                        <span className="sr-only">View Profile</span>
+                        <Eye className="h-5 w-5" />
+                    </Link>
+                </Tooltip>
+                
+                {/* Action buttons based on tab */}
+                {activeTab === 'connections' && (
+                    <Tooltip content="Remove Connection" position="left">
+                        <button
+                            onClick={() => promptForRemoval({ connection_id })}
+                            disabled={isProcessing}
+                            className={`p-1 rounded-full text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                        >
+                            <span className="sr-only">Remove Connection</span>
+                            {isProcessing ? (
+                                <div className="animate-spin h-5 w-5 border-2 border-red-600 rounded-full border-t-transparent"></div>
+                            ) : (
+                                <Trash2 className="h-5 w-5" />
+                            )}
+                        </button>
+                    </Tooltip>
+                )}
+                
+                {activeTab === 'received' && (
+                    <>
+                        <Tooltip content="Accept Request" position="left">
                             <button
-                                onClick={() => promptForRemoval({ connection_id })}
+                                onClick={() => handleConnectionAction(connection_id, 'accept')}
                                 disabled={isProcessing}
-                                className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none disabled:opacity-50"
+                                className={`p-1 rounded-full text-green-600 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+                                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                             >
-                                {isProcessing ? 'Processing...' : 'Remove Connection'}
+                                <span className="sr-only">Accept Request</span>
+                                {isProcessing ? (
+                                    <div className="animate-spin h-5 w-5 border-2 border-green-600 rounded-full border-t-transparent"></div>
+                                ) : (
+                                    <CheckSquare className="h-5 w-5" />
+                                )}
                             </button>
-                        )}
-
-                        {activeTab === 'received' && (
-                            <>
-                                <button
-                                    onClick={() => handleConnectionAction(connection_id, 'accept')}
-                                    disabled={isProcessing}
-                                    className="block w-full px-4 py-2 text-start text-sm text-green-600 hover:bg-green-50 focus:bg-green-50 focus:outline-none disabled:opacity-50"
-                                >
-                                    {isProcessing ? 'Processing...' : 'Accept Request'}
-                                </button>
-                                <button
-                                    onClick={() => handleConnectionAction(connection_id, 'reject')}
-                                    disabled={isProcessing}
-                                    className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none disabled:opacity-50"
-                                >
-                                    {isProcessing ? 'Processing...' : 'Reject Request'}
-                                </button>
-                            </>
-                        )}
-
-                        {activeTab === 'sent' && (
+                        </Tooltip>
+                        
+                        <Tooltip content="Reject Request" position="left">
                             <button
-                                onClick={() => promptForRemoval({ connection_id })}
+                                onClick={() => handleConnectionAction(connection_id, 'reject')}
                                 disabled={isProcessing}
-                                className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none disabled:opacity-50"
+                                className={`p-1 rounded-full text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                             >
-                                {isProcessing ? 'Processing...' : 'Cancel Request'}
+                                <span className="sr-only">Reject Request</span>
+                                {isProcessing ? (
+                                    <div className="animate-spin h-5 w-5 border-2 border-red-600 rounded-full border-t-transparent"></div>
+                                ) : (
+                                    <X className="h-5 w-5" />
+                                )}
                             </button>
-                        )}
-                    </Dropdown.Content>
-                </Dropdown>
+                        </Tooltip>
+                    </>
+                )}
+                
+                {activeTab === 'sent' && (
+                    <Tooltip content="Cancel Request" position="left">
+                        <button
+                            onClick={() => promptForRemoval({ connection_id })}
+                            disabled={isProcessing}
+                            className={`p-1 rounded-full text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                        >
+                            <span className="sr-only">Cancel Request</span>
+                            {isProcessing ? (
+                                <div className="animate-spin h-5 w-5 border-2 border-red-600 rounded-full border-t-transparent"></div>
+                            ) : (
+                                <X className="h-5 w-5" />
+                            )}
+                        </button>
+                    </Tooltip>
+                )}
             </div>
         );
     };
@@ -236,6 +442,25 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
     const renderConnectionCard = (connection) => {
         const { user, connection_id, status } = connection;
         const isProcessing = processingIds.includes(connection_id);
+        const isSelected = selectedConnections.includes(connection_id);
+
+        // Determine the role badge color based on user role
+        const getRoleBadgeColor = () => {
+            if (!user.role) return {};
+            
+            switch(user.role) {
+                case 'Academician':
+                    return { bg: 'bg-blue-100', text: 'text-blue-800' };
+                case 'Postgraduate':
+                    return { bg: 'bg-green-100', text: 'text-green-800' };
+                case 'Undergraduate':
+                    return { bg: 'bg-purple-100', text: 'text-purple-800' };
+                case 'Industry':
+                    return { bg: 'bg-orange-100', text: 'text-orange-800' };
+                default:
+                    return { bg: 'bg-gray-100', text: 'text-gray-800' };
+            }
+        };
         
         return (
             <div key={connection_id} className="bg-white shadow rounded-lg p-4 mb-4">
@@ -243,6 +468,16 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                 <div className="md:hidden">
                     <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center flex-1 min-w-0">
+                            {activeTab === 'connections' && (
+                                <div className="flex-shrink-0 mr-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => handleConnectionSelect(connection_id)}
+                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                </div>
+                            )}
                             <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                                 {user.profile_photo_url ? (
                                     <img 
@@ -261,7 +496,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                                 <h3 className="text-base font-medium text-gray-900 truncate">{user.name}</h3>
                                 <p className="text-sm text-gray-500 truncate">{user.email}</p>
                                 {user.role && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor().bg} ${getRoleBadgeColor().text} mt-1`}>
                                         {user.role}
                                     </span>
                                 )}
@@ -301,6 +536,16 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                 {/* Desktop Layout: Horizontal Card */}
                 <div className="hidden md:flex md:items-center md:justify-between">
                     <div className="flex items-center">
+                        {activeTab === 'connections' && (
+                            <div className="flex-shrink-0 mr-3">
+                                <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => handleConnectionSelect(connection_id)}
+                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                            </div>
+                        )}
                         <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                             {user.profile_photo_url ? (
                                 <img 
@@ -319,7 +564,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                             <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
                             <p className="text-sm text-gray-500">{user.email}</p>
                             {user.role && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor().bg} ${getRoleBadgeColor().text} mt-1`}>
                                     {user.role}
                                 </span>
                             )}
@@ -329,59 +574,95 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                     {/* Desktop Action Buttons */}
                     <div className="flex space-x-2">
                         {activeTab === 'connections' && (
-                            <button
-                                onClick={() => promptForRemoval({ connection_id })}
-                                disabled={isProcessing}
-                                className={`inline-flex items-center px-3 py-2 border border-red-300 text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
-                                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                            >
-                                {isProcessing ? 'Processing...' : 'Remove Connection'}
-                            </button>
+                            <>
+                                <Tooltip content="Manage Tags">
+                                    <button
+                                        onClick={() => handleManageTags(connection_id)}
+                                        className="inline-flex items-center justify-center w-9 h-9 border border-blue-300 text-sm rounded-full text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                        <Tags size={18} />
+                                    </button>
+                                </Tooltip>
+                                <Tooltip content="Remove Connection">
+                                    <button
+                                        onClick={() => promptForRemoval({ connection_id })}
+                                        disabled={isProcessing}
+                                        className={`inline-flex items-center justify-center w-9 h-9 border border-red-300 text-sm rounded-full text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                            isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                    >
+                                        {isProcessing ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-red-700 rounded-full border-t-transparent"></div>
+                                        ) : (
+                                            <Trash2 size={18} />
+                                        )}
+                                    </button>
+                                </Tooltip>
+                            </>
                         )}
                         
                         {activeTab === 'received' && (
                             <>
-                                <button
-                                    onClick={() => handleConnectionAction(connection_id, 'accept')}
-                                    disabled={isProcessing}
-                                    className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                                        isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                >
-                                    {isProcessing ? 'Processing...' : 'Accept'}
-                                </button>
+                                <Tooltip content="Accept Request">
+                                    <button
+                                        onClick={() => handleConnectionAction(connection_id, 'accept')}
+                                        disabled={isProcessing}
+                                        className={`inline-flex items-center justify-center w-9 h-9 border border-green-300 text-sm rounded-full text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+                                            isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                    >
+                                        {isProcessing ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                                        ) : (
+                                            <CheckSquare size={18} />
+                                        )}
+                                    </button>
+                                </Tooltip>
                                 
-                                <button
-                                    onClick={() => handleConnectionAction(connection_id, 'reject')}
-                                    disabled={isProcessing}
-                                    className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
-                                        isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                >
-                                    {isProcessing ? 'Processing...' : 'Reject'}
-                                </button>
+                                <Tooltip content="Reject Request">
+                                    <button
+                                        onClick={() => handleConnectionAction(connection_id, 'reject')}
+                                        disabled={isProcessing}
+                                        className={`inline-flex items-center justify-center w-9 h-9 border border-red-300 text-sm rounded-full text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                            isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                    >
+                                        {isProcessing ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                                        ) : (
+                                            <X size={18} />
+                                        )}
+                                    </button>
+                                </Tooltip>
                             </>
                         )}
                         
                         {activeTab === 'sent' && (
-                            <button
-                                onClick={() => promptForRemoval({ connection_id })}
-                                disabled={isProcessing}
-                                className={`inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                                    isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                            >
-                                {isProcessing ? 'Processing...' : 'Cancel Request'}
-                            </button>
+                            <Tooltip content="Cancel Request">
+                                <button
+                                    onClick={() => promptForRemoval({ connection_id })}
+                                    disabled={isProcessing}
+                                    className={`inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                        isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                >
+                                    {isProcessing ? (
+                                        <div className="animate-spin h-4 w-4 border-2 border-red-700 rounded-full border-t-transparent"></div>
+                                    ) : (
+                                        <X size={18} />
+                                    )}
+                                </button>
+                            </Tooltip>
                         )}
                         
-                        <Link
-                            href={getProfileUrl(user)}
-                            className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            View Profile
-                        </Link>
+                        <Tooltip content="View Profile">
+                            <Link
+                                href={getProfileUrl(user)}
+                                className="inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                <Eye size={18} />
+                            </Link>
+                        </Tooltip>
                     </div>
                 </div>
             </div>
@@ -399,26 +680,96 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
         );
     };
     
+    // Function to render pagination
+    const renderPagination = (paginationData) => {
+        if (!paginationData || !paginationData.meta || paginationData.meta.total <= paginationData.meta.per_page) {
+            return null;
+        }
+
+        console.log(paginationData)
+        
+        return (
+            <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6 mt-4">
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-sm text-gray-700">
+                            Showing <span className="font-medium">{paginationData.meta.from || 0}</span> to{' '}
+                            <span className="font-medium">{paginationData.meta.to || 0}</span> of{' '}
+                            <span className="font-medium">{paginationData.meta.total}</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                            {paginationData.meta.links.map((link, index) => {
+                                // Skip the "prev" and "next" links as we'll create custom ones
+                                if (link.label === '&laquo; Previous' || link.label === 'Next &raquo;') {
+                                    return null;
+                                }
+                                
+                                return (
+                                    <button
+                                        key={index}
+                                        onClick={() => {
+                                            if (!link.url || link.active) return;
+                                            router.get(link.url);
+                                        }}
+                                        disabled={!link.url || link.active}
+                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                                            link.active
+                                                ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                                                : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
+                                        } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                );
+                            })}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'connections':
                 const filteredConnections = filterConnections(acceptedConnections);
+                const hasConnections = Array.isArray(filteredConnections) && filteredConnections.length > 0;
+                
                 return (
                     <div className="mt-6">
-                        {filteredConnections.length > 0 ? (
-                            filteredConnections.map(connection => renderConnectionCard(connection))
-                        ) : (
-                            renderEmptyState(searchQuery ? 'No connections match your search' : 'You have no connections yet')
-                        )}
+                        <div className="flex flex-col md:flex-row">
+                            {renderTagSidebar()}
+                            
+                            <div className="flex-1">
+                                {hasConnections ? (
+                                    <>
+                                        <div className="space-y-4">
+                                            {filteredConnections.map(connection => renderConnectionCard(connection))}
+                                        </div>
+                                        {renderPagination(acceptedConnections)}
+                                    </>
+                                ) : (
+                                    renderEmptyState(searchQuery ? 'No connections match your search' : 'You have no connections yet')
+                                )}
+                            </div>
+                        </div>
                     </div>
                 );
                 
             case 'received':
                 const filteredReceived = filterConnections(receivedRequests);
+                const hasReceivedRequests = Array.isArray(filteredReceived) && filteredReceived.length > 0;
+                
                 return (
                     <div className="mt-6">
-                        {filteredReceived.length > 0 ? (
-                            filteredReceived.map(connection => renderConnectionCard(connection))
+                        {hasReceivedRequests ? (
+                            <>
+                                <div className="space-y-4">
+                                    {filteredReceived.map(connection => renderConnectionCard(connection))}
+                                </div>
+                                {renderPagination(receivedRequests)}
+                            </>
                         ) : (
                             renderEmptyState(searchQuery ? 'No requests match your search' : 'You have no pending requests')
                         )}
@@ -427,10 +778,17 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                 
             case 'sent':
                 const filteredSent = filterConnections(sentRequests);
+                const hasSentRequests = Array.isArray(filteredSent) && filteredSent.length > 0;
+                
                 return (
                     <div className="mt-6">
-                        {filteredSent.length > 0 ? (
-                            filteredSent.map(connection => renderConnectionCard(connection))
+                        {hasSentRequests ? (
+                            <>
+                                <div className="space-y-4">
+                                    {filteredSent.map(connection => renderConnectionCard(connection))}
+                                </div>
+                                {renderPagination(sentRequests)}
+                            </>
                         ) : (
                             renderEmptyState(searchQuery ? 'No requests match your search' : 'You have no sent requests')
                         )}
@@ -460,8 +818,25 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests }) 
                 message="Are you sure you want to remove this connection? This action cannot be undone."
                 confirmButtonText="Remove"
             />
+            
+            {/* Manage Tags Modal */}
+            <ManageTagsModal
+                show={isTagModalOpen}
+                onClose={() => {
+                    setIsTagModalOpen(false);
+                    setSelectedConnectionForTags(null);
+                }}
+                connectionIds={selectedConnectionForTags ? [selectedConnectionForTags] : selectedConnections}
+            />
+            
+            {/* Create Tag Modal */}
+            <CreateTagModal
+                show={isCreateTagModalOpen}
+                onClose={() => setIsCreateTagModalOpen(false)}
+                onTagCreated={handleTagCreated}
+            />
         </MainLayout>
     );
 };
 
-export default MyConnections; 
+export default MyConnections;

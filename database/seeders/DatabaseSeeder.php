@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             FieldOfResearchSeeder::class,
             ResearchAreaSeeder::class,
             NicheDomainSeeder::class,
+            ConnectionTagSeeder::class,
         ]);
     }
 }

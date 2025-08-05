@@ -18,6 +18,7 @@ use App\Models\CreatePost;
 use App\Models\Bookmark;
 use App\Models\UserMotivation;
 use App\Models\Connection;
+use App\Models\ConnectionTag;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
@@ -296,5 +297,25 @@ class User extends Authenticatable implements MustVerifyEmail
             
         // Merge both collections
         return $requestedConnections->merge($receivedConnections);
+    }
+
+    /**
+     * Get the connection tags assigned by this user.
+     */
+    public function connectionTags(): BelongsToMany
+    {
+        return $this->belongsToMany(ConnectionTag::class, 'connection_tag_user')
+            ->withPivot('connection_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the connections that this user has tagged.
+     */
+    public function taggedConnections(): BelongsToMany
+    {
+        return $this->belongsToMany(Connection::class, 'connection_tag_user')
+            ->withPivot('connection_tag_id')
+            ->withTimestamps();
     }
 }
