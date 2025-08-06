@@ -16,9 +16,9 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal } from 'lucide-react';
 import axios from 'axios';
 
-export default function Show({ initialBoardData, parentEntity, parentType, researchOptions = [] }) {
+export default function Show({ initialBoardData, researchOptions = [] }) {
     // Initialize board state from props
-    const [boardState, setBoardState] = useState(initialBoardData);
+    const [boardState, setBoardState] = useState(null);
     // Track the active dragging task
     const [activeTask, setActiveTask] = useState(null);
     // Track the active dragging list
@@ -28,7 +28,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     // State to track the current view (board or calendar)
     const [currentView, setCurrentView] = useState('board');
     // State to track loading state
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     // State to track if we're creating a new list
     const [isCreatingList, setIsCreatingList] = useState(false);
     // State for deletion confirmation modals
@@ -48,12 +48,43 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
         name: '',
     });
 
+    // Initialize board state from props
+    useEffect(() => {
+        // This effect runs when the component mounts or when initialBoardData changes
+        if (initialBoardData) {
+            // Ensure required properties exist with defaults
+            const boardData = {
+                ...initialBoardData,
+                lists: initialBoardData.lists?.data || [],
+                parent: initialBoardData.parent || {
+                    id: null,
+                    name: 'Unknown',
+                    type: 'unknown',
+                    members: []
+                }
+            };
+            
+            // Initialize the board state with the complete data
+            setBoardState(boardData);
+            
+            // Turn off loading state since we have valid data
+            setIsLoading(false);
+        } else {
+            // If no board data is provided, ensure loading state is true
+            setIsLoading(true);
+        }
+    }, [initialBoardData]);
+
+    // console.log(initialBoardData);
+
     // Helper function to determine the correct back link details
     const getBackLinkDetails = () => {
         // Check if we have the parent data in the board state
         if (!boardState || !boardState.parent) {
             return { href: route('project-hub.index'), text: 'ScholarLab' };
         }
+
+        // console.log(boardState);
 
         // Use the parent information from the board state
         const parent = boardState.parent;
@@ -63,12 +94,12 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
             return { href: route('project-hub.index'), text: 'ScholarLab' };
         }
 
-        if (parentType === 'Workspace') {
+        if (parentType.toLowerCase() === 'workspace') {
             return { 
                 href: route('project-hub.workspaces.show', parent.id),
                 text: parent.name || 'Workspace'
             };
-        } else if (parentType === 'Project') {
+        } else if (parentType.toLowerCase() === 'project') {
             return { 
                 href: route('project-hub.projects.show', parent.id),
                 text: parent.name || 'Project'
@@ -78,13 +109,6 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
         // Default fallback
         return { href: route('project-hub.index'), text: 'ScholarLab' };
     };
-
-    // Load board data into state when props change
-    useEffect(() => {
-        if (initialBoardData) {
-            setBoardState(initialBoardData);
-        }
-    }, [initialBoardData]);
 
     // Set up real-time listening for task moves
     useEffect(() => {
@@ -129,14 +153,19 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     const allTasks = useMemo(() => {
         if (!boardState || !boardState.lists) return [];
         
+        // Ensure lists is an array
+        const lists = Array.isArray(boardState.lists) ? boardState.lists : [];
+        
         // Flatten all tasks from all lists into a single array
-        return boardState.lists.flatMap(list => 
-            list.tasks.map(task => ({
+        return lists.flatMap(list => {
+            // Ensure tasks is an array
+            const tasks = Array.isArray(list.tasks) ? list.tasks : [];
+            return tasks.map(task => ({
                 ...task,
                 list_id: list.id,
                 list_name: list.name
-            }))
-        );
+            }));
+        });
     }, [boardState]);
 
     // Function to update the board state when receiving a real-time update
@@ -312,7 +341,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                 setBoardState(newBoardState);
 
                 // Send the update to the server
-                router.post(route('api.tasks.move'), {
+                router.post(route('project-hub.tasks.move', taskId), {
                     task_id: taskId,
                     source_list_id: sourceListId,
                     destination_list_id: destinationListId,
@@ -356,7 +385,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                 }));
 
                 // Send the update to the server
-                router.post(route('api.lists.reorder'), {
+                router.post(route('project-hub.lists.reorder'), {
                     lists: newOrder
                 }, {
                     preserveScroll: true,
@@ -383,19 +412,35 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     const handleCreateList = (e) => {
         e.preventDefault();
         
-        if (!boardState || !boardState.id) {
-            console.error("Board ID is missing, cannot create list.");
+        // Add debug logging
+        // console.log('Current boardState:', boardState);
+        
+        // Check if we have valid board data
+        if (!boardState) {
+            console.error("Board state is missing");
             return;
         }
         
-        form.post(`/api/v1/boards/${boardState.id}/lists`, {
+        // Get the board ID, ensuring it's a number
+        const boardId = parseInt(boardState.id);
+        if (!boardId || isNaN(boardId)) {
+            console.error("Invalid board ID:", boardState.id);
+            return;
+        }
+        
+        // Create the list
+        form.post(route('project-hub.boards.lists.store', boardId), {
             onSuccess: () => {
                 // Close the form and reset it
                 setIsCreatingList(false);
                 form.reset();
+                
+                // Reload the board data to show the new list
+                router.reload({ only: ['initialBoardData'] });
             },
             onError: (errors) => {
                 console.error('Failed to create list:', errors);
+                alert('Failed to create list. Please try again.');
             }
         });
     };
@@ -409,7 +454,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     const confirmDeleteList = () => {
         if (!confirmingListDeletion) return;
         
-        router.delete(route('lists.destroy', confirmingListDeletion.id), {
+        router.delete(route('project-hub.lists.destroy', confirmingListDeletion.id), {
             preserveScroll: true,
             onSuccess: () => {
                 setConfirmingListDeletion(null);
@@ -432,7 +477,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
     const confirmDeleteTask = () => {
         if (!confirmingTaskDeletion) return;
         
-        router.delete(route('tasks.destroy', confirmingTaskDeletion.id), {
+        router.delete(route('project-hub.tasks.destroy', confirmingTaskDeletion.id), {
             preserveScroll: true,
             onSuccess: () => {
                 setConfirmingTaskDeletion(null);
@@ -516,7 +561,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
             <BoardColumn
                 key={list.id}
                 list={list}
-                tasks={enhancedTasks}
+                tasks={list.tasks || []}
                 onDeleteList={() => handleDeleteList(list)}
                 onDeleteTask={handleDeleteTask}
                 onTaskClick={handleTaskClick}
@@ -529,8 +574,23 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
 
     // Render the Board View
     const renderBoardView = () => {
+        // Check if boardState exists
+        if (!boardState) {
+            return (
+                <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto"></div>
+                        <p className="mt-2 text-gray-600">Loading board data...</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Ensure lists is an array
+        const lists = Array.isArray(boardState.lists) ? boardState.lists : [];
+
         // Create an array of list IDs for the SortableContext
-        const listIds = boardState.lists.map(list => `list-${list.id}`);
+        const listIds = lists.map(list => `list-${list.id}`);
         
         return (
             <div className="board-container w-full overflow-hidden flex flex-col">
@@ -550,11 +610,11 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                                 // strategy will be overridden for desktop in CSS
                             >
                                 {/* Render columns */}
-                                {boardState.lists.map(list => (
+                                {lists.map(list => (
                                     <EnhancedBoardColumn
                                         key={list.id}
                                         list={list}
-                                        tasks={list.tasks || []}
+                                        tasks={Array.isArray(list.tasks?.data) ? list.tasks.data : []}
                                     />
                                 ))}
                             </SortableContext>
@@ -628,7 +688,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                             ) : activeList ? (
                                 <BoardColumn
                                     list={activeList}
-                                    tasks={activeList.tasks || []}
+                                    tasks={Array.isArray(activeList.tasks?.data) ? activeList.tasks.data : []}
                                     className="opacity-90 shadow-xl scale-[1.02] board-column"
                                     isOverlay={true}
                                 />
@@ -821,7 +881,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                 task={viewingTask}
                 show={!!viewingTask && !creatingPaperTask}
                 onClose={() => setViewingTask(null)}
-                workspaceMembers={boardState.parent?.members || []}
+                workspaceMembers={boardState?.parent?.members || []}
                 researchOptions={researchOptions}
             />
             
@@ -831,7 +891,7 @@ export default function Show({ initialBoardData, parentEntity, parentType, resea
                 show={creatingPaperTask}
                 onClose={handleClosePaperTask}
                 listId={currentListId}
-                workspaceMembers={boardState.parent.members}
+                workspaceMembers={boardState?.parent?.members || []}
                 researchOptions={researchOptions}
             />
             

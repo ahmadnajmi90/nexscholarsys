@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -8,7 +8,6 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 import { usePage } from '@inertiajs/react';
-import axios from 'axios';
 
 export default function ProjectMembersModal({ show, onClose, project, connections }) {
     const { auth } = usePage().props;
@@ -34,23 +33,21 @@ export default function ProjectMembersModal({ show, onClose, project, connection
         e.preventDefault();
         setIsSubmitting(true);
         
-        axios.post(`/api/v1/projects/${project.id}/members`, form.data)
-            .then(response => {
+        router.post(route('project-hub.projects.members.store', project.id), form.data, {
+            onSuccess: () => {
                 toast.success('Member added successfully');
                 form.reset();
                 // Refresh the page to update the members list
                 window.location.reload();
-            })
-            .catch(error => {
-                const message = error.response?.data?.message || 'Failed to add member';
+            },
+            onError: (errors) => {
+                const message = Object.values(errors).flat()[0] || 'Failed to add member';
                 toast.error(message);
-                if (error.response?.data?.errors) {
-                    form.setError(error.response.data.errors);
-                }
-            })
-            .finally(() => {
+            },
+            onFinish: () => {
                 setIsSubmitting(false);
-            });
+            }
+        });
     };
     
     const confirmRemoveMember = (member) => {
@@ -62,20 +59,21 @@ export default function ProjectMembersModal({ show, onClose, project, connection
         
         setIsSubmitting(true);
         
-        axios.delete(`/api/v1/projects/${project.id}/members/${confirmingRemoval.id}`)
-            .then(response => {
+        router.delete(route('project-hub.projects.members.destroy', [project.id, confirmingRemoval.id]), {
+            onSuccess: () => {
                 toast.success('Member removed successfully');
                 setConfirmingRemoval(null);
                 // Refresh the page to update the members list
                 window.location.reload();
-            })
-            .catch(error => {
-                const message = error.response?.data?.message || 'Failed to remove member';
+            },
+            onError: (errors) => {
+                const message = Object.values(errors).flat()[0] || 'Failed to remove member';
                 toast.error(message);
-            })
-            .finally(() => {
+            },
+            onFinish: () => {
                 setIsSubmitting(false);
-            });
+            }
+        });
     };
     
     // Helper function to get the full name from a user's profile
@@ -210,4 +208,4 @@ export default function ProjectMembersModal({ show, onClose, project, connection
             />
         </>
     );
-} 
+}

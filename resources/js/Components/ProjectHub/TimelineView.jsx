@@ -88,15 +88,16 @@ export default function TimelineView({ board, onTaskClick }) {
             } catch (error) {
                 console.error('Error initializing Gantt chart:', error);
             }
-        } else {
-            console.log("4d. Gantt chart NOT initialized - Container exists:", !!ganttContainer.current, "Tasks length:", tasks.length);
         }
     }, [board, onTaskClick, currentViewMode]);
     
     // Find a task by ID in the board data
     const findTaskById = (board, taskId) => {
+        if (!board || !Array.isArray(board.lists)) return null;
+        
         for (const list of board.lists) {
-            const task = list.tasks.find(t => t.id === taskId);
+            if (!list || !Array.isArray(list.tasks)) continue;
+            const task = list.tasks.find(t => t && t.id === taskId);
             if (task) return task;
         }
         return null;
@@ -106,12 +107,23 @@ export default function TimelineView({ board, onTaskClick }) {
     const transformTasksForGantt = (board) => {
         const ganttTasks = [];
         
-        console.log("3. Starting task transformation. Board lists:", board.lists);
+        // Check if board and lists exist
+        if (!board || !board.lists) {
+            console.warn('Invalid board data:', board);
+            return ganttTasks;
+        }
         
-        board.lists.forEach(list => {
-            console.log(`3a. Processing list "${list.name}" with ${list.tasks.length} tasks:`, list.tasks);
+        // Ensure lists is an array
+        const lists = Array.isArray(board.lists) ? board.lists : [];
+        
+        lists.forEach(list => {
+            // Ensure list and tasks exist
+            if (!list || !list.tasks) return;
             
-            list.tasks.forEach(task => {
+            // Ensure tasks is an array
+            const tasks = Array.isArray(list.tasks) ? list.tasks : [];
+            
+            tasks.forEach(task => {
                 // Skip tasks without necessary data
                 if (!task || !task.id || !task.title) {
                     console.warn('Skipping invalid task:', task);
@@ -164,12 +176,10 @@ export default function TimelineView({ board, onTaskClick }) {
                     list_name: list.name
                 };
                 
-                console.log(`3b. Adding task "${task.title}" to gantt:`, ganttTask);
                 ganttTasks.push(ganttTask);
             });
         });
         
-        console.log("3c. Final gantt tasks array:", ganttTasks);
         return ganttTasks;
     };
     
@@ -199,8 +209,6 @@ export default function TimelineView({ board, onTaskClick }) {
     
     // Render toolbar with view mode buttons
     const renderToolbar = () => {
-        if (!ganttChart) return null;
-        
         return (
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
                 <h3 className="text-sm md:text-base font-medium text-gray-900">Timeline View</h3>
@@ -227,6 +235,17 @@ export default function TimelineView({ board, onTaskClick }) {
             </div>
         );
     };
+    
+    // If no board data is available
+    if (!board || !board.lists) {
+        return (
+            <div className="bg-white rounded-lg shadow p-4">
+                <div className="text-center text-gray-500">
+                    No board data available for timeline view
+                </div>
+            </div>
+        );
+    }
     
     return (
         <div className="bg-white rounded-lg shadow p-3 md:p-4">
@@ -271,4 +290,4 @@ export default function TimelineView({ board, onTaskClick }) {
             </div>
         </div>
     );
-} 
+}

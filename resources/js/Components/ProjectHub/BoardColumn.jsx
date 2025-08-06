@@ -18,6 +18,12 @@ export default function BoardColumn({
     isOverlay = false
 }) {
     // Add useSortable hook for the column itself (but not for overlay)
+    // console.log('BoardColumn received:', {
+    //     list,
+    //     tasks,
+    //     taskIds: tasks.map(task => task.id),
+    //     tasksCount: tasks.length
+    // });
     const {
         attributes,
         listeners,

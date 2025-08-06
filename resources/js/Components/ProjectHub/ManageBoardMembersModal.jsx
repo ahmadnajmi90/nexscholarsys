@@ -34,7 +34,7 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
         e.preventDefault();
         setIsSubmitting(true);
         
-        axios.post(route('api.boards.syncMembers', board.id), {
+        axios.post(route('project-hub.boards.sync-members', board.id), {
             user_ids: selectedMemberIds
         })
         .then(response => {

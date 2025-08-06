@@ -46,6 +46,13 @@ use App\Http\Controllers\UserMotivationController;
 use App\Http\Controllers\AIGenerationController;
 use App\Http\Controllers\AIMatchingController;
 use App\Http\Controllers\ProjectHubController;
+use App\Http\Controllers\ProjectHub\WorkspaceController;
+use App\Http\Controllers\ProjectHub\BoardController;
+use App\Http\Controllers\ProjectHub\BoardListController;
+use App\Http\Controllers\ProjectHub\TaskController;
+use App\Http\Controllers\ProjectHub\TaskAttachmentController;
+use App\Http\Controllers\ProjectHub\ProjectMemberController;
+use App\Http\Controllers\ProjectHub\ProjectJoinRequestController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
@@ -338,14 +345,62 @@ Route::get('/admin/data-management', function() {
 });
 
 // Project Hub Routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/project-hub', [ProjectHubController::class, 'index'])->name('project-hub.index');
-    Route::post('/project-hub/workspaces', [ProjectHubController::class, 'storeWorkspace'])->name('project-hub.workspaces.store');
-    Route::post('/project-hub/projects', [ProjectHubController::class, 'storeProject'])->name('project-hub.projects.store');
-    Route::get('/project-hub/workspaces/{workspace}', [ProjectHubController::class, 'showWorkspace'])->name('project-hub.workspaces.show');
-    Route::get('/project-hub/projects/{scholar_project}', [ProjectHubController::class, 'showProject'])->name('project-hub.projects.show');
-    Route::delete('/project-hub/projects/{scholar_project}', [ProjectHubController::class, 'destroyProject'])->name('project-hub.projects.destroy');
-    Route::get('/project-hub/boards/{board}', [ProjectHubController::class, 'showBoard'])->name('project-hub.boards.show');
+Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(function () {
+    // Main Project Hub routes
+    Route::get('/', [ProjectHubController::class, 'index'])->name('index');
+    
+    // Workspace routes
+    Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
+    Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+    Route::get('/workspaces/{workspace}', [WorkspaceController::class, 'show'])->name('workspaces.show');
+    Route::put('/workspaces/{workspace}', [WorkspaceController::class, 'update'])->name('workspaces.update');
+    Route::delete('/workspaces/{workspace}', [WorkspaceController::class, 'destroy'])->name('workspaces.destroy');
+    Route::post('/workspaces/{workspace}/members', [WorkspaceController::class, 'addMember'])->name('workspaces.members.add');
+    Route::delete('/workspaces/{workspace}/members/{member}', [WorkspaceController::class, 'removeMember'])->name('workspaces.members.remove');
+    Route::put('/workspaces/{workspace}/members/{member}', [WorkspaceController::class, 'updateMemberRole'])->name('workspaces.members.update-role');
+    
+    // Project routes
+    Route::post('/projects', [ProjectHubController::class, 'storeProject'])->name('projects.store');
+    Route::get('/projects/{scholar_project}', [ProjectHubController::class, 'showProject'])->name('projects.show');
+    Route::delete('/projects/{scholar_project}', [ProjectHubController::class, 'destroyProject'])->name('projects.destroy');
+    
+    // Board routes
+    Route::post('/workspaces/{workspace}/boards', [BoardController::class, 'storeForWorkspace'])->name('workspaces.boards.store');
+    Route::post('/projects/{project}/boards', [BoardController::class, 'storeForProject'])->name('projects.boards.store');
+    Route::get('/boards/{board}', [BoardController::class, 'show'])->name('boards.show');
+    Route::put('/boards/{board}', [BoardController::class, 'update'])->name('boards.update');
+    Route::delete('/boards/{board}', [BoardController::class, 'destroy'])->name('boards.destroy');
+    Route::post('/boards/{board}/sync-members', [BoardController::class, 'syncMembers'])->name('boards.sync-members');
+    
+    // Board List routes
+    Route::post('/boards/{board}/lists', [BoardListController::class, 'store'])->name('boards.lists.store');
+    Route::put('/lists/{boardList}', [BoardListController::class, 'update'])->name('lists.update');
+    Route::delete('/lists/{boardList}', [BoardListController::class, 'destroy'])->name('lists.destroy');
+    Route::post('/lists/update-order', [BoardListController::class, 'updateOrder'])->name('lists.reorder');
+    
+    // Task routes
+    Route::post('/lists/{list}/tasks', [TaskController::class, 'store'])->name('lists.tasks.store');
+    Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+    Route::post('/tasks/{task}/move', [TaskController::class, 'move'])->name('tasks.move');
+    Route::post('/tasks/{task}/comments', [TaskController::class, 'addComment'])->name('tasks.comments.add');
+    Route::post('/tasks/{task}/assignees', [TaskController::class, 'assignUsers'])->name('tasks.assignees');
+    Route::post('/tasks/{task}/toggle-completion', [TaskController::class, 'toggleCompletion'])->name('tasks.toggle-completion');
+    
+    // Task Attachment routes
+    Route::post('/tasks/{task}/attachments', [TaskAttachmentController::class, 'store'])->name('tasks.attachments.store');
+    Route::delete('/attachments/{attachment}', [TaskAttachmentController::class, 'destroy'])->name('attachments.destroy');
+    
+    // Project Member routes
+    Route::post('/projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
+    Route::delete('/projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    Route::put('/projects/{project}/members/{member}', [ProjectMemberController::class, 'updateRole'])->name('projects.members.update-role');
+    
+    // Project Join Request routes
+    Route::post('/projects/{project}/join-request', [ProjectJoinRequestController::class, 'store'])->name('projects.join.request');
+    Route::patch('/project-join-requests/{projectJoinRequest}/accept', [ProjectJoinRequestController::class, 'accept'])->name('projects.join.accept');
+    Route::patch('/project-join-requests/{projectJoinRequest}/reject', [ProjectJoinRequestController::class, 'reject'])->name('projects.join.reject');
 });
 
 require __DIR__.'/auth.php';

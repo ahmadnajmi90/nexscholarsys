@@ -29,7 +29,7 @@ export default function Show({ workspace, connections }) {
         }
         
         // Post to the boards endpoint for this workspace using the named route
-        form.post(route('workspaces.boards.store', workspace.data.id), {
+        form.post(route('project-hub.workspaces.boards.store', workspace.data.id), {
             onSuccess: () => {
                 // Close the form
                 setIsCreatingBoard(false);
@@ -50,7 +50,7 @@ export default function Show({ workspace, connections }) {
     const confirmDeleteBoard = () => {
         if (!confirmingBoardDeletion) return;
         
-        router.delete(route('boards.destroy', confirmingBoardDeletion.id), {
+        router.delete(route('project-hub.boards.destroy', confirmingBoardDeletion.id), {
             onSuccess: () => {
                 setConfirmingBoardDeletion(null);
             },

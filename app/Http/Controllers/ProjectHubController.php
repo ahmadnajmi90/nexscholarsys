@@ -617,15 +617,34 @@ class ProjectHubController extends Controller
         
         $userId = Auth::id();
         
-        // Load the project's members and boards
+        // Load the project with all its boards, lists, tasks, and related data
         $scholar_project->load([
-            'owner.academician', 'owner.postgraduate', 'owner.undergraduate', 
+            'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
             'boards' => function($query) use ($userId) {
                 $query->orderBy('created_at')
                       ->whereHas('members', function ($query) use ($userId) {
                           $query->where('user_id', $userId);
                       })
-                      ->with('members'); // Add eager loading for board members
+                      ->with([
+                          'members',
+                          'lists' => function($query) {
+                              $query->orderBy('order');
+                          },
+                          'lists.tasks' => function($query) {
+                              $query->orderBy('order');
+                          },
+                          'lists.tasks.assignees.academician',
+                          'lists.tasks.assignees.postgraduate',
+                          'lists.tasks.assignees.undergraduate',
+                          'lists.tasks.comments.user.academician',
+                          'lists.tasks.comments.user.postgraduate',
+                          'lists.tasks.comments.user.undergraduate',
+                          'lists.tasks.creator.academician',
+                          'lists.tasks.creator.postgraduate',
+                          'lists.tasks.creator.undergraduate',
+                          'lists.tasks.attachments',
+                          'lists.tasks.paperWritingTask'
+                      ]);
             },
             'members' => function($query) {
                 $query->withPivot('role');

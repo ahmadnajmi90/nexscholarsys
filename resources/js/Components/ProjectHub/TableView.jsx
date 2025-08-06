@@ -24,15 +24,22 @@ export default function TableView({ board, onTaskClick }) {
     const [showCompleted, setShowCompleted] = useState(false);
     const [completingTasks, setCompletingTasks] = useState(new Set());
     
-    // Flatten all tasks from all lists
+    // Flatten all tasks from all lists with proper error handling
     const data = useMemo(() => {
-        return board.lists.flatMap(list => 
-            list.tasks.map(task => ({
+        if (!board || !board.lists) return [];
+        
+        // Ensure lists is an array
+        const lists = Array.isArray(board.lists) ? board.lists : [];
+        
+        return lists.flatMap(list => {
+            // Ensure tasks is an array
+            const tasks = Array.isArray(list.tasks) ? list.tasks : [];
+            return tasks.map(task => ({
                 ...task,
                 list_name: list.name,
                 list_id: list.id
-            }))
-        );
+            }));
+        });
     }, [board]);
     
     const columnHelper = createColumnHelper();
@@ -50,14 +57,11 @@ export default function TableView({ board, onTaskClick }) {
         setCompletingTasks(prev => new Set(prev).add(task.id));
 
         try {
-            await axios.post(route('api.tasks.toggleCompletion', task.id));
+            await axios.post(route('tasks.toggle-completion', task.id));
             
             toast.success('Task status updated!');
 
-            // THE CRITICAL FIX:
-            // This tells Inertia to refetch only the 'initialBoardData' prop 
-            // from the server. It's a highly efficient partial reload, 
-            // not a full page refresh.
+            // Reload only the board data
             router.reload({ only: ['initialBoardData'] });
         } catch (error) {
             console.error('Error toggling task completion:', error);
@@ -264,6 +268,17 @@ export default function TableView({ board, onTaskClick }) {
     const endIndex = startIndex + itemsPerPage;
     const currentPageRows = filteredTasks.slice(startIndex, endIndex);
     
+    // If no board data is available
+    if (!board) {
+        return (
+            <div className="table-view-container bg-white rounded-lg shadow p-4">
+                <div className="text-center text-gray-500">
+                    No board data available
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <div className="table-view-container bg-white rounded-lg shadow">
             {/* Mobile-responsive controls */}
@@ -391,4 +406,4 @@ export default function TableView({ board, onTaskClick }) {
             )}
         </div>
     );
-} 
+}

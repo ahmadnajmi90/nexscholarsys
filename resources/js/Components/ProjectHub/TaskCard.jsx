@@ -113,7 +113,7 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
         setIsCompleting(true);
 
         try {
-            await axios.post(route('api.tasks.toggleCompletion', task.id));
+            await axios.post(route('tasks.toggle-completion', task.id));
             
             toast.success('Task status updated!');
 
@@ -130,7 +130,7 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
         }
     };
     
-    console.log(task);
+    // console.log(task);
     return (
         <div
             ref={setNodeRef}

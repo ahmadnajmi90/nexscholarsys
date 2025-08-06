@@ -120,7 +120,7 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
         setIsSubmitting(true);
         
         // Determine the correct route name based on context type
-        const routeName = contextType === 'workspace' ? 'workspaces.members.add' : 'projects.members.store';
+        const routeName = contextType === 'workspace' ? 'project-hub.workspaces.members.add' : 'project-hub.projects.members.store';
         
         axios.post(route(routeName, contextId), form.data)
             .then(response => {
@@ -156,7 +156,7 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
         setIsSubmitting(true);
         
         // Determine the correct route name based on context type
-        const routeName = contextType === 'workspace' ? 'workspaces.members.update-role' : 'projects.members.update-role';
+        const routeName = contextType === 'workspace' ? 'project-hub.workspaces.members.update-role' : 'project-hub.projects.members.update-role';
         
         // Create the correct route parameters based on context type
         let routeParams;
@@ -174,30 +174,20 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
             };
         }
         
-        axios.put(route(routeName, routeParams), { role: newRole })
-            .then(response => {
-                // Show success message
+        router.put(route(routeName, routeParams), { role: newRole }, {
+            preserveScroll: true,
+            onSuccess: () => {
                 toast.success('Member role updated successfully');
-                
-                // Reload the page to reflect changes
-                router.reload({
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        // No need to close modal after role change
-                    },
-                    onError: () => {
-                        toast.error('Role updated but page refresh failed. Please reload the page.');
-                    }
-                });
-            })
-            .catch(error => {
-                const message = error.response?.data?.message || 'Failed to update member role';
+            },
+            onError: (errors) => {
+                const message = Object.values(errors).flat()[0] || 'Failed to update member role';
                 toast.error(message);
-                console.error('Error updating member role:', error);
-            })
-            .finally(() => {
+                console.error('Error updating member role:', errors);
+            },
+            onFinish: () => {
                 setIsSubmitting(false);
-            });
+            }
+        });
     };
     
     const removeMember = () => {
@@ -206,7 +196,7 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
         setIsSubmitting(true);
         
         // Determine the correct route name based on context type
-        const routeName = contextType === 'workspace' ? 'workspaces.members.remove' : 'projects.members.destroy';
+        const routeName = contextType === 'workspace' ? 'project-hub.workspaces.members.remove' : 'project-hub.projects.members.destroy';
         
         // Create the correct route parameters based on context type
         let routeParams;
@@ -224,31 +214,23 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
             };
         }
         
-        axios.delete(route(routeName, routeParams))
-            .then(response => {
-                // First show the success message
+        router.delete(route(routeName, routeParams), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
                 toast.success('Member removed successfully');
                 setConfirmingRemoval(null);
-                
-                // Then trigger Inertia reload and close modal after it's done
-                router.reload({
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        onClose();
-                    },
-                    onError: () => {
-                        // If reload fails, still close the modal but show an error
-                        onClose();
-                        toast.error('Member removed but page refresh failed. Please reload the page.');
-                    }
-                });
-            })
-            .catch(error => {
-                const message = error.response?.data?.message || 'Failed to remove member';
+                onClose();
+            },
+            onError: (errors) => {
+                const message = Object.values(errors).flat()[0] || 'Failed to remove member';
                 toast.error(message);
-                console.error('Error removing member:', error);
+                console.error('Error removing member:', errors);
                 setIsSubmitting(false);
-            });
+            },
+            onFinish: () => {
+                setIsSubmitting(false);
+            }
+        });
     };
     
     // Helper function to get the full name from a user's profile

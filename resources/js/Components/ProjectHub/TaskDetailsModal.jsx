@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from 'react';
+import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop, Description } from '@headlessui/react';
 import { Transition } from '@headlessui/react';
@@ -118,7 +118,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
             }
             
             // Creating a new task - use the correct route with list ID
-            form.post(`/api/v1/lists/${list_id}/tasks`, {
+            form.post(`/project-hub/lists/${list_id}/tasks`, {
                 forceFormData: true, // Ensure file uploads work properly
                 onSuccess: () => {
                     // Show success toast notification
@@ -133,7 +133,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
             });
         } else {
             // Updating an existing task
-            form.put(`/api/v1/tasks/${task.id}`, {
+            form.put(`/project-hub/tasks/${task.id}`, {
             onSuccess: () => {
                 // Show success toast notification
                 toast.success('Task updated successfully!');
@@ -152,7 +152,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     const handleCommentSubmit = (e) => {
         e.preventDefault();
         
-        commentForm.post(`/api/v1/tasks/${task.id}/comments`, {
+        commentForm.post(`/project-hub/tasks/${task.id}/comments`, {
             onSuccess: () => {
                 // Clear the comment field on success
                 commentForm.reset();
@@ -183,7 +183,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     const handleAttachmentSubmit = (e) => {
         e.preventDefault();
         
-        attachmentForm.post(`/api/v1/tasks/${task.id}/attachments`, {
+        attachmentForm.post(`/project-hub/tasks/${task.id}/attachments`, {
             preserveScroll: true,
             forceFormData: true,
             onSuccess: () => {
@@ -204,7 +204,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     
     const deleteAttachment = () => {
         // Use axios to send a DELETE request to the attachments.destroy route
-        axios.delete(`/api/v1/attachments/${attachmentToDelete.id}`, {
+        axios.delete(`/project-hub/attachments/${attachmentToDelete.id}`, {
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
@@ -228,16 +228,21 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
         return new Date(dateString).toLocaleDateString();
     };
     
-    // Get formatted member options for the select
-    const memberOptions = workspaceMembers?.map(member => ({
-        value: member.id,
-        label: getUserFullName(member),
-    })) || [];
-    
-    // Get currently selected members
-    const selectedMembers = memberOptions.filter(option => 
-        form.data.assignees?.includes(option.value)
-    );
+        // Get formatted member options for the select - ensure workspaceMembers is used directly
+    const memberOptions = useMemo(() => {
+        return workspaceMembers?.map(member => ({
+            value: member.id,
+            label: getUserFullName(member),
+            profilePicture: member.profile_picture,
+            role: member.academician ? 'Academician' : member.postgraduate ? 'Postgraduate' : member.undergraduate ? 'Undergraduate' : 'User'
+        })) || [];
+    }, [workspaceMembers]);
+
+    // Get currently selected members - handle both new and existing tasks
+    const selectedMembers = useMemo(() => {
+        const assigneeIds = form.data.assignees || [];
+        return memberOptions.filter(option => assigneeIds.includes(option.value));
+    }, [memberOptions, form.data.assignees]);
     
     // Determine if this is a paper writing task
     const isPaperWritingTask = task && task.paper_writing_task;
@@ -426,7 +431,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                                 onChange={e => form.setData('paper_type', e.target.value)}
                                                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                             >
-                                                                <option value="">Select a paper type</option>
+                                                                <option value="" disabled>Select a paper type</option>
                                                                 <option value="Experimental Paper">Experimental Paper</option>
                                                                 <option value="Systematic Literature Review">Systematic Literature Review</option>
                                                                 <option value="Conceptual Paper">Conceptual Paper</option>
@@ -456,7 +461,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                                 onChange={e => form.setData('publication_type', e.target.value)}
                                                                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                             >
-                                                                <option value="">Select a publication type</option>
+                                                                <option value="" disabled>Select a publication type</option>
                                                                 <option value="Journal Article">Journal Article</option>
                                                                 <option value="Conference">Conference</option>
                                                                 <option value="Book">Book</option>
@@ -481,7 +486,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                             onChange={e => form.setData('scopus_info', e.target.value)}
                                                             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         >
-                                                            <option value="">Select a quartile</option>
+                                                            <option value="" disabled>Select a quartile</option>
                                                             <option value="WOS Q1">WOS Q1</option>
                                                             <option value="WOS Q2">WOS Q2</option>
                                                             <option value="WOS Q3">WOS Q3</option>
@@ -578,16 +583,35 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                     options={memberOptions}
                                                     value={selectedMembers}
                                                     onChange={(selected) => {
-                                                        form.setData('assignees', selected.map(option => option.value));
+                                                        form.setData('assignees', selected?.map(option => option.value) || []);
                                                     }}
                                                     className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                     classNamePrefix="select"
                                                     placeholder="Select assignees..."
                                                     menuPortalTarget={document.body}
+                                                    formatOptionLabel={option => (
+                                                        <div className="flex items-center">
+                                                            {option.profilePicture && (
+                                                                <img 
+                                                                    src={option.profilePicture} 
+                                                                    alt={option.label}
+                                                                    className="w-6 h-6 rounded-full mr-2 object-cover"
+                                                                />
+                                                            )}
+                                                            <div>
+                                                                <div className="text-sm">{option.label}</div>
+                                                                <div className="text-xs text-gray-500">{option.role}</div>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                     styles={{
                                                         menuPortal: (provided) => ({
                                                             ...provided,
                                                             zIndex: 9999
+                                                        }),
+                                                        option: (provided, state) => ({
+                                                            ...provided,
+                                                            padding: '8px 12px'
                                                         })
                                                     }}
                                                 />

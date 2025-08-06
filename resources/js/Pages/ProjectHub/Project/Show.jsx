@@ -31,7 +31,7 @@ export default function Show({ project, connections }) {
         }
         
         // Post to the boards endpoint for this project using the named route
-        form.post(route('projects.boards.store', project.data.id), {
+        form.post(route('project-hub.projects.boards.store', project.data.id), {
             onSuccess: () => {
                 // Close the form
                 setIsCreatingBoard(false);
@@ -52,7 +52,7 @@ export default function Show({ project, connections }) {
     const confirmDeleteBoard = () => {
         if (!confirmingBoardDeletion) return;
         
-        router.delete(route('boards.destroy', confirmingBoardDeletion.id), {
+        router.delete(route('project-hub.boards.destroy', confirmingBoardDeletion.id), {
             onSuccess: () => {
                 setConfirmingBoardDeletion(null);
             },
