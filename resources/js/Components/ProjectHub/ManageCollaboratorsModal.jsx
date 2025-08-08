@@ -12,6 +12,7 @@ import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { Info } from 'lucide-react';
 import ReactDOM from 'react-dom';
+import Select from 'react-select';
 
 // Custom hook for tooltip positioning
 const useTooltip = () => {
@@ -117,35 +118,36 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        setIsSubmitting(true);
         
         // Determine the correct route name based on context type
-        const routeName = contextType === 'workspace' ? 'project-hub.workspaces.members.add' : 'project-hub.projects.members.store';
+        const routeName = contextType === 'workspace' 
+            ? 'project-hub.workspaces.members.add' 
+            : 'project-hub.projects.members.store';
         
-        axios.post(route(routeName, contextId), form.data)
-            .then(response => {
-                // First show the success message
-                toast.success('Member added successfully');
-                form.reset();
-                
-                // Then trigger Inertia reload and close modal after it's done
-                router.reload({
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        onClose();
-                    },
-                    onError: () => {
-                        // If reload fails, still close the modal but show an error
-                        onClose();
-                        toast.error('Member added but page refresh failed. Please reload the page.');
-                    }
-                });
-            })
-            .catch(error => {
-                const message = error.response?.data?.message || 'Failed to add member';
+        // Use the form helper to submit
+        form.post(route(routeName, contextId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Member added successfully!');
+                // Reset the form fields for the next invitation
+                form.reset(); 
+            },
+            onError: (errors) => {
+                const message = errors.user_id || errors.role || 'Failed to add member.';
                 toast.error(message);
-                setIsSubmitting(false);
-            });
+            },
+            // The form.processing state is automatically handled, so no need for a manual state.
+        });
+    };
+
+    const getUserProfileData = (user) => {
+        if (!user) return { role: 'User', fullName: 'Unknown' };
+        const profile = user.academician || user.postgraduate || user.undergraduate;
+        const role = user.academician ? 'Academician' : (user.postgraduate ? 'Postgraduate' : (user.undergraduate ? 'Undergraduate' : 'User'));
+        return {
+            role,
+            fullName: profile?.full_name || user.name,
+        };
     };
     
     const confirmRemoveMember = (member) => {
@@ -214,21 +216,20 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
             };
         }
         
-        router.delete(route(routeName, routeParams), {}, {
+        router.delete(route(routeName, routeParams), { 
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Member removed successfully');
                 setConfirmingRemoval(null);
-                onClose();
+                router.reload({ preserveState: true });
             },
             onError: (errors) => {
                 const message = Object.values(errors).flat()[0] || 'Failed to remove member';
                 toast.error(message);
-                console.error('Error removing member:', errors);
-                setIsSubmitting(false);
             },
             onFinish: () => {
                 setIsSubmitting(false);
+                setConfirmingRemoval(null);
             }
         });
     };
@@ -352,21 +353,39 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
                                         <InputLabel htmlFor="user_id" value="Select Connection" />
-                                        <select
-                                            id="user_id"
-                                            name="user_id"
-                                            value={form.data.user_id}
-                                            onChange={e => form.setData('user_id', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                            required
-                                        >
-                                            <option value="">Select a connection</option>
-                                            {availableConnections.map(connection => (
-                                                <option key={connection.id} value={connection.id}>
-                                                    {getFullName(connection)}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {(() => {
+                                            const connectionOptions = availableConnections.map(connection => ({
+                                                value: connection.id,
+                                                label: getUserProfileData(connection).fullName,
+                                                ...connection,
+                                            }));
+                                            const selectedOption = connectionOptions.find(opt => opt.value === form.data.user_id) || null;
+                                            return (
+                                                <Select
+                                                    inputId="user_id"
+                                                    name="user_id"
+                                                    options={connectionOptions}
+                                                    value={selectedOption}
+                                                    onChange={(opt) => form.setData('user_id', opt ? opt.value : '')}
+                                                    menuPortalTarget={document.body}
+                                                    formatOptionLabel={(connection) => {
+                                                        const { role, fullName } = getUserProfileData(connection);
+                                                        return (
+                                                            <div className="flex items-center">
+                                                                <div>
+                                                                    <div className="text-sm font-medium">{fullName}</div>
+                                                                    <div className="text-xs text-gray-500">{role}</div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }}
+                                                    styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                                    className="mt-1 block w-full"
+                                                    classNamePrefix="select"
+                                                    placeholder="Select a connection to invite..."
+                                                />
+                                            );
+                                        })()}
                                         <InputError message={form.errors.user_id} className="mt-2" />
                                     </div>
                                     
@@ -405,8 +424,8 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
                                     </div>
                                     
                                     <div className="flex justify-end">
-                                        <PrimaryButton type="submit" disabled={isSubmitting || !form.data.user_id}>
-                                            {isSubmitting ? 'Sending...' : 'Send Invitation'}
+                                        <PrimaryButton type="submit" disabled={form.processing || !form.data.user_id}>
+                                            {form.processing ? 'Sending...' : 'Send Invitation'}
                                         </PrimaryButton>
                                     </div>
                                 </form>

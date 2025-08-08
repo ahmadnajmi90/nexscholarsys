@@ -68,6 +68,12 @@ class ProjectMemberController extends Controller
         // Correctly detach the member from the project
         $project->members()->detach($member->id);
 
+        $member->notify(new \App\Notifications\RemovedFromWorkspaceNotification(
+            $project->name,
+            'project', // parentType
+            auth()->user()->name
+        ));
+
         return Redirect::back()->with('success', 'Member removed from project.');
     }
     

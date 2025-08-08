@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar, MessageSquare, Paperclip, Clock, Trash2 } from 'lucide-react';
+import { Calendar, MessageSquare, Paperclip, Clock, Trash2, Archive, MoreVertical } from 'lucide-react';
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react';
 import { format, isToday, isTomorrow, isPast, isAfter } from 'date-fns';
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
@@ -11,7 +12,7 @@ import PaperTaskBadge from './PaperTaskBadge';
 import { isTaskCompleted } from '@/Utils/utils';
 
 const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
-    const [showDeleteButton, setShowDeleteButton] = useState(false);
+    const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
 
     
@@ -91,6 +92,19 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
         }
     };
     
+    const handleArchive = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.post(route('project-hub.tasks.archive', task.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Task archived!');
+                router.reload({ only: ['initialBoardData'] });
+            },
+            onError: () => toast.error('Failed to archive task.'),
+        });
+    };
+    
     // Handle card click to open details modal
     const handleCardClick = (e) => {
         // Prevent click from triggering drag events
@@ -113,7 +127,7 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
         setIsCompleting(true);
 
         try {
-            await axios.post(route('tasks.toggle-completion', task.id));
+            await axios.post(route('project-hub.tasks.toggle-completion', task.id));
             
             toast.success('Task status updated!');
 
@@ -144,19 +158,39 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
                     "opacity-60": isTaskCompleted(task)
                 }
             )}
-            onMouseEnter={() => setShowDeleteButton(true)}
-            onMouseLeave={() => setShowDeleteButton(false)}
+            onMouseEnter={() => setShowActionsMenu(true)}
+            onMouseLeave={() => setShowActionsMenu(false)}
             onClick={handleCardClick}
         >
-            {/* Delete Button (visible on hover) */}
-            {showDeleteButton && onDelete && (
-                <button
-                    onClick={handleDeleteClick}
-                    className="absolute top-1 right-1 p-1 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full"
-                    title="Delete task"
-                >
-                    <Trash2 className="w-3.5 h-3.5" />
-                </button>
+            {/* Unified More Options Menu */}
+            {showActionsMenu && (
+                <div className="absolute top-1 right-1 z-10" onClick={(e) => e.stopPropagation()}>
+                    <Menu as="div" className="relative">
+                        <MenuButton className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="w-4 h-4" />
+                        </MenuButton>
+                        <MenuItems anchor="bottom end" className="w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className="py-1">
+                                {isTaskCompleted(task) && !task.archived_at && (
+                                    <MenuItem>
+                                        <button onClick={handleArchive} className="group flex w-full items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <Archive className="mr-2 h-4 w-4 text-gray-500" />
+                                            Archive
+                                        </button>
+                                    </MenuItem>
+                                )}
+                                {onDelete && (
+                                    <MenuItem>
+                                        <button onClick={handleDeleteClick} className="group flex w-full items-center px-3 py-2 text-sm text-red-700 hover:bg-red-50">
+                                            <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                                            Delete
+                                        </button>
+                                    </MenuItem>
+                                )}
+                            </div>
+                        </MenuItems>
+                    </Menu>
+                </div>
             )}
             
             {/* Labels/Tags - render if available */}

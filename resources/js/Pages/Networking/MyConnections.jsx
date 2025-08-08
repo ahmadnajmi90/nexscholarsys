@@ -47,16 +47,37 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         setProcessingIds(prev => [...prev, connectionId]);
         
         router.delete(route('connections.destroy', connectionId), {}, {
-            onSuccess: () => {
-                // Refresh the page to update the lists
-                router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
+            onSuccess: (page) => {
+                toast.success('Connection removed successfully.');
+                // Close modal on success
+                setIsModalOpen(false);
+                setConnectionToRemove(null);
                 // Clear selected connections after removal
                 setSelectedConnections([]);
+
+                // Pagination fix: if current page becomes empty and not first page, go to previous page
+                const currentList = activeTab === 'connections'
+                    ? page.props.acceptedConnections
+                    : activeTab === 'received'
+                        ? page.props.receivedRequests
+                        : page.props.sentRequests;
+
+                if (currentList && currentList.data && currentList.meta) {
+                    const itemsOnCurrentPage = currentList.data.length;
+                    const currentPage = currentList.meta.current_page;
+                    if (itemsOnCurrentPage === 0 && currentPage > 1) {
+                        const prevLink = (currentList.meta.links || []).find(l => l.label === '&laquo; Previous');
+                        if (prevLink?.url) {
+                            router.visit(prevLink.url, { preserveScroll: true });
+                        }
+                    } else {
+                        // Otherwise, reload current lists to reflect changes
+                        router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
+                    }
+                }
             },
             onFinish: () => {
                 setProcessingIds(prev => prev.filter(id => id !== connectionId));
-                setIsModalOpen(false);
-                setConnectionToRemove(null);
             }
         });
     };
@@ -112,8 +133,8 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         const dataToFilter = connections.data || connections;
         
         return dataToFilter.filter(conn => 
-            conn.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            conn.user.email.toLowerCase().includes(searchQuery.toLowerCase())
+            (conn.user.full_name || conn.user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (conn.user.email || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
     };
     
@@ -493,7 +514,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                             </div>
                             
                             <div className="ml-3 flex-1 min-w-0">
-                                <h3 className="text-base font-medium text-gray-900 truncate">{user.name}</h3>
+                                <h3 className="text-base font-medium text-gray-900 truncate">{user.full_name || user.name}</h3>
                                 <p className="text-sm text-gray-500 truncate">{user.email}</p>
                                 {user.role && (
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor().bg} ${getRoleBadgeColor().text} mt-1`}>
@@ -561,7 +582,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                         </div>
                         
                         <div className="ml-4">
-                            <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
+                            <h3 className="text-lg font-medium text-gray-900">{user.full_name || user.name}</h3>
                             <p className="text-sm text-gray-500">{user.email}</p>
                             {user.role && (
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor().bg} ${getRoleBadgeColor().text} mt-1`}>
@@ -573,6 +594,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                     
                     {/* Desktop Action Buttons */}
                     <div className="flex space-x-2">
+                        {/* --- Logic for 'connections' tab --- */}
                         {activeTab === 'connections' && (
                             <>
                                 <Tooltip content="Manage Tags">
@@ -582,6 +604,14 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                                     >
                                         <Tags size={18} />
                                     </button>
+                                </Tooltip>
+                                <Tooltip content="View Profile">
+                                    <Link
+                                        href={getProfileUrl(user)}
+                                        className="inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                        <Eye size={18} />
+                                    </Link>
                                 </Tooltip>
                                 <Tooltip content="Remove Connection">
                                     <button
@@ -601,6 +631,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                             </>
                         )}
                         
+                        {/* --- Logic for 'received' tab --- */}
                         {activeTab === 'received' && (
                             <>
                                 <Tooltip content="Accept Request">
@@ -618,7 +649,14 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                                         )}
                                     </button>
                                 </Tooltip>
-                                
+                                <Tooltip content="View Profile">
+                                    <Link
+                                        href={getProfileUrl(user)}
+                                        className="inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                        <Eye size={18} />
+                                    </Link>
+                                </Tooltip>
                                 <Tooltip content="Reject Request">
                                     <button
                                         onClick={() => handleConnectionAction(connection_id, 'reject')}
@@ -637,32 +675,34 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                             </>
                         )}
                         
+                        {/* --- Logic for 'sent' tab --- */}
                         {activeTab === 'sent' && (
-                            <Tooltip content="Cancel Request">
-                                <button
-                                    onClick={() => promptForRemoval({ connection_id })}
-                                    disabled={isProcessing}
-                                    className={`inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
-                                        isProcessing ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
-                                >
-                                    {isProcessing ? (
-                                        <div className="animate-spin h-4 w-4 border-2 border-red-700 rounded-full border-t-transparent"></div>
-                                    ) : (
-                                        <X size={18} />
-                                    )}
-                                </button>
-                            </Tooltip>
+                            <>
+                                <Tooltip content="View Profile">
+                                    <Link
+                                        href={getProfileUrl(user)}
+                                        className="inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                        <Eye size={18} />
+                                    </Link>
+                                </Tooltip>
+                                <Tooltip content="Cancel Request">
+                                    <button
+                                        onClick={() => promptForRemoval({ connection_id })}
+                                        disabled={isProcessing}
+                                        className={`inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${
+                                            isProcessing ? 'opacity-50 cursor-not-allowed' : ''
+                                        }`}
+                                    >
+                                        {isProcessing ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-red-700 rounded-full border-t-transparent"></div>
+                                        ) : (
+                                            <X size={18} />
+                                        )}
+                                    </button>
+                                </Tooltip>
+                            </>
                         )}
-                        
-                        <Tooltip content="View Profile">
-                            <Link
-                                href={getProfileUrl(user)}
-                                className="inline-flex items-center justify-center w-9 h-9 border border-gray-300 text-sm rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                <Eye size={18} />
-                            </Link>
-                        </Tooltip>
                     </div>
                 </div>
             </div>

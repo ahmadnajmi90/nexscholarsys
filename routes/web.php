@@ -368,6 +368,7 @@ Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(
     Route::post('/workspaces/{workspace}/boards', [BoardController::class, 'storeForWorkspace'])->name('workspaces.boards.store');
     Route::post('/projects/{project}/boards', [BoardController::class, 'storeForProject'])->name('projects.boards.store');
     Route::get('/boards/{board}', [BoardController::class, 'show'])->name('boards.show');
+    Route::get('/boards/{board}/archived-tasks', [BoardController::class, 'showArchived'])->name('boards.archived');
     Route::put('/boards/{board}', [BoardController::class, 'update'])->name('boards.update');
     Route::delete('/boards/{board}', [BoardController::class, 'destroy'])->name('boards.destroy');
     Route::post('/boards/{board}/sync-members', [BoardController::class, 'syncMembers'])->name('boards.sync-members');
@@ -384,6 +385,8 @@ Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(
     Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/tasks/{task}/move', [TaskController::class, 'move'])->name('tasks.move');
+    Route::post('/tasks/reorder', [TaskController::class, 'reorder'])->name('tasks.reorder');
+    Route::post('/tasks/{task}/archive', [TaskController::class, 'toggleArchive'])->name('tasks.archive');
     Route::post('/tasks/{task}/comments', [TaskController::class, 'addComment'])->name('tasks.comments.add');
     Route::post('/tasks/{task}/assignees', [TaskController::class, 'assignUsers'])->name('tasks.assignees');
     Route::post('/tasks/{task}/toggle-completion', [TaskController::class, 'toggleCompletion'])->name('tasks.toggle-completion');

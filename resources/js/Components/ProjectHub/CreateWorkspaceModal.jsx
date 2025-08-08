@@ -5,6 +5,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import toast from 'react-hot-toast';
 
 export default function CreateWorkspaceModal({ isOpen, onClose }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -17,9 +18,14 @@ export default function CreateWorkspaceModal({ isOpen, onClose }) {
         
         post(route('project-hub.workspaces.store'), {
             onSuccess: () => {
+                toast.success(`Workspace "${data.name}" created successfully.`);
                 reset();
                 onClose();
                 // The page will automatically be refreshed by Inertia
+            },
+            onError: (errors) => {
+                console.error('Error creating workspace:', errors);
+                toast.error('Failed to create workspace. Please check the form for errors.');
             },
         });
     };

@@ -20,14 +20,15 @@ class TaskAttachmentResource extends JsonResource
             'id' => $this->id,
             'task_id' => $this->task_id,
             'user_id' => $this->user_id,
-            'user' => new UserResource($this->whenLoaded('user')),
             'original_name' => $this->original_name,
+            'file_path' => $this->file_path,
             'mime_type' => $this->mime_type,
             'size' => $this->size,
             'size_formatted' => $this->formatSize($this->size),
-            'url' => asset('storage/' . $this->file_path),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'url' => Storage::disk('public')->url($this->file_path),
+            'created_at' => $this->created_at->toISOString(),
+            'updated_at' => $this->updated_at->toISOString(),
+            'user' => $this->whenLoaded('user', fn() => new UserResource($this->user)),
         ];
     }
     

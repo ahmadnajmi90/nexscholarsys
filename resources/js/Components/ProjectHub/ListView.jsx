@@ -30,7 +30,7 @@ export default function ListView({ board, onTaskClick }) {
         setCompletingTasks(prev => new Set(prev).add(task.id));
 
         try {
-            await axios.post(route('tasks.toggle-completion', task.id));
+            await axios.post(route('project-hub.tasks.toggle-completion', task.id));
             
             toast.success('Task status updated!');
 

@@ -90,7 +90,7 @@ class BoardController extends Controller
                 $query->orderBy('order');
             },
             'lists.tasks' => function ($query) {
-                $query->orderBy('order');
+                $query->whereNull('archived_at')->orderBy('order');
             },
             'lists.tasks.assignees.academician',
             'lists.tasks.assignees.postgraduate',
@@ -161,6 +161,29 @@ class BoardController extends Controller
             ]),
             'researchOptions' => $researchOptions
         ]);
+    }
+
+    /**
+     * Return archived tasks for a board as JSON.
+     */
+    public function showArchived(Board $board)
+    {
+        $this->authorize('view', $board);
+
+        $archivedTasks = \App\Models\Task::whereHas('list', function ($q) use ($board) {
+                $q->where('board_id', $board->id);
+            })
+            ->whereNotNull('archived_at')
+            ->with('list')
+            ->orderByDesc('archived_at')
+            ->paginate(20);
+
+        $archivedTasks->getCollection()->transform(function ($task) {
+            $task->list_name = $task->list ? $task->list->name : 'Unknown List';
+            return $task;
+        });
+
+        return response()->json($archivedTasks);
     }
     
     /**

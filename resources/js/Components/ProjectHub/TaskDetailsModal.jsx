@@ -2,9 +2,11 @@ import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop, Description } from '@headlessui/react';
 import { Transition } from '@headlessui/react';
-import { X, Calendar, User, Clock, MessageSquare, Send, Trash2, Paperclip, FileText, Download, BookOpen, FileType, Globe, TrendingUp } from 'lucide-react';
+import { X, Calendar, User, Clock, MessageSquare, Send, Trash2, Paperclip, FileText, Download, BookOpen, FileType, Globe, TrendingUp, Archive } from 'lucide-react';
+import { isTaskCompleted } from '@/Utils/utils';
 import Select from 'react-select';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import AttachmentPreviewModal from './AttachmentPreviewModal';
 import toast from 'react-hot-toast';
 import { parseISO, format } from 'date-fns';
 import axios from 'axios';
@@ -15,7 +17,11 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
     const [isConfirmingAttachmentDeletion, setIsConfirmingAttachmentDeletion] = useState(false);
     const [attachmentToDelete, setAttachmentToDelete] = useState(null);
+    const [previewFile, setPreviewFile] = useState(null);
     const isNewTask = task && !task.id; // Check if we're creating a new task
+    
+    // Maximum size for previewing files (15MB)
+    const MAX_PREVIEW_SIZE = 15 * 1024 * 1024;
     
     // Main task form - Enhanced to include paper-specific fields
     const form = useForm({
@@ -41,7 +47,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     
     // Separate form for attachments
     const attachmentForm = useForm({
-        attachment: null
+        files: []
     });
     
     // Reset the form when the task changes - Enhanced to handle paper writing tasks
@@ -166,7 +172,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     
     // Handle task deletion
     const confirmDelete = () => {
-        router.delete(route('tasks.destroy', task.id), {
+        router.delete(route('project-hub.tasks.destroy', task.id), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success(`Task "${task.title}" deleted successfully.`);
@@ -178,21 +184,84 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
             },
         });
     };
+
+    const handleArchiveFromModal = () => {
+        if (!task?.id) return;
+        router.post(route('project-hub.tasks.archive', task.id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Task archived!');
+                onClose();
+                router.reload({ only: ['initialBoardData'] });
+            },
+            onError: () => toast.error('Failed to archive task.'),
+        });
+    };
+    
+    // State for managing attachments in the UI
+    const [attachments, setAttachments] = useState(task?.attachments || []);
+    
+    // Reset state when task or show changes
+    useEffect(() => {
+        if (show) {
+            // Reset attachments to match the current task or empty array for new tasks
+            setAttachments(task?.attachments || []);
+            
+            // Reset attachment form
+            attachmentForm.reset('files');
+            
+            // Reset preview file
+            setPreviewFile(null);
+            
+            // Reset attachment deletion state
+            setAttachmentToDelete(null);
+            setIsConfirmingAttachmentDeletion(false);
+        }
+    }, [task, show]);
     
     // Handle attachment submission
     const handleAttachmentSubmit = (e) => {
         e.preventDefault();
+    
+        if (attachmentForm.data.files.length === 0) {
+            toast.error('Please select at least one file to upload.');
+            return;
+        }
         
-        attachmentForm.post(`/project-hub/tasks/${task.id}/attachments`, {
-            preserveScroll: true,
-            forceFormData: true,
-            onSuccess: () => {
-                attachmentForm.reset();
-                toast.success('Attachment uploaded successfully!');
+        // Manually set processing state to disable the button
+        attachmentForm.processing = true;
+    
+        // We need to construct FormData manually for file uploads with axios
+        const formData = new FormData();
+        attachmentForm.data.files.forEach(file => {
+            formData.append('files[]', file);
+        });
+    
+        axios.post(route('project-hub.tasks.attachments.store', task.id), formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
             },
-            onError: () => {
-                toast.error('Failed to upload attachment. Please try again.');
+        })
+        .then(response => {
+            // The data is directly in response.data
+            const newAttachments = response.data.attachments || [];
+    
+            if (newAttachments.length > 0) {
+                setAttachments(prev => [...prev, ...newAttachments]);
+                toast.success(response.data.message || 'Attachments uploaded!');
+            } else {
+                toast.error('Upload succeeded but no new attachments were returned.');
             }
+        })
+        .catch(error => {
+            console.error('Upload Error:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to upload attachments.';
+            toast.error(errorMessage);
+        })
+        .finally(() => {
+            // Reset processing state and the form fields
+            attachmentForm.processing = false;
+            attachmentForm.reset('files');
         });
     };
     
@@ -212,9 +281,9 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
         .then(response => {
             toast.success('Attachment deleted successfully!');
             setIsConfirmingAttachmentDeletion(false);
-            // Refresh the task to show updated attachments
-            // This could be replaced with a more elegant solution that updates the local state
-            window.location.reload();
+            
+            // Update local state to remove the deleted attachment
+            setAttachments(prev => prev.filter(attachment => attachment.id !== attachmentToDelete.id));
         })
         .catch(error => {
             console.error("Delete Error:", error);
@@ -301,14 +370,25 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                         )}
                                     </DialogTitle>
                                     <div className="flex items-center space-x-2">
+                                        {!isNewTask && isTaskCompleted(task) && !task.archived_at && (
+                                            <button
+                                                type="button"
+                                                onClick={handleArchiveFromModal}
+                                                className="text-gray-500 hover:text-gray-700 p-1"
+                                                title="Archive task"
+                                            >
+                                                <Archive className="w-5 h-5" />
+                                            </button>
+                                        )}
                                         {!isNewTask && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsConfirmingDeletion(true)}
-                                            className="text-red-500 hover:text-red-700 p-1"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsConfirmingDeletion(true)}
+                                                className="text-red-500 hover:text-red-700 p-1"
+                                                title="Delete task"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
                                         )}
                                         <button
                                             type="button"
@@ -622,7 +702,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                         )}
                                     </div>
 
-                                    <div className="flex justify-end">
+                                    <div className="flex justify-end mt-6 pt-4 border-t">
                                         <button
                                             type="submit"
                                             disabled={form.processing}
@@ -637,13 +717,13 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                 <div className="mt-6 border-t pt-4">
                                     <h4 className="flex items-center text-sm font-medium text-gray-700 mb-4">
                                         <Paperclip className="w-5 h-5 mr-2" />
-                                        Attachments ({task?.attachments?.length || 0})
+                                        Attachments ({attachments?.length || 0})
                                     </h4>
 
                                     {/* Attachment list - Only show if task exists and has attachments */}
-                                    {task && task.attachments && task.attachments.length > 0 && (
+                                    {attachments && attachments.length > 0 && (
                                     <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
-                                            {task.attachments.map((attachment) => (
+                                            {attachments.map((attachment) => (
                                                 <div key={attachment.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
                                                     <div className="flex items-center">
                                                         <FileText className="w-5 h-5 mr-2 text-gray-500" />
@@ -657,6 +737,17 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                     <div className="flex space-x-2">
                                                         <a 
                                                             href={attachment.url} 
+                                                            onClick={(e) => {
+                                                                const isPreviewable = 
+                                                                    (attachment.mime_type?.startsWith('image/') || 
+                                                                    attachment.mime_type === 'application/pdf') && 
+                                                                    attachment.size < MAX_PREVIEW_SIZE;
+                                                                
+                                                                if (isPreviewable) {
+                                                                    e.preventDefault();
+                                                                    setPreviewFile(attachment);
+                                                                }
+                                                            }}
                                                             download={attachment.original_name}
                                                             className="p-1 text-blue-500 hover:text-blue-700"
                                                             target="_blank"
@@ -678,7 +769,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                     )}
 
                                     {/* Show "No attachments yet" message only for existing tasks */}
-                                    {task && (!task.attachments || task.attachments.length === 0) && (
+                                    {task && (!attachments || attachments.length === 0) && (
                                         <div className="mb-4">
                                             <p className="text-sm text-gray-500 italic">No attachments yet</p>
                                         </div>
@@ -693,14 +784,15 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                             <input
                                                 type="file"
                                                 id="task-attachment"
-                                                onChange={(e) => form.setData('attachment', e.target.files[0])}
+                                                multiple
+                                                onChange={(e) => form.setData('files', Array.from(e.target.files))}
                                                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                                             />
-                                            {form.errors.attachment && (
-                                                <p className="mt-1 text-sm text-red-600">{form.errors.attachment}</p>
+                                            {form.errors.files && (
+                                                <p className="mt-1 text-sm text-red-600">{form.errors.files}</p>
                                             )}
                                             <p className="mt-1 text-xs text-gray-500">
-                                                You can attach a file when creating the task. Additional files can be added after creation.
+                                                You can attach multiple files when creating the task. Additional files can be added after creation.
                                             </p>
                                     </div>
                                     ) : (
@@ -710,16 +802,17 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                 <input
                                                     type="file"
                                                     id="attachment"
-                                                    onChange={(e) => attachmentForm.setData('attachment', e.target.files[0])}
+                                                    multiple
+                                                    onChange={(e) => attachmentForm.setData('files', Array.from(e.target.files))}
                                                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                                                 />
-                                                {attachmentForm.errors.attachment && (
-                                                    <p className="mt-1 text-sm text-red-600">{attachmentForm.errors.attachment}</p>
+                                                {attachmentForm.errors.files && (
+                                                    <p className="mt-1 text-sm text-red-600">{attachmentForm.errors.files}</p>
                                                 )}
                                             </div>
                                             <button
                                                 type="submit"
-                                                disabled={attachmentForm.processing || !attachmentForm.data.attachment}
+                                                disabled={attachmentForm.processing || !attachmentForm.data.files.length}
                                                 className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                                             >
                                                 Upload
@@ -837,6 +930,12 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                 onConfirm={deleteAttachment}
                 title="Delete Attachment"
                 message={`Are you sure you want to delete the attachment "${attachmentToDelete?.original_name}"? This action cannot be undone.`}
+            />
+
+            {/* Attachment Preview Modal */}
+            <AttachmentPreviewModal 
+                file={previewFile} 
+                onClose={() => setPreviewFile(null)} 
             />
         </>
     );

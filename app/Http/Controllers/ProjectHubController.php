@@ -604,7 +604,7 @@ class ProjectHubController extends Controller
             'order' => 3,
         ]);
         
-        return redirect()->route('project-hub.projects.show', ['scholar_project' => $project->id])->with('success', 'Project created successfully.');
+        return redirect()->route('project-hub.index')->with('success', 'Project created successfully.');
     }
     
     /**

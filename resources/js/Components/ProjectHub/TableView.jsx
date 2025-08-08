@@ -57,7 +57,7 @@ export default function TableView({ board, onTaskClick }) {
         setCompletingTasks(prev => new Set(prev).add(task.id));
 
         try {
-            await axios.post(route('tasks.toggle-completion', task.id));
+            await axios.post(route('project-hub.tasks.toggle-completion', task.id));
             
             toast.success('Task status updated!');
 
@@ -103,7 +103,7 @@ export default function TableView({ board, onTaskClick }) {
             cell: info => (
                 <div 
                     className={clsx(
-                        "font-medium cursor-pointer flex items-center gap-2 py-1 touch-manipulation",
+                        "font-medium cursor-pointer flex items-center gap-2 py-1 touch-manipulation whitespace-normal",
                         {
                             "text-gray-500 line-through": isTaskCompleted(info.row.original),
                             "text-indigo-600 hover:text-indigo-800": !isTaskCompleted(info.row.original)
@@ -114,17 +114,17 @@ export default function TableView({ board, onTaskClick }) {
                     {info.row.original.paper_writing_task && (
                         <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
                     )}
-                    <span className="truncate">{info.getValue()}</span>
+                    <span className="line-clamp-2">{info.getValue()}</span>
                 </div>
             ),
             sortingFn: 'alphanumeric',
-            size: 200,
-            minSize: 150
+            size: 100,
+            minSize: 100
         }),
         columnHelper.accessor('paper_writing_task', {
             header: 'Type',
             cell: info => (
-                <span className="text-sm whitespace-nowrap">
+                <span className="text-sm whitespace-normal">
                     {info.getValue() ? 'Paper' : 'Normal'}
                 </span>
             ),
@@ -138,7 +138,7 @@ export default function TableView({ board, onTaskClick }) {
         }),
         columnHelper.accessor('list_name', {
             header: 'List',
-            cell: info => <span className="text-sm truncate">{info.getValue()}</span>,
+            cell: info => <span className="text-sm truncate whitespace-normal">{info.getValue()}</span>,
             sortingFn: 'alphanumeric',
             size: 100,
             minSize: 80
@@ -166,7 +166,7 @@ export default function TableView({ board, onTaskClick }) {
                 }[priority] || 'bg-gray-100 text-gray-800';
                 
                 return (
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${colorClass}`}>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-normal ${colorClass}`}>
                         {priority}
                     </span>
                 );
@@ -364,7 +364,7 @@ export default function TableView({ board, onTaskClick }) {
                                     {row.getVisibleCells().map(cell => (
                                         <td 
                                             key={cell.id} 
-                                            className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-sm text-gray-900"
+                                            className="px-3 md:px-6 py-3 md:py-4 whitespace-normal text-sm text-gray-900"
                                             style={{ 
                                                 width: cell.column.getSize(),
                                                 minWidth: cell.column.columnDef.minSize || cell.column.getSize()

@@ -1,13 +1,15 @@
 import React from 'react';
+import { createPortal } from 'react-dom'; // Import createPortal
 import { X, AlertTriangle } from 'lucide-react';
 
 export default function ConfirmationModal({ show, onClose, onConfirm, title, message, confirmButtonText = 'Confirm Delete' }) {
     if (!show) {
         return null;
     }
-    
-    return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+
+    // The modal's JSX is now wrapped in createPortal
+    return createPortal(
+        <div className="fixed inset-0 z-[100] overflow-y-auto"> {/* You can use a high z-index like z-[100] here */}
             {/* Modal backdrop */}
             <div 
                 className="fixed inset-0 bg-black bg-opacity-40 transition-opacity"
@@ -61,6 +63,7 @@ export default function ConfirmationModal({ show, onClose, onConfirm, title, mes
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.getElementById('modal-portal') // This tells React where to "teleport" the modal
     );
-} 
+}

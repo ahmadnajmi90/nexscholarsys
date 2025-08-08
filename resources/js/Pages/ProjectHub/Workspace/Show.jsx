@@ -5,6 +5,7 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
 import ManageBoardMembersModal from '@/Components/ProjectHub/ManageBoardMembersModal';
 import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus, Users } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Show({ workspace, connections }) {
     const { auth } = usePage().props;
@@ -31,10 +32,15 @@ export default function Show({ workspace, connections }) {
         // Post to the boards endpoint for this workspace using the named route
         form.post(route('project-hub.workspaces.boards.store', workspace.data.id), {
             onSuccess: () => {
+                toast.success(`Board "${form.data.name}" created successfully.`);
                 // Close the form
                 setIsCreatingBoard(false);
                 // Reset the form
                 form.reset();
+            },
+            onError: (errors) => {
+                console.error('Error creating board:', errors);
+                toast.error('Failed to create board. Please check the form for errors.');
             },
         });
     };
@@ -52,7 +58,12 @@ export default function Show({ workspace, connections }) {
         
         router.delete(route('project-hub.boards.destroy', confirmingBoardDeletion.id), {
             onSuccess: () => {
+                toast.success(`Board "${confirmingBoardDeletion.name}" deleted successfully.`);
                 setConfirmingBoardDeletion(null);
+            },
+            onError: (errors) => {
+                console.error('Error deleting board:', errors);
+                toast.error('Failed to delete board. Please try again.');
             },
         });
     };
@@ -76,7 +87,7 @@ export default function Show({ workspace, connections }) {
                     <span className="text-sm">Back to workspaces</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate">{workspace.data.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate max-w-3xl">{workspace.data.name}</h1>
                     
                     {/* Manage Collaborators button - only visible to workspace owner */}
                     {isWorkspaceOwner && (
@@ -90,7 +101,7 @@ export default function Show({ workspace, connections }) {
                     )}
                 </div>
                 {workspace.data.description && (
-                    <p className="mt-1 text-gray-500">{workspace.data.description}</p>
+                    <p className="mt-1 text-gray-500 max-w-3xl">{workspace.data.description}</p>
                 )}
             </div>
             

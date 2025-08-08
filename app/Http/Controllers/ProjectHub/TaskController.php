@@ -35,63 +35,87 @@ class TaskController extends Controller
             'due_date' => 'nullable|date',
             'priority' => 'sometimes|string|in:Low,Medium,High,Urgent',
             'task_type' => ['required', 'string', Rule::in(['normal', 'paper'])],
-            'attachment' => 'nullable|file|max:10240', // 10MB max file size
+            'attachment' => 'nullable|file|max:10240', // 10MB max file size - single file legacy support
+            'files' => 'nullable|array', // Support for multiple files
+            'files.*' => 'file|max:10240', // 10MB max file size per file
             'assignees' => 'sometimes|array',
             'assignees.*' => 'exists:users,id',
         ]);
         
-        // Calculate the next order value
-        $order = $list->tasks()->max('order') + 1;
-        
-        // Create the task
-        $task = $list->tasks()->create([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'due_date' => $validated['due_date'] ?? null,
-            'priority' => $validated['priority'] ?? 'Medium',
-            'creator_id' => $request->user()->id,
-            'order' => $order,
-        ]);
-        
-        // If this is a paper writing task, create the associated record
-        if ($validated['task_type'] === 'paper') {
-            // Validate paper-specific fields
-            $paperValidated = $request->validate([
-                'area_of_study' => 'nullable|array',
-                'area_of_study.*' => 'string',
-                'paper_type' => 'nullable|string|max:255',
-                'publication_type' => 'nullable|string|max:255',
-                'scopus_info' => 'nullable|string|max:255',
-                'progress' => 'nullable|string|max:255',
-                'pdf_attachment_path' => 'nullable|string|max:255',
+        // Wrap everything in a transaction to ensure data integrity
+        $task = DB::transaction(function () use ($request, $list, $validated) {
+            // Calculate the next order value
+            $order = $list->tasks()->max('order') + 1;
+            
+            // Create the task
+            $task = $list->tasks()->create([
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'due_date' => $validated['due_date'] ?? null,
+                'priority' => $validated['priority'] ?? 'Medium',
+                'creator_id' => $request->user()->id,
+                'order' => $order,
             ]);
             
-            // Create the paper writing task record
-            $task->paperWritingTask()->create([
-                'area_of_study' => $paperValidated['area_of_study'] ?? null,
-                'paper_type' => $paperValidated['paper_type'] ?? null,
-                'publication_type' => $paperValidated['publication_type'] ?? null,
-                'scopus_info' => $paperValidated['scopus_info'] ?? null,
-                'progress' => $paperValidated['progress'] ?? null,
-                'pdf_attachment_path' => $paperValidated['pdf_attachment_path'] ?? null,
-            ]);
-        }
-        
-        // Handle file attachment if provided
-        if ($request->hasFile('attachment')) {
-            $file = $request->file('attachment');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('attachments', $fileName, 'public');
+            // If this is a paper writing task, create the associated record
+            if ($validated['task_type'] === 'paper') {
+                // Validate paper-specific fields
+                $paperValidated = $request->validate([
+                    'area_of_study' => 'nullable|array',
+                    'area_of_study.*' => 'string',
+                    'paper_type' => 'nullable|string|max:255',
+                    'publication_type' => 'nullable|string|max:255',
+                    'scopus_info' => 'nullable|string|max:255',
+                    'progress' => 'nullable|string|max:255',
+                    'pdf_attachment_path' => 'nullable|string|max:255',
+                ]);
+                
+                // Create the paper writing task record
+                $task->paperWritingTask()->create([
+                    'area_of_study' => $paperValidated['area_of_study'] ?? null,
+                    'paper_type' => $paperValidated['paper_type'] ?? null,
+                    'publication_type' => $paperValidated['publication_type'] ?? null,
+                    'scopus_info' => $paperValidated['scopus_info'] ?? null,
+                    'progress' => $paperValidated['progress'] ?? null,
+                    'pdf_attachment_path' => $paperValidated['pdf_attachment_path'] ?? null,
+                ]);
+            }
             
-            // Create attachment record
-            $task->attachments()->create([
-                'original_name' => $file->getClientOriginalName(),
-                'file_path' => $filePath,
-                'size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'user_id' => $request->user()->id,
-            ]);
-        }
+            // Handle single file attachment (legacy support)
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('attachments', $fileName, 'public');
+                
+                // Create attachment record
+                $task->attachments()->create([
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path' => $filePath,
+                    'size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                    'user_id' => $request->user()->id,
+                ]);
+            }
+            
+            // Handle multiple file attachments (new approach)
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $fileName = time() . '_' . $file->getClientOriginalName();
+                    $filePath = $file->storeAs('attachments', $fileName, 'public');
+                    
+                    // Create attachment record
+                    $task->attachments()->create([
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_path' => $filePath,
+                        'size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                        'user_id' => $request->user()->id,
+                    ]);
+                }
+            }
+            
+            return $task;
+        });
 
         // Handle assignees if provided
         if ($request->has('assignees')) {
@@ -251,62 +275,59 @@ class TaskController extends Controller
         $this->authorize('update', $task);
         
         $validated = $request->validate([
-            'new_list_id' => 'required|exists:board_lists,id',
-            'order' => 'required|integer|min:0',
+            'new_list_id' => 'required|integer|exists:board_lists,id',
+            'order_in_new_list' => 'required|array',
+            'order_in_new_list.*' => 'integer|exists:tasks,id',
         ]);
         
-        // Get current list and order
-        $oldListId = $task->board_list_id;
-        $oldOrder = $task->order;
-        $newListId = $validated['new_list_id'];
-        $newOrder = $validated['order'];
+        $newList = BoardList::findOrFail($validated['new_list_id']);
+        $this->authorize('update', $newList);
         
-        // Use a transaction to ensure data integrity
-        DB::transaction(function () use ($task, $oldListId, $oldOrder, $newListId, $newOrder) {
-            // If moving to a different list
-            if ($oldListId != $newListId) {
-                // Decrement order of tasks in the old list that were below the moved task
-                DB::table('tasks')
-                    ->where('board_list_id', $oldListId)
-                    ->where('order', '>', $oldOrder)
-                    ->decrement('order');
-                
-                // Increment order of tasks in the new list that are at or above the new position
-                DB::table('tasks')
-                    ->where('board_list_id', $newListId)
-                    ->where('order', '>=', $newOrder)
-                    ->increment('order');
-            } else {
-                // Moving within the same list
-                if ($oldOrder < $newOrder) {
-                    // Moving down - decrement tasks between old and new positions
-                    DB::table('tasks')
-                        ->where('board_list_id', $oldListId)
-                        ->whereBetween('order', [$oldOrder + 1, $newOrder])
-                        ->decrement('order');
-                } else if ($oldOrder > $newOrder) {
-                    // Moving up - increment tasks between new and old positions
-                    DB::table('tasks')
-                        ->where('board_list_id', $oldListId)
-                        ->whereBetween('order', [$newOrder, $oldOrder - 1])
-                        ->increment('order');
-                }
-            }
+        DB::transaction(function () use ($task, $validated) {
+            // Move task to new list
+            $task->board_list_id = $validated['new_list_id'];
+            $task->save();
             
-            // Update the task's position
-            $task->update([
-                'board_list_id' => $newListId,
-                'order' => $newOrder,
-            ]);
+            // Reorder tasks in destination list
+            foreach ($validated['order_in_new_list'] as $index => $taskId) {
+                Task::where('id', $taskId)
+                    ->where('board_list_id', $validated['new_list_id'])
+                    ->update(['order' => $index]);
+            }
         });
         
         // Reload the task with its list and board for broadcasting
-        $task->load('list.board');
+        $task->refresh()->load('list.board');
         
         // Broadcast the task moved event to others
         broadcast(new TaskMoved($task, $request->user()))->toOthers();
         
         return Redirect::back()->with('success', 'Task moved.');
+    }
+
+    /**
+     * Update the order of tasks within a specific list.
+     */
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'list_id' => 'required|integer|exists:board_lists,id',
+            'task_ids' => 'required|array',
+            'task_ids.*' => 'required|integer|exists:tasks,id',
+        ]);
+
+        $list = BoardList::findOrFail($validated['list_id']);
+        $this->authorize('update', $list);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['task_ids'] as $index => $taskId) {
+                Task::where('id', $taskId)
+                    ->where('board_list_id', $validated['list_id'])
+                    ->update(['order' => $index]);
+            }
+        });
+
+        return Redirect::back()->with('success', 'Task order updated.');
     }
     
     /**
@@ -379,5 +400,24 @@ class TaskController extends Controller
         $task->save();
 
         return Redirect::back()->with('success', $task->completed_at ? 'Task marked as completed.' : 'Task marked as incomplete.');
+    }
+
+    /**
+     * Toggle archive status of a task.
+     */
+    public function toggleArchive(Task $task)
+    {
+        $this->authorize('update', $task);
+
+        // Only completed tasks can be archived if currently not archived
+        if (!$task->completed_at && !$task->archived_at) {
+            return Redirect::back()->with('error', 'Only completed tasks can be archived.');
+        }
+
+        $task->archived_at = $task->archived_at ? null : now();
+        $task->save();
+
+        $message = $task->archived_at ? 'Task archived successfully.' : 'Task restored successfully.';
+        return Redirect::back()->with('success', $message);
     }
 }

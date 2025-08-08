@@ -17,13 +17,6 @@ export default function BoardColumn({
     isDragging = false,
     isOverlay = false
 }) {
-    // Add useSortable hook for the column itself (but not for overlay)
-    // console.log('BoardColumn received:', {
-    //     list,
-    //     tasks,
-    //     taskIds: tasks.map(task => task.id),
-    //     tasksCount: tasks.length
-    // });
     const {
         attributes,
         listeners,
@@ -44,7 +37,7 @@ export default function BoardColumn({
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
         id: `list-${list.id}`,
         data: {
-            type: 'list',
+            type: 'List',
             list
         },
         disabled: isOverlay // Disable droppable behavior for the overlay
@@ -81,12 +74,11 @@ export default function BoardColumn({
         'board-column',
         'flex flex-col',
         'lg:w-full w-20',
+        'md:mx-1',
         'md:flex-shrink-0',
         'rounded-md',
-        'md:mx-2',
         'mb-4 md:mb-0',
         'transition-transform duration-300 ease-in-out',
-        'h-full min-h-[350px]', // Ensure consistent height
         className,
         {
             // Placeholder styles when being dragged

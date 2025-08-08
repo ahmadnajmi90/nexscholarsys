@@ -6,6 +6,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Select from 'react-select';
+import toast from 'react-hot-toast';
 
 export default function CreateProjectModal({ show, onClose, linkableProjects = [] }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -16,9 +17,18 @@ export default function CreateProjectModal({ show, onClose, linkableProjects = [
         e.preventDefault();
         
         post(route('project-hub.projects.store'), {
-            onSuccess: () => {
+            preserveScroll: true,
+            onSuccess: (response) => {
+                // Find the project title from the selected project
+                const selectedProject = linkableProjects.find(project => project.id === data.post_project_id);
+                const projectTitle = selectedProject ? selectedProject.title : 'Project';
+                toast.success(`Project "${projectTitle}" created successfully.`);
                 reset();
                 onClose();
+            },
+            onError: (errors) => {
+                console.error('Error creating project:', errors);
+                toast.error('Failed to create project. Please check the form for errors.');
             },
         });
     };

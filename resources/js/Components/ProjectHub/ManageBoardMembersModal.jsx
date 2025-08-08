@@ -5,7 +5,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import { toast } from 'react-hot-toast';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
-import { UserCheck, UserX } from 'lucide-react';
+import { Switch } from '@headlessui/react';
+import clsx from 'clsx';
 
 export default function ManageBoardMembersModal({ show, onClose, board, workspaceMembers }) {
     const [selectedMemberIds, setSelectedMemberIds] = useState([]);
@@ -87,32 +88,30 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
     return (
         <Modal show={show} onClose={onClose} maxWidth="md">
             <div className="p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-6">Manage Board Access</h2>
-                
-                <p className="text-sm text-gray-600 mb-4">
-                    Select which members should have access to the <strong>{board?.name}</strong> board.
-                </p>
+                <h2 className="text-lg font-medium text-gray-900">Manage Board Access</h2>
+                <p className="text-sm text-gray-600 mt-1 mb-4">Use the toggle to grant or revoke board access for each member.</p>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="bg-gray-50 rounded-lg p-2 max-h-80 overflow-y-auto">
                         {workspaceMembers && workspaceMembers.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {workspaceMembers.map(member => (
-                                    <div 
-                                        key={member.id} 
-                                        className={`flex items-center justify-between p-3 rounded-lg ${
-                                            selectedMemberIds.includes(member.id) 
-                                                ? 'bg-indigo-50 border border-indigo-100' 
+                                    <div
+                                        key={member.id}
+                                        className={clsx(
+                                            'flex justify-between items-center p-3 rounded-lg transition-colors duration-200',
+                                            selectedMemberIds.includes(member.id)
+                                                ? 'bg-indigo-50 border border-indigo-200'
                                                 : 'bg-white border border-gray-100'
-                                        }`}
+                                        )}
                                     >
                                         <div className="flex items-center">
                                             <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                                                 {getAvatarUrl(member) ? (
-                                                    <img 
-                                                        src={getAvatarUrl(member)} 
-                                                        alt={getFullName(member)} 
-                                                        className="h-full w-full object-cover" 
+                                                    <img
+                                                        src={getAvatarUrl(member)}
+                                                        alt={getFullName(member)}
+                                                        className="h-full w-full object-cover"
                                                     />
                                                 ) : (
                                                     <span className="text-gray-500 text-sm">
@@ -127,27 +126,24 @@ export default function ManageBoardMembersModal({ show, onClose, board, workspac
                                                 </p>
                                             </div>
                                         </div>
-                                        
-                                        <div className="flex items-center">
-                                            <label className="inline-flex items-center cursor-pointer">
-                                                <input 
-                                                    type="checkbox"
-                                                    className="sr-only"
-                                                    checked={selectedMemberIds.includes(member.id)}
-                                                    onChange={() => handleMemberToggle(member.id)}
-                                                    disabled={isSubmitting}
-                                                />
-                                                {selectedMemberIds.includes(member.id) ? (
-                                                    <span className="p-1.5 bg-indigo-100 rounded-md text-indigo-600">
-                                                        <UserCheck className="w-5 h-5" />
-                                                    </span>
-                                                ) : (
-                                                    <span className="p-1.5 text-gray-400 bg-gray-100 hover:bg-gray-200 rounded-md">
-                                                        <UserX className="w-5 h-5" />
-                                                    </span>
+
+                                        <Switch
+                                            checked={selectedMemberIds.includes(member.id)}
+                                            onChange={() => handleMemberToggle(member.id)}
+                                            disabled={isSubmitting}
+                                            className={clsx(
+                                                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+                                                selectedMemberIds.includes(member.id) ? 'bg-indigo-600' : 'bg-gray-200'
+                                            )}
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={clsx(
+                                                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                                                    selectedMemberIds.includes(member.id) ? 'translate-x-5' : 'translate-x-0'
                                                 )}
-                                            </label>
-                                        </div>
+                                            />
+                                        </Switch>
                                     </div>
                                 ))}
                             </div>

@@ -6,6 +6,7 @@ import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaborator
 import ManageBoardMembersModal from '@/Components/ProjectHub/ManageBoardMembersModal';
 import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import toast from 'react-hot-toast';
 
 export default function Show({ project, connections }) {
     const { auth } = usePage().props;
@@ -33,10 +34,15 @@ export default function Show({ project, connections }) {
         // Post to the boards endpoint for this project using the named route
         form.post(route('project-hub.projects.boards.store', project.data.id), {
             onSuccess: () => {
+                toast.success(`Board "${form.data.name}" created successfully.`);
                 // Close the form
                 setIsCreatingBoard(false);
                 // Reset the form
                 form.reset();
+            },
+            onError: (errors) => {
+                console.error('Error creating board:', errors);
+                toast.error('Failed to create board. Please check the form for errors.');
             },
         });
     };
@@ -54,7 +60,12 @@ export default function Show({ project, connections }) {
         
         router.delete(route('project-hub.boards.destroy', confirmingBoardDeletion.id), {
             onSuccess: () => {
+                toast.success(`Board "${confirmingBoardDeletion.name}" deleted successfully.`);
                 setConfirmingBoardDeletion(null);
+            },
+            onError: (errors) => {
+                console.error('Error deleting board:', errors);
+                toast.error('Failed to delete board. Please try again.');
             },
         });
     };
@@ -78,7 +89,7 @@ export default function Show({ project, connections }) {
                     <span className="text-sm">Back to projects</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate">{project.data.name}</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 truncate max-w-3xl">{project.data.name}</h1>
                     
                     {/* Manage Collaborators button - only visible to project owner */}
                     {isProjectOwner && (
@@ -94,7 +105,7 @@ export default function Show({ project, connections }) {
                 {project.data.description && (
                     <>
                         <div 
-                            className={`mt-1 text-gray-500 ${!isDescriptionExpanded ? 'line-clamp-2' : ''}`}
+                            className={`mt-1 text-gray-500 max-w-3xl ${!isDescriptionExpanded ? 'line-clamp-2' : ''}`}
                             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.data.description) }}
                         />
                         <button

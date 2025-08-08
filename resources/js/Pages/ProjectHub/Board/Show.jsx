@@ -6,15 +6,17 @@ import CalendarView from '@/Components/ProjectHub/CalendarView';
 import ListView from '@/Components/ProjectHub/ListView';
 import TableView from '@/Components/ProjectHub/TableView';
 import TimelineView from '@/Components/ProjectHub/TimelineView';
-import { DndContext, DragOverlay, closestCorners, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCenter, useSensor, useSensors, MouseSensor, TouchSensor, PointerSensor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import TaskCard from '@/Components/ProjectHub/TaskCard';
 import TaskDetailsModal from '@/Components/ProjectHub/TaskDetailsModal';
 import PaperTaskCreateModal from '@/Components/ProjectHub/PaperTaskCreateModal';
 import ChooseTaskTypeModal from '@/Components/ProjectHub/ChooseTaskTypeModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
-import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal } from 'lucide-react';
+import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal, Archive as ArchiveIcon } from 'lucide-react';
+import ArchivedTasksModal from '@/Components/ProjectHub/ArchivedTasksModal';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export default function Show({ initialBoardData, researchOptions = [] }) {
     // Initialize board state from props
@@ -38,6 +40,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
     const [viewingTask, setViewingTask] = useState(null);
     // State for choose task type modal
     const [choosingTaskType, setChoosingTaskType] = useState(false);
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
     // State for paper task modal
     const [creatingPaperTask, setCreatingPaperTask] = useState(false);
     // State to track the current list ID for task creation
@@ -231,17 +234,10 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         }
     };
 
-    // Set up sensors for both mouse and touch (important for mobile drag & drop)
     const sensors = useSensors(
-        useSensor(MouseSensor, {
+        useSensor(PointerSensor, {
             activationConstraint: {
                 distance: 8,
-            },
-        }),
-        useSensor(TouchSensor, {
-            activationConstraint: {
-                delay: 200,
-                tolerance: 8,
             },
         })
     );
@@ -282,128 +278,110 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         }
     };
 
-    // Handle drag end event
+    // Handle drag end event (unified)
     const handleDragEnd = (event) => {
         const { active, over } = event;
         
-        // Clear the active task and list
         setActiveTask(null);
         setActiveList(null);
         
-        // If not dropped in a droppable area, do nothing
         if (!over) return;
 
         const activeId = active.id;
         const overId = over.id;
+        if (activeId === overId) return;
 
-        // Handle task movement
-        if (activeId.toString().startsWith('task-')) {
-            const taskId = parseInt(activeId.replace('task-', ''));
-            const sourceListId = active.data.current.task.list_id;
-            const destinationListId = parseInt(overId.replace('list-', ''));
+        const isActiveAList = active.data.current?.type === 'List' || activeId.toString().startsWith('list-');
+        const isActiveATask = active.data.current?.type === 'Task' || activeId.toString().startsWith('task-');
 
-            // If task was dropped in a different list
-            if (sourceListId !== destinationListId) {
-                // Find the source and destination lists
-                const sourceList = boardState.lists.find(list => list.id === sourceListId);
-                const destinationList = boardState.lists.find(list => list.id === destinationListId);
-                
-                if (!sourceList || !destinationList) return;
+        // Scenario 1: Reordering lists
+        if (isActiveAList && (over.data.current?.type === 'List' || overId.toString().startsWith('list-'))) {
+            setBoardState((prev) => {
+                const oldIndex = prev.lists.findIndex((list) => `list-${list.id}` === activeId.toString());
+                const newIndex = prev.lists.findIndex((list) => `list-${list.id}` === overId.toString());
+                if (oldIndex === -1 || newIndex === -1) return prev;
 
-                // Find the task in the source list
-                const taskIndex = sourceList.tasks.findIndex(task => task.id === taskId);
-                if (taskIndex === -1) return;
+                const reorderedLists = arrayMove(prev.lists, oldIndex, newIndex);
 
-                // Create a new board state
-                const newBoardState = structuredClone(boardState);
-                
-                // Remove task from source list
-                const [movedTask] = newBoardState.lists
-                    .find(list => list.id === sourceListId)
-                    .tasks.splice(taskIndex, 1);
-
-                // Calculate new order for the task
-                const destinationTasks = newBoardState.lists.find(list => list.id === destinationListId).tasks;
-                const newOrder = destinationTasks.length > 0
-                    ? destinationTasks[destinationTasks.length - 1].order + 1
-                    : 1;
-
-                // Add task to destination list
-                newBoardState.lists
-                    .find(list => list.id === destinationListId)
-                    .tasks.push({
-                        ...movedTask,
-                        list_id: destinationListId,
-                        order: newOrder
-                    });
-
-                // Update the state optimistically
-                setBoardState(newBoardState);
-
-                // Send the update to the server
-                router.post(route('project-hub.tasks.move', taskId), {
-                    task_id: taskId,
-                    source_list_id: sourceListId,
-                    destination_list_id: destinationListId,
-                    order: newOrder
-                }, {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        // Reload only the board data to ensure frontend state is in sync
-                        router.reload({ only: ['initialBoardData'] });
-                    },
-                    onError: (errors) => {
-                        console.error('Error moving task:', errors);
-                        // Revert to the server state on error
-                        router.reload({ only: ['initialBoardData'] });
-                    }
-                });
-            }
-        }
-        
-        // Handle list reordering
-        if (activeId.toString().startsWith('list-') && overId.toString().startsWith('list-')) {
-            const oldIndex = boardState.lists.findIndex(
-                list => list.id === parseInt(activeId.replace('list-', ''))
-            );
-            const newIndex = boardState.lists.findIndex(
-                list => list.id === parseInt(overId.replace('list-', ''))
-            );
-
-            if (oldIndex !== newIndex) {
-                const newBoardState = structuredClone(boardState);
-                newBoardState.lists = arrayMove(newBoardState.lists, oldIndex, newIndex);
-                
-                // Update the state optimistically
-                setBoardState(newBoardState);
-
-                // Calculate new order values
-                const newOrder = newBoardState.lists.map((list, index) => ({
+                const updatedListsForBackend = reorderedLists.map((list, index) => ({
                     id: list.id,
-                    order: index
+                    order: index,
                 }));
 
-                // Send the update to the server
-                router.post(route('project-hub.lists.reorder'), {
-                    lists: newOrder
-                }, {
+                router.post(route('project-hub.lists.reorder'), { lists: updatedListsForBackend }, {
                     preserveScroll: true,
                     preserveState: true,
-                    headers: {
-                        'X-Inertia': false,
-                        'Accept': 'application/json',
-                    },
-                    onSuccess: () => {
-                        // Reload only the board data to ensure frontend state is in sync
-                        router.reload({ only: ['initialBoardData'] });
-                    },
-                    onError: (errors) => {
-                        console.error('Error reordering lists:', errors);
-                        // Revert to the server state on error
-                        router.reload({ only: ['initialBoardData'] });
-                    }
                 });
+
+                return { ...prev, lists: reorderedLists };
+            });
+            return;
+        }
+
+        // Scenario 2: Dragging a task
+        if (isActiveATask) {
+            const sourceListId = active.data.current?.task?.list_id;
+            const destinationListId = (over.data.current?.type === 'List')
+                ? over.data.current.list.id
+                : (over.data.current?.type === 'Task' ? over.data.current.task.list_id : undefined);
+
+            if (!sourceListId || !destinationListId) return;
+
+            // 2A: Reorder tasks in the same list
+            if (sourceListId === destinationListId) {
+                const currentLists = boardState.lists;
+                const listIndex = currentLists.findIndex(list => list.id === sourceListId);
+                if (listIndex === -1) return;
+                const oldTaskIndex = currentLists[listIndex].tasks.findIndex(task => `task-${task.id}` === activeId.toString());
+                const newTaskIndex = currentLists[listIndex].tasks.findIndex(task => `task-${task.id}` === overId.toString());
+                if (oldTaskIndex === -1 || newTaskIndex === -1) return;
+
+                const reorderedTasks = arrayMove(currentLists[listIndex].tasks, oldTaskIndex, newTaskIndex);
+                const newLists = [...currentLists];
+                newLists[listIndex] = { ...newLists[listIndex], tasks: reorderedTasks };
+                setBoardState(prev => ({ ...prev, lists: newLists }));
+
+                const reorderedTaskIds = reorderedTasks.map(t => t.id);
+                router.post(route('project-hub.tasks.reorder'), {
+                    list_id: sourceListId,
+                    task_ids: reorderedTaskIds,
+                }, { preserveScroll: true, preserveState: true });
+                return;
+            }
+
+            // 2B: Move tasks between lists
+            if (sourceListId !== destinationListId) {
+                const currentLists = boardState.lists;
+                const sourceListIndex = currentLists.findIndex(list => list.id === sourceListId);
+                const destinationListIndex = currentLists.findIndex(list => list.id === destinationListId);
+                if (sourceListIndex === -1 || destinationListIndex === -1) return;
+
+                const sourceTaskIndex = currentLists[sourceListIndex].tasks.findIndex(task => `task-${task.id}` === activeId.toString());
+                if (sourceTaskIndex === -1) return;
+
+                const newSourceTasks = [...currentLists[sourceListIndex].tasks];
+                const [movedTask] = newSourceTasks.splice(sourceTaskIndex, 1);
+
+                const newDestinationTasks = [...currentLists[destinationListIndex].tasks];
+                const overTaskIndex = (over.data.current?.type === 'Task')
+                    ? newDestinationTasks.findIndex(task => `task-${task.id}` === overId.toString())
+                    : newDestinationTasks.length;
+                const insertIndex = overTaskIndex === -1 ? newDestinationTasks.length : overTaskIndex;
+                newDestinationTasks.splice(insertIndex, 0, movedTask);
+
+                const finalDestinationTasks = newDestinationTasks;
+                const newLists = [...currentLists];
+                newLists[sourceListIndex] = { ...newLists[sourceListIndex], tasks: newSourceTasks };
+                newLists[destinationListIndex] = { ...newLists[destinationListIndex], tasks: finalDestinationTasks };
+                setBoardState(prev => ({ ...prev, lists: newLists }));
+
+                const movedTaskId = parseInt(activeId.toString().replace('task-', ''));
+                const newOrderInDestination = finalDestinationTasks.map(t => t.id);
+                router.post(route('project-hub.tasks.move', movedTaskId), {
+                    new_list_id: destinationListId,
+                    order_in_new_list: newOrderInDestination,
+                }, { preserveScroll: true, preserveState: true });
+                return;
             }
         }
     };
@@ -457,13 +435,14 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         router.delete(route('project-hub.lists.destroy', confirmingListDeletion.id), {
             preserveScroll: true,
             onSuccess: () => {
+                toast.success(`List "${confirmingListDeletion.name}" deleted successfully.`);
                 setConfirmingListDeletion(null);
                 // Refresh the board data to reflect the deletion
                 router.reload({ only: ['initialBoardData'] });
             },
             onError: (errors) => {
                 console.error('Error deleting list:', errors);
-                alert('An error occurred while deleting the list. Please try again.');
+                toast.error('Failed to delete list. Please try again.');
             }
         });
     };
@@ -480,13 +459,14 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         router.delete(route('project-hub.tasks.destroy', confirmingTaskDeletion.id), {
             preserveScroll: true,
             onSuccess: () => {
+                toast.success(`Task "${confirmingTaskDeletion.title}" deleted successfully.`);
                 setConfirmingTaskDeletion(null);
                 // Refresh the board data to reflect the deletion
                 router.reload({ only: ['initialBoardData'] });
             },
             onError: (errors) => {
                 console.error('Error deleting task:', errors);
-                alert('An error occurred while deleting the task. Please try again.');
+                toast.error('Failed to delete task. Please try again.');
             }
         });
     };
@@ -598,7 +578,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                 <div className="board-scroll-container overflow-y-auto md:overflow-y-hidden md:overflow-x-auto">
                     <DndContext
                         sensors={sensors}
-                        collisionDetection={closestCorners}
+                        collisionDetection={closestCenter}
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
                     >
@@ -833,6 +813,9 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                             </button>
                         </div>
                     </div>
+                    <button type="button" onClick={() => setShowArchiveModal(true)} className="ml-0 md:ml-3 inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs md:text-sm text-gray-700 hover:bg-gray-50">
+                        <ArchiveIcon className="w-4 h-4 mr-2" /> Archived Items
+                    </button>
                 </div>
             </div>
             
@@ -901,6 +884,13 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                 onClose={() => setChoosingTaskType(false)}
                 onSelectTaskType={handleTaskTypeSelect}
             />
+
+            {/* Archived Tasks Modal */}
+            <ArchivedTasksModal
+                show={showArchiveModal}
+                onClose={() => setShowArchiveModal(false)}
+                boardId={boardState.id}
+            />
         </div>
     );
 }
@@ -944,7 +934,7 @@ style.textContent = `
         .board-scroll-container {
             overflow-y: hidden;
             overflow-x: auto;
-            width: calc(70rem + 2rem);
+            width: calc(70rem + 1rem);
             max-width: 100%;
         }
         

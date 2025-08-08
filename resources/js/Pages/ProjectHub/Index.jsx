@@ -8,6 +8,7 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Plus, Users, Calendar, Clock, Trash2, Briefcase, UserPlus } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import toast from 'react-hot-toast';
 
 export default function Index({ workspaces, projects, linkableProjects, connections }) {
     // Ensure workspaces and projects are arrays
@@ -37,7 +38,12 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
         
         router.delete(route('project-hub.workspaces.destroy', confirmingDeletion.id), {
             onSuccess: () => {
+                toast.success(`Workspace "${confirmingDeletion.name}" deleted successfully.`);
                 setConfirmingDeletion(null);
+            },
+            onError: (errors) => {
+                console.error('Error deleting workspace:', errors);
+                toast.error('Failed to delete workspace. Please try again.');
             },
         });
     };
@@ -53,7 +59,12 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
         
         router.delete(route('project-hub.projects.destroy', confirmingProjectDeletion.id), {
             onSuccess: () => {
+                toast.success(`Project "${confirmingProjectDeletion.name}" deleted successfully.`);
                 setConfirmingProjectDeletion(null);
+            },
+            onError: (errors) => {
+                console.error('Error deleting project:', errors);
+                toast.error('Failed to delete project. Please try again.');
             },
         });
     };

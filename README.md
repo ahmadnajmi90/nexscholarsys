@@ -264,6 +264,39 @@ Paper Writing Tasks are visually distinguished with:
 - **Table View**: "Show Completed Tasks" toggle with pagination reset
 - **Smart Messaging**: Different empty state messages for "no tasks" vs "no active tasks"
 
+### Task Lifecycle and Archiving
+
+To maintain a clean and focused workspace, tasks follow a three-stage lifecycle: Active → Completed → Archived.
+
+- **Active Tasks:** All tasks currently in progress on the board.
+- **Completed Tasks:** Finished tasks remain visible on the board (e.g., in a "Done" column) for reference and review. They are visually distinguished with faded opacity and a strikethrough.
+- **Archived Tasks:** To de-clutter the board, users can **archive** completed tasks. Archived tasks are removed from the main board view but are not deleted. They can be accessed and restored from a dedicated "Archived Items" view, ensuring no work is ever lost.
+
+### Advanced UI/UX and Interactivity
+
+The Project Hub is designed with a focus on a smooth, responsive, and intuitive user experience.
+
+- **Thoughtful Responsive Design:** The entire interface is fully mobile-responsive. The Kanban board intelligently switches to a single-column vertical layout on small screens for easy scrolling, and data-heavy tables become horizontally scrollable to preserve readability.
+- **Seamless Drag-and-Drop:** Reordering tasks and lists is enhanced with a smooth "lift-and-carry" animation, providing clear visual feedback for a professional user experience.
+- **Inline Editing:** The names of Workspaces, Boards, and Lists can be edited directly in the UI without needing to open a separate form. This functionality is restricted to Owners and Admins for security.
+- **Real-Time Notifications:** A comprehensive, queue-based email notification system keeps users informed of critical events such as new invitations, task assignments, and role changes, ensuring seamless collaboration even when users are not actively on the platform.
+
+### Collaboration and Permissions
+
+The Project Hub is built for teamwork with a robust, multi-layered permission system that ensures the right people have the right level of access.
+
+#### Granular User Roles
+There are three distinct roles for collaborators within a Workspace or Project:
+- **👑 Owner:** Has full administrative control, including managing members, changing roles, and the ability to delete the entire workspace or project.
+- **👮 Admin:** Can manage members (invite, remove, change roles to 'member'), create and delete boards, and edit workspace/project settings. Cannot delete the workspace/project itself.
+- **🧑‍💻 Member:** Can view assigned boards and create, edit, and manage content (lists and tasks) within them. Cannot create new boards or manage other members.
+
+#### Board-Specific Access
+Membership in a workspace or project does not automatically grant access to all boards within it. Access is managed on a per-board basis, allowing for private boards within a larger team project. Owners and Admins can assign specific members to each board, ensuring focused and secure collaboration.
+
+#### Owner Safeguards
+The owner of a workspace or project is automatically granted access to all boards created within it and cannot have their access revoked by other admins, providing a clear line of ownership and security.
+
 ### How to Use
 
 #### Getting Started

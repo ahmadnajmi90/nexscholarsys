@@ -31,7 +31,7 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
         publication_type: task?.paperWritingTask?.publication_type || '',
         scopus_info: task?.paperWritingTask?.scopus_info || '',
         progress: task?.paperWritingTask?.progress || 'Not Started',
-        attachment: null,
+        files: [],
         // Hidden fields
         task_type: 'paper',
         list_id: task?.board_list_id || listId || null, // Use task's list_id or the provided listId prop
@@ -73,7 +73,7 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
                 publication_type: task.paperWritingTask?.publication_type || '',
                 scopus_info: task.paperWritingTask?.scopus_info || '',
                 progress: task.paperWritingTask?.progress || 'Not Started',
-                attachment: null,
+                files: [],
                 // Hidden fields
                 task_type: 'paper',
                 list_id: task.board_list_id || listId || null, // Use task's list_id or the provided listId prop
@@ -90,10 +90,10 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
     
     // Handle file selection
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            form.setData('attachment', file);
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            setSelectedFile(files[0]); // For display purposes, show the first file name
+            form.setData('files', files);
         }
     };
     
@@ -129,7 +129,7 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
                 onSuccess: () => {
                     toast.success('Paper task created successfully!');
                     form.reset(); // This clears most fields
-                    form.setData('attachment', null); // Explicitly clear the attachment
+                    form.setData('files', []); // Explicitly clear the files
                     setSelectedFile(null); // Reset the selected file state
                     onClose();
                 },
@@ -517,20 +517,23 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
                                                     <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
                                                         <span className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                             <Upload className="h-4 w-4 mr-2" />
-                                                            {selectedFile ? 'Change File' : 'Upload PDF'}
+                                                            {selectedFile ? 'Change Files' : 'Upload PDFs'}
                                                         </span>
                                                         <input
                                                             id="pdf_attachment"
                                                             name="pdf_attachment"
                                                             type="file"
                                                             accept=".pdf"
+                                                            multiple
                                                             className="sr-only"
                                                             onChange={handleFileChange}
                                                         />
                                                     </label>
                                                     {selectedFile && (
                                                         <span className="ml-3 text-sm text-gray-500">
-                                                            {selectedFile.name}
+                                                            {form.data.files.length > 1 
+                                                                ? `${selectedFile.name} and ${form.data.files.length - 1} more file(s)` 
+                                                                : selectedFile.name}
                                                         </span>
                                                     )}
                                                     {task?.paperWritingTask?.pdf_attachment_path && !selectedFile && (
