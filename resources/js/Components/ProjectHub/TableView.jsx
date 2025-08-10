@@ -149,16 +149,17 @@ export default function TableView({ board, onTaskClick }) {
                             <div 
                                 key={assignee.id} 
                                 className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs overflow-hidden border border-white flex-shrink-0"
-                                title={assignee.name}
+                                title={assignee.full_name}
                             >
-                                {assignee.avatar ? (
+                                {assignee.avatar_url ? (
                                     <img 
-                                        src={assignee.avatar} 
-                                        alt={assignee.name} 
+                                        // src={assignee.avatar} 
+                                        src={assignee.avatar_url !== null ? `/storage/${assignee.avatar_url}` : "/storage/profile_pictures/default.jpg"}
+                                        alt={assignee.full_name} 
                                         className="h-full w-full object-cover"
                                     />
                                 ) : (
-                                    assignee.name.charAt(0)
+                                    assignee.full_name.charAt(0)
                                 )}
                             </div>
                         ))}
