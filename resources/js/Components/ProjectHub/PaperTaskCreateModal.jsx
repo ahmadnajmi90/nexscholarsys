@@ -12,7 +12,6 @@ import { PAPER_PROGRESS_OPTIONS } from './constants';
 import { getUserFullName } from '@/Utils/userHelpers';
 
 export default function PaperTaskCreateModal({ task = null, show, onClose, listId, workspaceMembers, researchOptions = [] }) {
-    console.log(workspaceMembers);
     const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const isEditMode = !!task;

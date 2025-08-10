@@ -142,7 +142,17 @@ class TaskController extends Controller
         $this->authorize('view', $task);
         
         // Eager load relationships including paperWritingTask if it exists
-        $task->load(['assignees.academician', 'assignees.postgraduate', 'assignees.undergraduate', 'comments.user', 'creator', 'attachments.user', 'paperWritingTask']);
+        $task->load([
+            'assignees.academician',
+            'assignees.postgraduate',
+            'assignees.undergraduate',
+            'comments.user.academician',
+            'comments.user.postgraduate',
+            'comments.user.undergraduate',
+            'creator',
+            'attachments.user',
+            'paperWritingTask'
+        ]);
         
         return Inertia::render('ProjectHub/Tasks/Show', [
             'task' => new TaskResource($task)
@@ -250,7 +260,17 @@ class TaskController extends Controller
         }
         
         // Load relationships for the response including paperWritingTask if it exists
-        $task->load(['assignees.academician', 'assignees.postgraduate', 'assignees.undergraduate', 'comments.user', 'creator', 'attachments.user', 'paperWritingTask']);
+        $task->load([
+            'assignees.academician',
+            'assignees.postgraduate',
+            'assignees.undergraduate',
+            'comments.user.academician',
+            'comments.user.postgraduate',
+            'comments.user.undergraduate',
+            'creator',
+            'attachments.user',
+            'paperWritingTask'
+        ]);
         
         return Redirect::back()->with('success', 'Task updated successfully.');
     }
@@ -346,10 +366,14 @@ class TaskController extends Controller
             'content' => $validated['content'],
         ]);
         
-        // Load the user relationship for the resource
-        $comment->load('user');
-        
-        return Redirect::back()->with('success', 'Comment added successfully.');
+        // Load the user relationship with role profiles for the resource
+        $comment->load(['user.academician', 'user.postgraduate', 'user.undergraduate']);
+
+        // Return JSON for real-time UI updates
+        return response()->json([
+            'message' => 'Comment posted successfully.',
+            'comment' => new TaskCommentResource($comment),
+        ]);
     }
     
     /**

@@ -797,7 +797,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                                 <Calendar className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
                                 Calendar
                             </button>
-                            <button
+                            {/* <button
                                 type="button"
                                 onClick={() => setCurrentView('timeline')}
                                 className={`
@@ -810,7 +810,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                             >
                                 <BarChartHorizontal className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-1.5" />
                                 Timeline
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                     <button type="button" onClick={() => setShowArchiveModal(true)} className="ml-0 md:ml-3 inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 rounded-md text-xs md:text-sm text-gray-700 hover:bg-gray-50">
@@ -832,14 +832,14 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                 </div>
             )}
             
-            {/* Board content - Responsive height */}
-            <div className="bg-gray-50 rounded-lg p-2 md:p-4 min-h-[calc(100vh-12rem)] md:h-[35.2rem] overflow-hidden">
+            {/* Board content - Responsive height with flexible container for inner scrollables */}
+            <div className="bg-gray-50 rounded-lg p-2 md:p-4 h-[calc(100vh-12rem)] md:h-auto md:min-h-[35rem] flex flex-col">
                 {/* Conditional rendering based on the current view */}
                 {currentView === 'board' && renderBoardView()}
                 {currentView === 'list' && renderListView()}
                 {currentView === 'table' && renderTableView()}
                 {currentView === 'calendar' && renderCalendarView()}
-                {currentView === 'timeline' && renderTimelineView()}
+                {/* {currentView === 'timeline' && renderTimelineView()} */}
             </div>
             
             {/* Confirmation Modals */}
@@ -934,7 +934,7 @@ style.textContent = `
         .board-scroll-container {
             overflow-y: hidden;
             overflow-x: auto;
-            width: calc(70rem + 1rem);
+            width: calc(70rem);
             max-width: 100%;
         }
         
@@ -987,15 +987,32 @@ style.textContent = `
         background: #9ca3af;
     }
     
+    /* --- ADD THESE NEW RULES --- */
+    /* This rule controls the TimelineView container layout */
+    .timeline-view-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        width: 50%;
+    }
+
+    /* This rule formats the Gantt chart date labels into two lines */
+    .gantt-task-react__header-text {
+        white-space: normal !important;
+        line-height: 1.2 !important;
+        text-align: center !important;
+        font-size: 11px !important;
+    }
+    
     /* List View mobile optimization */
     .list-view-container {
-        max-height: calc(100vh - 240px);
+        max-height: calc(100vh - 200px);
         overflow-y: auto;
     }
     
     /* Table View mobile optimization */
     .table-view-container {
-        max-height: calc(100vh - 320px);
+        md:max-height: calc(100vh - 160px);
         overflow-y: auto;
     }
     

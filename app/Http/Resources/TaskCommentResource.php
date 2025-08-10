@@ -18,10 +18,7 @@ class TaskCommentResource extends JsonResource
             'id' => $this->id,
             'task_id' => $this->task_id,
             'content' => $this->content,
-            'user' => [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-            ],
+            'user' => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

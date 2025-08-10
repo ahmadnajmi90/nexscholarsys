@@ -18,6 +18,8 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     const [isConfirmingAttachmentDeletion, setIsConfirmingAttachmentDeletion] = useState(false);
     const [attachmentToDelete, setAttachmentToDelete] = useState(null);
     const [previewFile, setPreviewFile] = useState(null);
+    // Local comments state for real-time updates
+    const [comments, setComments] = useState([]);
     const isNewTask = task && !task.id; // Check if we're creating a new task
     
     // Maximum size for previewing files (15MB)
@@ -39,6 +41,8 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
         scopus_info: '',
         progress: 'Not Started'
     });
+
+    console.log(task);
     
     // Separate form for comments
     const commentForm = useForm({
@@ -53,6 +57,8 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     // Reset the form when the task changes - Enhanced to handle paper writing tasks
     useEffect(() => {
         if (task) {
+            // Initialize comments from task when task changes
+            setComments(task.comments || []);
             // Format the date for the datetime-local input (YYYY-MM-DDThh:mm)
             let formattedDateTime = '';
             
@@ -157,17 +163,27 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     // Handle comment submission
     const handleCommentSubmit = (e) => {
         e.preventDefault();
-        
-        commentForm.post(`/project-hub/tasks/${task.id}/comments`, {
-            onSuccess: () => {
-                // Clear the comment field on success
-                commentForm.reset();
-                toast.success('Comment added successfully!');
-            },
-            onError: () => {
-                toast.error('Failed to add comment. Please try again.');
-            }
-        });
+        if (!commentForm.data.content.trim()) return;
+
+        // Manually toggle processing to disable button
+        commentForm.processing = true;
+
+        axios.post(route('project-hub.tasks.comments.add', task.id), commentForm.data)
+            .then(response => {
+                const newComment = response.data.comment;
+                if (newComment) {
+                    // Add newest comment to top
+                    setComments(prev => [newComment, ...prev]);
+                }
+                toast.success('Comment added!');
+                commentForm.reset('content');
+            })
+            .catch(error => {
+                toast.error(error?.response?.data?.message || 'Failed to add comment.');
+            })
+            .finally(() => {
+                commentForm.processing = false;
+            });
     };
     
     // Handle task deletion
@@ -702,6 +718,28 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                         )}
                                     </div>
 
+                                    {/* Add Attachment (Create mode only) */}
+                                    {isNewTask && (
+                                        <div className="mt-6">
+                                            <label htmlFor="task-attachment" className="block text-sm font-medium text-gray-700 mb-2">
+                                                Add Attachment (optional)
+                                            </label>
+                                            <input
+                                                type="file"
+                                                id="task-attachment"
+                                                multiple
+                                                onChange={(e) => form.setData('files', Array.from(e.target.files))}
+                                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                            />
+                                            {form.errors.files && (
+                                                <p className="mt-1 text-sm text-red-600">{form.errors.files}</p>
+                                            )}
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                You can attach multiple files when creating the task. Additional files can be added after creation.
+                                            </p>
+                                        </div>
+                                    )}
+
                                     <div className="flex justify-end mt-6 pt-4 border-t">
                                         <button
                                             type="submit"
@@ -713,7 +751,8 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                     </div>
                                 </form>
 
-                                {/* Attachments Section - Always visible */}
+                                {/* Attachments Section - Edit mode only */}
+                                {!isNewTask && (
                                 <div className="mt-6 border-t pt-4">
                                     <h4 className="flex items-center text-sm font-medium text-gray-700 mb-4">
                                         <Paperclip className="w-5 h-5 mr-2" />
@@ -775,27 +814,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                         </div>
                                     )}
 
-                                    {/* Attachment upload form - Always visible for both new and existing tasks */}
-                                    {isNewTask ? (
-                                        <div className="mt-4">
-                                            <label htmlFor="task-attachment" className="block text-sm font-medium text-gray-700 mb-2">
-                                                Add Attachment (optional)
-                                            </label>
-                                            <input
-                                                type="file"
-                                                id="task-attachment"
-                                                multiple
-                                                onChange={(e) => form.setData('files', Array.from(e.target.files))}
-                                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                                            />
-                                            {form.errors.files && (
-                                                <p className="mt-1 text-sm text-red-600">{form.errors.files}</p>
-                                            )}
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                You can attach multiple files when creating the task. Additional files can be added after creation.
-                                            </p>
-                                    </div>
-                                    ) : (
+                                    {/* Attachment upload form - Edit mode */}
                                     <form onSubmit={handleAttachmentSubmit} className="mt-4">
                                         <div className="flex items-start space-x-3">
                                             <div className="min-w-0 flex-1">
@@ -819,8 +838,8 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                             </button>
                                         </div>
                                     </form>
-                                    )}
                                 </div>
+                                )}
 
                                 {/* Only show comments for existing tasks */}
                                 {!isNewTask && (
@@ -828,12 +847,12 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                 <div className="mt-6 border-t pt-4">
                                     <h4 className="flex items-center text-sm font-medium text-gray-700 mb-4">
                                         <MessageSquare className="w-5 h-5 mr-2" />
-                                        Comments ({task.comments?.length || 0})
+                                        Comments ({comments.length || 0})
                                     </h4>
 
                                     <div className="space-y-4 max-h-60 overflow-y-auto mb-4">
-                                        {task.comments && task.comments.length > 0 ? (
-                                            task.comments.map((comment) => {
+                                        {comments && comments.length > 0 ? (
+                                            comments.map((comment) => {
                                                         // Use helper functions for consistent user data access
                                                         const avatarUrl = getUserProfilePicture(comment.user);
                                                         const fullName = getUserFullName(comment.user);

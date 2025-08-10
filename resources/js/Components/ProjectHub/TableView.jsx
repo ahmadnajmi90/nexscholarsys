@@ -8,13 +8,15 @@ import {
     createColumnHelper 
 } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ChevronUp, ChevronDown, Search, BookOpen } from 'lucide-react';
+import { ChevronUp, ChevronDown, Search, BookOpen, ClipboardList } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import axios from 'axios';
 import Pagination from '@/Components/Pagination';
 import { isTaskCompleted } from '@/Utils/utils';
+import Tooltip from '@/Components/Tooltip';
+import { Calendar } from 'lucide-react';
 
 export default function TableView({ board, onTaskClick }) {
     const [sorting, setSorting] = useState([]);
@@ -77,6 +79,7 @@ export default function TableView({ board, onTaskClick }) {
     
     // Define table columns with responsive sizing
     const columns = useMemo(() => [
+        // Column 1: COMPLETION CHECKBOX (Largely Unchanged)
         columnHelper.accessor('completed_at', {
             header: '',
             cell: info => (
@@ -87,110 +90,51 @@ export default function TableView({ board, onTaskClick }) {
                     onChange={(e) => handleToggleCompletion(info.row.original, e)}
                     className={clsx(
                         "w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 touch-manipulation",
-                        {
-                            "opacity-50 cursor-not-allowed": completingTasks.has(info.row.original.id)
-                        }
+                        { "opacity-50 cursor-not-allowed": completingTasks.has(info.row.original.id) }
                     )}
                 />
             ),
             enableSorting: false,
             size: 40,
-            minSize: 40,
-            maxSize: 40
         }),
+    
+        // Column 2: TASK (New Consolidated Column)
+        // This combines Title, List Name, and Type Icon
         columnHelper.accessor('title', {
             header: 'Task',
-            cell: info => (
-                <div 
-                    className={clsx(
-                        "font-medium cursor-pointer flex items-center gap-2 py-1 touch-manipulation whitespace-normal",
-                        {
-                            "text-gray-500 line-through": isTaskCompleted(info.row.original),
-                            "text-indigo-600 hover:text-indigo-800": !isTaskCompleted(info.row.original)
-                        }
-                    )}
-                    onClick={() => onTaskClick(info.row.original)}
-                >
-                    {info.row.original.paper_writing_task && (
-                        <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    )}
-                    <span className="line-clamp-2">{info.getValue()}</span>
-                </div>
-            ),
-            sortingFn: 'alphanumeric',
-            size: 100,
-            minSize: 100
-        }),
-        columnHelper.accessor('paper_writing_task', {
-            header: 'Type',
-            cell: info => (
-                <span className="text-sm whitespace-normal">
-                    {info.getValue() ? 'Paper' : 'Normal'}
-                </span>
-            ),
-            sortingFn: (rowA, rowB) => {
-                const typeA = rowA.original.paper_writing_task ? 'Paper' : 'Normal';
-                const typeB = rowB.original.paper_writing_task ? 'Paper' : 'Normal';
-                return typeA.localeCompare(typeB);
-            },
-            size: 80,
-            minSize: 70
-        }),
-        columnHelper.accessor('list_name', {
-            header: 'List',
-            cell: info => <span className="text-sm truncate whitespace-normal">{info.getValue()}</span>,
-            sortingFn: 'alphanumeric',
-            size: 100,
-            minSize: 80
-        }),
-        columnHelper.accessor('description', {
-            header: 'Description',
-            cell: info => info.getValue() 
-                ? <span className="line-clamp-2 text-sm">{info.getValue()}</span> 
-                : <span className="text-gray-400 italic text-sm">No description</span>,
-            enableSorting: false,
-            size: 150,
-            minSize: 120
-        }),
-        columnHelper.accessor('priority', {
-            header: 'Priority',
             cell: info => {
-                const priority = info.getValue();
-                if (!priority) return <span className="text-gray-400 italic text-sm">None</span>;
-                
-                const colorClass = {
-                    Urgent: 'bg-red-100 text-red-800',
-                    High: 'bg-orange-100 text-orange-800',
-                    Medium: 'bg-yellow-100 text-yellow-800',
-                    Low: 'bg-blue-100 text-blue-800'
-                }[priority] || 'bg-gray-100 text-gray-800';
-                
+                const task = info.row.original;
                 return (
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full whitespace-normal ${colorClass}`}>
-                        {priority}
-                    </span>
+                    <div 
+                        className={clsx("font-medium cursor-pointer group touch-manipulation", { "text-gray-500 line-through": isTaskCompleted(task) })}
+                        onClick={() => onTaskClick(task)}
+                    >
+                        <div className="flex items-center gap-2">
+                            {/* --- CHANGE 1 START: Add default icon for Normal Tasks --- */}
+                            {task.paper_writing_task ? (
+                                <Tooltip content="Paper Writing Task">
+                                    <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                </Tooltip>
+                            ) : (
+                                <Tooltip content="Normal Task">
+                                    <ClipboardList className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                </Tooltip>
+                            )}
+                            {/* --- CHANGE 1 END --- */}
+                            <span className={clsx("line-clamp-2", { "group-hover:text-indigo-800 text-indigo-600": !isTaskCompleted(task) })}>
+                                {info.getValue()}
+                            </span>
+                        </div>
+                        <div className={clsx("text-xs pl-6", { "text-gray-400": isTaskCompleted(task), "text-gray-500": !isTaskCompleted(task) })}>
+                            In list: <span className="font-semibold">{task.list_name}</span>
+                        </div>
+                    </div>
                 );
             },
-            sortingFn: (rowA, rowB) => {
-                const priorities = { Urgent: 4, High: 3, Medium: 2, Low: 1, null: 0, undefined: 0 };
-                const priorityA = priorities[rowA.original.priority] || 0;
-                const priorityB = priorities[rowB.original.priority] || 0;
-                return priorityB - priorityA; // Sort higher priorities first
-            },
-            size: 90,
-            minSize: 80
+            size: 200, // <-- CHANGE 3: Reduced width from 250
         }),
-        columnHelper.accessor('due_date', {
-            header: 'Due Date',
-            cell: info => {
-                const date = info.getValue();
-                if (!date) return <span className="text-gray-400 italic text-sm">None</span>;
-                return <span className="text-sm whitespace-nowrap">{format(new Date(date), "MMM d, yyyy")}</span>;
-            },
-            sortingFn: 'datetime',
-            size: 110,
-            minSize: 100
-        }),
+    
+        // Column 3: ASSIGNEES (Unchanged)
         columnHelper.accessor('assignees', {
             header: 'Assignees',
             cell: info => {
@@ -227,9 +171,53 @@ export default function TableView({ board, onTaskClick }) {
                 );
             },
             enableSorting: false,
-            size: 100,
-            minSize: 80
-        })
+            size: 120,
+        }),
+    
+        // Column 4: DETAILS (New Consolidated Column)
+        // This combines Priority and Due Date
+        columnHelper.accessor('priority', {
+            header: 'Details',
+            cell: info => {
+                const { priority, due_date } = info.row.original;
+                const priorityColorClass = {
+                    Urgent: 'bg-red-100 text-red-800',
+                    High: 'bg-orange-100 text-orange-800',
+                    Medium: 'bg-yellow-100 text-yellow-800',
+                    Low: 'bg-blue-100 text-blue-800'
+                }[priority] || 'bg-gray-100 text-gray-800';
+    
+                return (
+                    <div className="flex flex-col gap-2">
+                        {priority && (
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap text-center w-fit ${priorityColorClass}`}>
+                                {priority}
+                            </span>
+                        )}
+                        {/* --- CHANGE 2 START: Add icon and flex container to Due Date --- */}
+                        {due_date && (
+                            <div className="flex items-center text-xs text-gray-600 whitespace-nowrap">
+                                <Calendar className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
+                                <span>{format(new Date(due_date), "MMM d, yyyy")}</span>
+                            </div>
+                        )}
+                        {/* --- CHANGE 2 END --- */}
+                    </div>
+                );
+            },
+            size: 120,
+        }),
+        
+        // Column 5: DESCRIPTION (Unchanged logic, now fits better)
+        columnHelper.accessor('description', {
+            header: 'Description',
+            cell: info => info.getValue() 
+                ? <span className="line-clamp-3 text-sm break-words">{info.getValue()}</span> 
+                : <span className="text-gray-400 italic text-sm">No description</span>,
+            enableSorting: false,
+            size: 250,
+        }),
+    
     ], [completingTasks, onTaskClick]);
     
     // Create table instance
@@ -280,9 +268,9 @@ export default function TableView({ board, onTaskClick }) {
     }
     
     return (
-        <div className="table-view-container bg-white rounded-lg shadow">
+        <div className="table-view-container bg-white rounded-lg shadow flex flex-col h-full">
             {/* Mobile-responsive controls */}
-            <div className="px-3 md:px-4 py-3 border-b bg-gray-50 space-y-3 md:space-y-0 md:flex md:items-center md:justify-between">
+            <div className="px-3 md:px-4 py-3 border-b bg-gray-50 space-y-3 md:space-y-0 md:flex md:items-center md:justify-between flex-shrink-0">
                 {/* Search Input */}
                 <div className="relative flex-1 max-w-md">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -312,91 +300,93 @@ export default function TableView({ board, onTaskClick }) {
                 </div>
             </div>
 
-            {/* Mobile-responsive table container with horizontal scroll */}
-            <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200" style={{ minWidth: '800px' }}>
-                    {/* Table Header */}
-                    <thead className="bg-gray-50">
-                        {table.getHeaderGroups().map(headerGroup => (
-                            <tr key={headerGroup.id}>
-                                {headerGroup.headers.map(header => (
-                                    <th
-                                        key={header.id}
-                                        scope="col"
-                                        className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 touch-manipulation"
-                                        style={{ 
-                                            width: header.getSize(),
-                                            minWidth: header.column.columnDef.minSize || header.getSize()
-                                        }}
-                                        onClick={header.column.getToggleSortingHandler()}
-                                    >
-                                        <div className="flex items-center space-x-1">
-                                            <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
-                                            {header.column.getIsSorted() && (
-                                                <span className="flex-shrink-0">
-                                                    {header.column.getIsSorted() === 'desc' ? (
-                                                        <ChevronDown className="w-4 h-4" />
-                                                    ) : (
-                                                        <ChevronUp className="w-4 h-4" />
-                                                    )}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </th>
-                                ))}
-                            </tr>
-                        ))}
-                    </thead>
-                    
-                    {/* Table Body */}
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {currentPageRows.length > 0 ? (
-                            currentPageRows.map(row => (
-                                <tr 
-                                    key={row.id} 
-                                    className={clsx(
-                                        "hover:bg-gray-50",
-                                        {
-                                            "opacity-60": isTaskCompleted(row.original)
-                                        }
-                                    )}
-                                >
-                                    {row.getVisibleCells().map(cell => (
-                                        <td 
-                                            key={cell.id} 
-                                            className="px-3 md:px-6 py-3 md:py-4 whitespace-normal text-sm text-gray-900"
+            {/* Mobile-responsive table container with horizontal scroll inside a vertically scrollable wrapper */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="overflow-x-auto">
+                    <table className="w-full divide-y divide-gray-200 table-fixed" style={{ minWidth: '800px' }}>
+                        {/* Table Header */}
+                        <thead className="bg-gray-50 sticky top-0 z-10">
+                            {table.getHeaderGroups().map(headerGroup => (
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map(header => (
+                                        <th
+                                            key={header.id}
+                                            scope="col"
+                                            className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 touch-manipulation"
                                             style={{ 
-                                                width: cell.column.getSize(),
-                                                minWidth: cell.column.columnDef.minSize || cell.column.getSize()
+                                                width: header.getSize(),
+                                                minWidth: header.column.columnDef.minSize || header.getSize()
                                             }}
+                                            onClick={header.column.getToggleSortingHandler()}
                                         >
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
+                                            <div className="flex items-center space-x-1">
+                                                <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
+                                                {header.column.getIsSorted() && (
+                                                    <span className="flex-shrink-0">
+                                                        {header.column.getIsSorted() === 'desc' ? (
+                                                            <ChevronDown className="w-4 h-4" />
+                                                        ) : (
+                                                            <ChevronUp className="w-4 h-4" />
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </th>
                                     ))}
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td 
-                                    colSpan={columns.length}
-                                    className="px-4 py-8 text-center text-sm text-gray-500"
-                                >
-                                    {globalFilter 
-                                        ? 'No tasks match your search criteria'
-                                        : showCompleted || data.length === 0 
-                                            ? 'No tasks found' 
-                                            : 'No active tasks found'
-                                    }
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            ))}
+                        </thead>
+                        
+                        {/* Table Body */}
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {currentPageRows.length > 0 ? (
+                                currentPageRows.map(row => (
+                                    <tr 
+                                        key={row.id} 
+                                        className={clsx(
+                                            "hover:bg-gray-50",
+                                            {
+                                                "opacity-60": isTaskCompleted(row.original)
+                                            }
+                                        )}
+                                    >
+                                        {row.getVisibleCells().map(cell => (
+                                            <td 
+                                                key={cell.id} 
+                                                className="px-3 md:px-6 py-3 md:py-4 whitespace-normal text-sm text-gray-900"
+                                                style={{ 
+                                                    width: cell.column.getSize(),
+                                                    minWidth: cell.column.columnDef.minSize || cell.column.getSize()
+                                                }}
+                                            >
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td 
+                                        colSpan={columns.length}
+                                        className="px-4 py-8 text-center text-sm text-gray-500"
+                                    >
+                                        {globalFilter 
+                                            ? 'No tasks match your search criteria'
+                                            : showCompleted || data.length === 0 
+                                                ? 'No tasks found' 
+                                                : 'No active tasks found'
+                                        }
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Pagination */}
             {filteredTasks.length > itemsPerPage && (
-                <div className="px-4 py-3 border-t">
+                <div className="px-4 py-3 border-t flex-shrink-0">
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}

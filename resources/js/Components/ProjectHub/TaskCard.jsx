@@ -14,7 +14,7 @@ import { isTaskCompleted } from '@/Utils/utils';
 const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
-
+    console.log(task);
     
     // Set up drag-and-drop functionality with dnd-kit
     const {
@@ -294,17 +294,17 @@ const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
                             <div 
                                 key={index} 
                                 className="w-6 h-6 rounded-full ring-2 ring-white overflow-hidden bg-gray-200 flex items-center justify-center"
-                                title={assignee.name || 'Unnamed user'}
+                                title={assignee.full_name || 'Unnamed user'}
                             >
                                 {assignee.avatar_url ? (
                                     <img 
-                                        src={assignee.avatar_url} 
-                                        alt={assignee.name} 
+                                        src={assignee.avatar_url !== null ? `/storage/${assignee.avatar_url}` : "/storage/profile_pictures/default.jpg"}
+                                        alt={assignee.full_name} 
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <span className="text-xs font-medium text-gray-600">
-                                        {assignee.name ? getInitials(assignee.name) : '??'}
+                                        {assignee.full_name ? getInitials(assignee.full_name) : '??'}
                                     </span>
                                 )}
                             </div>
