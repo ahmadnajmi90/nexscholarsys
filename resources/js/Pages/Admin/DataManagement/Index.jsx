@@ -4,6 +4,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import UniversitiesTab from './Tabs/UniversitiesTab';
 import FacultiesTab from './Tabs/FacultiesTab';
 import ResearchFieldsTab from './Tabs/ResearchFieldsTab';
+import PhDProgramsTab from './Tabs/PhDProgramsTab';
 import { Toaster, toast } from 'react-hot-toast';
 
 export default function Index() {
@@ -30,6 +31,8 @@ export default function Index() {
                 return <FacultiesTab />;
             case 'research-fields':
                 return <ResearchFieldsTab />;
+            case 'phd-programs':
+                return <PhDProgramsTab />;
             default:
                 return <UniversitiesTab />;
         }
@@ -101,6 +104,17 @@ export default function Index() {
                                 } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                             >
                                 Research Fields
+                            </button>
+                            
+                            <button
+                                onClick={() => setActiveTab('phd-programs')}
+                                className={`${
+                                    activeTab === 'phd-programs'
+                                        ? 'border-blue-500 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                            >
+                                PhD Programs
                             </button>
                         </nav>
                     </div>

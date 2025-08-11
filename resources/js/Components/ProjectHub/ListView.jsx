@@ -91,8 +91,6 @@ export default function ListView({ board, onTaskClick }) {
                 lists.map(list => {
                     // Ensure tasks is an array
                     const tasks = Array.isArray(list.tasks) ? list.tasks : [];
-
-                    console.log(tasks);
                     
                     // Filter tasks based on showCompleted state
                     const filteredTasks = tasks.filter(task => {

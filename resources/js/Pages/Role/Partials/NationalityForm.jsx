@@ -227,6 +227,7 @@ export default function NationalityForm({ value, onChange, title, isNotSpecify, 
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                 classNamePrefix="react-select"
                 isSearchable
+                required
             />
             <InputError className="mt-2" message={errors[title]} />
         </div>

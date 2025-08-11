@@ -14,7 +14,6 @@ import { isTaskCompleted } from '@/Utils/utils';
 const TaskCard = ({ task, isRecentlyUpdated = false, onDelete, onClick }) => {
     const [showActionsMenu, setShowActionsMenu] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
-    console.log(task);
     
     // Set up drag-and-drop functionality with dnd-kit
     const {

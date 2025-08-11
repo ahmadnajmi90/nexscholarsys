@@ -41,8 +41,6 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
         scopus_info: '',
         progress: 'Not Started'
     });
-
-    console.log(task);
     
     // Separate form for comments
     const commentForm = useForm({
