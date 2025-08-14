@@ -120,6 +120,22 @@ class RoleProfileController extends Controller
             'query_params' => request()->query(),
         ]);
 
+        // Load PhD programs for association management if academician
+        $allPrograms = [];
+        $currentProgramIds = [];
+        if ($isAcademician && $academician = Auth::user()->academician) {
+            $facultyId = $academician->faculty_id ?? $academician->faculty ?? null;
+
+            if ($facultyId) {
+                $allPrograms = \App\Models\PhDProgram::where('faculty_id', $facultyId)
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->get();
+            }
+
+            $currentProgramIds = $academician->phdPrograms()->pluck('phd_program_id');
+        }
+
         return Inertia::render('Role/Edit', [
             'postgraduate' => $isPostgraduate ? Auth::user()->postgraduate : null,
             'academician' => $isAcademician ? Auth::user()->academician : null,
@@ -128,6 +144,8 @@ class RoleProfileController extends Controller
             'faculties' => FacultyList::all(),
             'researchOptions' => $researchOptions,
             'skills' => \App\Models\Skill::all(),
+            'allPrograms' => $allPrograms,
+            'currentProgramIds' => $currentProgramIds,
             'aiGenerationInProgress' => $aiGenerationInProgress,
             'aiGenerationMethod' => $aiGenerationMethod,
             'generatedProfileData' => $generatedProfileData,
@@ -477,7 +495,15 @@ class RoleProfileController extends Controller
                     ['academician_id' => $user->unique_id],
                     $validatedData
                 );
+
+                // Sync associated PhD programs if provided
+                if ($request->has('phd_program_ids') && is_array($request->input('phd_program_ids'))) {
+                    $academician->phdPrograms()->sync($request->input('phd_program_ids'));
+                }
             }
+
+            // Dispatch profile-changed event to invalidate cached insights
+            event(new \App\Events\ProfileDataChanged($user));
 
             return Redirect::route('role.edit')->with('status', 'Role information updated successfully!');
         } catch (ValidationException $e) {
@@ -1721,6 +1747,9 @@ class RoleProfileController extends Controller
                 }
                 
                 Log::info("CV file uploaded for user {$userId}", ['path' => $cvPath]);
+
+                // Invalidate insights upon CV update
+                event(new \App\Events\ProfileDataChanged($user));
                 
                 return response()->json([
                     'success' => true,

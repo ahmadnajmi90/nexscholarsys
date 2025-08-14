@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Academician;
+use App\Models\PhDProgram;
+use App\Models\User;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +18,74 @@ class AIMatchInsightService
     public function __construct(OpenAICompletionService $openaiCompletionService)
     {
         $this->openaiCompletionService = $openaiCompletionService;
+    }
+
+    /**
+     * Generate "Why this match" insight for a single student-supervisor pair within a program context.
+     */
+    public function generateSupervisorInsight(User $student, Academician $supervisor, PhDProgram $program, array $researchOptionsLookup): string
+    {
+        try {
+            $cacheKey = 'supervisor_insight_' . md5($student->id . '_' . $supervisor->id . '_' . $program->id);
+            if (Cache::has($cacheKey)) {
+                return Cache::get($cacheKey);
+            }
+
+            Log::info("AIMatchInsightService: Generating insight for student: {$student->id} and supervisor: {$supervisor->id}");
+
+            $studentType = $student->postgraduate ? 'postgraduate' : ($student->undergraduate ? 'undergraduate' : 'student');
+
+            // Build student's profile text from CV + research interests (resolved IDs to text)
+            $profileModel = $student->postgraduate ?? $student->undergraduate;
+            $studentResearchIds = [];
+            if ($student->postgraduate && !empty($student->postgraduate->field_of_research)) {
+                $studentResearchIds = is_array($student->postgraduate->field_of_research) ? $student->postgraduate->field_of_research : [];
+            } elseif ($student->undergraduate && !empty($student->undergraduate->research_preference)) {
+                $studentResearchIds = is_array($student->undergraduate->research_preference) ? $student->undergraduate->research_preference : [];
+            }
+            $studentResearchText = implode(', ', array_filter(array_map(fn($id) => $researchOptionsLookup[$id] ?? null, $studentResearchIds)));
+
+            $cvText = '';
+            if ($profileModel && !empty($profileModel->CV_file) && \Storage::disk('public')->exists($profileModel->CV_file) && class_exists('App\\Services\\CVParserService')) {
+                $cvText = app('App\\Services\\CVParserService')::getText($profileModel->CV_file) ?? '';
+            }
+            $studentProfileText = trim($cvText);
+
+            // Resolve supervisor expertise IDs to text
+            $supervisorExpertiseIds = is_array($supervisor->research_expertise ?? null) ? $supervisor->research_expertise : [];
+            $supervisorExpertiseText = implode(', ', array_filter(array_map(fn($id) => $researchOptionsLookup[$id] ?? null, $supervisorExpertiseIds)));
+
+            $promptData = [
+                'match_type' => 'student_to_supervisor_for_program',
+                'student_profile_summary' => $studentProfileText,
+                'student_type' => $studentType,
+                'student_research_interests' => $studentResearchText,
+                'student_bio' => $profileModel->bio ?? '',
+                'supervisor_name' => $supervisor->full_name ?? 'Supervisor',
+                'supervisor_expertise' => $supervisorExpertiseText,
+                'supervisor_bio' => $supervisor->bio ?? '',
+                'supervisor_position' => $supervisor->current_position ?? '',
+                'supervisor_department' => $supervisor->department ?? '',
+                'supervisor_supervision_style' => is_array($supervisor->style_of_supervision ?? null) ? implode(', ', $supervisor->style_of_supervision) : ($supervisor->style_of_supervision ?? ''),
+                'program_name' => $program->name,
+                'program_university' => $program->university->full_name ?? 'Unknown'
+            ];
+            Log::info('Data sent for justification prompt:', $promptData);
+
+            $insightResponse = $this->openaiCompletionService->generateMatchInsight($promptData);
+            Log::info('AIMatchInsightService: Raw insight response received: ' . (string) $insightResponse);
+
+            if (empty($insightResponse)) {
+                Log::warning('AIMatchInsightService: OpenAI service returned an empty or null response.');
+                return 'No insight available for this match type.';
+            }
+
+            Cache::put($cacheKey, $insightResponse, now()->addMinutes(60));
+            return $insightResponse;
+        } catch (\Exception $e) {
+            Log::error('Error in generateSupervisorInsight for supervisor ' . $supervisor->id . ': ' . $e->getMessage());
+            return 'No insights available due to an error.';
+        }
     }
 
     /**

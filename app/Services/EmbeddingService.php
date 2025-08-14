@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class EmbeddingService
 {
@@ -13,17 +14,77 @@ class EmbeddingService
     protected $model;
     protected $azureApiVersion;
 
-    public function __construct()
+    protected QdrantService $qdrantService;
+
+    public function __construct(QdrantService $qdrantService)
     {
+        $this->qdrantService = $qdrantService;
         $this->apiKey = config('services.openai.api_key', env('OPENAI_API_KEY'));
         $this->apiEndpoint = config('services.openai.embedding_api_url', 'https://api.openai.com/v1/embeddings');
         $this->model = config('services.openai.embedding_model', 'text-embedding-3-small');
         
-        Log::info('Embedding Service Configuration', [
-            'endpoint' => $this->apiEndpoint,
-            'model' => $this->model,
-            'api_key_prefix' => substr($this->apiKey, 0, 10) . '...'
-        ]);
+        // Log::info('Embedding Service Configuration', [
+        //     'endpoint' => $this->apiEndpoint,
+        //     'model' => $this->model,
+        //     'api_key_prefix' => substr($this->apiKey, 0, 10) . '...'
+        // ]);
+    }
+
+    /**
+     * Generate and upsert a user's embedding to Qdrant based on their active role.
+     * Returns true if an embedding was generated and upserted; false otherwise.
+     */
+    public function generateForUser(User $user): bool
+    {
+        try {
+            // Prefer role order: academician -> postgraduate -> undergraduate
+            if ($user->academician) {
+                $academician = $user->academician;
+                $vector = $this->generateAcademicianEmbedding($academician);
+                if (!$vector) { return false; }
+                $payload = [
+                    'full_name' => $academician->full_name,
+                    'university_id' => $academician->university ?? null,
+                    'faculty_id' => $academician->faculty ?? null,
+                    'has_embedding' => true,
+                ];
+                return $this->qdrantService->upsertAcademicianEmbedding(
+                    (string) ($academician->academician_id ?? $user->unique_id ?? $academician->id),
+                    (int) $academician->id,
+                    $vector,
+                    $payload
+                );
+            }
+            if ($user->postgraduate) {
+                $pg = $user->postgraduate;
+                $vector = $this->generatePostgraduateEmbedding($pg);
+                if (!$vector) { return false; }
+                $payload = [
+                    'full_name' => $pg->full_name,
+                    'university_id' => $pg->university_id ?? null,
+                    'faculty_id' => $pg->faculty_id ?? null,
+                    'has_embedding' => true,
+                ];
+                return $this->qdrantService->upsertStudentEmbedding('postgraduate', (int) $pg->id, (int) $pg->id, $vector, $payload);
+            }
+            if ($user->undergraduate) {
+                $ug = $user->undergraduate;
+                $vector = $this->generateUndergraduateEmbedding($ug);
+                if (!$vector) { return false; }
+                $payload = [
+                    'full_name' => $ug->full_name,
+                    'university_id' => $ug->university_id ?? null,
+                    'faculty_id' => $ug->faculty_id ?? null,
+                    'has_embedding' => true,
+                ];
+                return $this->qdrantService->upsertStudentEmbedding('undergraduate', (int) $ug->id, (int) $ug->id, $vector, $payload);
+            }
+            Log::info('generateForUser: No role profile found for user ' . $user->id);
+            return false;
+        } catch (\Throwable $t) {
+            Log::error('EmbeddingService.generateForUser error: ' . $t->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -35,6 +96,13 @@ class EmbeddingService
      */
     public function generateEmbedding($text, $isQuery = false)
     {
+        // Sanitize text to ensure valid UTF-8 and avoid json_encode errors
+        try {
+            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+        } catch (\Throwable $e) {
+            // Fallback: strip invalid characters if conversion fails unexpectedly
+            $text = iconv('UTF-8', 'UTF-8//IGNORE', $text);
+        }
         if (empty($text)) {
             Log::warning('Empty text provided for embedding generation');
             return null;

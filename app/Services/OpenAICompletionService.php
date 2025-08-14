@@ -490,11 +490,15 @@ class OpenAICompletionService
             // Build prompt based on match type
             $prompt = '';
             
-            if ($matchType === 'academician_to_student') {
-                $prompt = $this->buildAcademicianToStudentPrompt($data, $query, $matchScore);
-            } elseif ($matchType === 'academician_to_academician') {
-                $prompt = $this->buildAcademicianToAcademicianPrompt($data, $query, $matchScore);
-            } else {
+        if ($matchType === 'academician_to_student') {
+            $prompt = $this->buildAcademicianToStudentPrompt($data, $query, $matchScore);
+        } elseif ($matchType === 'academician_to_academician') {
+            $prompt = $this->buildAcademicianToAcademicianPrompt($data, $query, $matchScore);
+        } elseif ($matchType === 'student_to_supervisor_for_program') {
+            $prompt = $this->buildSupervisorForProgramPrompt($data);
+        } elseif ($matchType === 'student_to_program') {
+            $prompt = $this->buildStudentToProgramPrompt($data);
+        } else {
                 Log::error("Unknown match type for insight generation", [
                     'match_type' => $matchType
                 ]);
@@ -524,6 +528,34 @@ class OpenAICompletionService
             return "No insight available at this time.";
         }
     }
+
+    protected function buildStudentToProgramPrompt(array $data): string
+    {
+        $studentProfile = $data['student_profile_summary'] ?? 'No CV summary provided.';
+        $studentInterests = $data['student_research_interests'] ?? 'Not specified.';
+        $programName = $data['program_name'] ?? 'the selected program';
+        $programUniversity = $data['program_university'] ?? 'the university';
+        $programDescription = $data['program_description'] ?? 'No description available.';
+        $programFunding = $data['program_funding'] ?? 'Not specified.';
+
+        return <<<PROMPT
+You are an expert academic advisor. Your task is to write a concise, personalized, and encouraging justification explaining why a specific PhD program is a strong match for a student.
+
+**Student's Profile:**
+- Research Interests: {$studentInterests}
+- CV Summary: {$studentProfile}
+
+**PhD Program Profile:**
+- Program Name: {$programName} at {$programUniversity}
+- Funding Information: {$programFunding}
+- Program Description: {$programDescription}
+
+**Your Task:**
+Based on all the information above, write a compelling 2-3 sentence justification in the second person ("Your background..."). Create a strong narrative that connects the student's CV and research interests directly to the program's description and focus areas. Be specific and highlight unique benefits.
+
+**Justification:**
+PROMPT;
+    }
     
     /**
      * Build a prompt for academician-to-student insights
@@ -548,35 +580,35 @@ class OpenAICompletionService
         
         // Create a formatted prompt
         $prompt = <<<EOT
-You are an academic advisor with expertise in matching academics with students. 
-Your task is to generate a personalized, insightful explanation as to why a specific $studentType student may be a good match for an academician based on their research profiles and the search query.
+        You are an academic advisor with expertise in matching academics with students. 
+        Your task is to generate a personalized, insightful explanation as to why a specific $studentType student may be a good match for an academician based on their research profiles and the search query.
 
-Search Query: "$query"
+        Search Query: "$query"
 
-ACADEMICIAN INFORMATION:
-- Name: $academicianName
-- Position: $academicianPosition
-- Department: $academicianDepartment
-- Research Expertise: $academicianExpertise
-- Supervision Style: $academicianSupervisionStyle
+        ACADEMICIAN INFORMATION:
+        - Name: $academicianName
+        - Position: $academicianPosition
+        - Department: $academicianDepartment
+        - Research Expertise: $academicianExpertise
+        - Supervision Style: $academicianSupervisionStyle
 
-STUDENT INFORMATION:
-- Name: $studentName
-- Type: $studentType
-- Research Field/Interest: $studentResearchField
-- Bio: $studentBio
-- Current Status: $studentStatus
+        STUDENT INFORMATION:
+        - Name: $studentName
+        - Type: $studentType
+        - Research Field/Interest: $studentResearchField
+        - Bio: $studentBio
+        - Current Status: $studentStatus
 
-Match Score: {$matchScore} (on a scale of 0-1)
+        Match Score: {$matchScore} (on a scale of 0-1)
 
-Provide 3-5 sentences that explain why this student might be relevant to the academician's research interests, especially considering:
-1. Alignment between the academician's expertise and the student's research field
-2. Potential collaborative opportunities or projects
-3. How the student's profile matches the academician's search query
-4. Why the student might benefit from the academician's supervision or collaboration
+        Provide 3-5 sentences that explain why this student might be relevant to the academician's research interests, especially considering:
+        1. Alignment between the academician's expertise and the student's research field
+        2. Potential collaborative opportunities or projects
+        3. How the student's profile matches the academician's search query
+        4. Why the student might benefit from the academician's supervision or collaboration
 
-Use a professional, helpful tone but maintain a concise explanatory style focused on academic relevance.
-EOT;
+        Use a professional, helpful tone but maintain a concise explanatory style focused on academic relevance.
+        EOT;
 
         return $prompt;
     }
@@ -606,41 +638,87 @@ EOT;
         
         // Create a formatted prompt
         $prompt = <<<EOT
-You are an academic collaboration advisor with expertise in identifying potential research partnerships between academics.
-Your task is to generate a personalized, insightful explanation as to why two academics may be good research collaborators based on their research profiles, publication history, and a search query.
+        You are an academic collaboration advisor with expertise in identifying potential research partnerships between academics.
+        Your task is to generate a personalized, insightful explanation as to why two academics may be good research collaborators based on their research profiles, publication history, and a search query.
 
-Search Query: "$query"
+        Search Query: "$query"
 
-SEARCHING ACADEMICIAN:
-- Name: $searcherName
-- Position: $searcherPosition
-- Department: $searcherDepartment
-- Research Expertise: $searcherExpertise
+        SEARCHING ACADEMICIAN:
+        - Name: $searcherName
+        - Position: $searcherPosition
+        - Department: $searcherDepartment
+        - Research Expertise: $searcherExpertise
 
-POTENTIAL COLLABORATOR:
-- Name: $collaboratorName
-- Position: $collaboratorPosition
-- Department: $collaboratorDepartment
-- Research Expertise: $collaboratorExpertise
-- Bio: $collaboratorBio
+        POTENTIAL COLLABORATOR:
+        - Name: $collaboratorName
+        - Position: $collaboratorPosition
+        - Department: $collaboratorDepartment
+        - Research Expertise: $collaboratorExpertise
+        - Bio: $collaboratorBio
 
-PUBLICATIONS:
-$publicationsData
+        PUBLICATIONS:
+        $publicationsData
 
-Match Score: {$matchScore} (on a scale of 0-1)
+        Match Score: {$matchScore} (on a scale of 0-1)
 
-Provide 4-6 sentences that explain why these two academics might make good research collaborators, especially considering:
-1. Complementary aspects of their research expertise
-2. Potential interdisciplinary research opportunities
-3. How the potential collaborator's publication record demonstrates their expertise in areas relevant to the search query
-4. Specific research topics they might explore together based on the collaborator's publication history
-5. Possible synergies between their departments or specializations
-6. Real-world impact of potential collaborative research
+        Provide 4-6 sentences that explain why these two academics might make good research collaborators, especially considering:
+        1. Complementary aspects of their research expertise
+        2. Potential interdisciplinary research opportunities
+        3. How the potential collaborator's publication record demonstrates their expertise in areas relevant to the search query
+        4. Specific research topics they might explore together based on the collaborator's publication history
+        5. Possible synergies between their departments or specializations
+        6. Real-world impact of potential collaborative research
 
-Use a professional, helpful tone but maintain a concise explanatory style focused on academic collaboration opportunities.
-EOT;
+        Use a professional, helpful tone but maintain a concise explanatory style focused on academic collaboration opportunities.
+        EOT;
 
         return $prompt;
+    }
+
+    protected function buildSupervisorForProgramPrompt(array $data): string
+    {
+        // Student
+        $studentProfile = $data['student_profile_summary'] ?? 'No CV summary provided.';
+        $studentInterests = $data['student_research_interests'] ?? 'Not specified.';
+        $studentBio = $data['student_bio'] ?? '';
+        $studentType = $data['student_type'] ?? 'student';
+
+        // Supervisor
+        $supervisorName = $data['supervisor_name'] ?? 'this supervisor';
+        $supervisorExpertise = $data['supervisor_expertise'] ?? 'Not specified.';
+        $supervisorBio = $data['supervisor_bio'] ?? '';
+        $supervisorPosition = $data['supervisor_position'] ?? '';
+        $supervisorDepartment = $data['supervisor_department'] ?? '';
+        $supervisorStyle = $data['supervisor_supervision_style'] ?? 'Not specified.';
+
+        // Program
+        $programName = $data['program_name'] ?? 'the selected program';
+        $programUniversity = $data['program_university'] ?? 'the university';
+
+        return <<<PROMPT
+You are an expert academic advisor. Your task is to write a concise, personalized, and encouraging justification explaining why a specific supervisor is a strong match for a student, within the context of a specific PhD program.
+
+**Context:**
+- The Student is a {$studentType} considering the '{$programName}' at {$programUniversity}.
+- The Supervisor is Dr. {$supervisorName}, who is affiliated with this program.
+
+**Student's Profile:**
+- Research Interests: {$studentInterests}
+- CV / Profile Summary: {$studentProfile}
+- Brief Bio: {$studentBio}
+
+**Supervisor's Profile:**
+- Name: Dr. {$supervisorName}
+- Position: {$supervisorPosition}, {$supervisorDepartment}
+- Brief Bio: {$supervisorBio}
+- Research Expertise: {$supervisorExpertise}
+- Style of Supervision: {$supervisorStyle}
+
+**Your Task:**
+Based on all the information above, write a compelling 2-4 sentence justification in the second person ("Your background..."). Create a strong narrative that connects the student's experience and interests directly to the supervisor's expertise, position, and supervision style. Be specific and highlight the unique benefits of this potential partnership.
+
+**Justification:**
+PROMPT;
     }
 
     /**

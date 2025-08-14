@@ -13,6 +13,9 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'poppler' => [
+        'path' => env('PDFTOTEXT_PATH', 'C:\poppler\Library\bin\pdftotext.exe'),
+    ],
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),

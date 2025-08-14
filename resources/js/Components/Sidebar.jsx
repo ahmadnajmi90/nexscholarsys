@@ -20,7 +20,7 @@ import {
     FaUserShield,
     FaDatabase
 } from 'react-icons/fa';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, GraduationCap } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -134,6 +134,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>AI Matching</span>
                         </Link>
 
+                        <Link 
+                            href={route('phd-recommendations.index')} 
+                            className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
+                                route().current('phd-recommendations.*') ? 'bg-blue-50 text-blue-600' : ''
+                              }`}
+                        >
+                            <GraduationCap className="w-5 h-5 text-gray-600" />
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>PhD Recommendations</span>
+                        </Link>
+
                         <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
                             <FaBookmark className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Bookmarks</span>
@@ -142,9 +152,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         <Link 
                             href={route('project-hub.index')} 
                             className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
-                                route().current('project-hub.index') || route().current().startsWith('project-hub.') 
-                                ? 'bg-blue-50 text-blue-600' 
-                                : ''
+                                route().current('project-hub.*') ? 'bg-blue-50 text-blue-600' : ''
                             }`}
                         >
                             <LayoutGrid className="w-5 h-5 text-gray-600" />

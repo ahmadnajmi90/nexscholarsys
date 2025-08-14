@@ -23,6 +23,10 @@ class EventServiceProvider extends ServiceProvider
         ConnectionStatusChanged::class => [
             SendConnectionNotification::class,
         ],
+        \App\Events\ProfileDataChanged::class => [
+            \App\Listeners\InvalidateUserInsights::class,
+            \App\Listeners\RegenerateUserEmbedding::class,
+        ],
     ];
 
     /**

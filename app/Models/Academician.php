@@ -95,6 +95,16 @@ class Academician extends Model
         return $this->belongsTo(FacultyList::class, 'faculty', 'id');
     }
 
+    public function phdPrograms()
+    {
+        return $this->belongsToMany(PhDProgram::class, 'academician_phd_program', 'academician_id', 'phd_program_id')->withTimestamps();
+    }
+
+    public function postProjects()
+    {
+        return $this->hasMany(\App\Models\PostProject::class, 'author_id', 'academician_id');
+    }
+
     /**
      * Get the profile status attribute.
      * 

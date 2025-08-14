@@ -48,6 +48,7 @@ use App\Http\Controllers\AIMatchingController;
 use App\Http\Controllers\ProjectHubController;
 use App\Http\Controllers\ProjectHub\WorkspaceController;
 use App\Http\Controllers\ProjectHub\BoardController;
+use App\Http\Controllers\PhDRecommendationController;
 use App\Http\Controllers\ProjectHub\BoardListController;
 use App\Http\Controllers\ProjectHub\TaskController;
 use App\Http\Controllers\ProjectHub\TaskAttachmentController;
@@ -342,6 +343,16 @@ Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\Profil
 Route::get('/admin/data-management', function() {
     return Inertia::render('Admin/DataManagement/Index');
 })->name('admin.data-management.index');
+});
+
+// PhD Program Recommendations
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/phd-recommendations', [PhDRecommendationController::class, 'index'])->name('phd-recommendations.index');
+    Route::post('/phd-recommendations/analyze', [PhDRecommendationController::class, 'analyze'])->name('phd-recommendations.analyze');
+    Route::get('/phd-recommendations/status/{jobId}', [PhDRecommendationController::class, 'status'])->name('phd-recommendations.status');
+    Route::get('/phd-recommendations/results', [PhDRecommendationController::class, 'results'])->name('phd-recommendations.results');
+    Route::get('/phd-recommendations/programs/{program}/supervisors', [PhDRecommendationController::class, 'showSupervisors'])
+        ->name('phd-recommendations.supervisors');
 });
 
 // Project Hub Routes

@@ -22,6 +22,11 @@ class PhDProgram extends Model
         'funding_info',
         'application_url',
         'country',
+        'research_areas',
+    ];
+
+    protected $casts = [
+        'research_areas' => 'array',
     ];
 
     public function university(): BelongsTo

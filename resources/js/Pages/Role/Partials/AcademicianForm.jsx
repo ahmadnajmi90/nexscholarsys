@@ -12,6 +12,8 @@ import React from 'react';
 
 export default function AcademicianForm({ className = '', researchOptions, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   const academician = usePage().props.academician; // Related academician data
+  const allPrograms = usePage().props.allPrograms || [];
+  const currentProgramIds = usePage().props.currentProgramIds || [];
 
   const { data, setData, post, errors, processing, recentlySuccessful } =
     useForm({
@@ -38,6 +40,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       style_of_supervision: academician?.style_of_supervision || '',
       background_image: academician?.background_image || '',
       CV_file: academician?.CV_file || '',
+      phd_program_ids: currentProgramIds,
     });
 
   // State for modals and generation
@@ -1163,6 +1166,33 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                         </div>
                       );
                     }
+                  }}
+                />
+              </div>
+
+              {/* Associated PhD Programs */}
+              <div className="w-full">
+                <label htmlFor="phd_program_ids" className="block text-sm font-medium text-gray-700">
+                  Associated PhD Programs <span className="text-red-600">*</span>
+                </label>
+                <Select
+                  id="phd_program_ids"
+                  isMulti
+                  options={allPrograms.map(p => ({ value: p.id, label: p.name }))}
+                  className="mt-1 block w-full"
+                  classNamePrefix="select"
+                  value={allPrograms
+                    .map(p => ({ value: p.id, label: p.name }))
+                    .filter(opt => data.phd_program_ids?.includes(opt.value))}
+                  onChange={(selected) => {
+                    const ids = (selected || []).map(opt => opt.value);
+                    setData('phd_program_ids', ids);
+                  }}
+                  placeholder="Select associated programs..."
+                  menuPortalTarget={document.body}
+                  required
+                  styles={{
+                    menuPortal: (provided) => ({ ...provided, zIndex: 9999 })
                   }}
                 />
               </div>

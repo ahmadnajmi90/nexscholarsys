@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c1c1eaa48fc5a8c79abab2309cc16f6b",
+    "content-hash": "1589c30caa4a3c1ebdfbae747939dd03",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -7003,16 +7003,16 @@
         },
         {
             "name": "spatie/pdf-to-text",
-            "version": "1.54.0",
+            "version": "1.54.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/pdf-to-text.git",
-                "reference": "06dc9316dea63c74d7997da41f9fc08df97ba519"
+                "reference": "ad2a792c7e1e68f1bc9b038dc73cdcf760595fbb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/pdf-to-text/zipball/06dc9316dea63c74d7997da41f9fc08df97ba519",
-                "reference": "06dc9316dea63c74d7997da41f9fc08df97ba519",
+                "url": "https://api.github.com/repos/spatie/pdf-to-text/zipball/ad2a792c7e1e68f1bc9b038dc73cdcf760595fbb",
+                "reference": "ad2a792c7e1e68f1bc9b038dc73cdcf760595fbb",
                 "shasum": ""
             },
             "require": {
@@ -7049,7 +7049,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/pdf-to-text/issues",
-                "source": "https://github.com/spatie/pdf-to-text/tree/1.54.0"
+                "source": "https://github.com/spatie/pdf-to-text/tree/1.54.1"
             },
             "funding": [
                 {
@@ -7057,7 +7057,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-10-18T13:20:34+00:00"
+            "time": "2025-06-13T15:23:19+00:00"
         },
         {
             "name": "symfony/clock",

@@ -354,7 +354,8 @@ class QdrantService
         // Ensure mysql_id is included in payload
         $payload = array_merge([
             'mysql_id' => $mysqlId,
-            'record_type' => 'academician'
+            'record_type' => 'academician',
+            'academician_id' => $academicianId,
         ], $additionalPayload);
 
         return $this->upsertVector($this->academiciansCollection, $academicianId, $vector, $payload);
@@ -503,5 +504,120 @@ class QdrantService
             ]);
             return false;
         }
+    }
+
+    /**
+     * Create a payload index on a collection.
+     *
+     * @param string $collectionName The name of the collection.
+     * @param string $fieldName The name of the payload field to index.
+     * @param string $fieldType The type of the field (e.g., 'keyword', 'integer').
+     * @return bool True if successful or already exists, false otherwise.
+     */
+    public function createPayloadIndex(string $collectionName, string $fieldName, string $fieldType = 'keyword'): bool
+    {
+        try {
+            Log::info("Attempting to create payload index for '{$fieldName}' on collection '{$collectionName}'.");
+
+            $response = $this->httpClient->put("/collections/{$collectionName}/index", [
+                'field_name' => $fieldName,
+                'field_schema' => $fieldType,
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Successfully created or updated payload index for '{$fieldName}'.");
+                return true;
+            }
+
+            Log::error("Failed to create payload index for '{$fieldName}'.", [
+                'status' => $response->status(),
+                'response' => $response->json(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Exception when creating payload index: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Retrieve a single point from a collection based on a payload filter.
+     *
+     * @param string $collectionName The collection to search in.
+     * @param array $payloadFilter The exact key-value pair to match in the payload (e.g., ['academician_id' => 123]).
+     * @return array|null The found point with its vector and payload, or null if not found.
+     */
+    public function getPointByPayload(string $collectionName, array $payloadFilter): ?array
+    {
+        try {
+            $key = key($payloadFilter);
+            $value = current($payloadFilter);
+
+            $data = [
+                'filter' => [
+                    'must' => [
+                        [
+                            'key' => $key,
+                            'match' => [
+                                'value' => $value,
+                            ],
+                        ],
+                    ],
+                ],
+                'limit' => 1,
+                'with_payload' => true,
+                'with_vector' => true,
+            ];
+
+            $response = $this->httpClient->post("/collections/{$collectionName}/points/scroll", $data);
+
+            if ($response->successful()) {
+                $points = $response->json('result.points', []);
+                return $points[0] ?? null;
+            } else {
+                Log::error("Failed to get point by payload from {$collectionName}", [
+                    'status' => $response->status(),
+                    'response' => $response->json(),
+                    'filter' => $payloadFilter,
+                ]);
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception when getting point by payload: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Calculate cosine similarity between two vectors.
+     *
+     * @param array $v1 First vector
+     * @param array $v2 Second vector
+     * @return float Similarity score (0-1)
+     */
+    public function cosineSimilarity(array $v1, array $v2): float
+    {
+        $dotProduct = 0;
+        $magnitude1 = 0;
+        $magnitude2 = 0;
+
+        $count = min(count($v1), count($v2));
+
+        for ($i = 0; $i < $count; $i++) {
+            $a = $v1[$i] ?? 0;
+            $b = $v2[$i] ?? 0;
+            $dotProduct += $a * $b;
+            $magnitude1 += $a * $a;
+            $magnitude2 += $b * $b;
+        }
+
+        $magnitude1 = sqrt($magnitude1);
+        $magnitude2 = sqrt($magnitude2);
+
+        if ($magnitude1 == 0 || $magnitude2 == 0) {
+            return 0.0;
+        }
+
+        return $dotProduct / ($magnitude1 * $magnitude2);
     }
 } 
