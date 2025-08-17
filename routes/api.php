@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\ConnectionController;
 use App\Http\Controllers\Api\V1\NotificationController;
-use App\Http\Controllers\Api\V1\PhDProgramController;
+use App\Http\Controllers\Api\V1\PostgraduateProgramController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,13 +26,13 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
     
     // Data Management API Routes (Admin Only)
     Route::middleware(['admin'])->group(function () {
-        // PhD Programs - Import must be defined BEFORE resource to avoid {phd_program} catching 'import'
-        Route::post('phd-programs/import/preview', [PhDProgramController::class, 'previewImport'])->name('api.phd-programs.import.preview');
-        Route::post('phd-programs/import', [PhDProgramController::class, 'import'])->name('api.phd-programs.import');
-        Route::delete('phd-programs/{phd_program}', [PhDProgramController::class, 'destroy'])->name('api.phd-programs.destroy');
-        Route::apiResource('phd-programs', PhDProgramController::class)->except(['destroy']);
+        // Postgraduate Programs - Import must be defined BEFORE resource to avoid {postgraduate_program} catching 'import'
+        Route::post('postgraduate-programs/import/preview', [PostgraduateProgramController::class, 'previewImport'])->name('api.postgraduate-programs.import.preview');
+        Route::post('postgraduate-programs/import', [PostgraduateProgramController::class, 'import'])->name('api.postgraduate-programs.import');
+        Route::delete('postgraduate-programs/{postgraduate_program}', [PostgraduateProgramController::class, 'destroy'])->name('api.postgraduate-programs.destroy');
+        Route::apiResource('postgraduate-programs', PostgraduateProgramController::class)->except(['destroy']);
         // Allow POST to update for consistency with existing tabs
-        Route::post('phd-programs/{phd_program}', [PhDProgramController::class, 'update'])->name('api.phd-programs.update');
+        Route::post('postgraduate-programs/{postgraduate_program}', [PostgraduateProgramController::class, 'update'])->name('api.postgraduate-programs.update');
 
         // Universities
         Route::get('universities', [\App\Http\Controllers\Api\V1\UniversityController::class, 'index'])

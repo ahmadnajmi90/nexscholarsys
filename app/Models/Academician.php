@@ -95,9 +95,14 @@ class Academician extends Model
         return $this->belongsTo(FacultyList::class, 'faculty', 'id');
     }
 
-    public function phdPrograms()
+    public function postgraduatePrograms()
     {
-        return $this->belongsToMany(PhDProgram::class, 'academician_phd_program', 'academician_id', 'phd_program_id')->withTimestamps();
+        return $this->belongsToMany(
+            \App\Models\PostgraduateProgram::class,
+            'academician_postgraduate_program',
+            'academician_id',
+            'postgraduate_program_id'
+        )->withTimestamps();
     }
 
     public function postProjects()

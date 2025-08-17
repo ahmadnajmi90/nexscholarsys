@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\PhDProgram;
+use App\Models\PostgraduateProgram;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -24,10 +24,10 @@ class ProgramMatchingService
      *
      * @return array<int, array<string, mixed>> Saved recommendation rows
      */
-    public function findAndAnalyzePrograms(User $user, string $jobKey, string $profileHash): array
+    public function findAndAnalyzePrograms(User $user, string $jobKey, string $profileHash, string $programType = 'Any'): array
     {
         // --- ADD THIS BLOCK: CHECK FOR EXISTING RESULTS FIRST ---
-        $existingResult = DB::table('program_recommendation_results')
+        $existingResult = DB::table('postgraduate_program_recommendations')
             ->where('user_id', $user->id)
             ->where('profile_hash', $profileHash)
             ->exists();
@@ -59,7 +59,17 @@ class ProgramMatchingService
             }
 
             // Qdrant similarity search
-            $qdrantResults = $this->qdrantService->searchVectors('nexscholar_phd_programs', $queryVector, 10, 0.2);
+            // Add program type filter if specified
+            $filter = null;
+            if ($programType && $programType !== 'Any') {
+                $filter = [
+                    'must' => [
+                        ['key' => 'program_type', 'match' => ['value' => $programType]]
+                    ]
+                ];
+            }
+            
+            $qdrantResults = $this->qdrantService->searchVectors('nexscholar_postgraduate_programs', $queryVector, 10, 0.2, $filter);
             Log::info("ProgramMatchingService: Qdrant returned " . count($qdrantResults) . " results for user {$user->id}");
 
             // Use provided identifiers from the job
@@ -67,14 +77,14 @@ class ProgramMatchingService
 
             foreach ($qdrantResults as $i => $result) {
                 $payload = $result['payload'] ?? [];
-                $mysqlId = $payload['phd_program_id'] ?? ($payload['mysql_id'] ?? null);
+                $mysqlId = $payload['postgraduate_program_id'] ?? ($payload['mysql_id'] ?? null);
                 $score = (float) ($result['score'] ?? 0);
                 if (!$mysqlId) {
                     Log::warning("ProgramMatchingService: Skipping result #{$i} due to missing program ID in payload.");
                     continue;
                 }
 
-                $program = PhDProgram::with(['university', 'faculty'])->find($mysqlId);
+                $program = PostgraduateProgram::with(['university', 'faculty'])->find($mysqlId);
                 if (!$program) {
                     Log::warning("ProgramMatchingService: Program not found in DB for id={$mysqlId}.");
                     continue;
@@ -85,7 +95,8 @@ class ProgramMatchingService
                     'match_type' => 'student_to_program',
                     'student_profile_summary' => $studentProfileSummary,
                     'student_research_interests' => $studentInterests,
-                    'program_name' => $program->name ?? 'PhD Program',
+                    'program_name' => $program->name ?? 'Postgraduate Program',
+                    'program_type' => $program->program_type ?? 'Master',
                     'program_university' => $program->university->full_name ?? $program->university->name ?? 'University',
                     'program_description' => (string) ($program->description ?? ''),
                     'program_funding' => (string) ($program->funding_info ?? ''),
@@ -96,9 +107,9 @@ class ProgramMatchingService
                 $insight = trim($insight);
 
                 // Save recommendation row
-                DB::table('program_recommendation_results')->insert([
+                DB::table('postgraduate_program_recommendations')->insert([
                     'user_id' => $user->id,
-                    'phd_program_id' => $program->id,
+                    'postgraduate_program_id' => $program->id,
                     'batch_id' => $batchId,
                     'profile_hash' => $profileHash,
                     'match_score' => $score,
@@ -108,7 +119,7 @@ class ProgramMatchingService
                 ]);
 
                 $results[] = [
-                    'phd_program_id' => $program->id,
+                    'postgraduate_program_id' => $program->id,
                     'match_score' => $score,
                     'justification' => $insight,
                 ];

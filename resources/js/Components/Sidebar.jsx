@@ -135,13 +135,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </Link>
 
                         <Link 
-                            href={route('phd-recommendations.index')} 
+                            href={route('postgraduate-recommendations.index')} 
                             className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
-                                route().current('phd-recommendations.*') ? 'bg-blue-50 text-blue-600' : ''
+                                route().current('postgraduate-recommendations.*') ? 'bg-blue-50 text-blue-600' : ''
                               }`}
                         >
                             <GraduationCap className="w-5 h-5 text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>PhD Recommendations</span>
+                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Postgraduate Recommendations</span>
                         </Link>
 
                         <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">

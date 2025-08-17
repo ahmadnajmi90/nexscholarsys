@@ -18,7 +18,7 @@ class InvalidateUserInsights
         \App\Models\SupervisorInsight::where('user_id', $userId)->delete();
         
         // Also clear the user's cached vector to force regeneration on the next run
-        \Illuminate\Support\Facades\Cache::forget('phd_rec_user_vec_' . $userId);
+        \Illuminate\Support\Facades\Cache::forget('postgraduate_rec_user_vec_' . $userId);
     }
 }
 

@@ -298,9 +298,10 @@ class QdrantService
      * @param array $vector The query vector
      * @param int $limit Maximum number of results to return
      * @param float $threshold Minimum similarity threshold (0-1)
+     * @param array|null $filter Optional filter conditions
      * @return array Array of results with IDs, scores, and payloads
      */
-    public function searchVectors(string $collectionName, array $vector, int $limit = 10, float $threshold = 0.3): array
+    public function searchVectors(string $collectionName, array $vector, int $limit = 10, float $threshold = 0.3, ?array $filter = null): array
     {
         try {
             $data = [
@@ -311,7 +312,12 @@ class QdrantService
                 'score_threshold' => $threshold
             ];
 
-            $cacheKey = "qdrant_search_" . md5($collectionName . '_' . json_encode($vector) . '_' . $limit . '_' . $threshold);
+            // Add filter if provided
+            if ($filter !== null) {
+                $data['filter'] = $filter;
+            }
+
+            $cacheKey = "qdrant_search_" . md5($collectionName . '_' . json_encode($vector) . '_' . $limit . '_' . $threshold . '_' . json_encode($filter));
             
             // Try to get cached results first
             if (Cache::has($cacheKey)) {

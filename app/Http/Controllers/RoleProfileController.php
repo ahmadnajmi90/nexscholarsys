@@ -120,20 +120,20 @@ class RoleProfileController extends Controller
             'query_params' => request()->query(),
         ]);
 
-        // Load PhD programs for association management if academician
+        // Load Postgraduate programs for association management if academician
         $allPrograms = [];
         $currentProgramIds = [];
         if ($isAcademician && $academician = Auth::user()->academician) {
             $facultyId = $academician->faculty_id ?? $academician->faculty ?? null;
 
             if ($facultyId) {
-                $allPrograms = \App\Models\PhDProgram::where('faculty_id', $facultyId)
+                $allPrograms = \App\Models\PostgraduateProgram::where('faculty_id', $facultyId)
                     ->select('id', 'name')
                     ->orderBy('name')
                     ->get();
             }
 
-            $currentProgramIds = $academician->phdPrograms()->pluck('phd_program_id');
+            $currentProgramIds = $academician->postgraduatePrograms()->pluck('postgraduate_program_id');
         }
 
         return Inertia::render('Role/Edit', [
@@ -496,9 +496,9 @@ class RoleProfileController extends Controller
                     $validatedData
                 );
 
-                // Sync associated PhD programs if provided
-                if ($request->has('phd_program_ids') && is_array($request->input('phd_program_ids'))) {
-                    $academician->phdPrograms()->sync($request->input('phd_program_ids'));
+                // Sync associated Postgraduate programs if provided
+                if ($request->has('postgraduate_program_ids') && is_array($request->input('postgraduate_program_ids'))) {
+                    $academician->postgraduatePrograms()->sync($request->input('postgraduate_program_ids'));
                 }
             }
 

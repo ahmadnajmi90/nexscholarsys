@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\PhDProgram;
+use App\Models\PostgraduateProgram;
 use App\Models\User;
 use App\Models\FieldOfResearch;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +19,7 @@ class SupervisorMatchingService
     /**
      * Rank supervisors for a given program and user.
      */
-    public function rankSupervisorsForProgram(PhDProgram $program, User $user): array
+    public function rankSupervisorsForProgram(PostgraduateProgram $program, User $user): array
     {
         // Step 1: Build user query vector
         $queryVector = $this->buildUserVector($user);
@@ -89,7 +89,7 @@ class SupervisorMatchingService
                         [
                             'user_id' => $user->id,
                             'academician_id' => $sup->id,
-                            'phd_program_id' => $program->id,
+                            'postgraduate_program_id' => $program->id,
                         ],
                         [
                             'match_score' => $matchScore,
@@ -100,7 +100,7 @@ class SupervisorMatchingService
                     Log::error('Failed to persist supervisor insight', [
                         'user_id' => $user->id,
                         'academician_id' => $sup->id,
-                        'phd_program_id' => $program->id,
+                        'postgraduate_program_id' => $program->id,
                         'error' => $persistEx->getMessage(),
                     ]);
                 }
@@ -146,7 +146,7 @@ class SupervisorMatchingService
     protected function buildUserVector(User $user): array
     {
         try {
-            $cacheKey = 'phd_rec_user_vec_' . $user->id;
+            $cacheKey = 'postgraduate_rec_user_vec_' . $user->id;
             $cached = Cache::get($cacheKey);
             if ($cached) return $cached;
 

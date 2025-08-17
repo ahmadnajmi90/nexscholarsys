@@ -7,18 +7,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProgramRecommendationResult extends Model
 {
-    protected $table = 'program_recommendation_results';
+    protected $table = 'postgraduate_program_recommendations';
 
     protected $fillable = [
         'user_id',
-        'phd_program_id',
+        'postgraduate_program_id',
         'match_score',
         'justification',
     ];
 
-    public function phdProgram(): BelongsTo
+    public function postgraduateProgram(): BelongsTo
     {
-        return $this->belongsTo(PhDProgram::class);
+        return $this->belongsTo(PostgraduateProgram::class, 'postgraduate_program_id');
     }
 }
 

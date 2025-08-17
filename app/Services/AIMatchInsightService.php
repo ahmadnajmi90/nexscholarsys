@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Academician;
-use App\Models\PhDProgram;
+use App\Models\PostgraduateProgram;
 use App\Models\User;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
@@ -23,7 +23,7 @@ class AIMatchInsightService
     /**
      * Generate "Why this match" insight for a single student-supervisor pair within a program context.
      */
-    public function generateSupervisorInsight(User $student, Academician $supervisor, PhDProgram $program, array $researchOptionsLookup): string
+    public function generateSupervisorInsight(User $student, Academician $supervisor, PostgraduateProgram $program, array $researchOptionsLookup): string
     {
         try {
             $cacheKey = 'supervisor_insight_' . md5($student->id . '_' . $supervisor->id . '_' . $program->id);

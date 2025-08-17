@@ -534,24 +534,26 @@ class OpenAICompletionService
         $studentProfile = $data['student_profile_summary'] ?? 'No CV summary provided.';
         $studentInterests = $data['student_research_interests'] ?? 'Not specified.';
         $programName = $data['program_name'] ?? 'the selected program';
+        $programType = $data['program_type'] ?? 'Postgraduate';
         $programUniversity = $data['program_university'] ?? 'the university';
         $programDescription = $data['program_description'] ?? 'No description available.';
         $programFunding = $data['program_funding'] ?? 'Not specified.';
 
         return <<<PROMPT
-You are an expert academic advisor. Your task is to write a concise, personalized, and encouraging justification explaining why a specific PhD program is a strong match for a student.
+You are an expert academic advisor. Your task is to write a concise, personalized, and encouraging justification explaining why a specific {$programType} program is a strong match for a student.
 
 **Student's Profile:**
 - Research Interests: {$studentInterests}
 - CV Summary: {$studentProfile}
 
-**PhD Program Profile:**
+**{$programType} Program Profile:**
 - Program Name: {$programName} at {$programUniversity}
+- Program Type: {$programType}
 - Funding Information: {$programFunding}
 - Program Description: {$programDescription}
 
 **Your Task:**
-Based on all the information above, write a compelling 2-3 sentence justification in the second person ("Your background..."). Create a strong narrative that connects the student's CV and research interests directly to the program's description and focus areas. Be specific and highlight unique benefits.
+Based on all the information above, write a compelling 2-3 sentence justification in the second person ("Your background..."). Create a strong narrative that connects the student's CV and research interests directly to the {$programType} program's description and focus areas. Be specific and highlight unique benefits appropriate for a {$programType} level program.
 
 **Justification:**
 PROMPT;
@@ -696,7 +698,7 @@ PROMPT;
         $programUniversity = $data['program_university'] ?? 'the university';
 
         return <<<PROMPT
-You are an expert academic advisor. Your task is to write a concise, personalized, and encouraging justification explaining why a specific supervisor is a strong match for a student, within the context of a specific PhD program.
+You are an expert academic advisor. Your task is to write a concise, personalized, and encouraging justification explaining why a specific supervisor is a strong match for a student, within the context of a specific Postgraduate program.
 
 **Context:**
 - The Student is a {$studentType} considering the '{$programName}' at {$programUniversity}.

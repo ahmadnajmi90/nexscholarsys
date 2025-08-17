@@ -12,7 +12,7 @@ class SupervisorInsight extends Model
     protected $fillable = [
         'user_id',
         'academician_id',
-        'phd_program_id',
+        'postgraduate_program_id',
         'match_score',
         'justification',
     ];
@@ -27,9 +27,9 @@ class SupervisorInsight extends Model
         return $this->belongsTo(Academician::class);
     }
 
-    public function phdProgram()
+    public function postgraduateProgram()
     {
-        return $this->belongsTo(PhDProgram::class, 'phd_program_id');
+        return $this->belongsTo(\App\Models\PostgraduateProgram::class, 'postgraduate_program_id');
     }
 }
 

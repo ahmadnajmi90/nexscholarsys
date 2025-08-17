@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\PhDProgram;
+use App\Models\PostgraduateProgram;
 use App\Services\OpenAICompletionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Bus\Batchable;
@@ -16,7 +16,7 @@ class GenerateProgramResearchAreas implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, Batchable;
 
-    public function __construct(public PhDProgram $program) {}
+    public function __construct(public PostgraduateProgram $program) {}
 
     public function handle(OpenAICompletionService $openaiService): void
     {
@@ -58,7 +58,7 @@ class GenerateProgramResearchAreas implements ShouldQueue
     private function buildPrompt(string $description): string
     {
         return <<<PROMPT
-        You are an academic expert. Based on the following PhD program description, identify 3 to 5 core research area keywords.
+        You are an academic expert. Based on the following Postgraduate program description, identify 3 to 5 core research area keywords.
         The keywords should be concise (1-3 words each).
         Return your answer ONLY as a single, valid JSON array of strings.
 
