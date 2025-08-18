@@ -5,6 +5,7 @@ import { UploadCloud, FileText, Trash2, MapPin, DollarSign, Brain } from 'lucide
 import MainLayout from '@/Layouts/MainLayout';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import useRoles from '@/Hooks/useRoles';
 
 // Helper function for formatting file sizes
 const formatBytes = (bytes, decimals = 2) => {
@@ -17,6 +18,7 @@ const formatBytes = (bytes, decimals = 2) => {
 };
 
 export default function Index({ existingCv = null, searchHistory = [] }) {
+    const { isAcademician } = useRoles();
     const { data, setData, post, processing, errors } = useForm({
         cv_file: null,
         use_existing_cv: !!existingCv,
@@ -65,15 +67,41 @@ export default function Index({ existingCv = null, searchHistory = [] }) {
     return (
         <MainLayout title="Find Your Perfect Postgraduate Match">
             <div className="max-w-4xl mx-auto p-6">
-                <Head title="Find Your Perfect Postgraduate Match" />
-                <h1 className="text-3xl font-bold mb-2 text-center text-gray-900">Find Your Perfect Postgraduate Match</h1>
-                <p className="text-gray-600 text-center mb-8">Upload your CV and your research interests to get AI-powered Postgraduate Program recommendations.</p>
+                <Head title={isAcademician ? "Find Postgraduate Programs for Your Student" : "Find Your Perfect Postgraduate Match"} />
+                <h1 className="text-3xl font-bold mb-2 text-center text-gray-900">
+                    {isAcademician ? 'Find Postgraduate Programs for Your Student' : 'Find Your Perfect Postgraduate Match'}
+                </h1>
+                <p className="text-gray-600 text-center mb-8">
+                    {isAcademician 
+                        ? 'Upload your student\'s CV and research interests to get AI-powered Postgraduate Program recommendations.' 
+                        : 'Upload your CV and your research interests to get AI-powered Postgraduate Program recommendations.'
+                    }
+                </p>
+                {isAcademician && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-blue-700">
+                                    <strong>Note for Academicians:</strong> The CV and research information you provide here will only be used for this recommendation search. Your own academician profile will remain unchanged.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* --- CV Upload Section --- */}
                     {/* --- CV Upload Section --- */}
                     <div className="bg-white border rounded-lg p-6">
-                        <h2 className="font-medium text-lg mb-4 flex items-center gap-2"><FileText className="w-5 h-5" /> Upload Your CV</h2>
+                        <h2 className="font-medium text-lg mb-4 flex items-center gap-2">
+                            <FileText className="w-5 h-5" /> 
+                            {isAcademician ? 'Upload Student\'s CV' : 'Upload Your CV'}
+                        </h2>
 
                         {data.use_existing_cv && existingCv ? (
                             // STATE 1: Showing the EXISTING CV
@@ -123,15 +151,23 @@ export default function Index({ existingCv = null, searchHistory = [] }) {
 
                     {/* --- Research Interests & Preferences Section --- */}
                     <div className="bg-white border rounded-lg p-6 space-y-4">
-                        <h2 className="font-medium text-lg flex items-center gap-2"><Brain className="w-5 h-5" /> Research Interests & Preferences</h2>
+                        <h2 className="font-medium text-lg flex items-center gap-2">
+                            <Brain className="w-5 h-5" /> 
+                            {isAcademician ? 'Student\'s Research Interests & Preferences' : 'Research Interests & Preferences'}
+                        </h2>
                         <div>
-                            <label htmlFor="research_text" className="block text-sm font-medium text-gray-700 mb-1">Research Interests & Keywords</label>
+                            <label htmlFor="research_text" className="block text-sm font-medium text-gray-700 mb-1">
+                                {isAcademician ? 'Student\'s Research Interests & Keywords' : 'Research Interests & Keywords'}
+                            </label>
                             <textarea
                                 id="research_text"
                                 value={data.research_text}
                                 onChange={(e) => setData('research_text', e.target.value)}
                                 rows={6}
-                                placeholder="Describe your research interests, methodologies, and areas of expertise (e.g., machine learning, social media analytics, computational linguistics)..."
+                                placeholder={isAcademician 
+                                    ? "Describe your student's research interests, methodologies, and areas of expertise (e.g., machine learning, social media analytics, computational linguistics)..."
+                                    : "Describe your research interests, methodologies, and areas of expertise (e.g., machine learning, social media analytics, computational linguistics)..."
+                                }
                                 className="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                             {errors.research_text && <p className="text-red-600 text-sm mt-1">{errors.research_text}</p>}
@@ -205,7 +241,7 @@ export default function Index({ existingCv = null, searchHistory = [] }) {
                             className="w-full md:w-auto inline-flex justify-center items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                         >
                             <Brain className="w-5 h-5 mr-2" />
-                            {processing ? 'Analyzing...' : 'Get AI Recommendations'}
+                            {processing ? 'Analyzing...' : (isAcademician ? 'Get AI Recommendations for Student' : 'Get AI Recommendations')}
                         </button>
                     </div>
                 </form>

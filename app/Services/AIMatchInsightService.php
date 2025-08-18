@@ -9,6 +9,7 @@ use App\Models\Postgraduate;
 use App\Models\Undergraduate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AIMatchInsightService
@@ -23,7 +24,7 @@ class AIMatchInsightService
     /**
      * Generate "Why this match" insight for a single student-supervisor pair within a program context.
      */
-    public function generateSupervisorInsight(User $student, Academician $supervisor, PostgraduateProgram $program, array $researchOptionsLookup): string
+    public function generateSupervisorInsight(User $student, Academician $supervisor, PostgraduateProgram $program, array $researchOptionsLookup, ?string $providedCvPath = null, ?string $providedResearchText = null): string
     {
         try {
             $cacheKey = 'supervisor_insight_' . md5($student->id . '_' . $supervisor->id . '_' . $program->id);
@@ -33,23 +34,43 @@ class AIMatchInsightService
 
             Log::info("AIMatchInsightService: Generating insight for student: {$student->id} and supervisor: {$supervisor->id}");
 
-            $studentType = $student->postgraduate ? 'postgraduate' : ($student->undergraduate ? 'undergraduate' : 'student');
+            // Check if user is an academician and we have provided data
+            $isAcademician = $student->academician !== null;
+            
+            if ($isAcademician && ($providedCvPath || $providedResearchText)) {
+                // For academicians with provided data, use that instead of their profile
+                $studentType = 'student'; // Generic student type for academician searches
+                $studentResearchText = $providedResearchText ?? '';
+                
+                $cvText = '';
+                if ($providedCvPath && Storage::disk('public')->exists($providedCvPath)) {
+                    try {
+                        $cvText = app('App\\Services\\CVParserService')::getText($providedCvPath) ?? '';
+                    } catch (\Throwable $t) {
+                        Log::warning('AIMatchInsightService: CV parsing failed for academician: ' . $t->getMessage());
+                    }
+                }
+                $studentProfileText = trim($cvText);
+            } else {
+                // For students or academicians without provided data, use their profile
+                $studentType = $student->postgraduate ? 'postgraduate' : ($student->undergraduate ? 'undergraduate' : 'student');
 
-            // Build student's profile text from CV + research interests (resolved IDs to text)
-            $profileModel = $student->postgraduate ?? $student->undergraduate;
-            $studentResearchIds = [];
-            if ($student->postgraduate && !empty($student->postgraduate->field_of_research)) {
-                $studentResearchIds = is_array($student->postgraduate->field_of_research) ? $student->postgraduate->field_of_research : [];
-            } elseif ($student->undergraduate && !empty($student->undergraduate->research_preference)) {
-                $studentResearchIds = is_array($student->undergraduate->research_preference) ? $student->undergraduate->research_preference : [];
-            }
-            $studentResearchText = implode(', ', array_filter(array_map(fn($id) => $researchOptionsLookup[$id] ?? null, $studentResearchIds)));
+                // Build student's profile text from CV + research interests (resolved IDs to text)
+                $profileModel = $student->postgraduate ?? $student->undergraduate;
+                $studentResearchIds = [];
+                if ($student->postgraduate && !empty($student->postgraduate->field_of_research)) {
+                    $studentResearchIds = is_array($student->postgraduate->field_of_research) ? $student->postgraduate->field_of_research : [];
+                } elseif ($student->undergraduate && !empty($student->undergraduate->research_preference)) {
+                    $studentResearchIds = is_array($student->undergraduate->research_preference) ? $student->undergraduate->research_preference : [];
+                }
+                $studentResearchText = implode(', ', array_filter(array_map(fn($id) => $researchOptionsLookup[$id] ?? null, $studentResearchIds)));
 
-            $cvText = '';
-            if ($profileModel && !empty($profileModel->CV_file) && \Storage::disk('public')->exists($profileModel->CV_file) && class_exists('App\\Services\\CVParserService')) {
-                $cvText = app('App\\Services\\CVParserService')::getText($profileModel->CV_file) ?? '';
+                $cvText = '';
+                if ($profileModel && !empty($profileModel->CV_file) && Storage::disk('public')->exists($profileModel->CV_file) && class_exists('App\\Services\\CVParserService')) {
+                    $cvText = app('App\\Services\\CVParserService')::getText($profileModel->CV_file) ?? '';
+                }
+                $studentProfileText = trim($cvText);
             }
-            $studentProfileText = trim($cvText);
 
             // Resolve supervisor expertise IDs to text
             $supervisorExpertiseIds = is_array($supervisor->research_expertise ?? null) ? $supervisor->research_expertise : [];

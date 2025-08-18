@@ -882,6 +882,88 @@ The system generates embeddings for both postgraduate and undergraduate students
 4. Insights are cached for 30 minutes to improve performance and reduce API costs
 5. Insights are also stored in the database for analytics and future reference
 
+### Postgraduate Program Recommendations
+
+The platform provides AI-powered postgraduate program recommendations to help students find the perfect academic match:
+
+#### Role-Aware Recommendation System
+
+The system intelligently adapts its behavior based on the user's role:
+
+1. **Student Users (Postgraduates/Undergraduates):**
+   - Uses the student's own profile data (CV and research interests) for analysis
+   - Updates the student's profile when a new CV is uploaded
+   - Provides personalized recommendations based on their academic background
+
+2. **Academician Users:**
+   - Designed for academicians searching on behalf of their students
+   - Uses only the provided CV and research text for analysis
+   - **Crucially, does not update the academician's own profile** when uploading a new CV
+   - Stores uploaded CVs in a separate directory (`recommendation_cv_files`) to avoid profile conflicts
+   - Provides recommendations based solely on the student's information provided in the form
+
+#### Key Features
+
+1. **AI-Powered Analysis:**
+   - Uses GPT-4o to generate personalized insights for each program match
+   - Analyzes CV content and research interests to find optimal matches
+   - Provides detailed justifications for why each program is recommended
+
+2. **Comprehensive Program Database:**
+   - Searches across Master's and PhD programs
+   - Includes program descriptions, funding information, and university details
+   - Filters by program type (Any, Master, PhD)
+
+3. **Supervisor Matching:**
+   - For each recommended program, view available supervisors
+   - AI-generated insights on supervisor-student compatibility
+   - Filter supervisors by research areas and availability
+
+4. **User Experience:**
+   - Dynamic interface that adapts messaging based on user role
+   - Clear distinction between student and academician workflows
+   - Informational notes for academicians explaining that their profile won't be affected
+   - Search history tracking for repeated recommendations
+
+#### Technical Implementation
+
+1. **Role Detection:**
+   - Uses Laravel Bouncer for role-based access control
+   - Frontend adapts messaging and form labels based on user role
+   - Backend services check user role to determine processing logic
+
+2. **File Management:**
+   - Students: CVs stored in `CV_files` directory and linked to their profile
+   - Academicians: CVs stored in `recommendation_cv_files` directory with `academician_` prefix
+   - Separate storage prevents profile conflicts
+
+3. **Profile Hash System:**
+   - Creates unique fingerprints of CV + research text + program type
+   - Enables caching of results to avoid redundant processing
+   - Search history tracking for user convenience
+
+4. **Background Processing:**
+   - Uses Laravel jobs for asynchronous recommendation generation
+   - Progress tracking via cache for real-time status updates
+   - Automatic program research area enrichment when needed
+
+#### Usage
+
+1. **For Students:**
+   - Navigate to "Postgraduate Recommendations"
+   - Upload your CV or use existing profile CV
+   - Describe your research interests
+   - Select program type preferences
+   - Get AI-powered recommendations
+
+2. **For Academicians:**
+   - Navigate to "Postgraduate Recommendations"
+   - Upload your student's CV
+   - Describe your student's research interests
+   - Select program type preferences
+   - Get AI-powered recommendations for your student
+   - Your own academician profile remains unchanged
+
 ## Google Services
 
 ### Google Scholar Integration

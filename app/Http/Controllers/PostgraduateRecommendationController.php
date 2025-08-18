@@ -7,6 +7,7 @@ use App\Models\PostgraduateProgram;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -39,7 +40,7 @@ class PostgraduateRecommendationController extends Controller
         }
 
         // Fetch recent search history (last 5)
-        $history = \DB::table('recommendation_search_histories')
+        $history = DB::table('recommendation_search_histories')
             ->where('user_id', $user->id)
             ->latest('created_at')
             ->limit(5)
@@ -68,7 +69,7 @@ class PostgraduateRecommendationController extends Controller
 
         if (!empty($validated['use_existing_cv']) && $profile) {
             $existing = $profile->cv_file ?? $profile->CV_file ?? null;
-            if ($existing && \Storage::disk('public')->exists($existing)) {
+            if ($existing && Storage::disk('public')->exists($existing)) {
                 $cvPath = $existing;
             }
         } elseif ($request->hasFile('cv_file')) {
@@ -76,17 +77,28 @@ class PostgraduateRecommendationController extends Controller
             $destination = 'CV_files';
             $fileName = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
 
-            // Delete old CV if it exists
-            if ($profile) {
-                $old = $profile->cv_file ?? $profile->CV_file ?? null;
-                if ($old && \Storage::disk('public')->exists($old)) {
-                    \Storage::disk('public')->delete($old);
+            // Check if user is an academician
+            $isAcademician = $user->academician !== null;
+
+            if ($isAcademician) {
+                // For academicians, store CV in a separate directory to avoid updating their profile
+                $destination = 'recommendation_cv_files';
+                $fileName = 'academician_' . $user->id . '_' . time() . '_' . $file->getClientOriginalName();
+            } else {
+                // For students, delete old CV if it exists and update their profile
+                if ($profile) {
+                    $old = $profile->cv_file ?? $profile->CV_file ?? null;
+                    if ($old && Storage::disk('public')->exists($old)) {
+                        Storage::disk('public')->delete($old);
+                    }
                 }
             }
 
-            // Store and persist
+            // Store the file
             $cvPath = $file->storeAs($destination, $fileName, 'public');
-            if ($profile) {
+            
+            // Only update profile for non-academicians
+            if (!$isAcademician && $profile) {
                 $profile->cv_file = $cvPath; // prefer snake_case
                 // Maintain backward compatibility if model used CV_file
                 $profile->CV_file = $cvPath;
@@ -102,7 +114,7 @@ class PostgraduateRecommendationController extends Controller
         }
 
         // Create a unique fingerprint of the inputs
-        $cvFullPath = \Storage::disk('public')->path($cvPath);
+        $cvFullPath = Storage::disk('public')->path($cvPath);
         $cvHash = @md5_file($cvFullPath) ?: md5($cvPath);
         $profileHash = md5($cvHash . $validated['research_text'] . $validated['program_type']);
 
@@ -135,6 +147,16 @@ class PostgraduateRecommendationController extends Controller
         $jobKey = 'postgrad_rec_job_' . $user->id . '_' . \Illuminate\Support\Str::random(10); // also used as batch_id
         Cache::put($jobKey, ['status' => 'started', 'progress' => 10], now()->addMinutes(60));
         
+        // Store student data in session for supervisor matching (for academicians)
+        $isAcademician = $user->academician !== null;
+        if ($isAcademician) {
+            session([
+                'student_cv_path' => $cvPath,
+                'student_research_text' => $validated['research_text'],
+                'student_profile_hash' => $profileHash
+            ]);
+        }
+        
         GeneratePostgraduateRecommendations::dispatch($user->id, $cvPath, $validated['research_text'], $validated['program_type'], $jobKey, $profileHash);
         
         return Inertia::render('PostgraduateRecommendations/Processing', [
@@ -150,7 +172,7 @@ class PostgraduateRecommendationController extends Controller
 
     public function results()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $latestBatchId = \App\Models\ProgramRecommendationResult::where('user_id', $user->id)
             ->latest('created_at')
@@ -180,8 +202,18 @@ class PostgraduateRecommendationController extends Controller
     {
         $user = Auth::user();
         
+        // Check if we have stored student data for academicians
+        $isAcademician = $user->academician !== null;
+        $studentCvPath = null;
+        $studentResearchText = null;
+        
+        if ($isAcademician) {
+            $studentCvPath = session('student_cv_path');
+            $studentResearchText = session('student_research_text');
+        }
+        
         // 1. All the complex logic is now handled by the dedicated service.
-        $supervisors = $this->supervisorMatchingService->rankSupervisorsForProgram($program, $user);
+        $supervisors = $this->supervisorMatchingService->rankSupervisorsForProgram($program, $user, $studentCvPath, $studentResearchText);
 
         // 2. Load the program's relationships for the header display
         $program->load('university', 'faculty');

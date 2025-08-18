@@ -24,7 +24,7 @@ class ProgramMatchingService
      *
      * @return array<int, array<string, mixed>> Saved recommendation rows
      */
-    public function findAndAnalyzePrograms(User $user, string $jobKey, string $profileHash, string $programType = 'Any'): array
+    public function findAndAnalyzePrograms(User $user, string $jobKey, string $profileHash, string $programType = 'Any', ?string $providedCvPath = null, ?string $providedResearchText = null): array
     {
         // --- ADD THIS BLOCK: CHECK FOR EXISTING RESULTS FIRST ---
         $existingResult = DB::table('postgraduate_program_recommendations')
@@ -42,7 +42,7 @@ class ProgramMatchingService
 
         try {
             // Build student profile text from CV and stored interests
-            [$cvText, $studentInterests] = $this->buildStudentProfileText($user);
+            [$cvText, $studentInterests] = $this->buildStudentProfileText($user, $providedCvPath, $providedResearchText);
             $studentProfileSummary = trim(substr($cvText, 0, 1200));
 
             $queryDocument = trim($cvText . "\n\n" . $studentInterests);
@@ -137,36 +137,58 @@ class ProgramMatchingService
      *
      * @return array{0:string,1:string} [cvText, interestsText]
      */
-    protected function buildStudentProfileText(User $user): array
+    protected function buildStudentProfileText(User $user, ?string $providedCvPath = null, ?string $providedResearchText = null): array
     {
         $cvText = '';
         $interestsText = '';
 
-        $profile = $user->academician ?? $user->postgraduate ?? $user->undergraduate;
-        if ($profile) {
-            // CV text
-            try {
-                $cvPath = $profile->cv_file ?? $profile->CV_file ?? null;
-                if ($cvPath && Storage::disk('public')->exists($cvPath)) {
+        // Check if user is an academician
+        $isAcademician = $user->academician !== null;
+        
+        if ($isAcademician) {
+            // For academicians, only use provided CV and research text
+            if ($providedCvPath && Storage::disk('public')->exists($providedCvPath)) {
+                try {
                     /** @var \App\Services\CVParserService $cvParser */
                     $cvParser = resolve(\App\Services\CVParserService::class);
-                    $cvText = (string) $cvParser::getText($cvPath);
+                    $cvText = (string) $cvParser::getText($providedCvPath);
+                } catch (\Throwable $t) {
+                    Log::warning('ProgramMatchingService: CV parsing failed for academician: ' . $t->getMessage());
                 }
-            } catch (\Throwable $t) {
-                Log::warning('ProgramMatchingService: CV parsing failed: ' . $t->getMessage());
             }
+            
+            // Use provided research text for academicians
+            if ($providedResearchText) {
+                $interestsText = $providedResearchText;
+            }
+        } else {
+            // For students, use their profile data as before
+            $profile = $user->academician ?? $user->postgraduate ?? $user->undergraduate;
+            if ($profile) {
+                // CV text
+                try {
+                    $cvPath = $profile->cv_file ?? $profile->CV_file ?? null;
+                    if ($cvPath && Storage::disk('public')->exists($cvPath)) {
+                        /** @var \App\Services\CVParserService $cvParser */
+                        $cvParser = resolve(\App\Services\CVParserService::class);
+                        $cvText = (string) $cvParser::getText($cvPath);
+                    }
+                } catch (\Throwable $t) {
+                    Log::warning('ProgramMatchingService: CV parsing failed: ' . $t->getMessage());
+                }
 
-            // Interests from profile
-            $fields = [];
-            foreach (['field_of_research', 'research_preference', 'bio', 'about', 'suggested_research_title', 'suggested_research_description'] as $key) {
-                $val = $profile->{$key} ?? null;
-                if (is_string($val) && trim($val) !== '') {
-                    $fields[] = $val;
-                } elseif (is_array($val) && !empty($val)) {
-                    $fields[] = implode(', ', array_filter(array_map('strval', $val)));
+                // Interests from profile
+                $fields = [];
+                foreach (['field_of_research', 'research_preference', 'bio', 'about', 'suggested_research_title', 'suggested_research_description'] as $key) {
+                    $val = $profile->{$key} ?? null;
+                    if (is_string($val) && trim($val) !== '') {
+                        $fields[] = $val;
+                    } elseif (is_array($val) && !empty($val)) {
+                        $fields[] = implode(', ', array_filter(array_map('strval', $val)));
+                    }
                 }
+                $interestsText = implode("\n", $fields);
             }
-            $interestsText = implode("\n", $fields);
         }
 
         return [$cvText, $interestsText];

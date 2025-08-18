@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\FieldOfResearch;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class SupervisorMatchingService
 {
@@ -19,10 +20,10 @@ class SupervisorMatchingService
     /**
      * Rank supervisors for a given program and user.
      */
-    public function rankSupervisorsForProgram(PostgraduateProgram $program, User $user): array
+    public function rankSupervisorsForProgram(PostgraduateProgram $program, User $user, ?string $providedCvPath = null, ?string $providedResearchText = null): array
     {
         // Step 1: Build user query vector
-        $queryVector = $this->buildUserVector($user);
+        $queryVector = $this->buildUserVector($user, $providedCvPath, $providedResearchText);
 
         // Step 2: Build research options map for ID -> name resolution
         $researchOptions = $this->buildResearchOptionsLookup();
@@ -80,7 +81,7 @@ class SupervisorMatchingService
 
                 // 3b. Generate AI justification
                 Log::info("Requesting justification from AIMatchInsightService for supervisor ID: {$sup->id}");
-                $insight = $this->aiMatchInsightService->generateSupervisorInsight($user, $sup, $program, $researchOptions);
+                $insight = $this->aiMatchInsightService->generateSupervisorInsight($user, $sup, $program, $researchOptions, $providedCvPath, $providedResearchText);
                 Log::info("Received justification for supervisor ID {$sup->id}: " . substr((string) $insight, 0, 100) . '...');
 
                 // Persist supervisor insight for analytics and faster retrieval
@@ -143,34 +144,62 @@ class SupervisorMatchingService
         return $results;
     }
 
-    protected function buildUserVector(User $user): array
+    protected function buildUserVector(User $user, ?string $providedCvPath = null, ?string $providedResearchText = null): array
     {
         try {
-            $cacheKey = 'postgraduate_rec_user_vec_' . $user->id;
+            // Check if user is an academician and we have provided data
+            $isAcademician = $user->academician !== null;
+            
+            if ($isAcademician && ($providedCvPath || $providedResearchText)) {
+                // For academicians with provided data, use that instead of their profile
+                $cacheKey = 'postgraduate_rec_user_vec_' . $user->id . '_' . md5($providedCvPath . $providedResearchText);
+            } else {
+                // For students or academicians without provided data, use their profile
+                $cacheKey = 'postgraduate_rec_user_vec_' . $user->id;
+            }
+            
             $cached = Cache::get($cacheKey);
             if ($cached) return $cached;
 
-            $profile = $user->academician ?? $user->postgraduate ?? $user->undergraduate;
-            $cvPath = $profile?->cv_file ?? $profile?->CV_file ?? null;
             $cvText = '';
-            if ($cvPath && \Storage::disk('public')->exists($cvPath) && class_exists('App\\Services\\CVParserService')) {
-                $cvText = app('App\\Services\\CVParserService')::getText($cvPath) ?? '';
-            }
-
-            // Resolve research interest IDs to names for student types
             $researchText = '';
-            if ($user->postgraduate && !empty($user->postgraduate->field_of_research)) {
-                $lookup = $this->buildResearchOptionsLookup();
-                $ids = is_array($user->postgraduate->field_of_research) ? $user->postgraduate->field_of_research : [];
-                $names = [];
-                foreach ($ids as $id) { if (isset($lookup[$id])) $names[] = $lookup[$id]; }
-                $researchText = implode('; ', $names);
-            } elseif ($user->undergraduate && !empty($user->undergraduate->research_preference)) {
-                $lookup = $this->buildResearchOptionsLookup();
-                $ids = is_array($user->undergraduate->research_preference) ? $user->undergraduate->research_preference : [];
-                $names = [];
-                foreach ($ids as $id) { if (isset($lookup[$id])) $names[] = $lookup[$id]; }
-                $researchText = implode('; ', $names);
+
+            if ($isAcademician && ($providedCvPath || $providedResearchText)) {
+                // For academicians, use provided CV and research text
+                if ($providedCvPath && Storage::disk('public')->exists($providedCvPath)) {
+                    try {
+                        $cvText = app('App\\Services\\CVParserService')::getText($providedCvPath) ?? '';
+                    } catch (\Throwable $t) {
+                        Log::warning('SupervisorMatchingService: CV parsing failed for academician: ' . $t->getMessage());
+                    }
+                }
+                
+                if ($providedResearchText) {
+                    $researchText = $providedResearchText;
+                }
+            } else {
+                // For students or academicians without provided data, use their profile
+                $profile = $user->academician ?? $user->postgraduate ?? $user->undergraduate;
+                $cvPath = $profile?->cv_file ?? $profile?->CV_file ?? null;
+                
+                if ($cvPath && Storage::disk('public')->exists($cvPath) && class_exists('App\\Services\\CVParserService')) {
+                    $cvText = app('App\\Services\\CVParserService')::getText($cvPath) ?? '';
+                }
+
+                // Resolve research interest IDs to names for student types
+                if ($user->postgraduate && !empty($user->postgraduate->field_of_research)) {
+                    $lookup = $this->buildResearchOptionsLookup();
+                    $ids = is_array($user->postgraduate->field_of_research) ? $user->postgraduate->field_of_research : [];
+                    $names = [];
+                    foreach ($ids as $id) { if (isset($lookup[$id])) $names[] = $lookup[$id]; }
+                    $researchText = implode('; ', $names);
+                } elseif ($user->undergraduate && !empty($user->undergraduate->research_preference)) {
+                    $lookup = $this->buildResearchOptionsLookup();
+                    $ids = is_array($user->undergraduate->research_preference) ? $user->undergraduate->research_preference : [];
+                    $names = [];
+                    foreach ($ids as $id) { if (isset($lookup[$id])) $names[] = $lookup[$id]; }
+                    $researchText = implode('; ', $names);
+                }
             }
 
             $document = trim($cvText . "\n\n" . $researchText);

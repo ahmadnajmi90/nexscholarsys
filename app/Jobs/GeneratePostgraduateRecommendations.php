@@ -54,7 +54,7 @@ class GeneratePostgraduateRecommendations implements ShouldQueue
             }
 
             // Step 1: Find and analyze programs
-            $results = $programMatchingService->findAndAnalyzePrograms($user, $this->jobKey, $this->profileHash, $this->programType);
+            $results = $programMatchingService->findAndAnalyzePrograms($user, $this->jobKey, $this->profileHash, $this->programType, $this->cvPath, $this->researchText);
 
             Log::info("Job [{$this->jobKey}]: Program analysis complete. Found " . count($results) . " recommendations.");
 
