@@ -43,6 +43,7 @@ class QdrantSetupCommand extends Command
         $vectorSize = config('services.qdrant.vector_size');
         $academiciansCollection = config('services.qdrant.academicians_collection');
         $studentsCollection = config('services.qdrant.students_collection');
+        $programsCollection = config('services.qdrant.postgraduate_programs_collection', 'nexscholar_postgraduate_programs');
         
         $this->info("Qdrant configuration:");
         $this->line("- URL: {$qdrantUrl}");
@@ -50,6 +51,7 @@ class QdrantSetupCommand extends Command
         $this->line("- Vector size: {$vectorSize}");
         $this->line("- Academicians collection: {$academiciansCollection}");
         $this->line("- Students collection: {$studentsCollection}");
+        $this->line("- Programs collection: {$programsCollection}");
         $this->line("");
         
         // Test connection to Qdrant
@@ -88,6 +90,17 @@ class QdrantSetupCommand extends Command
             $this->info("✓ Successfully created or verified collection: {$studentsCollection}");
         } else {
             $this->error("× Failed to create collection: {$studentsCollection}");
+            return Command::FAILURE;
+        }
+        
+        // Create programs collection
+        $this->info('Creating programs collection...');
+        $result = $this->qdrantService->createCollection($programsCollection);
+        
+        if ($result) {
+            $this->info("✓ Successfully created or verified collection: {$programsCollection}");
+        } else {
+            $this->error("× Failed to create collection: {$programsCollection}");
             return Command::FAILURE;
         }
         

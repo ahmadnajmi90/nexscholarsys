@@ -50,7 +50,8 @@ class Postgraduate extends Model
         'field_of_research' => 'array', // Cast field_of_study as an array
         'skills' => 'array',
         'supervisorAvailability' => 'boolean', // Cast to boolean
-        'grantAvailability' => 'boolean' // Cast to boolean
+        'grantAvailability' => 'boolean', // Cast to boolean
+        'qdrant_migrated_at' => 'datetime',
     ];
 
     protected static function booted()

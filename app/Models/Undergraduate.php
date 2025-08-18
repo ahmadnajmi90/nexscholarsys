@@ -43,7 +43,8 @@ class Undergraduate extends Model
     protected $casts = [
         'research_preference' => 'array', // Cast field_of_study as an array
         'skills' => 'array',
-        'interested_do_research' => 'boolean'
+        'interested_do_research' => 'boolean',
+        'qdrant_migrated_at' => 'datetime',
     ];
 
     protected static function booted()

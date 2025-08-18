@@ -46,6 +46,17 @@ class GenerateAcademicianEmbeddingsCommand extends Command
      */
     public function handle()
     {
+        // Ensure Qdrant collection exists before starting
+        $this->info('Ensuring Qdrant collection exists...');
+        $collectionName = config('services.qdrant.academicians_collection', 'nexscholar_academicians');
+        
+        if (!$this->qdrantService->createCollection($collectionName)) {
+            $this->error("Failed to create or verify Qdrant collection: {$collectionName}. Aborting.");
+            return Command::FAILURE;
+        }
+        
+        $this->info("✅ Qdrant collection '{$collectionName}' is ready.");
+        
         $academicianId = $this->argument('academician_id');
         $force = $this->option('force');
         $batchSize = (int)$this->option('batch-size');

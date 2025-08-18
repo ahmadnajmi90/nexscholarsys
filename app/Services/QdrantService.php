@@ -253,6 +253,37 @@ class QdrantService
     }
 
     /**
+     * Delete an entire collection
+     *
+     * @param string $collectionName The name of the collection to delete
+     * @return bool True if successful, false otherwise
+     */
+    public function deleteCollection(string $collectionName): bool
+    {
+        try {
+            Log::info("Deleting Qdrant collection: {$collectionName}");
+
+            $response = $this->httpClient->delete("/collections/{$collectionName}");
+
+            if ($response->successful()) {
+                Log::info("Successfully deleted collection {$collectionName} from Qdrant");
+                return true;
+            } else {
+                Log::error("Failed to delete collection {$collectionName} from Qdrant", [
+                    'status' => $response->status(),
+                    'response' => $response->json()
+                ]);
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception when deleting Qdrant collection {$collectionName}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Delete a vector from a collection
      *
      * @param string $collectionName The collection from which to delete the vector
@@ -357,34 +388,54 @@ class QdrantService
      */
     public function upsertAcademicianEmbedding(string $academicianId, int $mysqlId, array $vector, array $additionalPayload = []): bool
     {
-        // Ensure mysql_id is included in payload
+        // Get the user record to access user_id and unique_id
+        $academician = \App\Models\Academician::where('academician_id', $academicianId)->first();
+        $user = $academician ? $academician->user : null;
+        
+        // New standardized payload structure for academicians
         $payload = array_merge([
-            'mysql_id' => $mysqlId,
+            'user_id' => $user ? $user->id : null, // Add the main users.id
+            'unique_id' => $academicianId,         // This is the ACAD-XYZ string
+            'mysql_id' => $mysqlId,                // This is the academicians.id
             'record_type' => 'academician',
-            'academician_id' => $academicianId,
         ], $additionalPayload);
 
         return $this->upsertVector($this->academiciansCollection, $academicianId, $vector, $payload);
     }
 
     /**
-     * Upsert a student's embedding to Qdrant
+     * Upsert a student's embedding to Qdrant.
      *
-     * @param string $studentType The student type (postgraduate/undergraduate)
-     * @param int $studentId The student ID
-     * @param int $mysqlId The MySQL record ID
-     * @param array $vector The embedding vector
-     * @param array $additionalPayload Additional payload data
-     * @return bool True if successful, false otherwise
+     * @param \Illuminate\Database\Eloquent\Model $student The Postgraduate or Undergraduate model instance.
+     * @param array $vector The embedding vector.
+     * @param array $additionalPayload Additional payload data.
+     * @return bool True if successful, false otherwise.
      */
-    public function upsertStudentEmbedding(string $studentType, int $studentId, int $mysqlId, array $vector, array $additionalPayload = []): bool
+    public function upsertStudentEmbedding(\Illuminate\Database\Eloquent\Model $student, array $vector, array $additionalPayload = []): bool
     {
-        $id = $studentType . '_' . $studentId;
+        // Determine type from the model class
+        $studentType = $student instanceof \App\Models\Postgraduate ? 'postgraduate' : 'undergraduate';
+        
+        // Get the correct IDs from the parent User model via the relationship
+        $user = $student->user; 
+        if (!$user) {
+            Log::error("Could not find parent User for {$studentType} with ID: {$student->id}");
+            return false;
+        }
+
+        $id = $studentType . '_' . $student->id;
         $payload = array_merge([
-            'mysql_id' => $mysqlId,
+            'user_id' => $user->id,                  // Correct: from users table
+            'unique_id' => $user->unique_id,        // Correct: from users table
+            'mysql_id' => $student->id,             // Correct: from role table (postgraduates or undergraduates)
             'student_type' => $studentType,
-            'record_type' => 'student'
+            'record_type' => 'student',
+            'full_name' => $user->full_name,
+            'has_embedding' => true,
         ], $additionalPayload);
+
+        // The 'original_id' can be the composite string
+        $payload['original_id'] = $id;
 
         return $this->upsertVector($this->studentsCollection, $id, $vector, $payload);
     }
@@ -407,13 +458,13 @@ class QdrantService
             // Get MySQL ID from payload (primary identifier for database queries)
             $mysqlId = $result['payload']['mysql_id'] ?? null;
             
-            // Original string ID (may be useful for debugging)
-            $originalId = $result['payload']['original_id'] ?? null;
+            // Get unique_id from payload (ACAD-XYZ string)
+            $uniqueId = $result['payload']['unique_id'] ?? null;
             
             if ($mysqlId) {
                 $academicians[] = [
                     'mysql_id' => $mysqlId,
-                    'original_id' => $originalId,
+                    'unique_id' => $uniqueId,
                     'score' => $result['score']
                 ];
             }
@@ -431,6 +482,37 @@ class QdrantService
     public function deleteAcademicianEmbedding(string $academicianId): bool
     {
         return $this->deleteVector($this->academiciansCollection, $academicianId);
+    }
+
+    /**
+     * Upsert a postgraduate program's embedding to Qdrant
+     *
+     * @param int $programId The postgraduate program ID
+     * @param array $vector The embedding vector
+     * @param array $additionalPayload Additional payload data
+     * @return bool True if successful, false otherwise
+     */
+    public function upsertProgramEmbedding(int $programId, array $vector, array $additionalPayload = []): bool
+    {
+        $id = 'program_' . $programId;
+        
+        // New standardized payload structure for programs
+        $payload = array_merge([
+            'postgraduate_program_id' => $programId, // The primary key from the new table
+            'record_type' => 'program',
+        ], $additionalPayload);
+
+        return $this->upsertVector($this->getProgramsCollection(), $id, $vector, $payload);
+    }
+
+    /**
+     * Get the programs collection name from config
+     *
+     * @return string The collection name
+     */
+    protected function getProgramsCollection(): string
+    {
+        return config('services.qdrant.postgraduate_programs_collection', 'nexscholar_postgraduate_programs');
     }
 
     /**
@@ -454,13 +536,13 @@ class QdrantService
             // Get student type from payload
             $studentType = $result['payload']['student_type'] ?? 'unknown';
             
-            // Original string ID (may be useful for debugging)
-            $originalId = $result['payload']['original_id'] ?? null;
+            // Get unique_id from payload (PG-XYZ or UG-XYZ string)
+            $uniqueId = $result['payload']['unique_id'] ?? null;
             
             if ($mysqlId) {
                 $students[] = [
                     'mysql_id' => $mysqlId,
-                    'original_id' => $originalId,
+                    'unique_id' => $uniqueId,
                     'student_type' => $studentType,
                     'score' => $result['score']
                 ];

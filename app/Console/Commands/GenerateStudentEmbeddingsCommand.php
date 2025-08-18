@@ -20,7 +20,8 @@ class GenerateStudentEmbeddingsCommand extends Command
                             {student_id? : The ID of a specific student} 
                             {--type=both : Type of student (postgraduate, undergraduate, or both)} 
                             {--force : Force regeneration even if already embedded} 
-                            {--batch-size=20 : Number of students to process per batch}';
+                            {--batch-size=20 : Number of students to process per batch}
+                            {--complete-only : Only process students with complete research profiles}';
 
     /**
      * The console command description.
@@ -47,10 +48,22 @@ class GenerateStudentEmbeddingsCommand extends Command
      */
     public function handle()
     {
+        // Ensure Qdrant collection exists before starting
+        $this->info('Ensuring Qdrant collection exists...');
+        $collectionName = config('services.qdrant.students_collection', 'nexscholar_students');
+        
+        if (!$this->qdrantService->createCollection($collectionName)) {
+            $this->error("Failed to create or verify Qdrant collection: {$collectionName}. Aborting.");
+            return Command::FAILURE;
+        }
+        
+        $this->info("✅ Qdrant collection '{$collectionName}' is ready.");
+        
         $studentId = $this->argument('student_id');
         $type = $this->option('type');
         $force = $this->option('force');
         $batchSize = (int)$this->option('batch-size');
+        $completeOnly = $this->option('complete-only');
         
         if (!in_array($type, ['postgraduate', 'undergraduate', 'both'])) {
             $this->error("Invalid type. Use 'postgraduate', 'undergraduate', or 'both'.");
@@ -58,9 +71,9 @@ class GenerateStudentEmbeddingsCommand extends Command
         }
         
         if ($studentId) {
-            $this->processSpecificStudent($studentId, $type, $force);
+            $this->processSpecificStudent($studentId, $type, $force, $completeOnly);
         } else {
-            $this->processAllStudents($type, $force, $batchSize);
+            $this->processAllStudents($type, $force, $batchSize, $completeOnly);
         }
         
         return Command::SUCCESS;
@@ -69,11 +82,17 @@ class GenerateStudentEmbeddingsCommand extends Command
     /**
      * Process a specific student by ID
      */
-    protected function processSpecificStudent($studentId, $type, $force)
+    protected function processSpecificStudent($studentId, $type, $force, $completeOnly = false)
     {
         if ($type === 'postgraduate' || $type === 'both') {
-            $postgraduate = Postgraduate::find($studentId);
+            $postgraduate = Postgraduate::with('user')->find($studentId);
             if ($postgraduate) {
+                // Check if complete profile is required
+                if ($completeOnly && !$this->hasCompletePostgraduateProfile($postgraduate)) {
+                    $this->warn("Postgraduate {$postgraduate->full_name} (ID: {$studentId}) has an incomplete profile. Skipping.");
+                    return;
+                }
+                
                 $this->info("Processing postgraduate: {$postgraduate->full_name}");
                 $result = $this->processPostgraduate($postgraduate, $force, true);
                 if ($result === true) {
@@ -89,8 +108,14 @@ class GenerateStudentEmbeddingsCommand extends Command
         }
         
         if ($type === 'undergraduate' || $type === 'both') {
-            $undergraduate = Undergraduate::find($studentId);
+            $undergraduate = Undergraduate::with('user')->find($studentId);
             if ($undergraduate) {
+                // Check if complete profile is required
+                if ($completeOnly && !$this->hasCompleteUndergraduateProfile($undergraduate)) {
+                    $this->warn("Undergraduate {$undergraduate->full_name} (ID: {$studentId}) has an incomplete profile. Skipping.");
+                    return;
+                }
+                
                 $this->info("Processing undergraduate: {$undergraduate->full_name}");
                 $result = $this->processUndergraduate($undergraduate, $force, true);
                 if ($result === true) {
@@ -109,21 +134,21 @@ class GenerateStudentEmbeddingsCommand extends Command
     /**
      * Process all students of the specified type
      */
-    protected function processAllStudents($type, $force, $batchSize)
+    protected function processAllStudents($type, $force, $batchSize, $completeOnly = false)
     {
         if ($type === 'postgraduate' || $type === 'both') {
-            $this->processAllPostgraduates($force, $batchSize);
+            $this->processAllPostgraduates($force, $batchSize, $completeOnly);
         }
         
         if ($type === 'undergraduate' || $type === 'both') {
-            $this->processAllUndergraduates($force, $batchSize);
+            $this->processAllUndergraduates($force, $batchSize, $completeOnly);
         }
     }
     
     /**
      * Process all postgraduates
      */
-    protected function processAllPostgraduates($force, $batchSize)
+    protected function processAllPostgraduates($force, $batchSize, $completeOnly = false)
     {
         if ($force) {
             // Reset migration flags for force regeneration
@@ -139,10 +164,18 @@ class GenerateStudentEmbeddingsCommand extends Command
                 ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         });
         
+        // Add complete profile filters if requested
+        if ($completeOnly) {
+            $query->whereNotNull('field_of_research');
+            $this->info("Filtering for postgraduates with complete research profiles only");
+        }
+        
         $count = $query->count();
         
         if ($count === 0) {
-            $this->info("No postgraduates need embedding generation. Use --force to regenerate all.");
+            $this->info($completeOnly 
+                ? "No postgraduates with complete research profiles need embedding generation. Use --force to regenerate all." 
+                : "No postgraduates need embedding generation. Use --force to regenerate all.");
             return;
         }
         
@@ -156,15 +189,29 @@ class GenerateStudentEmbeddingsCommand extends Command
         $progressBar = $this->output->createProgressBar($count);
         $progressBar->start();
         
-        // Process in chunks to avoid memory issues
-        Postgraduate::where(function($query) {
+        // Build the base query
+        $baseQuery = Postgraduate::where(function($query) {
             $query->where('qdrant_migrated', false)
                 ->orWhereNull('qdrant_migrated')
                 ->orWhereNull('qdrant_migrated_at')
                 ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
-        })
-        ->chunk($batchSize, function($postgraduates) use (&$processedCount, &$failedCount, &$skipCount, $progressBar) {
+        });
+        
+        // Add complete profile filters if requested
+        if ($completeOnly) {
+            $baseQuery->whereNotNull('field_of_research');
+        }
+        
+        // Process in chunks to avoid memory issues
+        $baseQuery->with('user')->chunk($batchSize, function($postgraduates) use (&$processedCount, &$failedCount, &$skipCount, $progressBar, $completeOnly) {
             foreach ($postgraduates as $postgraduate) {
+                // Skip if complete profile is required but missing
+                if ($completeOnly && !$this->hasCompletePostgraduateProfile($postgraduate)) {
+                    $skipCount++;
+                    $progressBar->advance();
+                    continue;
+                }
+                
                 $result = $this->processPostgraduate($postgraduate, false, false);
                 
                 if ($result === true) {
@@ -188,7 +235,7 @@ class GenerateStudentEmbeddingsCommand extends Command
     /**
      * Process all undergraduates
      */
-    protected function processAllUndergraduates($force, $batchSize)
+    protected function processAllUndergraduates($force, $batchSize, $completeOnly = false)
     {
         if ($force) {
             // Reset migration flags for force regeneration
@@ -204,10 +251,18 @@ class GenerateStudentEmbeddingsCommand extends Command
                 ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
         });
         
+        // Add complete profile filters if requested
+        if ($completeOnly) {
+            $query->whereNotNull('research_preference');
+            $this->info("Filtering for undergraduates with complete research profiles only");
+        }
+        
         $count = $query->count();
         
         if ($count === 0) {
-            $this->info("No undergraduates need embedding generation. Use --force to regenerate all.");
+            $this->info($completeOnly 
+                ? "No undergraduates with complete research profiles need embedding generation. Use --force to regenerate all." 
+                : "No undergraduates need embedding generation. Use --force to regenerate all.");
             return;
         }
         
@@ -221,15 +276,29 @@ class GenerateStudentEmbeddingsCommand extends Command
         $progressBar = $this->output->createProgressBar($count);
         $progressBar->start();
         
-        // Process in chunks to avoid memory issues
-        Undergraduate::where(function($query) {
+        // Build the base query
+        $baseQuery = Undergraduate::where(function($query) {
             $query->where('qdrant_migrated', false)
                 ->orWhereNull('qdrant_migrated')
                 ->orWhereNull('qdrant_migrated_at')
                 ->orWhere('qdrant_migrated_at', '<', now()->subMonth());
-        })
-        ->chunk($batchSize, function($undergraduates) use (&$processedCount, &$failedCount, &$skipCount, $progressBar) {
+        });
+        
+        // Add complete profile filters if requested
+        if ($completeOnly) {
+            $baseQuery->whereNotNull('research_preference');
+        }
+        
+        // Process in chunks to avoid memory issues
+        $baseQuery->with('user')->chunk($batchSize, function($undergraduates) use (&$processedCount, &$failedCount, &$skipCount, $progressBar, $completeOnly) {
             foreach ($undergraduates as $undergraduate) {
+                // Skip if complete profile is required but missing
+                if ($completeOnly && !$this->hasCompleteUndergraduateProfile($undergraduate)) {
+                    $skipCount++;
+                    $progressBar->advance();
+                    continue;
+                }
+                
                 $result = $this->processUndergraduate($undergraduate, false, false);
                 
                 if ($result === true) {
@@ -313,9 +382,7 @@ class GenerateStudentEmbeddingsCommand extends Command
             
             // Upsert to Qdrant
             $result = $this->qdrantService->upsertStudentEmbedding(
-                'postgraduate',
-                $postgraduate->id,
-                $postgraduate->id,
+                $postgraduate,
                 $embedding,
                 $payload
             );
@@ -410,9 +477,7 @@ class GenerateStudentEmbeddingsCommand extends Command
             
             // Upsert to Qdrant
             $result = $this->qdrantService->upsertStudentEmbedding(
-                'undergraduate',
-                $undergraduate->id,
-                $undergraduate->id,
+                $undergraduate,
                 $embedding,
                 $payload
             );
@@ -442,5 +507,23 @@ class GenerateStudentEmbeddingsCommand extends Command
             }
             return false;
         }
+    }
+    
+    /**
+     * Check if a postgraduate has a complete research profile
+     */
+    protected function hasCompletePostgraduateProfile(Postgraduate $postgraduate): bool
+    {
+        return !empty($postgraduate->field_of_research) &&
+               (is_array($postgraduate->field_of_research) ? count($postgraduate->field_of_research) > 0 : true);
+    }
+    
+    /**
+     * Check if an undergraduate has a complete research profile
+     */
+    protected function hasCompleteUndergraduateProfile(Undergraduate $undergraduate): bool
+    {
+        return !empty($undergraduate->research_preference) &&
+               (is_array($undergraduate->research_preference) ? count($undergraduate->research_preference) > 0 : true);
     }
 } 

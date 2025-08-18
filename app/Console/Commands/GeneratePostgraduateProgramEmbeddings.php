@@ -39,9 +39,16 @@ class GeneratePostgraduateProgramEmbeddings extends Command
     {
         $batchSize = (int) $this->option('batch-size');
 
-        // Ensure collection exists
-        $collection = 'nexscholar_postgraduate_programs';
-        $this->qdrantService->createCollection($collection);
+        // Ensure Qdrant collection exists before starting
+        $this->info('Ensuring Qdrant collection exists...');
+        $collection = config('services.qdrant.postgraduate_programs_collection', 'nexscholar_postgraduate_programs');
+        
+        if (!$this->qdrantService->createCollection($collection)) {
+            $this->error("Failed to create or verify Qdrant collection: {$collection}. Aborting.");
+            return Command::FAILURE;
+        }
+        
+        $this->info("✅ Qdrant collection '{$collection}' is ready.");
 
         $total = PostgraduateProgram::count();
         if ($total === 0) {
@@ -69,9 +76,7 @@ class GeneratePostgraduateProgramEmbeddings extends Command
                             continue;
                         }
 
-                        $payload = [
-                            'postgraduate_program_id' => $program->id,
-                            'record_type' => 'postgraduate_program',
+                        $additionalPayload = [
                             'name' => $program->name,
                             'program_type' => $program->program_type ?? 'Master',
                             'university_id' => $program->university_id,
@@ -79,11 +84,10 @@ class GeneratePostgraduateProgramEmbeddings extends Command
                             'country' => $program->country,
                         ];
 
-                        $upserted = $this->qdrantService->upsertVector(
-                            $collection,
-                            (string) $program->id,
+                        $upserted = $this->qdrantService->upsertProgramEmbedding(
+                            $program->id,
                             $embedding,
-                            $payload
+                            $additionalPayload
                         );
 
                         if ($upserted) {

@@ -718,37 +718,50 @@ The platform uses OpenAI embeddings to provide semantic search capabilities:
    php artisan qdrant:setup
    ```
 
-3. Generate embeddings for academician profiles:
-   ```bash
-   php artisan embeddings:generate-academician
-   ```
-   
-   Additional options:
-   ```bash
-   # Process only academicians with complete profiles
-   php artisan embeddings:generate-academician --complete-only
-   
-   # Force regeneration of all embeddings
-   php artisan embeddings:generate-academician --force
-   
-   # Process a specific academician by ID
-   php artisan embeddings:generate-academician {academician_id}
-   ```
+### Generating Embeddings
 
-4. Generate embeddings for student profiles:
-   ```bash
-   php artisan embeddings:generate-student
-   ```
-   
-   Additional options:
-   ```bash
-   # Process only specific student type
-   php artisan embeddings:generate-student --type=postgraduate
-   php artisan embeddings:generate-student --type=undergraduate
-   
-   # Process a specific student by ID
-   php artisan embeddings:generate-student {student_id} --type=postgraduate
-   ```
+**For Academicians:**
+```bash
+php artisan embeddings:generate-academician
+```
+* `--complete-only`: Process only academicians with complete profiles (research expertise, field of study, academician_id, and profile picture).
+* `--force`: Force regeneration of all embeddings.
+* `--batch-size=20`: Number of academicians to process per batch (default: 20).
+* `{academician_id}`: Process a specific academician by ID.
+
+**For Students:**
+```bash
+php artisan embeddings:generate-student
+```
+* `--complete-only`: Process only students with research interests defined (field_of_research for postgraduates, research_preference for undergraduates).
+* `--type=postgraduate|undergraduate|both`: Process a specific student type (default: both).
+* `--force`: Force regeneration of all embeddings.
+* `--batch-size=20`: Number of students to process per batch (default: 20).
+* `{student_id}`: Process a specific student by ID (requires `--type`).
+
+**For Postgraduate Programs:**
+```bash
+php artisan embeddings:generate-postgraduate-programs
+```
+* `--batch-size=100`: Number of programs to process per chunk (default: 100).
+
+**Examples:**
+```bash
+# Generate embeddings for all academicians with complete profiles
+php artisan embeddings:generate-academician --complete-only
+
+# Generate embeddings for all postgraduates with research interests
+php artisan embeddings:generate-student --type=postgraduate --complete-only
+
+# Force regenerate all undergraduate embeddings
+php artisan embeddings:generate-student --type=undergraduate --force
+
+# Process a specific academician
+php artisan embeddings:generate-academician 123
+
+# Process a specific postgraduate student
+php artisan embeddings:generate-student 456 --type=postgraduate
+```
 
 5. To clear the search cache:
    ```bash
@@ -854,15 +867,28 @@ The platform uses Qdrant, a vector database optimized for similarity search:
    - Complex searches complete in milliseconds
    - The system supports efficient filtering by university, faculty, and other metadata
 
-2. **Vector Storage Architecture**:
-   - Each academician and student embedding is stored with structured metadata
-   - Embedding points use consistent ID format for reliable lookups
-   - Additional payload data enables rich filtering options
+2. **Standardized Vector Storage Schema**:
+   - **Consistent Payload Structure**: All collections use a standardized schema for reliable data access
+   - **Unique Identifiers**: Each record has multiple identifier types for flexible lookups:
+     - `unique_id`: Human-readable IDs (ACAD-XYZ, PG-XYZ, UG-XYZ strings)
+     - `user_id`: Main users.id for cross-referencing
+     - `mysql_id`: Table-specific primary keys
+     - `record_type`: Entity type (academician, student, program)
 
-3. **UUID Conversion**:
+3. **Collection-Specific Payloads**:
+   - **Academicians**: `user_id`, `unique_id`, `mysql_id`, `record_type`
+   - **Students**: `user_id`, `unique_id`, `mysql_id`, `student_type`, `record_type`
+   - **Programs**: `postgraduate_program_id`, `record_type`
+
+4. **Vector Storage Architecture**:
+   - Each embedding is stored with structured metadata
+   - UUID-based point IDs for Qdrant compatibility
    - String IDs are automatically converted to UUID format for Qdrant compatibility
-   - Original IDs are preserved in the payload for reference and debugging
-   - Deterministic UUID generation ensures consistent IDs across operations
+
+5. **Schema Migration**:
+   - Use `php artisan qdrant:rebuild-collections` to migrate to the new schema
+   - Automatically deletes old collections and regenerates with new structure
+   - Maintains backward compatibility during transition period
 
 ### Student Profile Embeddings
 

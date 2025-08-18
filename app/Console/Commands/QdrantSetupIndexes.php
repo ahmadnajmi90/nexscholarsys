@@ -12,20 +12,22 @@ class QdrantSetupIndexes extends Command
 
     public function handle(QdrantService $qdrantService)
     {
-        $this->info('Setting up Qdrant payload indexes...');
+        $this->info('Setting up Qdrant payload indexes with new standardized schema...');
 
+        // For Academicians Collection
         $academicianCollection = config('services.qdrant.academicians_collection');
-        if ($qdrantService->createPayloadIndex($academicianCollection, 'academician_id', 'keyword')) {
-            $this->info("Index 'academician_id' on '{$academicianCollection}' created successfully.");
+        $this->info("Setting up indexes for academicians collection: {$academicianCollection}");
+        
+        if ($qdrantService->createPayloadIndex($academicianCollection, 'unique_id', 'keyword')) {
+            $this->info("Index 'unique_id' on '{$academicianCollection}' created successfully.");
         } else {
-            $this->error("Failed to create index 'academician_id' on '{$academicianCollection}'.");
+            $this->error("Failed to create index 'unique_id' on '{$academicianCollection}'.");
         }
 
-        // Also index fallback keys used in lookups
-        if ($qdrantService->createPayloadIndex($academicianCollection, 'original_id', 'keyword')) {
-            $this->info("Index 'original_id' on '{$academicianCollection}' created successfully.");
+        if ($qdrantService->createPayloadIndex($academicianCollection, 'user_id', 'integer')) {
+            $this->info("Index 'user_id' on '{$academicianCollection}' created successfully.");
         } else {
-            $this->error("Failed to create index 'original_id' on '{$academicianCollection}'.");
+            $this->error("Failed to create index 'user_id' on '{$academicianCollection}'.");
         }
 
         if ($qdrantService->createPayloadIndex($academicianCollection, 'mysql_id', 'integer')) {
@@ -34,21 +36,45 @@ class QdrantSetupIndexes extends Command
             $this->error("Failed to create index 'mysql_id' on '{$academicianCollection}'.");
         }
 
-        // Postgraduate programs collection indexes
-        $programsCollection = 'nexscholar_postgraduate_programs';
-        if ($qdrantService->createPayloadIndex($programsCollection, 'program_type', 'keyword')) {
-            $this->info("Index 'program_type' on '{$programsCollection}' created successfully.");
+        // For Students Collection
+        $studentCollection = config('services.qdrant.students_collection');
+        $this->info("Setting up indexes for students collection: {$studentCollection}");
+        
+        if ($qdrantService->createPayloadIndex($studentCollection, 'unique_id', 'keyword')) {
+            $this->info("Index 'unique_id' on '{$studentCollection}' created successfully.");
         } else {
-            $this->error("Failed to create index 'program_type' on '{$programsCollection}'.");
+            $this->error("Failed to create index 'unique_id' on '{$studentCollection}'.");
         }
 
-        if ($qdrantService->createPayloadIndex($programsCollection, 'postgraduate_program_id', 'integer')) {
-            $this->info("Index 'postgraduate_program_id' on '{$programsCollection}' created successfully.");
+        if ($qdrantService->createPayloadIndex($studentCollection, 'user_id', 'integer')) {
+            $this->info("Index 'user_id' on '{$studentCollection}' created successfully.");
         } else {
-            $this->error("Failed to create index 'postgraduate_program_id' on '{$programsCollection}'.");
+            $this->error("Failed to create index 'user_id' on '{$studentCollection}'.");
         }
 
-        $this->info('Qdrant payload indexes setup complete.');
+        if ($qdrantService->createPayloadIndex($studentCollection, 'mysql_id', 'integer')) {
+            $this->info("Index 'mysql_id' on '{$studentCollection}' created successfully.");
+        } else {
+            $this->error("Failed to create index 'mysql_id' on '{$studentCollection}'.");
+        }
+
+        // For Programs Collection
+        $programCollection = config('services.qdrant.postgraduate_programs_collection', 'nexscholar_postgraduate_programs');
+        $this->info("Setting up indexes for programs collection: {$programCollection}");
+        
+        if ($qdrantService->createPayloadIndex($programCollection, 'postgraduate_program_id', 'integer')) {
+            $this->info("Index 'postgraduate_program_id' on '{$programCollection}' created successfully.");
+        } else {
+            $this->error("Failed to create index 'postgraduate_program_id' on '{$programCollection}'.");
+        }
+
+        if ($qdrantService->createPayloadIndex($programCollection, 'program_type', 'keyword')) {
+            $this->info("Index 'program_type' on '{$programCollection}' created successfully.");
+        } else {
+            $this->error("Failed to create index 'program_type' on '{$programCollection}'.");
+        }
+
+        $this->info('Qdrant payload indexes setup complete with new standardized schema.');
         return 0;
     }
 }

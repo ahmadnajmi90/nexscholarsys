@@ -47,13 +47,13 @@ class SupervisorMatchingService
                     $point = null;
                     if (method_exists($this->qdrantService, 'getPointByPayload')) {
                         $collection = config('services.qdrant.academicians_collection', 'nexscholar_academicians');
-                        $point = $this->qdrantService->getPointByPayload($collection, ['academician_id' => $sup->academician_id]);
+                        
+                        // Use the new standardized unique_id for lookup
+                        $point = $this->qdrantService->getPointByPayload($collection, ['unique_id' => $sup->academician_id]);
+                        
+                        // Fallback to mysql_id if unique_id lookup fails
                         if (empty($point)) {
-                            Log::warning("Primary lookup by academician_id failed; trying original_id for supervisor {$sup->academician_id}");
-                            $point = $this->qdrantService->getPointByPayload($collection, ['original_id' => $sup->academician_id]);
-                        }
-                        if (empty($point)) {
-                            Log::warning("Secondary lookup by original_id failed; trying mysql_id={$sup->id}");
+                            Log::warning("Primary lookup by unique_id failed; trying mysql_id for supervisor {$sup->academician_id}");
                             $point = $this->qdrantService->getPointByPayload($collection, ['mysql_id' => $sup->id]);
                         }
                     }

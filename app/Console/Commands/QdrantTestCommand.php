@@ -77,9 +77,9 @@ class QdrantTestCommand extends Command
         // Print first result details
         $this->info("Top match details:");
         foreach ($searchResults as $index => $result) {
-            $originalId = $result['payload']['original_id'] ?? 'unknown';
+            $uniqueId = $result['payload']['unique_id'] ?? $result['payload']['original_id'] ?? 'unknown';
             $score = $result['score'] ?? 0;
-            $this->info("Result #{$index}: ID={$originalId}, Score={$score}");
+            $this->info("Result #{$index}: ID={$uniqueId}, Score={$score}");
             
             if ($index >= 2) break; // Show only top 3 results
         }
