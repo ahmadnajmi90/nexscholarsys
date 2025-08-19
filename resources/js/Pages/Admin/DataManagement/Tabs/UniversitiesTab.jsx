@@ -27,10 +27,10 @@ export default function UniversitiesTab() {
         fetchUniversities();
     }, [pagination.current_page, searchQuery]);
 
-    const fetchUniversities = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get('/api/v1/universities', {
+      const fetchUniversities = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/v1/app/universities', {
                 params: {
                     page: pagination.current_page,
                     per_page: pagination.per_page,
@@ -82,45 +82,19 @@ export default function UniversitiesTab() {
 
     const handleDelete = () => {
         if (!currentUniversity) return;
-        
-        const deleteAction = async () => {
-            try {
-                // Step 1: Make the API call with axios
-                await axios.delete(`/api/v1/universities/${currentUniversity.id}`);
-                
-                // Step 2: On success, show a direct success toast.
-                toast.success('University deleted successfully!');
-                
-                // Step 3: Manually re-fetch the data for that tab.
-                fetchUniversities();
-                
-            } catch (error) {
-                // Step 3: Handle errors directly from the axios response.
-                if (error.response) {
-                    if (error.response.status === 404) {
-                        toast.error(`University not found. It may have been already deleted.`);
-                        // Refresh the list to update the UI
-                        fetchUniversities();
-                    } else if (error.response.status === 409) {
-                        toast.error(`Cannot delete university with existing faculties. Delete the faculties first.`);
-                    } else if (error.response.data?.error) {
-                        toast.error(error.response.data.error);
-                    } else if (error.response.data?.message) {
-                        toast.error(error.response.data.message);
-                    } else {
-                        toast.error(`Error (${error.response.status}): Unable to delete university.`);
-                    }
-                } else {
-                    toast.error('Network error or server not responding.');
-                }
-                console.error('Error deleting university:', error);
-            } finally {
-                // Step 4: Always close the confirmation modal.
+
+        router.delete(`/admin/data-management/universities/${currentUniversity.id}`, {
+            onSuccess: () => {
+                // The toast will be shown automatically from the session flash.
                 setIsDeleteModalOpen(false);
+                fetchUniversities(); // Re-fetch data to update the table
+            },
+            onError: (errors) => {
+                // The toast for the error will also be shown automatically.
+                // You can log the error for debugging if you wish.
+                console.error(errors);
             }
-        };
-        
-        deleteAction();
+        });
     };
 
     const closeFormModal = () => {

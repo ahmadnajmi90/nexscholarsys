@@ -343,6 +343,39 @@ Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\Profil
 Route::get('/admin/data-management', function() {
     return Inertia::render('Admin/DataManagement/Index');
 })->name('admin.data-management.index');
+
+// Admin Data Management CRUD Routes
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    // Universities
+    Route::post('/admin/data-management/universities', [App\Http\Controllers\Admin\DataManagement\UniversityController::class, 'store'])->name('admin.data-management.universities.store');
+    Route::post('/admin/data-management/universities/{university}', [App\Http\Controllers\Admin\DataManagement\UniversityController::class, 'update'])->name('admin.data-management.universities.update');
+    Route::delete('/admin/data-management/universities/{university}', [App\Http\Controllers\Admin\DataManagement\UniversityController::class, 'destroy'])->name('admin.data-management.universities.destroy');
+    
+    // Faculties
+    Route::post('/admin/data-management/faculties', [App\Http\Controllers\Admin\DataManagement\FacultyController::class, 'store'])->name('admin.data-management.faculties.store');
+    Route::post('/admin/data-management/faculties/{faculty}', [App\Http\Controllers\Admin\DataManagement\FacultyController::class, 'update'])->name('admin.data-management.faculties.update');
+    Route::delete('/admin/data-management/faculties/{faculty}', [App\Http\Controllers\Admin\DataManagement\FacultyController::class, 'destroy'])->name('admin.data-management.faculties.destroy');
+    
+    // Fields of Research
+    Route::post('/admin/data-management/fields-of-research', [App\Http\Controllers\Admin\DataManagement\FieldOfResearchController::class, 'store'])->name('admin.data-management.fields-of-research.store');
+    Route::post('/admin/data-management/fields-of-research/{fieldOfResearch}', [App\Http\Controllers\Admin\DataManagement\FieldOfResearchController::class, 'update'])->name('admin.data-management.fields-of-research.update');
+    Route::delete('/admin/data-management/fields-of-research/{fieldOfResearch}', [App\Http\Controllers\Admin\DataManagement\FieldOfResearchController::class, 'destroy'])->name('admin.data-management.fields-of-research.destroy');
+    
+    // Research Areas
+    Route::post('/admin/data-management/research-areas', [App\Http\Controllers\Admin\DataManagement\ResearchAreaController::class, 'store'])->name('admin.data-management.research-areas.store');
+    Route::post('/admin/data-management/research-areas/{researchArea}', [App\Http\Controllers\Admin\DataManagement\ResearchAreaController::class, 'update'])->name('admin.data-management.research-areas.update');
+    Route::delete('/admin/data-management/research-areas/{researchArea}', [App\Http\Controllers\Admin\DataManagement\ResearchAreaController::class, 'destroy'])->name('admin.data-management.research-areas.destroy');
+    
+    // Niche Domains
+    Route::post('/admin/data-management/niche-domains', [App\Http\Controllers\Admin\DataManagement\NicheDomainController::class, 'store'])->name('admin.data-management.niche-domains.store');
+    Route::post('/admin/data-management/niche-domains/{nicheDomain}', [App\Http\Controllers\Admin\DataManagement\NicheDomainController::class, 'update'])->name('admin.data-management.niche-domains.update');
+    Route::delete('/admin/data-management/niche-domains/{nicheDomain}', [App\Http\Controllers\Admin\DataManagement\NicheDomainController::class, 'destroy'])->name('admin.data-management.niche-domains.destroy');
+    
+    // Postgraduate Programs
+    Route::post('/admin/data-management/postgraduate-programs', [App\Http\Controllers\Admin\DataManagement\PostgraduateProgramController::class, 'store'])->name('admin.data-management.postgraduate-programs.store');
+    Route::post('/admin/data-management/postgraduate-programs/{postgraduateProgram}', [App\Http\Controllers\Admin\DataManagement\PostgraduateProgramController::class, 'update'])->name('admin.data-management.postgraduate-programs.update');
+    Route::delete('/admin/data-management/postgraduate-programs/{postgraduateProgram}', [App\Http\Controllers\Admin\DataManagement\PostgraduateProgramController::class, 'destroy'])->name('admin.data-management.postgraduate-programs.destroy');
+});
 });
 
 // Postgraduate Program Recommendations

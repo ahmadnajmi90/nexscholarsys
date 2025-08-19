@@ -46,7 +46,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         const connectionId = connectionToRemove.connection_id;
         setProcessingIds(prev => [...prev, connectionId]);
         
-        router.delete(route('connections.destroy', connectionId), {}, {
+        router.delete(route('api.app.connections.destroy', connectionId), {}, {
             onSuccess: (page) => {
                 toast.success('Connection removed successfully.');
                 // Close modal on success

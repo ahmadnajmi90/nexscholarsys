@@ -7,12 +7,16 @@ use App\Http\Requests\StoreFieldOfResearchRequest;
 use App\Http\Requests\UpdateFieldOfResearchRequest;
 use App\Http\Resources\FieldOfResearchResource;
 use App\Models\FieldOfResearch;
+use App\Services\FieldOfResearchService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Redirect;
 
 class FieldOfResearchController extends Controller
 {
+    public function __construct(
+        private FieldOfResearchService $fieldOfResearchService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -48,10 +52,15 @@ class FieldOfResearchController extends Controller
      */
     public function store(StoreFieldOfResearchRequest $request)
     {
-        $field = FieldOfResearch::create($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Field of Research created successfully.');
+        try {
+            $field = $this->fieldOfResearchService->create($request->validated());
+            
+            return new FieldOfResearchResource($field);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while creating the field of research.'
+            ], 500);
+        }
     }
 
     /**
@@ -69,11 +78,20 @@ class FieldOfResearchController extends Controller
      */
     public function update(UpdateFieldOfResearchRequest $request, string $id)
     {
-        $field = FieldOfResearch::findOrFail($id);
-        $field->update($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Field of Research updated successfully.');
+        try {
+            $field = FieldOfResearch::findOrFail($id);
+            $updatedField = $this->fieldOfResearchService->update($field, $request->validated());
+            
+            return new FieldOfResearchResource($updatedField);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Field of Research not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while updating the field of research.'
+            ], 500);
+        }
     }
 
     /**
@@ -83,48 +101,23 @@ class FieldOfResearchController extends Controller
     {
         try {
             $field = FieldOfResearch::findOrFail($id);
+            $this->fieldOfResearchService->delete($field);
             
-            // Check if field has related research areas
-            if ($field->researchAreas()->count() > 0) {
-                
-                if (request()->wantsJson() || request()->ajax()) {
-                    return response()->json([
-                        'error' => 'Cannot delete field of research with existing research areas. Delete the research areas first.'
-                    ], 409);
-                }
-                
-                return Redirect::route('admin.data-management.index')
-                    ->with('error', 'Cannot delete field of research with existing research areas. Delete the research areas first.');
-            }
-            
-            $field->delete();
-            
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'message' => 'Field of Research deleted successfully.'
-                ]);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('success', 'Field of Research deleted successfully.');
+            return response()->json([
+                'message' => 'Field of Research deleted successfully.'
+            ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'Field of Research not found.'
-                ], 404);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'Field of Research not found.');
+            return response()->json([
+                'error' => 'Field of Research not found.'
+            ], 404);
+        } catch (\App\Exceptions\CannotDeleteException $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 409);
         } catch (\Exception $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'An error occurred while deleting the field of research.'
-                ], 500);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'An error occurred while deleting the field of research.');
+            return response()->json([
+                'error' => 'An error occurred while deleting the field of research.'
+            ], 500);
         }
     }
 }

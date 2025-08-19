@@ -64,7 +64,7 @@ export default function SupervisorCard({ supervisor }) {
     if (!user?.id) return;
     setIsConnLoading(true);
     try {
-      const response = await axios.post(route('connections.store', user.id));
+              const response = await axios.post(route('api.app.connections.store', user.id));
       if (response.data && response.data.connection) {
         setConnectionStatus('pending_sent');
         setConnectionId(response.data.connection.id);
@@ -80,7 +80,7 @@ export default function SupervisorCard({ supervisor }) {
     if (!connectionId) return;
     setIsConnLoading(true);
     try {
-      await axios.patch(route('connections.accept', connectionId));
+              await axios.patch(route('api.app.connections.accept', connectionId));
       setConnectionStatus('connected');
     } catch (error) {
       console.error('Error accepting connection request:', error);
@@ -93,7 +93,7 @@ export default function SupervisorCard({ supervisor }) {
     if (!connectionId) return;
     setIsConnLoading(true);
     try {
-      await axios.delete(route('connections.destroy', connectionId));
+              await axios.delete(route('api.app.connections.destroy', connectionId));
       setConnectionStatus('not_connected');
       setConnectionId(null);
     } catch (error) {

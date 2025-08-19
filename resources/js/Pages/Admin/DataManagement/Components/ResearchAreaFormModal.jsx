@@ -37,7 +37,7 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
     const fetchFields = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/v1/fields-of-research?per_page=100');
+            const response = await axios.get('/api/v1/app/fields-of-research?per_page=100');
             setFields(response.data.data);
         } catch (error) {
             console.error('Error fetching fields of research:', error);
@@ -50,24 +50,20 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        const successMessage = mode === 'create' ? 'Research area created successfully!' : 'Research area updated successfully!';
-        
         // Determine the correct URL for create or update
         const url = mode === 'create' 
-            ? '/api/v1/research-areas' 
-            : `/api/v1/research-areas/${area.id}`;
+            ? '/admin/data-management/research-areas' 
+            : `/admin/data-management/research-areas/${area.id}`;
         
         // Always use the 'post' method
         post(url, {
             onSuccess: () => {
-                toast.success(successMessage);
                 onClose();
                 if (mode === 'create') {
                     reset();
                 }
             },
             onError: (errors) => {
-                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} research area`);
                 console.error(errors);
             }
         });

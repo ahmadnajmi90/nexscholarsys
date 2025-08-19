@@ -18,24 +18,20 @@ export default function FieldOfResearchFormModal({ isOpen, onClose, field = null
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        const successMessage = mode === 'create' ? 'Field of research created successfully!' : 'Field of research updated successfully!';
-        
         // Determine the correct URL for create or update
         const url = mode === 'create' 
-            ? '/api/v1/fields-of-research' 
-            : `/api/v1/fields-of-research/${field.id}`;
+            ? '/admin/data-management/fields-of-research' 
+            : `/admin/data-management/fields-of-research/${field.id}`;
         
         // Always use the 'post' method
         post(url, {
             onSuccess: () => {
-                toast.success(successMessage);
                 onClose();
                 if (mode === 'create') {
                     reset();
                 }
             },
             onError: (errors) => {
-                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} field of research`);
                 console.error(errors);
             }
         });

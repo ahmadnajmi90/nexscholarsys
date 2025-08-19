@@ -7,12 +7,16 @@ use App\Http\Requests\StoreNicheDomainRequest;
 use App\Http\Requests\UpdateNicheDomainRequest;
 use App\Http\Resources\NicheDomainResource;
 use App\Models\NicheDomain;
+use App\Services\NicheDomainService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Redirect;
 
 class NicheDomainController extends Controller
 {
+    public function __construct(
+        private NicheDomainService $nicheDomainService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -53,10 +57,15 @@ class NicheDomainController extends Controller
      */
     public function store(StoreNicheDomainRequest $request)
     {
-        $domain = NicheDomain::create($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Niche Domain created successfully.');
+        try {
+            $domain = $this->nicheDomainService->create($request->validated());
+            
+            return new NicheDomainResource($domain);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while creating the niche domain.'
+            ], 500);
+        }
     }
 
     /**
@@ -74,11 +83,20 @@ class NicheDomainController extends Controller
      */
     public function update(UpdateNicheDomainRequest $request, string $id)
     {
-        $domain = NicheDomain::findOrFail($id);
-        $domain->update($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Niche Domain updated successfully.');
+        try {
+            $domain = NicheDomain::findOrFail($id);
+            $updatedDomain = $this->nicheDomainService->update($domain, $request->validated());
+            
+            return new NicheDomainResource($updatedDomain);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Niche Domain not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while updating the niche domain.'
+            ], 500);
+        }
     }
 
     /**
@@ -88,35 +106,19 @@ class NicheDomainController extends Controller
     {
         try {
             $domain = NicheDomain::findOrFail($id);
+            $this->nicheDomainService->delete($domain);
             
-            $domain->delete();
-            
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'message' => 'Niche Domain deleted successfully.'
-                ]);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('success', 'Niche Domain deleted successfully.');
+            return response()->json([
+                'message' => 'Niche Domain deleted successfully.'
+            ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'Niche Domain not found.'
-                ], 404);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'Niche Domain not found.');
+            return response()->json([
+                'error' => 'Niche Domain not found.'
+            ], 404);
         } catch (\Exception $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'An error occurred while deleting the niche domain.'
-                ], 500);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'An error occurred while deleting the niche domain.');
+            return response()->json([
+                'error' => 'An error occurred while deleting the niche domain.'
+            ], 500);
         }
     }
 }

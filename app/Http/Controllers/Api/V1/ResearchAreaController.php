@@ -7,12 +7,16 @@ use App\Http\Requests\StoreResearchAreaRequest;
 use App\Http\Requests\UpdateResearchAreaRequest;
 use App\Http\Resources\ResearchAreaResource;
 use App\Models\ResearchArea;
+use App\Services\ResearchAreaService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Redirect;
 
 class ResearchAreaController extends Controller
 {
+    public function __construct(
+        private ResearchAreaService $researchAreaService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -57,10 +61,15 @@ class ResearchAreaController extends Controller
      */
     public function store(StoreResearchAreaRequest $request)
     {
-        $area = ResearchArea::create($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Research Area created successfully.');
+        try {
+            $area = $this->researchAreaService->create($request->validated());
+            
+            return new ResearchAreaResource($area);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while creating the research area.'
+            ], 500);
+        }
     }
 
     /**
@@ -78,11 +87,20 @@ class ResearchAreaController extends Controller
      */
     public function update(UpdateResearchAreaRequest $request, string $id)
     {
-        $area = ResearchArea::findOrFail($id);
-        $area->update($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Research Area updated successfully.');
+        try {
+            $area = ResearchArea::findOrFail($id);
+            $updatedArea = $this->researchAreaService->update($area, $request->validated());
+            
+            return new ResearchAreaResource($updatedArea);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Research Area not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while updating the research area.'
+            ], 500);
+        }
     }
 
     /**
@@ -92,48 +110,23 @@ class ResearchAreaController extends Controller
     {
         try {
             $area = ResearchArea::findOrFail($id);
+            $this->researchAreaService->delete($area);
             
-            // Check if area has related niche domains
-            if ($area->nicheDomains()->count() > 0) {
-                
-                if (request()->wantsJson() || request()->ajax()) {
-                    return response()->json([
-                        'error' => 'Cannot delete research area with existing niche domains. Delete the niche domains first.'
-                    ], 409);
-                }
-                
-                return Redirect::route('admin.data-management.index')
-                    ->with('error', 'Cannot delete research area with existing niche domains. Delete the niche domains first.');
-            }
-            
-            $area->delete();
-            
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'message' => 'Research Area deleted successfully.'
-                ]);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('success', 'Research Area deleted successfully.');
+            return response()->json([
+                'message' => 'Research Area deleted successfully.'
+            ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'Research Area not found.'
-                ], 404);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'Research Area not found.');
+            return response()->json([
+                'error' => 'Research Area not found.'
+            ], 404);
+        } catch (\App\Exceptions\CannotDeleteException $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 409);
         } catch (\Exception $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'An error occurred while deleting the research area.'
-                ], 500);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'An error occurred while deleting the research area.');
+            return response()->json([
+                'error' => 'An error occurred while deleting the research area.'
+            ], 500);
         }
     }
 }

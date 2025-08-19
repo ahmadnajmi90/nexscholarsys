@@ -21,7 +21,7 @@ export default function PostgraduateProgramsTab() {
   const fetchPrograms = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/v1/postgraduate-programs', {
+      const response = await axios.get('/api/v1/app/postgraduate-programs', {
         params: { page: pagination.current_page, per_page: pagination.per_page, search: searchQuery || undefined }
       });
       setPrograms(response.data.data);
@@ -43,12 +43,19 @@ export default function PostgraduateProgramsTab() {
 
   const handleDelete = async () => {
     if (!currentProgram) return;
-    try {
-      await axios.delete(`/api/v1/postgraduate-programs/${currentProgram.id}`);
-      toast.success('Postgraduate Program deleted');
-      setIsDeleteModalOpen(false);
-      fetchPrograms();
-    } catch (e) { console.error(e); toast.error('Delete failed'); }
+    
+    router.delete(`/admin/data-management/postgraduate-programs/${currentProgram.id}`, {
+      onSuccess: () => {
+        // The toast will be shown automatically from the session flash.
+        setIsDeleteModalOpen(false);
+        fetchPrograms(); // Re-fetch data to update the table
+      },
+      onError: (errors) => {
+        // The toast for the error will also be shown automatically.
+        // You can log the error for debugging if you wish.
+        console.error(errors);
+      }
+    });
   };
 
   const handlePageChange = (page) => setPagination(prev => ({ ...prev, current_page: page }));
