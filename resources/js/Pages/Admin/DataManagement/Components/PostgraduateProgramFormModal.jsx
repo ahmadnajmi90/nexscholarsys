@@ -65,12 +65,15 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
     try {
       if (isEdit) {
         await axios.post(`/admin/data-management/postgraduate-programs/${currentProgram.id}`, form);
+        toast.success('Program updated');
       } else {
         await axios.post('/admin/data-management/postgraduate-programs', form);
+        toast.success('Program created');
       }
       onSuccess?.();
     } catch (e) {
       console.error(e);
+      toast.error('Save failed');
     }
   };
 

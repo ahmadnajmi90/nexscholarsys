@@ -41,6 +41,8 @@ export default function UniversityFormModal({ isOpen, onClose, university = null
     const handleSubmit = (e) => {
         e.preventDefault();
         
+        const successMessage = mode === 'create' ? 'University created successfully!' : 'University updated successfully!';
+        
         // Determine the correct URL for create or update
         const url = mode === 'create' 
             ? '/admin/data-management/universities' 
@@ -50,6 +52,7 @@ export default function UniversityFormModal({ isOpen, onClose, university = null
         post(url, { 
             data: data, // Pass the entire form data object
             onSuccess: () => {
+                toast.success(successMessage);
                 onClose();
                 if (mode === 'create') {
                     reset();
@@ -58,6 +61,7 @@ export default function UniversityFormModal({ isOpen, onClose, university = null
                 }
             },
             onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} university`);
                 console.error(errors);
             }
         });

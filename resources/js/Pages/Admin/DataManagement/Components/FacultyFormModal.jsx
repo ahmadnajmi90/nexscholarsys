@@ -50,6 +50,8 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
     const handleSubmit = (e) => {
         e.preventDefault();
         
+        const successMessage = mode === 'create' ? 'Faculty created successfully!' : 'Faculty updated successfully!';
+        
         // Determine the correct URL for create or update
         const url = mode === 'create' 
             ? '/admin/data-management/faculties' 
@@ -58,12 +60,14 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
         // Always use the 'post' method
         post(url, {
             onSuccess: () => {
+                toast.success(successMessage);
                 onClose();
                 if (mode === 'create') {
                     reset();
                 }
             },
             onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} faculty`);
                 console.error(errors);
             }
         });

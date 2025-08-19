@@ -214,7 +214,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         if (action !== 'destroy') {
         setProcessingIds(prev => [...prev, connectionId]);
         
-        const url = route(`connections.${action}`, connectionId);
+        const url = route(`api.app.connections.${action}`, connectionId);
         const method = action === 'accept' ? 'patch' : 'delete';
         
         router[method](url, {}, {

@@ -50,6 +50,8 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
     const handleSubmit = (e) => {
         e.preventDefault();
         
+        const successMessage = mode === 'create' ? 'Research area created successfully!' : 'Research area updated successfully!';
+        
         // Determine the correct URL for create or update
         const url = mode === 'create' 
             ? '/admin/data-management/research-areas' 
@@ -58,12 +60,14 @@ export default function ResearchAreaFormModal({ isOpen, onClose, area = null, fi
         // Always use the 'post' method
         post(url, {
             onSuccess: () => {
+                toast.success(successMessage);
                 onClose();
                 if (mode === 'create') {
                     reset();
                 }
             },
             onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} research area`);
                 console.error(errors);
             }
         });

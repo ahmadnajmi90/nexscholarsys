@@ -116,19 +116,43 @@ export default function FacultiesTab() {
 
     const handleDelete = () => {
         if (!currentFaculty) return;
-
-        router.delete(`/admin/data-management/faculties/${currentFaculty.id}`, {
-            onSuccess: () => {
-                // The toast will be shown automatically from the session flash.
+        
+        const deleteAction = async () => {
+            try {
+                // Step 1: Make the API call with axios
+                router.delete(`/admin/data-management/faculties/${currentFaculty.id}`);
+                
+                // Step 2: On success, show a direct success toast.
+                toast.success('Faculty deleted successfully!');
+                
+                // Step 3: Manually re-fetch the data for that tab.
+                fetchFaculties();
+                
+            } catch (error) {
+                // Step 3: Handle errors directly from the axios response.
+                if (error.response) {
+                    if (error.response.status === 404) {
+                        toast.error(`Faculty not found. It may have been already deleted.`);
+                        // Refresh the list to update the UI
+                        fetchFaculties();
+                    } else if (error.response.data?.error) {
+                        toast.error(error.response.data.error);
+                    } else if (error.response.data?.message) {
+                        toast.error(error.response.data.message);
+                    } else {
+                        toast.error(`Error (${error.response.status}): Unable to delete faculty.`);
+                    }
+                } else {
+                    toast.error('Network error or server not responding.');
+                }
+                console.error('Error deleting faculty:', error);
+            } finally {
+                // Step 4: Always close the confirmation modal.
                 setIsDeleteModalOpen(false);
-                fetchFaculties(); // Re-fetch data to update the table
-            },
-            onError: (errors) => {
-                // The toast for the error will also be shown automatically.
-                // You can log the error for debugging if you wish.
-                console.error(errors);
             }
-        });
+        };
+        
+        deleteAction();
     };
 
     const closeFormModal = () => {

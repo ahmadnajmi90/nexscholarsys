@@ -61,6 +61,8 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
     const handleSubmit = (e) => {
         e.preventDefault();
         
+        const successMessage = mode === 'create' ? 'Niche domain created successfully!' : 'Niche domain updated successfully!';
+        
         // Determine the correct URL for create or update
         const url = mode === 'create' 
             ? '/admin/data-management/niche-domains' 
@@ -69,12 +71,14 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
         // Always use the 'post' method
         post(url, {
             onSuccess: () => {
+                toast.success(successMessage);
                 onClose();
                 if (mode === 'create') {
                     reset();
                 }
             },
             onError: (errors) => {
+                toast.error(`Error ${mode === 'create' ? 'saving' : 'updating'} niche domain`);
                 console.error(errors);
             }
         });

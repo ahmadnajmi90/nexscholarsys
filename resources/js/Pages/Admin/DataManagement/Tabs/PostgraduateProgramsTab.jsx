@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { FaEdit, FaTrash, FaSearch, FaPlus } from 'react-icons/fa';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import PostgraduateProgramFormModal from '../Components/PostgraduateProgramFormModal';
+import { router } from '@inertiajs/react';
 
 export default function PostgraduateProgramsTab() {
   const [programs, setPrograms] = useState([]);
@@ -43,19 +44,12 @@ export default function PostgraduateProgramsTab() {
 
   const handleDelete = async () => {
     if (!currentProgram) return;
-    
-    router.delete(`/admin/data-management/postgraduate-programs/${currentProgram.id}`, {
-      onSuccess: () => {
-        // The toast will be shown automatically from the session flash.
-        setIsDeleteModalOpen(false);
-        fetchPrograms(); // Re-fetch data to update the table
-      },
-      onError: (errors) => {
-        // The toast for the error will also be shown automatically.
-        // You can log the error for debugging if you wish.
-        console.error(errors);
-      }
-    });
+    try {
+      router.delete(`/admin/data-management/postgraduate-programs/${currentProgram.id}`);
+      toast.success('Postgraduate Program deleted');
+      setIsDeleteModalOpen(false);
+      fetchPrograms();
+    } catch (e) { console.error(e); toast.error('Delete failed'); }
   };
 
   const handlePageChange = (page) => setPagination(prev => ({ ...prev, current_page: page }));
