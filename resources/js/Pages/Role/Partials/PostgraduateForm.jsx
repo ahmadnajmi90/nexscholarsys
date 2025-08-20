@@ -838,6 +838,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 }}
                                 placeholder="Select your skills..."
                             />
+                            <InputError className="mt-2" message={errors.skills} />
                         </div>
                     </div>
 

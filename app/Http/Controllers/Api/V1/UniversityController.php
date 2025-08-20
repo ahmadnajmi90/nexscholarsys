@@ -11,6 +11,12 @@ use App\Services\UniversityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+/**
+ * @OA\Tag(
+ * name="Universities",
+ * description="API Endpoints for managing universities"
+ * )
+ */
 class UniversityController extends Controller
 {
     public function __construct(
@@ -19,6 +25,70 @@ class UniversityController extends Controller
 
     /**
      * Display a listing of the resource.
+     * 
+     * @OA\Get(
+     * path="/api/v1/universities",
+     * operationId="getUniversitiesList",
+     * tags={"Universities"},
+     * summary="Get list of universities",
+     * description="Returns a paginated list of universities, optionally filtered by search term or country.",
+     * @OA\Parameter(
+     * name="search",
+     * in="query",
+     * description="A search term to filter universities by full or short name.",
+     * required=false,
+     * @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     * name="country",
+     * in="query",
+     * description="Filter universities by country.",
+     * required=false,
+     * @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     * name="sort_by",
+     * in="query",
+     * description="Sort field for the results.",
+     * required=false,
+     * @OA\Schema(type="string", default="id")
+     * ),
+     * @OA\Parameter(
+     * name="sort_direction",
+     * in="query",
+     * description="Sort direction (asc or desc).",
+     * required=false,
+     * @OA\Schema(type="string", enum={"asc", "desc"}, default="asc")
+     * ),
+     * @OA\Parameter(
+     * name="per_page",
+     * in="query",
+     * description="Number of items per page.",
+     * required=false,
+     * @OA\Schema(type="integer", default=15)
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Successful operation",
+     * @OA\JsonContent(
+     * allOf={
+     * @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     * @OA\Schema(
+     * @OA\Property(
+     * property="data",
+     * type="array",
+     * @OA\Items(ref="#/components/schemas/University")
+     * )
+     * )
+     * }
+     * )
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function index(Request $request)
     {
@@ -50,6 +120,47 @@ class UniversityController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * @OA\Post(
+     * path="/api/v1/universities",
+     * operationId="storeUniversity",
+     * tags={"Universities"},
+     * summary="Create a new university",
+     * description="Creates a new university with the provided data.",
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"full_name", "short_name", "country", "university_category", "university_type"},
+     * @OA\Property(property="full_name", type="string", example="Universiti Malaya", description="Full name of the university"),
+     * @OA\Property(property="short_name", type="string", example="UM", description="Short name or abbreviation"),
+     * @OA\Property(property="country", type="string", example="Malaysia", description="Country where the university is located"),
+     * @OA\Property(property="university_category", type="string", enum={"Research", "Comprehensive", "N/A"}, example="Research", description="Category of the university"),
+     * @OA\Property(property="university_type", type="string", enum={"Public", "Private"}, example="Public", description="Type of the university"),
+     * @OA\Property(property="profile_picture", type="string", format="binary", nullable=true, description="Profile picture file"),
+     * @OA\Property(property="background_image", type="string", format="binary", nullable=true, description="Background image file")
+     * )
+     * ),
+     * @OA\Response(
+     * response=201,
+     * description="University created successfully",
+     * @OA\JsonContent(ref="#/components/schemas/University")
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Bad request - validation error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function store(StoreUniversityRequest $request)
     {
@@ -66,6 +177,36 @@ class UniversityController extends Controller
 
     /**
      * Display the specified resource.
+     * 
+     * @OA\Get(
+     * path="/api/v1/universities/{id}",
+     * operationId="showUniversity",
+     * tags={"Universities"},
+     * summary="Get a specific university",
+     * description="Returns detailed information about a specific university.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="University ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Successful operation",
+     * @OA\JsonContent(ref="#/components/schemas/University")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="University not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function show(string $id)
     {
@@ -76,6 +217,58 @@ class UniversityController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * 
+     * @OA\Post(
+     * path="/api/v1/universities/{id}",
+     * operationId="updateUniversity",
+     * tags={"Universities"},
+     * summary="Update a university",
+     * description="Updates an existing university with the provided data.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="University ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * @OA\Property(property="full_name", type="string", example="Universiti Malaya", description="Full name of the university"),
+     * @OA\Property(property="short_name", type="string", example="UM", description="Short name or abbreviation"),
+     * @OA\Property(property="country", type="string", example="Malaysia", description="Country where the university is located"),
+     * @OA\Property(property="university_category", type="string", enum={"Research", "Comprehensive", "N/A"}, example="Research", description="Category of the university"),
+     * @OA\Property(property="university_type", type="string", enum={"Public", "Private"}, example="Public", description="Type of the university"),
+     * @OA\Property(property="profile_picture", type="string", format="binary", nullable=true, description="Profile picture file"),
+     * @OA\Property(property="background_image", type="string", format="binary", nullable=true, description="Background image file")
+     * )
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="University updated successfully",
+     * @OA\JsonContent(ref="#/components/schemas/University")
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Bad request - validation error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="University not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function update(UpdateUniversityRequest $request, string $id)
     {
@@ -97,6 +290,46 @@ class UniversityController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * @OA\Delete(
+     * path="/api/v1/universities/{id}",
+     * operationId="destroyUniversity",
+     * tags={"Universities"},
+     * summary="Delete a university",
+     * description="Deletes a university from the system.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="University ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="University deleted successfully",
+     * @OA\JsonContent(ref="#/components/schemas/Success")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="University not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=409,
+     * description="Conflict - Cannot delete university",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function destroy(string $id)
     {

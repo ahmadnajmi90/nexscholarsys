@@ -11,6 +11,12 @@ use App\Services\NicheDomainService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+/**
+ * @OA\Tag(
+ * name="Niche Domains",
+ * description="API Endpoints for managing niche domains"
+ * )
+ */
 class NicheDomainController extends Controller
 {
     public function __construct(
@@ -19,6 +25,77 @@ class NicheDomainController extends Controller
 
     /**
      * Display a listing of the resource.
+     * 
+     * @OA\Get(
+     * path="/api/v1/niche-domains",
+     * operationId="getNicheDomainsList",
+     * tags={"Niche Domains"},
+     * summary="Get list of niche domains",
+     * description="Returns a paginated list of niche domains, optionally filtered by research_area_id or search term.",
+     * @OA\Parameter(
+     * name="research_area_id",
+     * in="query",
+     * description="Filter niche domains by research area ID.",
+     * required=false,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Parameter(
+     * name="search",
+     * in="query",
+     * description="A search term to filter niche domains by name.",
+     * required=false,
+     * @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     * name="with_area",
+     * in="query",
+     * description="Include research area data in the response.",
+     * required=false,
+     * @OA\Schema(type="boolean", default=false)
+     * ),
+     * @OA\Parameter(
+     * name="sort_by",
+     * in="query",
+     * description="Sort field for the results.",
+     * required=false,
+     * @OA\Schema(type="string", default="id")
+     * ),
+     * @OA\Parameter(
+     * name="sort_direction",
+     * in="query",
+     * description="Sort direction (asc or desc).",
+     * required=false,
+     * @OA\Schema(type="string", enum={"asc", "desc"}, default="asc")
+     * ),
+     * @OA\Parameter(
+     * name="per_page",
+     * in="query",
+     * description="Number of items per page.",
+     * required=false,
+     * @OA\Schema(type="integer", default=15)
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Successful operation",
+     * @OA\JsonContent(
+     * allOf={
+     * @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     * @OA\Schema(
+     * @OA\Property(
+     * property="data",
+     * type="array",
+     * @OA\Items(ref="#/components/schemas/NicheDomain")
+     * )
+     * )
+     * }
+     * )
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function index(Request $request)
     {
@@ -54,6 +131,42 @@ class NicheDomainController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * @OA\Post(
+     * path="/api/v1/niche-domains",
+     * operationId="storeNicheDomain",
+     * tags={"Niche Domains"},
+     * summary="Create a new niche domain",
+     * description="Creates a new niche domain with the provided data.",
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name", "research_area_id"},
+     * @OA\Property(property="name", type="string", example="Machine Learning", description="Name of the niche domain"),
+     * @OA\Property(property="research_area_id", type="integer", example=1, description="ID of the research area this domain belongs to")
+     * )
+     * ),
+     * @OA\Response(
+     * response=201,
+     * description="Niche domain created successfully",
+     * @OA\JsonContent(ref="#/components/schemas/NicheDomain")
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Bad request - validation error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function store(StoreNicheDomainRequest $request)
     {
@@ -70,6 +183,36 @@ class NicheDomainController extends Controller
 
     /**
      * Display the specified resource.
+     * 
+     * @OA\Get(
+     * path="/api/v1/niche-domains/{id}",
+     * operationId="showNicheDomain",
+     * tags={"Niche Domains"},
+     * summary="Get a specific niche domain",
+     * description="Returns detailed information about a specific niche domain.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="Niche Domain ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Successful operation",
+     * @OA\JsonContent(ref="#/components/schemas/NicheDomain")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Niche Domain not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function show(string $id)
     {
@@ -80,6 +223,53 @@ class NicheDomainController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * 
+     * @OA\Post(
+     * path="/api/v1/niche-domains/{id}",
+     * operationId="updateNicheDomain",
+     * tags={"Niche Domains"},
+     * summary="Update a niche domain",
+     * description="Updates an existing niche domain with the provided data.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="Niche Domain ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * @OA\Property(property="name", type="string", example="Machine Learning", description="Name of the niche domain"),
+     * @OA\Property(property="research_area_id", type="integer", example=1, description="ID of the research area this domain belongs to")
+     * )
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Niche domain updated successfully",
+     * @OA\JsonContent(ref="#/components/schemas/NicheDomain")
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Bad request - validation error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Niche Domain not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function update(UpdateNicheDomainRequest $request, string $id)
     {
@@ -101,6 +291,46 @@ class NicheDomainController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * @OA\Delete(
+     * path="/api/v1/niche-domains/{id}",
+     * operationId="destroyNicheDomain",
+     * tags={"Niche Domains"},
+     * summary="Delete a niche domain",
+     * description="Deletes a niche domain from the system.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="Niche Domain ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Niche domain deleted successfully",
+     * @OA\JsonContent(ref="#/components/schemas/Success")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Niche Domain not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=409,
+     * description="Conflict - Cannot delete niche domain",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function destroy(string $id)
     {

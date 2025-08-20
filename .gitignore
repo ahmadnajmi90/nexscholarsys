@@ -20,5 +20,6 @@ yarn-error.log
 /.vscode
 /.zed
 .env1
+/storage/api-docs
 
 .codegpt
