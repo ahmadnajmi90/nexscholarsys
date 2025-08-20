@@ -35,7 +35,15 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // Reset all states when modal is closed
+      setActiveTab('manual');
+      setFile(null);
+      setPreviewData([]);
+      setImportStep('upload');
+      return;
+    }
+    
     if (isEdit) {
       setForm({
         name: currentProgram.name || '',
@@ -100,6 +108,13 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
     try {
       await axios.post('/api/v1/app/postgraduate-programs/import', { programs: previewData });
       toast.success('Programs imported successfully!');
+      
+      // Reset import state after successful import
+      setFile(null);
+      setPreviewData([]);
+      setImportStep('upload');
+      setActiveTab('manual'); // Switch back to manual entry tab
+      
       onSuccess?.();
     } catch (e) {
       console.error(e);

@@ -171,50 +171,32 @@ export default function ResearchFieldsTab() {
 
     const handleDeleteField = () => {
         if (!currentField) return;
-        
-        const deleteAction = async () => {
-            try {
-                // Step 1: Make the API call with axios
-                router.delete(`/admin/data-management/fields-of-research/${currentField.id}`);
-                
-                // Step 2: On success, show a direct success toast.
-                toast.success('Field of Research deleted successfully!');
-                
-                // Step 3: Manually re-fetch the data for that tab.
-                fetchFields();
-                
-            } catch (error) {
-                // Step 3: Handle errors directly from the axios response.
-                if (error.response) {
-                    if (error.response.status === 404) {
-                        toast.error(`Field of research not found. It may have been already deleted.`);
-                        // Refresh the list to update the UI
-                        fetchFields();
-                    } else if (error.response.status === 409) {
-                        toast.error(`Cannot delete field of research with existing research areas. Delete the research areas first.`);
-                    } else if (error.response.data?.error) {
-                        toast.error(error.response.data.error);
-                    } else if (error.response.data?.message) {
-                        toast.error(error.response.data.message);
-                    } else {
-                        toast.error(`Error (${error.response.status}): Unable to delete field of research.`);
-                    }
-                } else {
-                    toast.error('Network error or server not responding.');
+
+        router.delete(`/admin/data-management/fields-of-research/${currentField.id}`, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // Check for success OR error flash messages from the server response
+                if (page.props?.flash?.success) {
+                    toast.success(page.props.flash.success);
                 }
-                console.error('Error deleting field of research:', error);
-            } finally {
-                // Step 4: Always close the confirmation modal.
+                if (page.props?.flash?.error) {
+                    toast.error(page.props.flash.error);
+                }
+
+                // Always close the modal after the action
                 setModalStates(prev => ({ ...prev, fieldDelete: false }));
-                
-                // Reset selected field if it was the one being deleted
+
+                // Reset selection if the deleted item was selected
                 if (selectedField && selectedField.id === currentField.id) {
                     setSelectedField(null);
                 }
+            },
+            onError: (errors) => {
+                // Fallback for client-side or network errors
+                toast.error('A client-side error occurred. Please try again.');
+                console.error(errors);
             }
-        };
-        
-        deleteAction();
+        });
     };
 
     // Modal handlers for Research Area
@@ -242,50 +224,32 @@ export default function ResearchFieldsTab() {
 
     const handleDeleteArea = () => {
         if (!currentArea) return;
-        
-        const deleteAction = async () => {
-            try {
-                // Step 1: Make the API call with axios
-                router.delete(`/admin/data-management/research-areas/${currentArea.id}`);
-                
-                // Step 2: On success, show a direct success toast.
-                toast.success('Research Area deleted successfully!');
-                
-                // Step 3: Manually re-fetch the data for that tab.
-                fetchAreas();
-                
-            } catch (error) {
-                // Step 3: Handle errors directly from the axios response.
-                if (error.response) {
-                    if (error.response.status === 404) {
-                        toast.error(`Research area not found. It may have been already deleted.`);
-                        // Refresh the list to update the UI
-                        fetchAreas();
-                    } else if (error.response.status === 409) {
-                        toast.error(`Cannot delete research area with existing niche domains. Delete the niche domains first.`);
-                    } else if (error.response.data?.error) {
-                        toast.error(error.response.data.error);
-                    } else if (error.response.data?.message) {
-                        toast.error(error.response.data.message);
-                    } else {
-                        toast.error(`Error (${error.response.status}): Unable to delete research area.`);
-                    }
-                } else {
-                    toast.error('Network error or server not responding.');
+
+        router.delete(`/admin/data-management/research-areas/${currentArea.id}`, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // Check for success OR error flash messages from the server response
+                if (page.props?.flash?.success) {
+                    toast.success(page.props.flash.success);
                 }
-                console.error('Error deleting research area:', error);
-            } finally {
-                // Step 4: Always close the confirmation modal.
+                if (page.props?.flash?.error) {
+                    toast.error(page.props.flash.error);
+                }
+
+                // Always close the modal after the action
                 setModalStates(prev => ({ ...prev, areaDelete: false }));
-                
-                // Reset selected area if it was the one being deleted
+
+                // Reset selection if the deleted item was selected
                 if (selectedArea && selectedArea.id === currentArea.id) {
                     setSelectedArea(null);
                 }
+            },
+            onError: (errors) => {
+                // Fallback for client-side or network errors
+                toast.error('A client-side error occurred. Please try again.');
+                console.error(errors);
             }
-        };
-        
-        deleteAction();
+        });
     };
 
     // Modal handlers for Niche Domain
@@ -313,43 +277,27 @@ export default function ResearchFieldsTab() {
 
     const handleDeleteDomain = () => {
         if (!currentDomain) return;
-        
-        const deleteAction = async () => {
-            try {
-                // Step 1: Make the API call with axios
-                router.delete(`/admin/data-management/niche-domains/${currentDomain.id}`);
-                
-                // Step 2: On success, show a direct success toast.
-                toast.success('Niche Domain deleted successfully!');
-                
-                // Step 3: Manually re-fetch the data for that tab.
-                fetchDomains();
-                
-            } catch (error) {
-                // Step 3: Handle errors directly from the axios response.
-                if (error.response) {
-                    if (error.response.status === 404) {
-                        toast.error(`Niche domain not found. It may have been already deleted.`);
-                        // Refresh the list to update the UI
-                        fetchDomains();
-                    } else if (error.response.data?.error) {
-                        toast.error(error.response.data.error);
-                    } else if (error.response.data?.message) {
-                        toast.error(error.response.data.message);
-                    } else {
-                        toast.error(`Error (${error.response.status}): Unable to delete niche domain.`);
-                    }
-                } else {
-                    toast.error('Network error or server not responding.');
+
+        router.delete(`/admin/data-management/niche-domains/${currentDomain.id}`, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                // Check for success OR error flash messages from the server response
+                if (page.props?.flash?.success) {
+                    toast.success(page.props.flash.success);
                 }
-                console.error('Error deleting niche domain:', error);
-            } finally {
-                // Step 4: Always close the confirmation modal.
+                if (page.props?.flash?.error) {
+                    toast.error(page.props.flash.error);
+                }
+
+                // Always close the modal after the action
                 setModalStates(prev => ({ ...prev, domainDelete: false }));
+            },
+            onError: (errors) => {
+                // Fallback for client-side or network errors
+                toast.error('A client-side error occurred. Please try again.');
+                console.error(errors);
             }
-        };
-        
-        deleteAction();
+        });
     };
 
     return (

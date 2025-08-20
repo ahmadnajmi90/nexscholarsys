@@ -27,9 +27,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 
     // Data Management API Routes (Admin Only) - Stateless for external tools
     Route::middleware(['admin'])->group(function () {
-        // Postgraduate Programs - Import must be defined BEFORE resource to avoid {postgraduate_program} catching 'import'
-        Route::post('postgraduate-programs/import/preview', [PostgraduateProgramController::class, 'previewImport'])->name('api.postgraduate-programs.import.preview');
-        Route::post('postgraduate-programs/import', [PostgraduateProgramController::class, 'import'])->name('api.postgraduate-programs.import');
         Route::delete('postgraduate-programs/{postgraduate_program}', [PostgraduateProgramController::class, 'destroy'])->name('api.postgraduate-programs.destroy');
         Route::apiResource('postgraduate-programs', PostgraduateProgramController::class)->except(['destroy']);
         // Allow POST to update for consistency with existing tabs
@@ -137,6 +134,10 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('api.app.postgraduate-programs.index');
         Route::get('postgraduate-programs/{postgraduate_program}', [PostgraduateProgramController::class, 'show'])
             ->name('api.app.postgraduate-programs.show');
+            
+        // Postgraduate Programs - Import functionality for frontend
+        Route::post('postgraduate-programs/import/preview', [PostgraduateProgramController::class, 'previewImport'])->name('api.app.postgraduate-programs.import.preview');
+        Route::post('postgraduate-programs/import', [PostgraduateProgramController::class, 'import'])->name('api.app.postgraduate-programs.import');
     });
 
     // Connection Routes - Stateful for frontend
