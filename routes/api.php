@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\ConnectionController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PostgraduateProgramController;
+use App\Http\Controllers\Api\V1\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,8 @@ use App\Http\Controllers\Api\V1\PostgraduateProgramController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 
 // Group A: Stateless API for External Tools (Bearer Token Authentication)
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
