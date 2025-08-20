@@ -39,8 +39,8 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
         try {
             // If we have a specific area ID, we need to make sure we fetch that area
             const url = areaId 
-                ? `/api/v1/research-areas/${areaId}` 
-                : '/api/v1/research-areas?per_page=100';
+                ? `/api/v1/app/research-areas/${areaId}` 
+                : '/api/v1/app/research-areas?per_page=100';
             
             const response = await axios.get(url);
             
@@ -65,8 +65,8 @@ export default function NicheDomainFormModal({ isOpen, onClose, domain = null, a
         
         // Determine the correct URL for create or update
         const url = mode === 'create' 
-            ? '/api/v1/niche-domains' 
-            : `/api/v1/niche-domains/${domain.id}`;
+            ? '/admin/data-management/niche-domains' 
+            : `/admin/data-management/niche-domains/${domain.id}`;
         
         // Always use the 'post' method
         post(url, {

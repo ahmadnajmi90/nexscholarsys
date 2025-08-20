@@ -29,13 +29,21 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
   useEffect(() => {
     if (!isOpen) return;
     // Load universities for dropdowns
-    axios.get('/api/v1/universities', { params: { per_page: 200 } })
+    axios.get('/api/v1/app/universities', { params: { per_page: 200 } })
       .then(res => setUniversities(res.data.data))
       .catch(() => toast.error('Failed to load universities'));
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      // Reset all states when modal is closed
+      setActiveTab('manual');
+      setFile(null);
+      setPreviewData([]);
+      setImportStep('upload');
+      return;
+    }
+    
     if (isEdit) {
       setForm({
         name: currentProgram.name || '',
@@ -55,7 +63,7 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
 
   useEffect(() => {
     if (!form.university_id) { setFaculties([]); return; }
-    axios.get('/api/v1/faculties', { params: { university_id: form.university_id, per_page: 200 } })
+    axios.get('/api/v1/app/faculties', { params: { university_id: form.university_id, per_page: 200 } })
       .then(res => setFaculties(res.data.data))
       .catch(() => setFaculties([]));
   }, [form.university_id]);
@@ -64,10 +72,10 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
     e.preventDefault();
     try {
       if (isEdit) {
-        await axios.post(`/api/v1/postgraduate-programs/${currentProgram.id}`, form);
+        await axios.post(`/admin/data-management/postgraduate-programs/${currentProgram.id}`, form);
         toast.success('Program updated');
       } else {
-        await axios.post('/api/v1/postgraduate-programs', form);
+        await axios.post('/admin/data-management/postgraduate-programs', form);
         toast.success('Program created');
       }
       onSuccess?.();
@@ -84,7 +92,7 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const response = await axios.post('/api/v1/postgraduate-programs/import/preview', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const response = await axios.post('/api/v1/app/postgraduate-programs/import/preview', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setPreviewData(response.data || []);
       setImportStep('preview');
     } catch (e) {
@@ -98,8 +106,15 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
   const handleConfirmImport = async () => {
     setIsImportLoading(true);
     try {
-      await axios.post('/api/v1/postgraduate-programs/import', { programs: previewData });
+      await axios.post('/api/v1/app/postgraduate-programs/import', { programs: previewData });
       toast.success('Programs imported successfully!');
+      
+      // Reset import state after successful import
+      setFile(null);
+      setPreviewData([]);
+      setImportStep('upload');
+      setActiveTab('manual'); // Switch back to manual entry tab
+      
       onSuccess?.();
     } catch (e) {
       console.error(e);

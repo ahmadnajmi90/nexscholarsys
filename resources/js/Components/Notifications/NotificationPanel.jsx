@@ -31,7 +31,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/v1/notifications');
+              const response = await axios.get('/api/v1/app/notifications');
       setNotifications(response.data);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -43,7 +43,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
   const markAsRead = async (notificationId) => {
     setProcessingIds((prev) => [...prev, notificationId]);
     try {
-      await axios.post('/api/v1/notifications/mark-as-read', {
+              await axios.post('/api/v1/app/notifications/mark-as-read', {
         notification_id: notificationId,
       });
       
@@ -70,7 +70,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.post('/api/v1/notifications/mark-all-as-read');
+              await axios.post('/api/v1/app/notifications/mark-all-as-read');
       
       // Update the local state to reflect all notifications being read
       setNotifications((prev) => {

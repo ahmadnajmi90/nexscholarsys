@@ -7,12 +7,16 @@ use App\Http\Requests\StoreFacultyRequest;
 use App\Http\Requests\UpdateFacultyRequest;
 use App\Http\Resources\FacultyResource;
 use App\Models\FacultyList;
+use App\Services\FacultyService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Redirect;
 
 class FacultyController extends Controller
 {
+    public function __construct(
+        private FacultyService $facultyService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -53,10 +57,15 @@ class FacultyController extends Controller
      */
     public function store(StoreFacultyRequest $request)
     {
-        $faculty = FacultyList::create($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Faculty created successfully.');
+        try {
+            $faculty = $this->facultyService->create($request->validated());
+            
+            return new FacultyResource($faculty);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while creating the faculty.'
+            ], 500);
+        }
     }
 
     /**
@@ -76,11 +85,20 @@ class FacultyController extends Controller
      */
     public function update(UpdateFacultyRequest $request, string $id)
     {
-        $faculty = FacultyList::findOrFail($id);
-        $faculty->update($request->validated());
-        
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Faculty updated successfully.');
+        try {
+            $faculty = FacultyList::findOrFail($id);
+            $updatedFaculty = $this->facultyService->update($faculty, $request->validated());
+            
+            return new FacultyResource($updatedFaculty);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Faculty not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while updating the faculty.'
+            ], 500);
+        }
     }
 
     /**
@@ -90,50 +108,23 @@ class FacultyController extends Controller
     {
         try {
             $faculty = FacultyList::findOrFail($id);
+            $this->facultyService->delete($faculty);
             
-            // Check if faculty has related users
-            if ($faculty->academicians()->count() > 0 || 
-                $faculty->postgraduates()->count() > 0 || 
-                $faculty->undergraduates()->count() > 0) {
-                
-                if (request()->wantsJson() || request()->ajax()) {
-                    return response()->json([
-                        'error' => 'Cannot delete faculty with existing users. Reassign users first.'
-                    ], 409);
-                }
-                
-                return Redirect::route('admin.data-management.index')
-                    ->with('error', 'Cannot delete faculty with existing users. Reassign users first.');
-            }
-            
-            $faculty->delete();
-            
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'message' => 'Faculty deleted successfully.'
-                ]);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('success', 'Faculty deleted successfully.');
+            return response()->json([
+                'message' => 'Faculty deleted successfully.'
+            ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'Faculty not found.'
-                ], 404);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'Faculty not found.');
+            return response()->json([
+                'error' => 'Faculty not found.'
+            ], 404);
+        } catch (\App\Exceptions\CannotDeleteException $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 409);
         } catch (\Exception $e) {
-            if (request()->wantsJson() || request()->ajax()) {
-                return response()->json([
-                    'error' => 'An error occurred while deleting the faculty.'
-                ], 500);
-            }
-            
-            return Redirect::route('admin.data-management.index')
-                ->with('error', 'An error occurred while deleting the faculty.');
+            return response()->json([
+                'error' => 'An error occurred while deleting the faculty.'
+            ], 500);
         }
     }
 }

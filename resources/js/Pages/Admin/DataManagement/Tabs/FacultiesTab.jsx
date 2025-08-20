@@ -39,7 +39,7 @@ export default function FacultiesTab() {
 
     const fetchUniversities = async () => {
         try {
-            const response = await axios.get('/api/v1/universities', {
+            const response = await axios.get('/api/v1/app/universities', {
                 params: { per_page: 100 }
             });
             setUniversities(response.data.data);
@@ -54,7 +54,7 @@ export default function FacultiesTab() {
         
         setLoading(true);
         try {
-            const response = await axios.get('/api/v1/faculties', {
+            const response = await axios.get('/api/v1/app/faculties', {
                 params: {
                     university_id: selectedUniversity,
                     page: pagination.current_page,
@@ -120,7 +120,7 @@ export default function FacultiesTab() {
         const deleteAction = async () => {
             try {
                 // Step 1: Make the API call with axios
-                await axios.delete(`/api/v1/faculties/${currentFaculty.id}`);
+                router.delete(`/admin/data-management/faculties/${currentFaculty.id}`);
                 
                 // Step 2: On success, show a direct success toast.
                 toast.success('Faculty deleted successfully!');

@@ -31,7 +31,7 @@ const ConnectionButton = ({ user, onRemoveConnection }) => {
   const connect = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.post(route('connections.store', user.id));
+              const response = await axios.post(route('api.app.connections.store', user.id));
       if (response.data && response.data.connection) {
         setConnectionStatus('pending_sent');
         setConnectionId(response.data.connection.id);
@@ -46,7 +46,7 @@ const ConnectionButton = ({ user, onRemoveConnection }) => {
   const acceptRequest = async () => {
     setIsLoading(true);
     try {
-      await axios.patch(route('connections.accept', connectionId));
+              await axios.patch(route('api.app.connections.accept', connectionId));
       setConnectionStatus('connected');
     } catch (error) {
       console.error('Error accepting connection request:', error);
@@ -58,7 +58,7 @@ const ConnectionButton = ({ user, onRemoveConnection }) => {
   const rejectRequest = async () => {
     setIsLoading(true);
     try {
-      await axios.delete(route('connections.reject', connectionId));
+              await axios.delete(route('api.app.connections.reject', connectionId));
       setConnectionStatus('not_connected');
       setConnectionId(null);
     } catch (error) {
@@ -78,7 +78,7 @@ const ConnectionButton = ({ user, onRemoveConnection }) => {
     // Otherwise, use the direct deletion method
     setIsLoading(true);
     try {
-      await axios.delete(route('connections.destroy', connectionId));
+              await axios.delete(route('api.app.connections.destroy', connectionId));
       setConnectionStatus('not_connected');
       setConnectionId(null);
     } catch (error) {

@@ -9,12 +9,16 @@ use App\Http\Requests\ImportPostgraduateProgramsRequest;
 use App\Http\Resources\PostgraduateProgramResource;
 use App\Imports\PostgraduateProgramsImport;
 use App\Models\PostgraduateProgram;
+use App\Services\PostgraduateProgramService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
 
 class PostgraduateProgramController extends Controller
 {
+    public function __construct(
+        private PostgraduateProgramService $postgraduateProgramService
+    ) {}
+
     public function index(Request $request)
     {
         $query = PostgraduateProgram::with(['university', 'faculty']);
@@ -36,10 +40,15 @@ class PostgraduateProgramController extends Controller
 
     public function store(StorePostgraduateProgramRequest $request)
     {
-        $program = PostgraduateProgram::create($request->validated());
-
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Postgraduate Program created successfully.');
+        try {
+            $program = $this->postgraduateProgramService->create($request->validated());
+            
+            return new PostgraduateProgramResource($program);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while creating the postgraduate program.'
+            ], 500);
+        }
     }
 
     public function show(string $id)
@@ -50,25 +59,40 @@ class PostgraduateProgramController extends Controller
 
     public function update(UpdatePostgraduateProgramRequest $request, string $id)
     {
-        $program = PostgraduateProgram::findOrFail($id);
-        $program->update($request->validated());
-
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Postgraduate Program updated successfully.');
+        try {
+            $program = PostgraduateProgram::findOrFail($id);
+            $updatedProgram = $this->postgraduateProgramService->update($program, $request->validated());
+            
+            return new PostgraduateProgramResource($updatedProgram);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Postgraduate Program not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while updating the postgraduate program.'
+            ], 500);
+        }
     }
 
     public function destroy(string $id)
     {
-        $program = PostgraduateProgram::findOrFail($id);
-        $program->delete();
-
-        if (request()->wantsJson() || request()->ajax()) {
+        try {
+            $program = PostgraduateProgram::findOrFail($id);
+            $this->postgraduateProgramService->delete($program);
+            
             return response()->json([
                 'message' => 'Postgraduate Program deleted successfully.'
             ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'Postgraduate Program not found.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while deleting the postgraduate program.'
+            ], 500);
         }
-        return Redirect::route('admin.data-management.index')
-            ->with('success', 'Postgraduate Program deleted successfully.');
     }
 
     public function previewImport(Request $request)
@@ -87,6 +111,7 @@ class PostgraduateProgramController extends Controller
         $validated = $request->validate([
             'programs' => 'required|array',
             'programs.*.name' => 'required|string',
+            'programs.*.program_type' => 'required|string|in:Master,PhD',
             'programs.*.university_id' => 'required|integer|exists:university_list,id',
             'programs.*.faculty_id' => 'nullable|integer|exists:faculty_list,id',
             'programs.*.description' => 'nullable|string',
@@ -102,7 +127,15 @@ class PostgraduateProgramController extends Controller
                     'name' => $programData['name'],
                     'university_id' => $programData['university_id'],
                 ],
-                $programData
+                [
+                    'program_type' => $programData['program_type'] ?? 'Master',
+                    'faculty_id' => $programData['faculty_id'] ?? null,
+                    'description' => $programData['description'] ?? null,
+                    'duration_years' => $programData['duration_years'] ?? null,
+                    'funding_info' => $programData['funding_info'] ?? null,
+                    'application_url' => $programData['application_url'] ?? null,
+                    'country' => $programData['country'] ?? null,
+                ]
             );
         }
 

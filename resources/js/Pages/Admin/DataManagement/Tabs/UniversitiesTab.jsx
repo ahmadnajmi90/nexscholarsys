@@ -27,10 +27,10 @@ export default function UniversitiesTab() {
         fetchUniversities();
     }, [pagination.current_page, searchQuery]);
 
-    const fetchUniversities = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get('/api/v1/universities', {
+      const fetchUniversities = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/v1/app/universities', {
                 params: {
                     page: pagination.current_page,
                     per_page: pagination.per_page,
@@ -86,7 +86,7 @@ export default function UniversitiesTab() {
         const deleteAction = async () => {
             try {
                 // Step 1: Make the API call with axios
-                await axios.delete(`/api/v1/universities/${currentUniversity.id}`);
+                router.delete(`/admin/data-management/universities/${currentUniversity.id}`);
                 
                 // Step 2: On success, show a direct success toast.
                 toast.success('University deleted successfully!');

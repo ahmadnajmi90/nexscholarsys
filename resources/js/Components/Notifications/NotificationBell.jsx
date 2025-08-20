@@ -23,7 +23,7 @@ const NotificationBell = () => {
   const fetchUnreadCount = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/v1/notifications');
+              const response = await axios.get('/api/v1/app/notifications');
       setUnreadCount(response.data.unread_count);
     } catch (error) {
       console.error('Error fetching notifications count:', error);

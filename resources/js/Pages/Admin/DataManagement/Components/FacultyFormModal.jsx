@@ -37,7 +37,7 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
     const fetchUniversities = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/v1/universities?per_page=100');
+            const response = await axios.get('/api/v1/app/universities?per_page=100');
             setUniversities(response.data.data);
         } catch (error) {
             console.error('Error fetching universities:', error);
@@ -54,8 +54,8 @@ export default function FacultyFormModal({ isOpen, onClose, faculty = null, univ
         
         // Determine the correct URL for create or update
         const url = mode === 'create' 
-            ? '/api/v1/faculties' 
-            : `/api/v1/faculties/${faculty.id}`;
+            ? '/admin/data-management/faculties' 
+            : `/admin/data-management/faculties/${faculty.id}`;
         
         // Always use the 'post' method
         post(url, {

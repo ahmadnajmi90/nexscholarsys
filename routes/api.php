@@ -17,18 +17,16 @@ use App\Http\Controllers\Api\V1\PostgraduateProgramController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-// V1 API Routes
-Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
+// Group A: Stateless API for External Tools (Bearer Token Authentication)
+Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     
-    // Data Management API Routes (Admin Only)
+    // User route for external tools
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    // Data Management API Routes (Admin Only) - Stateless for external tools
     Route::middleware(['admin'])->group(function () {
-        // Postgraduate Programs - Import must be defined BEFORE resource to avoid {postgraduate_program} catching 'import'
-        Route::post('postgraduate-programs/import/preview', [PostgraduateProgramController::class, 'previewImport'])->name('api.postgraduate-programs.import.preview');
-        Route::post('postgraduate-programs/import', [PostgraduateProgramController::class, 'import'])->name('api.postgraduate-programs.import');
         Route::delete('postgraduate-programs/{postgraduate_program}', [PostgraduateProgramController::class, 'destroy'])->name('api.postgraduate-programs.destroy');
         Route::apiResource('postgraduate-programs', PostgraduateProgramController::class)->except(['destroy']);
         // Allow POST to update for consistency with existing tabs
@@ -94,22 +92,69 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1')->group(function () {
         Route::delete('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'destroy'])
             ->name('api.niche-domains.destroy');
     });
+});
 
-    // Connection Routes
+// Group B: Stateful "App" API for the Inertia Frontend (Session-based Authentication)
+Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () {
+    
+    // Data Management API Routes (Admin Only) - Stateful for frontend
+    Route::middleware(['admin'])->group(function () {
+        // Universities - Read-only for frontend data fetching
+        Route::get('universities', [\App\Http\Controllers\Api\V1\UniversityController::class, 'index'])
+            ->name('api.app.universities.index');
+        Route::get('universities/{university}', [\App\Http\Controllers\Api\V1\UniversityController::class, 'show'])
+            ->name('api.app.universities.show');
+            
+        // Faculties - Read-only for frontend data fetching
+        Route::get('faculties', [\App\Http\Controllers\Api\V1\FacultyController::class, 'index'])
+            ->name('api.app.faculties.index');
+        Route::get('faculties/{faculty}', [\App\Http\Controllers\Api\V1\FacultyController::class, 'show'])
+            ->name('api.app.faculties.show');
+            
+        // Fields of Research - Read-only for frontend data fetching
+        Route::get('fields-of-research', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'index'])
+            ->name('api.app.fields-of-research.index');
+        Route::get('fields-of-research/{field_of_research}', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'show'])
+            ->name('api.app.fields-of-research.show');
+            
+        // Research Areas - Read-only for frontend data fetching
+        Route::get('research-areas', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'index'])
+            ->name('api.app.research-areas.index');
+        Route::get('research-areas/{research_area}', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'show'])
+            ->name('api.app.research-areas.show');
+            
+        // Niche Domains - Read-only for frontend data fetching
+        Route::get('niche-domains', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'index'])
+            ->name('api.app.niche-domains.index');
+        Route::get('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'show'])
+            ->name('api.app.niche-domains.show');
+
+        // Postgraduate Programs - Read-only for frontend data fetching
+        Route::get('postgraduate-programs', [PostgraduateProgramController::class, 'index'])
+            ->name('api.app.postgraduate-programs.index');
+        Route::get('postgraduate-programs/{postgraduate_program}', [PostgraduateProgramController::class, 'show'])
+            ->name('api.app.postgraduate-programs.show');
+            
+        // Postgraduate Programs - Import functionality for frontend
+        Route::post('postgraduate-programs/import/preview', [PostgraduateProgramController::class, 'previewImport'])->name('api.app.postgraduate-programs.import.preview');
+        Route::post('postgraduate-programs/import', [PostgraduateProgramController::class, 'import'])->name('api.app.postgraduate-programs.import');
+    });
+
+    // Connection Routes - Stateful for frontend
     Route::post('/connections/{user}', [ConnectionController::class, 'store'])
-        ->name('connections.store');
+        ->name('api.app.connections.store');
     Route::patch('/connections/{connection}/accept', [ConnectionController::class, 'accept'])
-        ->name('connections.accept');
+        ->name('api.app.connections.accept');
     Route::delete('/connections/{connection}/reject', [ConnectionController::class, 'reject'])
-        ->name('connections.reject');
+        ->name('api.app.connections.reject');
     Route::delete('/connections/{connection}', [ConnectionController::class, 'destroy'])
-        ->name('connections.destroy');
+        ->name('api.app.connections.destroy');
 
-    // Notification Routes
+    // Notification Routes - Stateful for frontend
     Route::get('/notifications', [NotificationController::class, 'index'])
-        ->name('notifications.index');
+        ->name('api.app.notifications.index');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
-        ->name('notifications.mark-as-read');
+        ->name('api.app.notifications.mark-as-read');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
-        ->name('notifications.mark-all-as-read');
+        ->name('api.app.notifications.mark-all-as-read');
 });

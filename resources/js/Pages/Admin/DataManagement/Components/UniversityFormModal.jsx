@@ -45,8 +45,8 @@ export default function UniversityFormModal({ isOpen, onClose, university = null
         
         // Determine the correct URL for create or update
         const url = mode === 'create' 
-            ? '/api/v1/universities' 
-            : `/api/v1/universities/${university.id}`;
+            ? '/admin/data-management/universities' 
+            : `/admin/data-management/universities/${university.id}`;
         
         // Always use the 'post' method. The useForm hook handles FormData automatically.
         post(url, { 

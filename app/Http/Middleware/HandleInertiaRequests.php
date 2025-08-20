@@ -61,6 +61,10 @@ class HandleInertiaRequests extends Middleware
                     }),
             ],
             'meta' => session('meta', $defaultMetaTags),
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ],
         ]);
     }
 }

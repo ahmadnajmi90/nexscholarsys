@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { FaEdit, FaTrash, FaSearch, FaPlus } from 'react-icons/fa';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import PostgraduateProgramFormModal from '../Components/PostgraduateProgramFormModal';
+import { router } from '@inertiajs/react';
 
 export default function PostgraduateProgramsTab() {
   const [programs, setPrograms] = useState([]);
@@ -21,7 +22,7 @@ export default function PostgraduateProgramsTab() {
   const fetchPrograms = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/api/v1/postgraduate-programs', {
+      const response = await axios.get('/api/v1/app/postgraduate-programs', {
         params: { page: pagination.current_page, per_page: pagination.per_page, search: searchQuery || undefined }
       });
       setPrograms(response.data.data);
@@ -44,7 +45,7 @@ export default function PostgraduateProgramsTab() {
   const handleDelete = async () => {
     if (!currentProgram) return;
     try {
-      await axios.delete(`/api/v1/postgraduate-programs/${currentProgram.id}`);
+      router.delete(`/admin/data-management/postgraduate-programs/${currentProgram.id}`);
       toast.success('Postgraduate Program deleted');
       setIsDeleteModalOpen(false);
       fetchPrograms();

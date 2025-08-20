@@ -5,6 +5,7 @@ import { FaUserFriends, FaUserPlus, FaUserClock, FaSearch, FaTags } from 'react-
 import { MoreVertical, CheckSquare, Tags, Trash2, Eye, X, Plus } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ConnectionButton from '@/Components/ConnectionButton';
 import Dropdown from '@/Components/Dropdown';
@@ -40,46 +41,49 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
     };
     
     // Function to handle connection removal after confirmation
-    const handleRemoveConnection = () => {
+    const handleRemoveConnection = async () => {
         if (!connectionToRemove) return;
         
         const connectionId = connectionToRemove.connection_id;
         setProcessingIds(prev => [...prev, connectionId]);
         
-        router.delete(route('connections.destroy', connectionId), {}, {
-            onSuccess: (page) => {
-                toast.success('Connection removed successfully.');
-                // Close modal on success
-                setIsModalOpen(false);
-                setConnectionToRemove(null);
-                // Clear selected connections after removal
-                setSelectedConnections([]);
-
-                // Pagination fix: if current page becomes empty and not first page, go to previous page
-                const currentList = activeTab === 'connections'
-                    ? page.props.acceptedConnections
-                    : activeTab === 'received'
-                        ? page.props.receivedRequests
-                        : page.props.sentRequests;
-
-                if (currentList && currentList.data && currentList.meta) {
-                    const itemsOnCurrentPage = currentList.data.length;
-                    const currentPage = currentList.meta.current_page;
-                    if (itemsOnCurrentPage === 0 && currentPage > 1) {
-                        const prevLink = (currentList.meta.links || []).find(l => l.label === '&laquo; Previous');
-                        if (prevLink?.url) {
-                            router.visit(prevLink.url, { preserveScroll: true });
-                        }
-                    } else {
-                        // Otherwise, reload current lists to reflect changes
-                        router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
-                    }
+        try {
+            // Step 1: Make the API call with axios
+            await axios.delete(route('api.app.connections.destroy', connectionId));
+            
+            // Step 2: On success, show a direct success toast
+            toast.success('Connection removed successfully.');
+            
+            // Step 3: Manually reload the connection data
+            router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
+            
+        } catch (error) {
+            // Step 4: Handle errors directly from the axios response
+            if (error.response) {
+                if (error.response.status === 404) {
+                    toast.error('Connection not found. It may have been already removed.');
+                    // Refresh the list to update the UI
+                    router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
+                } else if (error.response.status === 403) {
+                    toast.error('You do not have permission to remove this connection.');
+                } else if (error.response.data?.error) {
+                    toast.error(error.response.data.error);
+                } else if (error.response.data?.message) {
+                    toast.error(error.response.data.message);
+                } else {
+                    toast.error(`Error (${error.response.status}): Unable to remove connection.`);
                 }
-            },
-            onFinish: () => {
-                setProcessingIds(prev => prev.filter(id => id !== connectionId));
+            } else {
+                toast.error('Network error or server not responding.');
             }
-        });
+            console.error('Error removing connection:', error);
+        } finally {
+            // Step 5: Always close the confirmation modal and clean up state
+            setIsModalOpen(false);
+            setConnectionToRemove(null);
+            setSelectedConnections([]);
+            setProcessingIds(prev => prev.filter(id => id !== connectionId));
+        }
     };
     
     // Function to handle checkbox selection for a connection
@@ -209,23 +213,52 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         );
     };
     
-    const handleConnectionAction = (connectionId, action) => {
+    const handleConnectionAction = async (connectionId, action) => {
         // For non-destroy actions
         if (action !== 'destroy') {
-        setProcessingIds(prev => [...prev, connectionId]);
-        
-        const url = route(`connections.${action}`, connectionId);
-        const method = action === 'accept' ? 'patch' : 'delete';
-        
-        router[method](url, {}, {
-            onSuccess: () => {
-                // Refresh the page to update the lists
+            setProcessingIds(prev => [...prev, connectionId]);
+            
+            try {
+                // Step 1: Make the API call with axios
+                const url = route(`api.app.connections.${action}`, connectionId);
+                const method = action === 'accept' ? 'patch' : 'delete';
+                
+                await axios[method](url);
+                
+                // Step 2: On success, show a specific success toast
+                if (action === 'accept') {
+                    toast.success('Connection request accepted.');
+                } else if (action === 'reject') {
+                    toast.success('Connection request rejected.');
+                }
+                
+                // Step 3: Manually reload the connection data
                 router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
-            },
-            onFinish: () => {
+                
+            } catch (error) {
+                // Step 4: Handle errors directly from the axios response
+                if (error.response) {
+                    if (error.response.status === 404) {
+                        toast.error('Connection request not found. It may have been already processed.');
+                        // Refresh the list to update the UI
+                        router.reload({ only: ['acceptedConnections', 'receivedRequests', 'sentRequests'] });
+                    } else if (error.response.status === 403) {
+                        toast.error('You do not have permission to perform this action.');
+                    } else if (error.response.data?.error) {
+                        toast.error(error.response.data.error);
+                    } else if (error.response.data?.message) {
+                        toast.error(error.response.data.message);
+                    } else {
+                        toast.error(`Error (${error.response.status}): Unable to ${action} connection request.`);
+                    }
+                } else {
+                    toast.error('Network error or server not responding.');
+                }
+                console.error(`Error ${action}ing connection:`, error);
+            } finally {
+                // Step 5: Always clean up the processingIds state
                 setProcessingIds(prev => prev.filter(id => id !== connectionId));
             }
-        });
         } else {
             // For destroy action, prompt for confirmation
             const connection = [...acceptedConnections, ...sentRequests, ...receivedRequests]

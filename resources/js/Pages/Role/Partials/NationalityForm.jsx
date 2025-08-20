@@ -228,6 +228,14 @@ export default function NationalityForm({ value, onChange, title, isNotSpecify, 
                 classNamePrefix="react-select"
                 isSearchable
                 required
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+                styles={{
+                    menuPortal: (base) => ({
+                        ...base,
+                        zIndex: 9999
+                    })
+                }}
             />
             <InputError className="mt-2" message={errors[title]} />
         </div>

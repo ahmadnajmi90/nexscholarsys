@@ -11,17 +11,8 @@ export default function Index() {
     const { props } = usePage();
     const [activeTab, setActiveTab] = useState('universities');
     
-    useEffect(() => {
-        // Check for success messages
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        }
-        
-        // Check for error messages
-        if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
-    }, [props.flash]);
+    // Flash messages are now handled by individual tab components
+    // to avoid duplicate toasts
 
     const renderTabContent = () => {
         switch (activeTab) {

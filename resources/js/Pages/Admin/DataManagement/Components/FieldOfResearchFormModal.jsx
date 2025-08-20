@@ -22,8 +22,8 @@ export default function FieldOfResearchFormModal({ isOpen, onClose, field = null
         
         // Determine the correct URL for create or update
         const url = mode === 'create' 
-            ? '/api/v1/fields-of-research' 
-            : `/api/v1/fields-of-research/${field.id}`;
+            ? '/admin/data-management/fields-of-research' 
+            : `/admin/data-management/fields-of-research/${field.id}`;
         
         // Always use the 'post' method
         post(url, {
@@ -40,6 +40,7 @@ export default function FieldOfResearchFormModal({ isOpen, onClose, field = null
             }
         });
     };
+
 
     if (!isOpen) return null;
 
