@@ -54,7 +54,14 @@ export default function Edit() {
     url: currentPost.url || "",
     content: currentPost.content || "",
     category: currentPost.category || "",
-    tags: currentPost.tags || [],
+    tags: (() => {
+      try {
+        return currentPost.tags ? JSON.parse(currentPost.tags) : [];
+      } catch (error) {
+        console.warn('Failed to parse tags JSON:', error);
+        return [];
+      }
+    })(),
     // New multiple images field. (We do not prefill this with existing images.)
     images: null,
     featured_image: null,
