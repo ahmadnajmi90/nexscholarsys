@@ -161,3 +161,11 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
         ->name('api.app.notifications.mark-all-as-read');
 });
+
+// Content Management API Routes - Stateless for external tools
+Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+    Route::apiResource('posts', \App\Http\Controllers\Api\V1\ContentManagement\CreatePostController::class);
+    Route::apiResource('events', \App\Http\Controllers\Api\V1\ContentManagement\PostEventController::class);
+    Route::apiResource('grants', \App\Http\Controllers\Api\V1\ContentManagement\PostGrantController::class);
+    Route::apiResource('projects', \App\Http\Controllers\Api\V1\ContentManagement\PostProjectController::class);
+});
