@@ -14,22 +14,44 @@ use App\Models\Skill;
 
 class UniversityController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $universities = UniversityList::all();
-        return inertia('Universities/UniversityList', 
-        ['universities' => $universities]);
+        $searchQuery = $request->input('search');
+        
+        $universities = UniversityList::query()
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('full_name', 'like', "%{$search}%")
+                      ->orWhere('short_name', 'like', "%{$search}%");
+            })
+            ->get();
+            
+        return inertia('Universities/UniversityList', [
+            'universities' => $universities,
+            'searchQuery' => $searchQuery,
+        ]);
     }
 
-    public function faculties(UniversityList $university)
+    public function faculties(Request $request, UniversityList $university)
     {
-        $faculties = $university->faculties; // Assuming a relationship
-        return inertia('Universities/FacultyList', 
-        ['faculties' => $faculties, 'university' => $university]);
+        $searchQuery = $request->input('search');
+        
+        $faculties = $university->faculties()
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->get();
+            
+        return inertia('Universities/FacultyList', [
+            'faculties' => $faculties, 
+            'university' => $university,
+            'searchQuery' => $searchQuery,
+        ]);
     }
 
-    public function academicians(FacultyList $faculty)
+    public function academicians(Request $request, FacultyList $faculty)
     {
+        $searchQuery = $request->input('search');
+        
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -53,6 +75,9 @@ class UniversityController extends Controller
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->whereNotNull('research_expertise')
             ->where('research_expertise', '!=', '[]')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('full_name', 'like', "%{$search}%");
+            })
             ->get();
             
         return inertia('Universities/AcademicianList', [
@@ -63,11 +88,14 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
+            'searchQuery'    => $searchQuery,
         ]);
     }
 
-    public function undergraduates(FacultyList $faculty)
+    public function undergraduates(Request $request, FacultyList $faculty)
     {
+        $searchQuery = $request->input('search');
+        
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -89,6 +117,9 @@ class UniversityController extends Controller
         $undergraduates = $faculty->undergraduates()
             ->with('user')
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('full_name', 'like', "%{$search}%");
+            })
             ->get();
             
         return inertia('Universities/UndergraduateList', [
@@ -100,11 +131,14 @@ class UniversityController extends Controller
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
             'skills' => Skill::all(),
+            'searchQuery'    => $searchQuery,
         ]);
     }
 
-    public function postgraduates(FacultyList $faculty)
+    public function postgraduates(Request $request, FacultyList $faculty)
     {
+        $searchQuery = $request->input('search');
+        
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -128,6 +162,9 @@ class UniversityController extends Controller
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->whereNotNull('field_of_research')
             ->where('field_of_research', '!=', '[]')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('full_name', 'like', "%{$search}%");
+            })
             ->get();
             
         return inertia('Universities/PostgraduateList', [
@@ -139,6 +176,7 @@ class UniversityController extends Controller
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
             'skills'        => Skill::all(),
+            'searchQuery'    => $searchQuery,
         ]);
     }
 

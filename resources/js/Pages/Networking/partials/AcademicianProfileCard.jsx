@@ -7,6 +7,8 @@ import RecommendationDisplay from "@/Components/RecommendationDisplay";
 import FilterDropdown from "@/Components/FilterDropdown";
 import BookmarkButton from "@/Components/BookmarkButton";
 import ConnectionButton from "@/Components/ConnectionButton";
+import SearchBar from "@/Components/SearchBar";
+import LoadingSkeletonCard from "./LoadingSkeletonCard";
 
 const AcademicianProfileCard = ({
   profilesData,
@@ -14,13 +16,17 @@ const AcademicianProfileCard = ({
   faculties,
   users,
   researchOptions,
-  searchQuery
+  searchQuery,
+  isLoading,
+  onSearch
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [recommendingProfile, setRecommendingProfile] = useState(null);
   const [loadingProfileData, setLoadingProfileData] = useState(false);
+  
+  // Search state - removed as it's now handled by SearchBar component
   
   // Filtering state variables
   const [selectedArea, setSelectedArea] = useState([]);
@@ -210,14 +216,28 @@ const AcademicianProfileCard = ({
 
   return (
     <div className="min-h-screen flex">
-      {/* Mobile title and Filter Toggle Button */}
-      <div className="fixed top-20 right-4 z-50 flex items-center space-x-4 lg:hidden">
+      {/* Search Bar - Desktop */}
+      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+        <SearchBar
+          placeholder="Search academicians..."
+          onSearch={onSearch}
+          className=""
+        />
+      </div>
+
+      {/* Mobile Header with Search and Filter */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="bg-blue-600 text-white p-2 rounded-full shadow-lg"
+          className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
         >
           <FaFilter className="text-xl" />
         </button>
+        <SearchBar
+          placeholder="Search academicians..."
+          onSearch={onSearch}
+          className=""
+        />
       </div>
 
       {/* Sidebar for Filters */}
@@ -269,7 +289,14 @@ const AcademicianProfileCard = ({
       {/* Main Content */}
       <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
-          {displayedProfiles.map((profile) => (
+          {isLoading ? (
+            // Show skeleton cards while loading
+            Array.from({ length: 9 }, (_, index) => (
+              <LoadingSkeletonCard key={index} />
+            ))
+          ) : (
+            // Show actual profile cards when not loading
+            displayedProfiles.map((profile) => (
             <div
               key={profile.id}
               className="bg-white shadow-md rounded-lg overflow-hidden relative"
@@ -393,7 +420,8 @@ const AcademicianProfileCard = ({
                 />
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Pagination */}

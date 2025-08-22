@@ -15,11 +15,17 @@ use Illuminate\Http\Request;
 
 class ShowEventController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {   
+        $searchQuery = $request->input('search');
         $today = Carbon::today();
 
-        $events = PostEvent::where('event_status', 'published')
+        $events = PostEvent::query()
+            ->where('event_status', 'published')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('event_name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+            })
             ->orderByRaw("CASE WHEN start_date >= ? THEN 0 ELSE 1 END", [$today])
             ->orderBy('start_date', 'asc')
             ->get();
@@ -47,6 +53,7 @@ class ShowEventController extends Controller
             // 'universities' => UniversityList::all(),
             'users' => User::all(),
             'researchOptions' => $researchOptions,
+            'searchQuery' => $searchQuery, // Pass the search query back
         ]);
     }
 

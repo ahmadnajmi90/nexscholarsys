@@ -1,11 +1,39 @@
-import React from "react";
-import ProfileCard from '@/Pages/Networking/partials/StudentProfileCard';
+import React, { useState, useEffect, useCallback } from "react";
+import { router } from '@inertiajs/react';
+import AcademicianProfileCard from '@/Pages/Networking/partials/AcademicianProfileCard';
 import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
 import { Link } from '@inertiajs/react';
 
-const AcademicianList = ({ academicians, faculties, researchOptions, universities, faculty, university, users }) => {
+const AcademicianList = ({ academicians, faculties, researchOptions, universities, faculty, university, users, searchQuery }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Add useEffect to track Inertia's processing state
+    useEffect(() => {
+        const handleStart = () => setIsLoading(true);
+        const handleFinish = () => setIsLoading(false);
+
+        // router.on() returns a function that removes the listener.
+        // We capture these remover functions.
+        const removeStartListener = router.on('start', handleStart);
+        const removeFinishListener = router.on('finish', handleFinish);
+
+        // The cleanup function in the return statement will now call
+        // the remover functions, which is the safe way to do this.
+        return () => {
+            removeStartListener();
+            removeFinishListener();
+        };
+    }, []); // The empty dependency array is correct.
+
+    // Define search handler function with useCallback
+    const handleSearch = useCallback((searchTerm) => {
+        router.get(route('faculties.academicians', { faculty: faculty.id }), 
+            { search: searchTerm }, 
+            { preserveState: true, replace: true }
+        );
+    }, [faculty.id]);
     
     return (
         <MainLayout title="">
@@ -72,15 +100,15 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
                 </div>
             </div>
 
-            <ProfileCard 
+            <AcademicianProfileCard 
                 profilesData={academicians} 
-                supervisorAvailabilityKey="availability_as_supervisor" 
                 universitiesList={universities} 
-                isFacultyAdminDashboard={true}
                 faculties={faculties}
-                isPostgraduateList={false}
                 users={users}
-                researchOptions={researchOptions}/>
+                researchOptions={researchOptions}
+                searchQuery={searchQuery || ""}
+                isLoading={isLoading}
+                onSearch={handleSearch} />
         </MainLayout>
     );
 };

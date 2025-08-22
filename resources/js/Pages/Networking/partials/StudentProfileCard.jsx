@@ -7,6 +7,8 @@ import RecommendationModal from "@/Components/RecommendationModal";
 import RecommendationDisplay from "@/Components/RecommendationDisplay";
 import BookmarkButton from "@/Components/BookmarkButton";
 import ConnectionButton from "@/Components/ConnectionButton";
+import SearchBar from "@/Components/SearchBar";
+import LoadingSkeletonCard from "./LoadingSkeletonCard";
 
 // Helper function to capitalize each skill
 const capitalize = (s) => {
@@ -24,6 +26,9 @@ const ProfileGridWithDualFilter = ({
   isFacultyAdminDashboard,
   users,
   researchOptions,
+  searchQuery,
+  isLoading,
+  onSearch
 }) => {
   // Global skills from the backend (all skills in the table)
   const { skills } = usePage().props;
@@ -56,6 +61,8 @@ const ProfileGridWithDualFilter = ({
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [recommendingProfile, setRecommendingProfile] = useState(null);
   const [loadingProfileData, setLoadingProfileData] = useState(false);
+  
+  // Search state - removed as it's now handled by SearchBar component
   
   // Reference to the filter container
   const filterContainerRef = useRef(null);
@@ -190,14 +197,28 @@ const ProfileGridWithDualFilter = ({
 
   return (
     <div className="min-h-screen flex">
-      {/* Mobile title and Filter Toggle Button */}
-      <div className="fixed top-20 right-4 z-50 flex items-center space-x-4 lg:hidden">
+      {/* Search Bar - Desktop */}
+      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+        <SearchBar
+          placeholder={`Search ${isUndergraduateList ? 'undergraduates' : 'postgraduates'}...`}
+          onSearch={onSearch}
+          className=""
+        />
+      </div>
+
+      {/* Mobile Header with Search and Filter */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="bg-blue-600 text-white p-2 rounded-full shadow-lg"
+          className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
         >
           <FaFilter className="text-xl" />
         </button>
+        <SearchBar
+          placeholder={`Search ${isUndergraduateList ? 'undergraduates' : 'postgraduates'}...`}
+          onSearch={onSearch}
+          className=""
+        />
       </div>
 
       {/* Sidebar for Filters */}
@@ -267,7 +288,16 @@ const ProfileGridWithDualFilter = ({
       {/* Main Content */}
       <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
-          {displayedProfiles.map((profile) => (
+          {isLoading ? (
+            // Show skeleton cards while loading
+            Array.from({ length: 9 }, (_, index) => (
+              <div key={index} className="w-full">
+                <LoadingSkeletonCard />
+              </div>
+            ))
+          ) : (
+            // Show actual profile cards when not loading
+            displayedProfiles.map((profile) => (
             <div
               key={profile.id}
               className="bg-white shadow-md rounded-lg overflow-hidden relative"
@@ -412,7 +442,8 @@ const ProfileGridWithDualFilter = ({
                 />
               </div>
             </div>
-          ))}
+          ))
+          )}
           {isModalOpen && selectedProfile && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"

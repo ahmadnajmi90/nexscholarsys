@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import AcademicianProfileCard from '@/Pages/Networking/partials/AcademicianProfileCard';
 import useRoles from '@/Hooks/useRoles';
@@ -6,6 +7,32 @@ import useRoles from '@/Hooks/useRoles';
 
 const Academician = ( {academicians, universities, faculties, users, researchOptions, searchQuery} ) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
+    const [isLoading, setIsLoading] = useState(false);
+
+      // Add useEffect to track Inertia's processing state
+  useEffect(() => {
+    const handleStart = () => setIsLoading(true);
+    const handleFinish = () => setIsLoading(false);
+
+    // Capture the remover function returned by router.on()
+    const removeStartListener = router.on('start', handleStart);
+    const removeFinishListener = router.on('finish', handleFinish);
+
+    // Use the remover functions in the cleanup phase
+    return () => {
+      removeStartListener();
+      removeFinishListener();
+    };
+  }, []);
+
+  // Define search handler function with useCallback
+  const handleSearch = useCallback((searchTerm) => {
+    router.get(route('academicians.index'), 
+      { search: searchTerm }, 
+      { preserveState: true, replace: true }
+    );
+  }, []);
+
     return (
         <MainLayout title="Academician" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
             <AcademicianProfileCard 
@@ -14,7 +41,9 @@ const Academician = ( {academicians, universities, faculties, users, researchOpt
             faculties={faculties}
             users={users}
             researchOptions={researchOptions}
-            searchQuery={searchQuery || ""}/>
+            searchQuery={searchQuery || ""}
+            isLoading={isLoading}
+            onSearch={handleSearch} />
         </MainLayout>
     );
 };

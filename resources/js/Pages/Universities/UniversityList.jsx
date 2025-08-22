@@ -1,8 +1,10 @@
-import React, { useState } from "react";
-import { Link } from "@inertiajs/react";
+import React, { useState, useEffect } from "react";
+import { Link, router } from "@inertiajs/react";
 import MainLayout from "@/Layouts/MainLayout";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaFilter } from "react-icons/fa";
 import FilterDropdown from "@/Components/FilterDropdown";
+import SearchBar from "@/Components/SearchBar";
+import UniversitySkeletonCard from "./partials/UniversitySkeletonCard";
 import useRoles from "@/Hooks/useRoles";
 
 // CSS for consistent card sizing
@@ -25,7 +27,26 @@ const UniversityList = ({ universities }) => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const profilesPerPage = 9;
+
+  // Add useEffect to track Inertia's processing state
+  useEffect(() => {
+    const handleStart = () => setIsLoading(true);
+    const handleFinish = () => setIsLoading(false);
+
+    // router.on() returns a function that removes the listener.
+    // We capture these remover functions.
+    const removeStartListener = router.on('start', handleStart);
+    const removeFinishListener = router.on('finish', handleFinish);
+
+    // The cleanup function in the return statement will now call
+    // the remover functions, which is the safe way to do this.
+    return () => {
+      removeStartListener();
+      removeFinishListener();
+    };
+  }, []); // The empty dependency array is correct.
 
   // Convert unique options to objects with value and label
   const uniqueCountries = [...new Set(universities.map((uni) => uni.country))]
@@ -60,13 +81,29 @@ const UniversityList = ({ universities }) => {
   return (
     <MainLayout title={"List of Universities"}>
       <div className="min-h-screen flex flex-col lg:flex-row">
-        {/* Mobile Filter Toggle Button */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
-        >
-          <FaFilter className="text-xl" />
-        </button>
+        {/* Search Bar - Desktop */}
+        <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+          <SearchBar
+            placeholder="Search universities..."
+            routeName="universities.index"
+            className=""
+          />
+        </div>
+
+        {/* Mobile Header with Search and Filter */}
+        <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+          >
+            <FaFilter className="text-xl" />
+          </button>
+          <SearchBar
+            placeholder="Search universities..."
+            routeName="universities.index"
+            className=""
+          />
+        </div>
 
         {/* Sidebar for Filters */}
         <div
@@ -102,9 +139,16 @@ const UniversityList = ({ universities }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 lg:p-6">
+        <div className="flex-1 px-4 lg:px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {displayedUniversities.map((uni) => (
+            {isLoading ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 9 }, (_, index) => (
+                <UniversitySkeletonCard key={index} />
+              ))
+            ) : (
+              // Show actual university cards when not loading
+              displayedUniversities.map((uni) => (
               <div key={uni.id} className="flex justify-center">
                 <div className="bg-white shadow-md rounded-lg overflow-hidden flex flex-col w-full max-w-[450px] sm:max-w-[250px]">
                   {/* Faculty Banner */}
@@ -187,7 +231,8 @@ const UniversityList = ({ universities }) => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
 
           {/* Pagination */}

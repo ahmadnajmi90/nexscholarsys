@@ -1,11 +1,40 @@
-import React from "react";
-import { Link } from '@inertiajs/react';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, router } from '@inertiajs/react';
 import MainLayout from "@/Layouts/MainLayout";
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin } from "react-icons/fa";
+import SearchBar from "@/Components/SearchBar";
+import FacultySkeletonCard from "./partials/FacultySkeletonCard";
 import useRoles from "@/Hooks/useRoles";
 
 const FacultyList = ({ faculties, university }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Add useEffect to track Inertia's processing state
+    useEffect(() => {
+        const handleStart = () => setIsLoading(true);
+        const handleFinish = () => setIsLoading(false);
+
+        // router.on() returns a function that removes the listener.
+        // We capture these remover functions.
+        const removeStartListener = router.on('start', handleStart);
+        const removeFinishListener = router.on('finish', handleFinish);
+
+        // The cleanup function in the return statement will now call
+        // the remover functions, which is the safe way to do this.
+        return () => {
+            removeStartListener();
+            removeFinishListener();
+        };
+    }, []); // The empty dependency array is correct.
+
+    // Define search handler function with useCallback
+    const handleSearch = useCallback((searchTerm) => {
+        router.get(route('universities.faculties', { university: university.id }), 
+            { search: searchTerm }, 
+            { preserveState: true, replace: true }
+        );
+    }, [university.id]);
 
     return (
         <MainLayout>
@@ -74,10 +103,26 @@ const FacultyList = ({ faculties, university }) => {
                 </div>
             </div>
 
+            {/* Search Bar - Desktop */}
+            <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+                <SearchBar
+                    placeholder="Search faculties..."
+                    onSearch={handleSearch}
+                    className=""
+                />
+            </div>
+
             {/* Faculty List Section */}
             <div className="flex-1 px-8 mt-10">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
-                    {faculties.map((faculty) => (
+                    {isLoading ? (
+                        // Show skeleton cards while loading
+                        Array.from({ length: 9 }, (_, index) => (
+                            <FacultySkeletonCard key={index} />
+                        ))
+                    ) : (
+                        // Show actual faculty cards when not loading
+                        faculties.map((faculty) => (
                         <div
                             key={faculty.id}
                             className="bg-white shadow-md rounded-lg overflow-hidden relative"
@@ -153,7 +198,8 @@ const FacultyList = ({ faculties, university }) => {
                                 </a>
                             </div>
                         </div>
-                    ))}
+                    ))
+                    )}
                 </div>
             </div>
         </MainLayout>

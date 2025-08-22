@@ -34,13 +34,20 @@ class UndergraduateController extends Controller
             }
         }
         
+        // Get search query from request
+        $searchQuery = request('search');
+        
         // Get only undergraduates with complete profiles
         $undergraduates = Undergraduate::with('user')
             ->where(function($query) {
                 $query->where('profile_picture', '!=', 'profile_pictures/default.jpg');
                     //   ->whereNotNull('bio')
                     //   ->where('bio', '!=', '');
-            })->get();
+            })
+            ->when($searchQuery, function($query) use ($searchQuery) {
+                $query->where('full_name', 'like', '%' . $searchQuery . '%');
+            })
+            ->get();
         
         return Inertia::render('Networking/Undergraduate', [
             // Pass any data you want to the component here
@@ -50,6 +57,7 @@ class UndergraduateController extends Controller
             'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
             'skills' => Skill::all(),
+            'searchQuery' => $searchQuery,
         ]);
     }
 

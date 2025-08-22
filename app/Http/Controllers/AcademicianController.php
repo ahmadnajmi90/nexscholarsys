@@ -35,6 +35,9 @@ class AcademicianController extends Controller
             }
         }
         
+        // Get search query from request
+        $searchQuery = request('search');
+        
         // Get only academicians with complete profiles
         $academicians = Academician::with('user')
             ->where(function($query) {
@@ -43,7 +46,14 @@ class AcademicianController extends Controller
                     //   ->where('bio', '!=', '')
                       ->whereNotNull('research_expertise')
                       ->where('research_expertise', '!=', '[]');
-            })->get();
+            })
+            ->when($searchQuery, function($query) use ($searchQuery) {
+                $query->where(function($q) use ($searchQuery) {
+                    $q->where('full_name', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('research_expertise', 'like', '%' . $searchQuery . '%');
+                });
+            })
+            ->get();
         
         return Inertia::render('Networking/Academician', [
             // Pass any data you want to the component here
@@ -52,6 +62,7 @@ class AcademicianController extends Controller
             'faculties' => FacultyList::all(),
             'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
+            'searchQuery' => $searchQuery,
         ]);
     }
 
