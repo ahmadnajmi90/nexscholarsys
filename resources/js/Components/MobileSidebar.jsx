@@ -15,7 +15,8 @@ import {
     FaBookmark,
     FaSearch,
     FaRobot,
-    FaUserShield
+    FaUserShield,
+    FaSignOutAlt
 } from 'react-icons/fa';
 import { LayoutGrid, GraduationCap } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
@@ -335,7 +336,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                             <h3 className="text-gray-500 uppercase text-xs font-bold">Settings</h3>
                             <button
                                 onClick={() => toggleMenu('profile')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
+                                className="flex items-center w-full pt-2 px-4 hover:bg-gray-100 rounded"
                             >
                                 <FaUser className="text-gray-600" />
                                 <span className="ml-2">Profile</span>
@@ -363,9 +364,9 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                             href={route('logout')}
                             method="post"
                             as="button"
-                            className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
+                            className="flex items-center px-4 hover:bg-gray-100 rounded"
                         >
-                            <FaCog className="text-gray-600" />
+                            <FaSignOutAlt className="text-gray-600" />
                             <span className="ml-2">Log Out</span>
                         </Link>
                     </nav>

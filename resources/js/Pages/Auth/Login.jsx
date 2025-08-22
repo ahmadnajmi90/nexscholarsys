@@ -4,7 +4,7 @@ import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { FaGoogle } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -47,9 +47,9 @@ export default function Login({ status, canResetPassword }) {
                     <div className="flex flex-col sm:flex-row sm:space-x-2">
                         <a
                             href={route('auth.google')}
-                            className="mb-3 sm:mb-0 flex items-center justify-center w-full py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
+                            className="mb-3 sm:mb-0 flex items-center justify-center w-full py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-50 transition"
                         >
-                            <FaGoogle className="mr-2" />
+                            <FcGoogle className="mr-2 text-xl" />
                             <span>Sign in with Google</span>
                         </a>
                     </div>

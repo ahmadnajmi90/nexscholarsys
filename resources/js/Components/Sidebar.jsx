@@ -18,7 +18,8 @@ import {
     FaRobot,
     FaBookmark,
     FaUserShield,
-    FaDatabase
+    FaDatabase,
+    FaSignOutAlt
 } from 'react-icons/fa';
 import { LayoutGrid, GraduationCap } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
@@ -408,7 +409,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             )}
                         </div>
                         <Link href={route('logout')} method="post" as="button" className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaCog className="text-gray-600" />
+                            <FaSignOutAlt className="text-gray-600" />
                             <span className={`ml-2 ${!isOpen && 'hidden'}`}>Log Out</span>
                         </Link>
                     </div>

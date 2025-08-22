@@ -5,7 +5,7 @@ import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react'; // Import useState if not already imported
-import { FaGoogle } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -48,8 +48,8 @@ export default function Register() {
                 {/* Right Form Section */}
                 <main className="flex items-center justify-center px-8 py-8 sm:px-12 lg:col-span-7 lg:px-16 lg:py-12 xl:col-span-6">
                     <div className="max-w-xl lg:max-w-3xl">
-                        <h1 className="text-2xl font-bold sm:text-3xl">Create an Account</h1>
-                        <p className="mt-4 text-gray-500">
+                        <h1 className="text-2xl font-bold sm:text-3xl text-center">Create an Account</h1>
+                        <p className="mt-4 text-gray-500 text-center">
                             Start your journey with NexScholar by creating your account below.
                         </p>
 
@@ -62,6 +62,7 @@ export default function Register() {
                                     value={data.name}
                                     className="mt-1 w-full rounded-md border-gray-200 shadow-sm"
                                     onChange={(e) => setData('name', e.target.value)}
+                                    autoFocus
                                     required
                                 />
                                 <InputError message={errors.name} className="mt-2" />
@@ -140,14 +141,18 @@ export default function Register() {
                             </div>
 
                             {/* Submit Button */}
-                            <div className="col-span-6 sm:flex sm:items-center sm:gap-4">
+                            <div className="col-span-6">
                                 <PrimaryButton
-                                    className="w-full sm:w-auto"
+                                    className="w-full !justify-center !text-sm"
                                     disabled={processing || !isAgreed} // Disable if not agreed
                                 >
                                     Create an Account
                                 </PrimaryButton>
-                                <p className="mt-4 text-sm text-gray-500 sm:mt-0">
+                            </div>
+
+                            {/* Log in Link */}
+                            <div className="col-span-6 text-center">
+                                <p className="text-sm text-gray-500">
                                     Already have an account?{' '}
                                     <Link
                                         href={route('login')}
@@ -170,9 +175,9 @@ export default function Register() {
                                 <div className="w-full">
                                     <a
                                         href={route('auth.google')}
-                                        className="flex items-center justify-center w-full py-2 bg-[#4285F4] text-white font-medium rounded-lg shadow-md hover:bg-[#357ae8] transition"
+                                        className="flex items-center justify-center w-full py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-50 transition"
                                     >
-                                        <FaGoogle className="mr-2" />
+                                        <FcGoogle className="mr-2 text-xl" />
                                         <span>Sign in with Google</span>
                                     </a>
                                 </div>

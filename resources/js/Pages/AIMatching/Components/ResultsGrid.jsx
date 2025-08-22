@@ -5,8 +5,8 @@ import axios from "axios";
 import RecommendationModal from "@/Components/RecommendationModal";
 import RecommendationDisplay from "@/Components/RecommendationDisplay";
 import BookmarkButton from "@/Components/BookmarkButton";
-import MatchIndicator from "@/Components/MatchIndicator";
-import ProgressiveLoadingResults from "@/Components/ProgressiveLoadingResults";
+import MatchIndicator from "./MatchIndicator";
+import ProgressiveLoadingResults from "./ProgressiveLoadingResults";
 import ConnectionButton from "@/Components/ConnectionButton";
 import { Sparkles } from 'lucide-react';
 

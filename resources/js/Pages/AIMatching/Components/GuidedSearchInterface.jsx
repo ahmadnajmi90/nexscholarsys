@@ -1,139 +1,209 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaInfoCircle, FaLightbulb } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from 'react';
+import { FaSearch, FaLightbulb, FaHistory } from 'react-icons/fa';
+import NaturalLanguageQueryBuilder from './NaturalLanguageQueryBuilder';
 
-export default function GuidedSearchInterface({
-  searchType = 'supervisor',
-  onSearch,
-  placeholderText = 'Enter your search query...',
+const GuidedSearchInterface = ({ 
+  onSearch, 
+  researchOptions,
   isSearching = false,
   initialQuery = '',
-  searchTips = []
-}) {
-  const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [showSearchTips, setShowSearchTips] = useState(false);
-  const searchInputRef = useRef(null);
-  const tipsRef = useRef(null);
-
-  // Focus the search input on component mount
-  useEffect(() => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [searchType]);
-
-  // Update local state when initialQuery changes
-  useEffect(() => {
-    setSearchQuery(initialQuery);
-  }, [initialQuery]);
-
-  // Handle clicks outside of the search tips dropdown
+  pageTitle = 'Find Your Perfect Research Supervisor',
+  searchDescription = 'Enter your research interest, topic, or field of study below and we\'ll match you with supervisors who have relevant expertise.',
+  placeholder = 'e.g., Artificial Intelligence in Healthcare, Design Science Research...',
+  tips = [],
+  error = null,
+  children, // Add children prop for search type selector
+  searchQuery,
+  onSearchQueryChange
+}) => {
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [showRecent, setShowRecent] = useState(false);
+  const [localError, setLocalError] = useState(null);
+  const recentSearchesRef = useRef(null);
+  
+  // Handle clicks outside the recent searches dropdown
   useEffect(() => {
     function handleClickOutside(event) {
-      if (tipsRef.current && !tipsRef.current.contains(event.target)) {
-        setShowSearchTips(false);
+      if (recentSearchesRef.current && !recentSearchesRef.current.contains(event.target)) {
+        setShowRecent(false);
       }
     }
-
-    document.addEventListener('mousedown', handleClickOutside);
+    
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, [recentSearchesRef]);
+  
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('supervisor_recent_searches');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setRecentSearches(parsed.slice(0, 5)); // Keep last 5 searches
+        }
+      }
+    } catch (e) {
+      console.error('Error loading recent searches:', e);
+    }
   }, []);
-
-  // Handle search submission
-  const handleSubmit = (e) => {
+  
+  // Save a search to recent searches
+  const saveSearchToRecent = (query) => {
+    try {
+      if (query && query.trim().length > 0) {
+        // Add to beginning, remove duplicates, limit to 5
+        const updatedSearches = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
+        setRecentSearches(updatedSearches);
+        localStorage.setItem('supervisor_recent_searches', JSON.stringify(updatedSearches));
+      }
+    } catch (e) {
+      console.error('Error saving recent search:', e);
+    }
+  };
+  
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      onSearch(searchQuery);
-    }
+    
+    
+    setLocalError(null);
+    saveSearchToRecent(searchQuery);
+    onSearch(searchQuery);
   };
-
-  // Handle a search tip click
-  const handleSearchTipClick = (tip) => {
-    setSearchQuery(tip);
-    setShowSearchTips(false);
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
+  
+  const handleQueryChange = (newQuery) => {
+    onSearchQueryChange(newQuery);
+    setLocalError(null);
   };
-
+  
+  const handleRecentSearch = (query) => {
+    onSearchQueryChange(query);
+    setShowRecent(false);
+  };
+  
+  // Handle Enter key press from NaturalLanguageQueryBuilder
+  const handleEnterPress = () => {
+    if (searchQuery.trim().length < 3) {
+      setLocalError('Please enter at least 3 characters to search');
+      return;
+    }
+    
+    setLocalError(null);
+    saveSearchToRecent(searchQuery);
+    onSearch(searchQuery);
+  };
+  
   return (
-    <div className="mb-8">
-      <form onSubmit={handleSubmit} className="relative">
-        <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-          {/* Search input */}
-          <div className="flex-grow relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              ref={searchInputRef}
-              type="text"
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold mb-4">{pageTitle}</h1>
+        <p className="text-gray-600 mb-6">
+          {searchDescription}
+        </p>
+      </div>
+      
+      <form onSubmit={handleSearchSubmit} className="mb-8">
+        <div className="relative flex">
+          <div className="relative flex-grow">
+            <NaturalLanguageQueryBuilder
+              onQueryChange={handleQueryChange}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={placeholderText}
-              className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg 
-                       focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
-              disabled={isSearching}
+              researchOptions={researchOptions}
+              onEnterPress={handleEnterPress}
+              placeholder={placeholder}
             />
-            {/* Search tips button */}
+          </div>
+          
+          {/* Recent searches button */}
+          <div className="absolute right-20 top-4 z-10">
             <button
               type="button"
-              onClick={() => setShowSearchTips(!showSearchTips)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="text-gray-500 hover:text-gray-700"
+              onClick={() => setShowRecent(!showRecent)}
+              title="Recent searches"
             >
-              <FaLightbulb className={`h-5 w-5 ${showSearchTips ? 'text-blue-500' : 'text-gray-400'}`} />
+              <FaHistory />
             </button>
           </div>
           
           {/* Search button */}
           <button
             type="submit"
-            disabled={!searchQuery.trim() || isSearching}
-            className={`px-6 py-3 rounded-lg text-white font-medium text-base
-                      ${!searchQuery.trim() || isSearching
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                      }`}
+            className={`bg-blue-600 text-white px-6 py-3 rounded-r-lg flex items-center justify-center ${
+              isSearching ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'
+            }`}
+            disabled={isSearching}
           >
             {isSearching ? (
-              <div className="flex items-center space-x-2">
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Searching...</span>
-              </div>
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
             ) : (
-              'Search'
+              <FaSearch />
             )}
           </button>
-        </div>
-
-        {/* Search tips dropdown */}
-        {showSearchTips && searchTips.length > 0 && (
-          <div 
-            ref={tipsRef}
-            className="absolute z-10 mt-2 w-full md:w-3/4 bg-white shadow-lg rounded-lg border border-gray-200 py-2 overflow-hidden"
-          >
-            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center">
-              <FaInfoCircle className="text-blue-500 mr-2" />
-              <span className="text-sm font-medium text-gray-700">Search tips</span>
+          
+          {/* Recent searches dropdown */}
+          {showRecent && recentSearches.length > 0 && (
+            <div 
+              ref={recentSearchesRef}
+              className="absolute top-12 right-0 mt-2 w-full md:w-72 bg-white border border-gray-200 rounded-md shadow-lg z-30"
+            >
+              <div className="p-3">
+                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <FaHistory className="mr-2 text-gray-500" /> Recent Searches
+                </h3>
+                <ul className="space-y-1">
+                  {recentSearches.map((search, index) => (
+                    <li key={index}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        onClick={() => handleRecentSearch(search)}
+                      >
+                        {search}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <ul className="py-1">
-              {searchTips.map((tip, index) => (
-                <li 
-                  key={index}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700"
-                  onClick={() => handleSearchTipClick(tip)}
-                >
-                  {tip}
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
+        </div>
+        
+        {(localError || error) && (
+          <p className="text-red-500 mt-2 text-center">{localError || error}</p>
         )}
+        
+        {/* Search Type Selector - Render children below the search input */}
+        <div className="mt-4 text-center">
+          {children}
+        </div>
       </form>
+      
+      {/* Search guidance - redesigned to match the image */}
+      <div className="mt-8 border-t border-gray-200 pt-10">
+        <div className="flex items-center mb-4">
+          <FaLightbulb className="text-yellow-500 mr-2" />
+          <h3 className="text-lg font-semibold">Tips for better searching</h3>
+        </div>
+        
+        <ol className="space-y-3 text-gray-600 list-decimal list-inside">
+          {tips.map((tip, index) => (
+            <li key={index} className="flex items-start">
+              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
+                {index + 1}
+              </span>
+              <span>{tip}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
-} 
+};
+
+export default GuidedSearchInterface; 

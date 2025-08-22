@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
-import GuidedSearchInterface from '@/Components/GuidedSearchInterface';
+import GuidedSearchInterface from './Components/GuidedSearchInterface';
 import ResultsGrid from './Components/ResultsGrid';
 import SearchTypeSelector from './Components/SearchTypeSelector';
 import FilterPanel from './Components/FilterPanel';
@@ -45,6 +45,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
     }
     
     setSearchType(newType);
+    setSearchQuery(''); // Clear search query when changing search type
     setSearchResults(null); // Clear previous results when changing search type
     setError(null);
   };
@@ -143,13 +144,20 @@ export default function Index({ auth, universities, faculties, users, researchOp
       
       if (response.data && response.data.matches) {
         // Merge new results with existing ones
-        setSearchResults(prevResults => ({
-          ...response.data,
-          matches: [
-            ...prevResults.matches,
-            ...response.data.matches
-          ]
-        }));
+        setSearchResults(prevResults => {
+          // Handle case where prevResults might be null
+          if (!prevResults || !prevResults.matches) {
+            return response.data;
+          }
+          
+          return {
+            ...response.data,
+            matches: [
+              ...prevResults.matches,
+              ...response.data.matches
+            ]
+          };
+        });
         setPage(nextPage);
       }
     } catch (error) {
@@ -344,6 +352,8 @@ export default function Index({ auth, universities, faculties, users, researchOp
             placeholder={getPlaceholderText()}
             tips={getSearchTips()}
             error={error}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
           >
             {/* Search Type Selection */}
             <SearchTypeSelector
