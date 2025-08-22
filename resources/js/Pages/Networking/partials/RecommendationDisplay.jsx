@@ -54,9 +54,8 @@ export default function RecommendationDisplay({ academicianId }) {
     return <p className="text-red-500 text-sm">{error}</p>;
   }
 
-  if (!recommendations || recommendations.length === 0) {
-    return <p className="text-gray-600">No recommendations yet</p>;
-  }
+  // Initialize recommendations as empty array if null/undefined to ensure tab buttons always show
+  const safeRecommendations = recommendations || [];
 
   const tabButtons = [
     { id: 'communication', icon: <FaComment size={28} className="text-blue-500" /> },
@@ -77,7 +76,7 @@ export default function RecommendationDisplay({ academicianId }) {
   };
 
   // Filter recommendations with comments for the active tab
-  const filteredRecommendations = activeTab ? recommendations.filter(
+  const filteredRecommendations = activeTab ? safeRecommendations.filter(
     rec => rec[`${activeTab}_comment`] && rec[`${activeTab}_comment`].trim() !== ''
   ) : [];
 
@@ -92,7 +91,7 @@ export default function RecommendationDisplay({ academicianId }) {
             onClick={() => handleTabClick(tab.id)}
             className="flex items-center cursor-pointer transition-transform duration-200 hover:scale-105"
           >
-            <div className={`p-1 rounded-full ${activeTab === tab.id ? 'bg-gray-100' : ''}`}>
+            <div className={`p-1 rounded-full ${activeTab === tab.id ? 'bg-gray-200' : ''}`}>
               {tab.icon}
             </div>
             <span className="text-gray-700 text-lg font-medium ml-1">{getCount(tab.id)}</span>

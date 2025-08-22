@@ -469,9 +469,9 @@ const ProfileContent = ({
     };
 
     return (
-        <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             {/* Back Button */}
-            <div className="absolute top-[2rem] left-6 md:top-[3rem] md:left-[20.2rem] z-10">
+            <div className="absolute top-[2rem] left-8 z-10">
                 <Link 
                     onClick={() => window.history.back()}
                     className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"

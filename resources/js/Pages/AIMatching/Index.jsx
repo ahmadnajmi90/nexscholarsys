@@ -13,10 +13,22 @@ import { Sparkles } from 'lucide-react';
 
 export default function Index({ auth, universities, faculties, users, researchOptions, skills }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Helper function to get initial state from sessionStorage
+  const getInitialState = (key, defaultValue) => {
+    try {
+      const savedState = sessionStorage.getItem(key);
+      return savedState ? JSON.parse(savedState) : defaultValue;
+    } catch (error) {
+      console.error("Error reading from sessionStorage", error);
+      return defaultValue;
+    }
+  };
+  
+  const [searchQuery, setSearchQuery] = useState(() => getInitialState('ai_search_query', ''));
   const [searchType, setSearchType] = useState('supervisor'); // Default: supervisor
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState(null);
+  const [searchResults, setSearchResults] = useState(() => getInitialState('ai_search_results', null));
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   
@@ -36,6 +48,19 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [selectedAvailability, setSelectedAvailability] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   
+  // Save state to sessionStorage when navigating away
+  useEffect(() => {
+    // This cleanup function runs when the user navigates away
+    return () => {
+      try {
+        sessionStorage.setItem('ai_search_query', JSON.stringify(searchQuery));
+        sessionStorage.setItem('ai_search_results', JSON.stringify(searchResults));
+      } catch (error) {
+        console.error("Error saving to sessionStorage", error);
+      }
+    };
+  }, [searchQuery, searchResults]);
+  
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
     // Only allow academicians to search for students
@@ -48,12 +73,23 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setSearchQuery(''); // Clear search query when changing search type
     setSearchResults(null); // Clear previous results when changing search type
     setError(null);
+    
+    // Clear sessionStorage when changing search type
+    try {
+      sessionStorage.removeItem('ai_search_query');
+      sessionStorage.removeItem('ai_search_results');
+    } catch (error) {
+      console.error("Error clearing sessionStorage", error);
+    }
   };
   
   // Handle search submission from the guided interface
   const handleSearch = async (query) => {
     // Skip if already searching or query is empty
     if (isSearching || !query || query.trim() === '') return;
+    
+    // Clear old results from sessionStorage before starting new search
+    sessionStorage.removeItem('ai_search_results');
     
     setSearchQuery(query);
     setIsSearching(true);
