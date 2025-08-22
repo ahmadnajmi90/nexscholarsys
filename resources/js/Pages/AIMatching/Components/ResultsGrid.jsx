@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaUserPlus, FaPaperPlane, FaStar, FaLightbulb, FaHome, FaUniversity, FaSearch } from 'react-icons/fa';
 import axios from "axios";
-import RecommendationModal from "@/Components/RecommendationModal";
-import RecommendationDisplay from "@/Components/RecommendationDisplay";
+import RecommendationModal from "@/Pages/Networking/partials/RecommendationModal";
+import RecommendationDisplay from "@/Pages/Networking/partials/RecommendationDisplay";
 import BookmarkButton from "@/Components/BookmarkButton";
-import MatchIndicator from "@/Components/MatchIndicator";
-import ProgressiveLoadingResults from "@/Components/ProgressiveLoadingResults";
+import MatchIndicator from "./MatchIndicator";
+import ProgressiveLoadingResults from "./ProgressiveLoadingResults";
 import ConnectionButton from "@/Components/ConnectionButton";
 import { Sparkles } from 'lucide-react';
 
@@ -559,7 +559,12 @@ export default function ResultsGrid({
 
                   {/* Social Action Links */}
                   <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-                    <ConnectionButton user={profile.user} />
+                    <ConnectionButton user={users.find(
+                      (user) =>
+                        user.unique_id === 
+                        (isAcademician ? profile.academician_id || profile.id : 
+                         profile.postgraduate_id || profile.undergraduate_id || profile.id)
+                    )} />
                     <Link
                       href={route('email.compose', { 
                         to: users.find(
@@ -652,302 +657,309 @@ export default function ResultsGrid({
         <>
           {console.log('Modal opening with selectedProfile:', selectedProfile)}
           {console.log('AI insights available:', selectedProfile.ai_insights)}
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-            onClick={() => setIsModalOpen(false)}
-          >
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            {/* Layer 1: Dedicated full-screen backdrop */}
             <div
-              className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {loadingProfileData ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <svg className="animate-spin h-8 w-8 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                  </svg>
-                  <p className="text-gray-600">Loading profile information...</p>
-                </div>
-              ) : (
-                <>
-                  <h3 className="text-xl font-bold mb-4 text-gray-800">
-                    {selectedProfile.full_name}
-                  </h3>
+              className="fixed inset-0 bg-black bg-opacity-50"
+              onClick={() => setIsModalOpen(false)}
+            ></div>
 
-                  <hr className="border-t border-gray-800 mb-4" />
-                  
-                  {/* AI Match Insights - Detailed */}
-                  <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                    <h4 className="text-lg font-semibold text-blue-800 mb-2 flex items-center">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      AI Match Insights
-                    </h4>
-                    {console.log('Rendering AI insights section with:', {
-                      ai_insights: selectedProfile.ai_insights,
-                      processedInsights: selectedProfile.processedInsights
-                    })}
-                    {loadingInsights ? (
-                      <div className="flex items-center justify-center p-4">
-                        <svg className="animate-spin h-5 w-5 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        <p className="text-gray-600">Generating detailed insights...</p>
-                      </div>
-                    ) : (
-                      <p className="text-gray-700 whitespace-pre-line">
-                        {selectedProfile.processedInsights || selectedProfile.ai_insights || "No insights available for this profile."}
-                      </p>
-                    )}
+            {/* Layer 2: Centering container for the modal panel */}
+            <div className="flex items-center justify-center min-h-screen p-4">
+              <div
+                className="relative bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg max-h-[80vh] overflow-y-auto z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {loadingProfileData ? (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <svg className="animate-spin h-8 w-8 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <p className="text-gray-600">Loading profile information...</p>
                   </div>
-                  
-                  <div className="space-y-6">
-                    {/* Short Bio */}
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 mb-2">Short Bio</h4>
-                      <p className="text-gray-600 whitespace-pre-line">
-                        {selectedProfile.bio || "Not Provided"}
-                      </p>
+                ) : (
+                  <>
+                    {/* All the existing modal content (header, bio, insights, etc.) goes here */}
+                    <h3 className="text-xl font-bold mb-4 text-gray-800">
+                      {selectedProfile.full_name}
+                    </h3>
+
+                    <hr className="border-t border-gray-800 mb-4" />
+                    
+                    {/* AI Match Insights - Detailed */}
+                    <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                      <h4 className="text-lg font-semibold text-blue-800 mb-2 flex items-center">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        AI Match Insights
+                      </h4>
+                      {console.log('Rendering AI insights section with:', {
+                        ai_insights: selectedProfile.ai_insights,
+                        processedInsights: selectedProfile.processedInsights
+                      })}
+                      {loadingInsights ? (
+                        <div className="flex items-center justify-center p-4">
+                          <svg className="animate-spin h-5 w-5 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                          </svg>
+                          <p className="text-gray-600">Generating detailed insights...</p>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 whitespace-pre-line">
+                          {selectedProfile.processedInsights || selectedProfile.ai_insights || "No insights available for this profile."}
+                        </p>
+                      )}
                     </div>
                     
-                    {/* Research Interests */}
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                        {selectedProfile.academician_id ? "Research Expertise" : "Research Interests"}
-                      </h4>
-                      <div className="">
-                        {(() => {
-                          // Get the research expertise data based on profile type
-                          let researchArray = [];
-                          
-                          if (selectedProfile.academician_id) {
-                            researchArray = selectedProfile.research_expertise || [];
-                          } else if (selectedProfile.postgraduate_id || selectedProfile.student_type === 'postgraduate') {
-                            researchArray = selectedProfile.field_of_research || [];
-                          } else {
-                            researchArray = selectedProfile.research_preference || [];
-                          }
+                    <div className="space-y-6">
+                      {/* Short Bio */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Short Bio</h4>
+                        <p className="text-gray-600 whitespace-pre-line">
+                          {selectedProfile.bio || "Not Provided"}
+                        </p>
+                      </div>
+                      
+                      {/* Research Interests */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                          {selectedProfile.academician_id ? "Research Expertise" : "Research Interests"}
+                        </h4>
+                        <div className="">
+                          {(() => {
+                            // Get the research expertise data based on profile type
+                            let researchArray = [];
+                            
+                            if (selectedProfile.academician_id) {
+                              researchArray = selectedProfile.research_expertise || [];
+                            } else if (selectedProfile.postgraduate_id || selectedProfile.student_type === 'postgraduate') {
+                              researchArray = selectedProfile.field_of_research || [];
+                            } else {
+                              researchArray = selectedProfile.research_preference || [];
+                            }
 
-                          if (Array.isArray(researchArray) && researchArray.length > 0) {
-                            // Show all research interests with numbering
-                            return (
-                              <div className="space-y-2">
-                                {researchArray.map((id, index) => {
-                                  const matchedOption = researchOptions.find(
-                                    (option) =>
-                                      `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                                  );
-                                  
-                                  if (matchedOption) {
+                            if (Array.isArray(researchArray) && researchArray.length > 0) {
+                              // Show all research interests with numbering
+                              return (
+                                <div className="space-y-2">
+                                  {researchArray.map((id, index) => {
+                                    const matchedOption = researchOptions.find(
+                                      (option) =>
+                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+                                    );
+                                    
+                                    if (matchedOption) {
+                                      return (
+                                        <p key={index} className="text-gray-600">
+                                          {index + 1}. {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
+                                        </p>
+                                      );
+                                    }
                                     return (
                                       <p key={index} className="text-gray-600">
-                                        {index + 1}. {matchedOption.field_of_research_name} - {matchedOption.research_area_name} - {matchedOption.niche_domain_name}
+                                        {index + 1}. {id}
                                       </p>
                                     );
+                                  })}
+                                </div>
+                              );
+                            }
+                            return <p className="text-gray-600">Not Provided</p>;
+                          })()}
+                        </div>
+                      </div>
+                      
+                      {/* Academician-specific sections */}
+                      {selectedProfile.academician_id && (
+                        <>
+                          {/* Style of Supervision */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Style of Supervision</h4>
+                            <div className="space-y-2">
+                              {Array.isArray(selectedProfile.style_of_supervision) && selectedProfile.style_of_supervision.length > 0 ? (
+                                <div className="mt-2 text-normal text-gray-600">
+                                  {selectedProfile.style_of_supervision.map((style, index) => (
+                                    <div key={index} className="mb-2">
+                                      <span className="font-medium">{index + 1}. {style}</span>
+                                      <div className="ml-4 text-sm">
+                                        {style === 'Directive Supervision' && 'Structured approach with active guidance and regular monitoring'}
+                                        {style === 'Facilitative Supervision' && 'Supportive approach encouraging student independence'}
+                                        {style === 'Coaching Supervision' && 'Focuses on personal development and academic growth'}
+                                        {style === 'Adaptive Supervision' && 'Flexible support based on student\'s changing needs'}
+                                        {style === 'Participatory Supervision' && 'Collaborative approach with shared decision-making'}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-gray-600">Not Specified</p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Total Supervised Student */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Total Supervised Student</h4>
+                            <p className="text-gray-600">{selectedProfile.supervised_students_count || "Not Provided"}</p>
+                          </div>
+                          
+                          {/* Total Available Grant and Project */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Total Available Grant and Project</h4>
+                            <div className="flex flex-col">
+                              <p className="text-gray-600">
+                                {countGrants() + countProjects()} Projects/Grants
+                              </p>
+                              <Link
+                                href={route('academicians.projects', selectedProfile.url || selectedProfile.academician_id)}
+                                className="mt-2 self-start text-xs px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                              >
+                                <span>View Projects</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
+                            </div>
+                          </div>
+                          
+                          {/* Total Publication */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Total Publication</h4>
+                            <div className="flex flex-col">
+                              <p className="text-gray-600">
+                                {countPublications()} Publications
+                              </p>
+                              <Link
+                                href={route('academicians.publications', selectedProfile.url || selectedProfile.academician_id)}
+                                className="mt-2 self-start text-xs px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                              >
+                                <span>View Publications</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
+                            </div>
+                          </div>
+                          
+                          {/* Recommendation by Others */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Recommendation by Others</h4>
+                            <RecommendationDisplay academicianId={selectedProfile.academician_id || selectedProfile.id} />
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Student-specific sections */}
+                      {(selectedProfile.postgraduate_id || selectedProfile.undergraduate_id) && (
+                        <>
+                          {/* Skills */}
+                          <div className="mb-6">
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
+                            {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {selectedProfile.skills.map((skill, index) => {
+                                  // Check different skill formats
+                                  let skillName = '';
+                                  
+                                  // If skill is already a string (name), use it directly
+                                  if (typeof skill === 'string') {
+                                    skillName = skill;
+                                  } 
+                                  // If skill is an object with name property, use that
+                                  else if (typeof skill === 'object' && skill !== null && skill.name) {
+                                    skillName = skill.name;
+                                  } 
+                                  // If skill is an ID, look it up in the skills list
+                                  else if (skills && (typeof skill === 'number' || !isNaN(parseInt(skill)))) {
+                                    const skillId = typeof skill === 'number' ? skill : parseInt(skill);
+                                    const foundSkill = skills.find(s => s.id === skillId);
+                                    skillName = foundSkill ? foundSkill.name : `Skill #${skill}`;
                                   }
+                                  // Fallback
+                                  else {
+                                    skillName = `Skill #${index+1}`;
+                                  }
+                                  
                                   return (
-                                    <p key={index} className="text-gray-600">
-                                      {index + 1}. {id}
-                                    </p>
+                                    <span 
+                                      key={index} 
+                                      className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
+                                    >
+                                      {skillName}
+                                    </span>
                                   );
                                 })}
                               </div>
-                            );
-                          }
-                          return <p className="text-gray-600">Not Provided</p>;
-                        })()}
-                      </div>
-                    </div>
-                    
-                    {/* Academician-specific sections */}
-                    {selectedProfile.academician_id && (
-                      <>
-                        {/* Style of Supervision */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">Style of Supervision</h4>
-                          <div className="space-y-2">
-                            {Array.isArray(selectedProfile.style_of_supervision) && selectedProfile.style_of_supervision.length > 0 ? (
-                              <div className="mt-2 text-normal text-gray-600">
-                                {selectedProfile.style_of_supervision.map((style, index) => (
-                                  <div key={index} className="mb-2">
-                                    <span className="font-medium">{index + 1}. {style}</span>
-                                    <div className="ml-4 text-sm">
-                                      {style === 'Directive Supervision' && 'Structured approach with active guidance and regular monitoring'}
-                                      {style === 'Facilitative Supervision' && 'Supportive approach encouraging student independence'}
-                                      {style === 'Coaching Supervision' && 'Focuses on personal development and academic growth'}
-                                      {style === 'Adaptive Supervision' && 'Flexible support based on student\'s changing needs'}
-                                      {style === 'Participatory Supervision' && 'Collaborative approach with shared decision-making'}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
                             ) : (
-                              <p className="text-gray-600">Not Specified</p>
+                              <p className="text-gray-600">No skills listed</p>
                             )}
                           </div>
-                        </div>
-                        
-                        {/* Total Supervised Student */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">Total Supervised Student</h4>
-                          <p className="text-gray-600">{selectedProfile.supervised_students_count || "Not Provided"}</p>
-                        </div>
-                        
-                        {/* Total Available Grant and Project */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">Total Available Grant and Project</h4>
-                          <div className="flex flex-col">
-                            <p className="text-gray-600">
-                              {countGrants() + countProjects()} Projects/Grants
-                            </p>
-                            <Link
-                              href={route('academicians.projects', selectedProfile.url || selectedProfile.academician_id)}
-                              className="mt-2 self-start text-xs px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                        </>
+                      )}
+                      
+                      {/* Connect via - For all profiles */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Connect via</h4>
+                        <div className="flex items-center space-x-4">
+                          {selectedProfile.google_scholar && (
+                            <a
+                              href={selectedProfile.google_scholar}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 text-lg hover:text-red-700"
+                              title="Google Scholar"
                             >
-                              <span>View Projects</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </Link>
-                          </div>
-                        </div>
-                        
-                        {/* Total Publication */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">Total Publication</h4>
-                          <div className="flex flex-col">
-                            <p className="text-gray-600">
-                              {countPublications()} Publications
-                            </p>
-                            <Link
-                              href={route('academicians.publications', selectedProfile.url || selectedProfile.academician_id)}
-                              className="mt-2 self-start text-xs px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 flex items-center"
+                              <FaGoogle />
+                            </a>
+                          )}
+                          {selectedProfile.personal_website && (
+                            <a
+                              href={selectedProfile.personal_website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 text-lg hover:text-green-700"
+                              title="Personal Website"
                             >
-                              <span>View Publications</span>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </Link>
-                          </div>
-                        </div>
-                        
-                        {/* Recommendation by Others */}
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">Recommendation by Others</h4>
-                          <RecommendationDisplay academicianId={selectedProfile.academician_id || selectedProfile.id} />
-                        </div>
-                      </>
-                    )}
-                    
-                    {/* Student-specific sections */}
-                    {(selectedProfile.postgraduate_id || selectedProfile.undergraduate_id) && (
-                      <>
-                        {/* Skills */}
-                        <div className="mb-6">
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
-                          {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {selectedProfile.skills.map((skill, index) => {
-                                // Check different skill formats
-                                let skillName = '';
-                                
-                                // If skill is already a string (name), use it directly
-                                if (typeof skill === 'string') {
-                                  skillName = skill;
-                                } 
-                                // If skill is an object with name property, use that
-                                else if (typeof skill === 'object' && skill !== null && skill.name) {
-                                  skillName = skill.name;
-                                } 
-                                // If skill is an ID, look it up in the skills list
-                                else if (skills && (typeof skill === 'number' || !isNaN(parseInt(skill)))) {
-                                  const skillId = typeof skill === 'number' ? skill : parseInt(skill);
-                                  const foundSkill = skills.find(s => s.id === skillId);
-                                  skillName = foundSkill ? foundSkill.name : `Skill #${skill}`;
-                                }
-                                // Fallback
-                                else {
-                                  skillName = `Skill #${index+1}`;
-                                }
-                                
-                                return (
-                                  <span 
-                                    key={index} 
-                                    className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                                  >
-                                    {skillName}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <p className="text-gray-600">No skills listed</p>
+                              <FaHome />
+                            </a>
+                          )}
+                          {selectedProfile.institution_website && (
+                            <a
+                              href={selectedProfile.institution_website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 text-lg hover:text-blue-700"
+                              title="Institutional Website"
+                            >
+                              <FaUniversity />
+                            </a>
+                          )}
+                          {selectedProfile.linkedin && (
+                            <a
+                              href={selectedProfile.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 text-lg hover:text-blue-800"
+                              title="LinkedIn"
+                            >
+                              <FaLinkedin />
+                            </a>
                           )}
                         </div>
-                      </>
-                    )}
-                    
-                    {/* Connect via - For all profiles */}
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 mb-2">Connect via</h4>
-                      <div className="flex items-center space-x-4">
-                        {selectedProfile.google_scholar && (
-                          <a
-                            href={selectedProfile.google_scholar}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 text-lg hover:text-red-700"
-                            title="Google Scholar"
-                          >
-                            <FaGoogle />
-                          </a>
-                        )}
-                        {selectedProfile.personal_website && (
-                          <a
-                            href={selectedProfile.personal_website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 text-lg hover:text-green-700"
-                            title="Personal Website"
-                          >
-                            <FaHome />
-                          </a>
-                        )}
-                        {selectedProfile.institution_website && (
-                          <a
-                            href={selectedProfile.institution_website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 text-lg hover:text-blue-700"
-                            title="Institutional Website"
-                          >
-                            <FaUniversity />
-                          </a>
-                        )}
-                        {selectedProfile.linkedin && (
-                          <a
-                            href={selectedProfile.linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-500 text-lg hover:text-blue-800"
-                            title="LinkedIn"
-                          >
-                            <FaLinkedin />
-                          </a>
-                        )}
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
-              
-              <div className="mt-6 text-center">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
-                >
-                  Close
-                </button>
+                  </>
+                )}
+                
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>

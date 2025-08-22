@@ -3,12 +3,11 @@ import { FaLightbulb, FaPlus, FaTimes } from 'react-icons/fa';
 
 const NaturalLanguageQueryBuilder = ({ 
   onQueryChange, 
-  initialQuery = '', 
+  value = '', 
   researchOptions,
   placeholder = 'e.g., Artificial Intelligence in Healthcare, Design Science Research...',
   onEnterPress = null
 }) => {
-  const [query, setQuery] = useState(initialQuery);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestedTerms, setSuggestedTerms] = useState([]);
   const suggestionsRef = useRef(null);
@@ -47,9 +46,7 @@ const NaturalLanguageQueryBuilder = ({
   
   // Handle query changes
   const handleQueryChange = (e) => {
-    const newQuery = e.target.value;
-    setQuery(newQuery);
-    onQueryChange(newQuery);
+    onQueryChange(e.target.value);
   };
   
   // Handle key down events for the input field
@@ -63,8 +60,7 @@ const NaturalLanguageQueryBuilder = ({
   
   // Add a suggested term to the query
   const addTermToQuery = (term) => {
-    const newQuery = query ? `${query}, ${term}` : term;
-    setQuery(newQuery);
+    const newQuery = value ? `${value}, ${term}` : term;
     onQueryChange(newQuery);
     setShowSuggestions(false);
   };
@@ -75,20 +71,20 @@ const NaturalLanguageQueryBuilder = ({
       <div className="relative">
         <input
           type="text"
-          value={query}
+          value={value}
           onChange={handleQueryChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="w-full px-4 pr-14 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base"
           onFocus={() => setShowSuggestions(true)}
+          autoFocus
         />
         
         {/* Show X icon to clear input when there's text */}
-        {query && (
+        {value && (
           <button 
             className="absolute right-10 top-4 text-gray-400 hover:text-gray-600"
             onClick={() => {
-              setQuery('');
               onQueryChange('');
             }}
           >

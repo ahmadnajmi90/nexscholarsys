@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import ResultsGrid from '@/Pages/AIMatching/Components/ResultsGrid';
+import ResultsGrid from './ResultsGrid';
 
 const ProgressiveLoadingResults = ({
   searchResults,

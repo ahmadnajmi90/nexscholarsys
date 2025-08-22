@@ -161,6 +161,7 @@ export default function Compose({ auth, to, replyTo }) {
                                         className="mt-1 w-full rounded-lg border-gray-300 p-3 sm:p-4 text-base shadow-sm"
                                         placeholder="Enter Email Subject"
                                         required
+                                        autoFocus
                                     />
                                 </div>
 

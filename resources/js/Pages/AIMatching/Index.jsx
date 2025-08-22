@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
-import GuidedSearchInterface from '@/Components/GuidedSearchInterface';
+import GuidedSearchInterface from './Components/GuidedSearchInterface';
 import ResultsGrid from './Components/ResultsGrid';
 import SearchTypeSelector from './Components/SearchTypeSelector';
 import FilterPanel from './Components/FilterPanel';
@@ -13,10 +13,22 @@ import { Sparkles } from 'lucide-react';
 
 export default function Index({ auth, universities, faculties, users, researchOptions, skills }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Helper function to get initial state from sessionStorage
+  const getInitialState = (key, defaultValue) => {
+    try {
+      const savedState = sessionStorage.getItem(key);
+      return savedState ? JSON.parse(savedState) : defaultValue;
+    } catch (error) {
+      console.error("Error reading from sessionStorage", error);
+      return defaultValue;
+    }
+  };
+  
+  const [searchQuery, setSearchQuery] = useState(() => getInitialState('ai_search_query', ''));
   const [searchType, setSearchType] = useState('supervisor'); // Default: supervisor
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState(null);
+  const [searchResults, setSearchResults] = useState(() => getInitialState('ai_search_results', null));
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   
@@ -36,6 +48,19 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [selectedAvailability, setSelectedAvailability] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   
+  // Save state to sessionStorage when navigating away
+  useEffect(() => {
+    // This cleanup function runs when the user navigates away
+    return () => {
+      try {
+        sessionStorage.setItem('ai_search_query', JSON.stringify(searchQuery));
+        sessionStorage.setItem('ai_search_results', JSON.stringify(searchResults));
+      } catch (error) {
+        console.error("Error saving to sessionStorage", error);
+      }
+    };
+  }, [searchQuery, searchResults]);
+  
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
     // Only allow academicians to search for students
@@ -45,14 +70,26 @@ export default function Index({ auth, universities, faculties, users, researchOp
     }
     
     setSearchType(newType);
+    setSearchQuery(''); // Clear search query when changing search type
     setSearchResults(null); // Clear previous results when changing search type
     setError(null);
+    
+    // Clear sessionStorage when changing search type
+    try {
+      sessionStorage.removeItem('ai_search_query');
+      sessionStorage.removeItem('ai_search_results');
+    } catch (error) {
+      console.error("Error clearing sessionStorage", error);
+    }
   };
   
   // Handle search submission from the guided interface
   const handleSearch = async (query) => {
     // Skip if already searching or query is empty
     if (isSearching || !query || query.trim() === '') return;
+    
+    // Clear old results from sessionStorage before starting new search
+    sessionStorage.removeItem('ai_search_results');
     
     setSearchQuery(query);
     setIsSearching(true);
@@ -143,13 +180,20 @@ export default function Index({ auth, universities, faculties, users, researchOp
       
       if (response.data && response.data.matches) {
         // Merge new results with existing ones
-        setSearchResults(prevResults => ({
-          ...response.data,
-          matches: [
-            ...prevResults.matches,
-            ...response.data.matches
-          ]
-        }));
+        setSearchResults(prevResults => {
+          // Handle case where prevResults might be null
+          if (!prevResults || !prevResults.matches) {
+            return response.data;
+          }
+          
+          return {
+            ...response.data,
+            matches: [
+              ...prevResults.matches,
+              ...response.data.matches
+            ]
+          };
+        });
         setPage(nextPage);
       }
     } catch (error) {
@@ -344,6 +388,8 @@ export default function Index({ auth, universities, faculties, users, researchOp
             placeholder={getPlaceholderText()}
             tips={getSearchTips()}
             error={error}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
           >
             {/* Search Type Selection */}
             <SearchTypeSelector
