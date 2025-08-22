@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
+import SearchBar from "@/Components/SearchBar";
+import ContentSkeletonCard from "@/Pages/Components/ContentSkeletonCard";
 import DOMPurify from 'dompurify';
 
 // Plain text truncated content
@@ -16,7 +18,7 @@ const TruncatedText = ({ html, maxLength = 100, className }) => {
   return <p className={className}>{truncated}</p>;
 };
 
-const ProjectCard = ({ projects }) => {
+const ProjectCard = ({ projects, isLoading }) => {
   const [typeFilter, setTypeFilter] = useState([]);
   const [countryFilter, setCountryFilter] = useState([]);
   const [themeFilter, setThemeFilter] = useState([]);
@@ -73,26 +75,42 @@ const ProjectCard = ({ projects }) => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Mobile Filter Button */}
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      {/* Search Bar - Desktop */}
+      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+        <SearchBar
+          placeholder="Search projects..."
+          routeName="projects.index"
+          className=""
+        />
+      </div>
+
+      {/* Mobile Header with Search and Filter */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4.586L3.293 6.707A1 1 0 013 6V4z"
-          />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-4.586L3.293 6.707A1 1 0 013 6V4z"
+            />
+          </svg>
+        </button>
+        <SearchBar
+          placeholder="Search projects..."
+          routeName="projects.index"
+          className=""
+        />
+      </div>
 
       {/* Sidebar for Filters */}
       <div
@@ -129,7 +147,14 @@ const ProjectCard = ({ projects }) => {
       {/* Main Content */}
       <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedProjects.map((project, index) => (
+          {isLoading ? (
+            // Show skeleton cards while loading
+            Array.from({ length: 9 }, (_, index) => (
+              <ContentSkeletonCard key={index} />
+            ))
+          ) : (
+            // Show actual project cards when not loading
+            displayedProjects.map((project, index) => (
             <div
               key={index}
               className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 relative"
@@ -218,7 +243,8 @@ const ProjectCard = ({ projects }) => {
                 View Details
               </Link>
             </div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Pagination */}

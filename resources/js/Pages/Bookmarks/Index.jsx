@@ -58,7 +58,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
             <div className="flex items-center mb-3">
               <img 
                 src={bookmarkable.profile_picture ? `/storage/${bookmarkable.profile_picture}` : '/storage/profile_pictures/default.jpg'} 
-                className="w-12 h-12 rounded-full mr-3" 
+                className="w-12 h-12 rounded-full mr-3 object-cover" 
                 alt={bookmarkable.full_name} 
               />
               <div>
@@ -90,7 +90,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
             <div className="flex items-center mb-3">
               <img 
                 src={bookmarkable.profile_picture ? `/storage/${bookmarkable.profile_picture}` : '/storage/profile_pictures/default.jpg'} 
-                className="w-12 h-12 rounded-full mr-3" 
+                className="w-12 h-12 rounded-full mr-3 object-cover" 
                 alt={bookmarkable.full_name} 
               />
               <div>
@@ -122,7 +122,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
             <div className="flex items-center mb-3">
               <img 
                 src={bookmarkable.profile_picture ? `/storage/${bookmarkable.profile_picture}` : '/storage/profile_pictures/default.jpg'} 
-                className="w-12 h-12 rounded-full mr-3" 
+                className="w-12 h-12 rounded-full mr-3 object-cover" 
                 alt={bookmarkable.full_name} 
               />
               <div>
@@ -343,6 +343,10 @@ export default function Bookmarks({ auth, bookmarks }) {
               case 'App\\Models\\Academician':
                 return bookmarkable.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        (bookmarkable.current_position && bookmarkable.current_position.toLowerCase().includes(searchTerm.toLowerCase()));
+              
+              case 'App\\Models\\Undergraduate':
+              case 'App\\Models\\Postgraduate':
+                return bookmarkable.full_name.toLowerCase().includes(searchTerm.toLowerCase());
               
               case 'App\\Models\\PostGrant':
               case 'App\\Models\\PostProject':

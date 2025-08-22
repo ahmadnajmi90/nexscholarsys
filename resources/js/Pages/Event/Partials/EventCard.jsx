@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
+import SearchBar from "@/Components/SearchBar";
+import ContentSkeletonCard from "@/Pages/Components/ContentSkeletonCard";
 import { FaFilter } from "react-icons/fa";
 import DOMPurify from 'dompurify';
 
@@ -17,7 +19,7 @@ const TruncatedText = ({ html, maxLength = 100, className }) => {
   return <p className={className}>{truncated}</p>;
 };
 
-const EventCard = ({ events, researchOptions }) => {
+const EventCard = ({ events, researchOptions, isLoading }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [eventModeFilter, setEventModeFilter] = useState([]);
   const [eventTypeFilter, setEventTypeFilter] = useState([]);
@@ -103,13 +105,29 @@ const EventCard = ({ events, researchOptions }) => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Mobile Filter Button */}
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="fixed top-20 right-4 z-50 bg-blue-600 text-white p-2 rounded-full shadow-lg lg:hidden"
-      >
-        <FaFilter className="text-xl" />
-      </button>
+      {/* Search Bar - Desktop */}
+      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+        <SearchBar
+          placeholder="Search events..."
+          routeName="events.index"
+          className=""
+        />
+      </div>
+
+      {/* Mobile Header with Search and Filter */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+        >
+          <FaFilter className="text-xl" />
+        </button>
+        <SearchBar
+          placeholder="Search events..."
+          routeName="events.index"
+          className=""
+        />
+      </div>
 
       {/* Sidebar for Filters */}
       <div
@@ -176,7 +194,14 @@ const EventCard = ({ events, researchOptions }) => {
       {/* Main Content */}
       <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedEvents.map((event, index) => {
+          {isLoading ? (
+            // Show skeleton cards while loading
+            Array.from({ length: 9 }, (_, index) => (
+              <ContentSkeletonCard key={index} />
+            ))
+          ) : (
+            // Show actual event cards when not loading
+            displayedEvents.map((event, index) => {
             const isEventEnded = new Date(event.end_date) < new Date();
             return (
               <div
@@ -227,7 +252,8 @@ const EventCard = ({ events, researchOptions }) => {
                 </Link>
               </div>
             );
-          })}
+          })
+          )}
         </div>
 
         {/* Pagination */}

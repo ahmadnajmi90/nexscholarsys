@@ -15,11 +15,17 @@ use Illuminate\Http\Request;
 
 class ShowProjectController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $searchQuery = $request->input('search');
         $today = Carbon::today();
         
-        $projects = PostProject::where('project_status', 'published')
+        $projects = PostProject::query()
+            ->where('project_status', 'published')
+            ->when($searchQuery, function ($query, $search) {
+                $query->where('title', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+            })
             ->orderByRaw("CASE WHEN start_date >= ? THEN 0 ELSE 1 END", [$today])
             ->orderBy('start_date', 'asc')
             ->get();
@@ -29,6 +35,7 @@ class ShowProjectController extends Controller
             'projects' => $projects,
             // 'universities' => UniversityList::all(),
             'users' => User::all(),
+            'searchQuery' => $searchQuery, // Pass the search query back
         ]);
     }
 

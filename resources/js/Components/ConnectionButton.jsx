@@ -10,7 +10,7 @@ import { FaUserPlus, FaCheck, FaTimes, FaSpinner, FaClock, FaUserCheck } from 'r
  */
 const ConnectionButton = ({ user, onRemoveConnection }) => {
   // --- START DIAGNOSTIC LOGGING ---
-  console.log("ConnectionButton rendered for user:", user?.name, user);
+  // console.log("ConnectionButton rendered for user:", user?.name, user);
   if (user && !user.connection_status_with_auth_user) {
     console.warn("DATA MISSING: 'connection_status_with_auth_user' not found for user:", user.name || user.id);
   }

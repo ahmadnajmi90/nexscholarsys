@@ -17,14 +17,22 @@ use Illuminate\Http\Request;
 class ShowPostController extends Controller
 {
     // In ShowPostController.php
-    public function index()
+    public function index(Request $request)
     {
-        $posts = CreatePost::where('status', 'published')
+        $searchQuery = $request->input('search');
+
+        $posts = CreatePost::query()
+                    ->where('status', 'published')
+                    ->when($searchQuery, function ($query, $search) {
+                        $query->where('title', 'like', "%{$search}%")
+                              ->orWhere('content', 'like', "%{$search}%");
+                    })
                     ->orderBy('created_at', 'desc')
                     ->get();
 
         return Inertia::render('Post/Post', [
             'posts' => $posts,
+            'searchQuery' => $searchQuery, // Pass the search query back
         ]);
     }
 

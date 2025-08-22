@@ -33,6 +33,9 @@ class PostgraduateController extends Controller
             }
         }
         
+        // Get search query from request
+        $searchQuery = request('search');
+        
         // Get only postgraduates with complete profiles
         $postgraduates = Postgraduate::with('user')
             ->where(function($query) {
@@ -41,7 +44,11 @@ class PostgraduateController extends Controller
                     //   ->where('bio', '!=', '')
                       ->whereNotNull('field_of_research')
                       ->where('field_of_research', '!=', '[]');
-            })->get();
+            })
+            ->when($searchQuery, function($query) use ($searchQuery) {
+                $query->where('full_name', 'like', '%' . $searchQuery . '%');
+            })
+            ->get();
         
         return Inertia::render('Networking/Postgraduate', [
             // Pass any data you want to the component here
@@ -51,6 +58,7 @@ class PostgraduateController extends Controller
             'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
             'skills' => Skill::all(),
+            'searchQuery' => $searchQuery,
         ]);
     }
 

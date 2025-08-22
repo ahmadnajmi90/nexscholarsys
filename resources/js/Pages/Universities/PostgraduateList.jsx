@@ -1,11 +1,39 @@
-import React from "react";
-import ProfileCard from '@/Pages/Networking/partials/StudentProfileCard';
+import React, { useState, useEffect, useCallback } from "react";
+import { router } from '@inertiajs/react';
+import StudentProfileCard from '@/Pages/Networking/partials/StudentProfileCard';
 import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
 import { Link } from '@inertiajs/react';
 
-const PostgraduateList = ({ postgraduates, faculties, researchOptions, universities, faculty, university, users, skills }) => {
+const PostgraduateList = ({ postgraduates, faculties, researchOptions, universities, faculty, university, users, skills, searchQuery }) => {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Add useEffect to track Inertia's processing state
+  useEffect(() => {
+    const handleStart = () => setIsLoading(true);
+    const handleFinish = () => setIsLoading(false);
+
+    // router.on() returns a function that removes the listener.
+    // We capture these remover functions.
+    const removeStartListener = router.on('start', handleStart);
+    const removeFinishListener = router.on('finish', handleFinish);
+
+    // The cleanup function in the return statement will now call
+    // the remover functions, which is the safe way to do this.
+    return () => {
+      removeStartListener();
+      removeFinishListener();
+    };
+  }, []); // The empty dependency array is correct.
+
+  // Define search handler function with useCallback
+  const handleSearch = useCallback((searchTerm) => {
+    router.get(route('faculties.postgraduates', { faculty: faculty.id }), 
+      { search: searchTerm }, 
+      { preserveState: true, replace: true }
+    );
+  }, [faculty.id]);
   
   return (
     <MainLayout title="Postgraduate List">
@@ -56,17 +84,20 @@ const PostgraduateList = ({ postgraduates, faculties, researchOptions, universit
         </div>
       </div>
 
-      <ProfileCard 
+      <StudentProfileCard 
           profilesData={postgraduates} 
           supervisorAvailabilityKey="supervisorAvailability" 
           universitiesList={universities} 
           isFacultyAdminDashboard={true}
           faculties={faculties}
           isPostgraduateList={true}  // Set to true for postgraduates
-          isUndergraduateList={true} 
+          isUndergraduateList={false} 
           users={users}
           researchOptions={researchOptions}
-          skills={skills}/>
+          skills={skills}
+          searchQuery={searchQuery || ""}
+          isLoading={isLoading}
+          onSearch={handleSearch} />
     </MainLayout>
   );
 };
