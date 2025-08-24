@@ -71,6 +71,14 @@ class CreatePost extends Model
         return $this->belongsTo(User::class, 'author_id', 'unique_id'); // Adjust to match your unique identifier field
     }
 
+    /**
+     * Define the relationship to the User model (Author).
+     */
+    public function author()
+    {
+        return $this->belongsTo(User::class, 'author_id', 'unique_id');
+    }
+
     public function postgraduate()
     {
         return $this->belongsTo(User::class, 'author_id', 'unique_id'); // Adjust to match your unique identifier field
