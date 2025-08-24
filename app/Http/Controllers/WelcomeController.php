@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Academician;
 use App\Models\Postgraduate;
 use App\Models\Undergraduate;
+use App\Http\Resources\UserResource;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -24,9 +25,10 @@ class WelcomeController extends Controller
 {
     public function index()
     {
-        $posts = CreatePost::where('status', 'published')
+        $posts = CreatePost::with('author')
+            ->where('status', 'published')
             ->orderBy('created_at', 'desc')
-            ->take(5)
+            ->take(6)
             ->get();
 
         $today = Carbon::today();
@@ -34,19 +36,13 @@ class WelcomeController extends Controller
         $events = PostEvent::where('event_status', 'published')
             ->where('start_date', '>=', $today)
             ->orderBy('start_date', 'asc')
-            ->take(5)
-            ->get();
-        
-        $projects = PostProject::where('project_status', 'published')
-            ->where('application_deadline', '>=', $today)
-            ->orderBy('application_deadline', 'asc')
-            ->take(5)
+            ->take(9)
             ->get();
         
         $grants = PostGrant::where('status', 'published')
             ->where('application_deadline', '>=', $today)
             ->orderBy('application_deadline', 'asc')
-            ->take(5)
+            ->take(9)
             ->get();
 
         return Inertia::render('Welcome', [
@@ -56,7 +52,6 @@ class WelcomeController extends Controller
             'phpVersion' => PHP_VERSION,
             'posts' => $posts,
             'events' => $events,
-            'projects' => $projects,
             'grants' => $grants,
         ]);
     }
