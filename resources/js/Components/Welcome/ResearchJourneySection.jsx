@@ -2,7 +2,7 @@ import React from 'react';
 
 const FeatureCard = ({ title, subtitle, description, linkText, image_url }) => {
     return (
-        <div className="bg-white rounded-lg p-8 hover:shadow-2xl transition-all duration-300 shadow-xl border border-gray-100 relative overflow-hidden font-[fantasy]">
+        <div className="bg-white rounded-lg p-8 hover:shadow-2xl transition-all duration-300 shadow-xl border border-gray-100 relative overflow-hidden font-[sans-serif]">
             {/* Main Content */}
             <div className="space-y-2">
                 <h3 className="text-purple-600 font-bold text-lg">{subtitle}</h3>
