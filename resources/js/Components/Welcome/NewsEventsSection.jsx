@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 
 const NewsEventsSection = ({ posts = [] }) => {
-    console.log(posts)
     // The first post will be used for the featured article on the left (as is currently hardcoded).
     // We will use the next 6 posts for the list on the right.
     const smallerArticles = posts.slice(0, 6).map(post => ({
@@ -20,7 +19,7 @@ const NewsEventsSection = ({ posts = [] }) => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
                     <div>
                         <h2 className="text-5xl font-extrabold text-gray-900 mb-4 font-[sans-serif]">
-                            News & Events
+                            Latest Posts
                         </h2>
                         <p className="text-gray-600 text-xl">
                             Latest research highlights, platform updates, and academic opportunities

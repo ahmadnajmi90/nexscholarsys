@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import InfiniteScroll from '../ReactBits/InfiniteScroll';
-import DarkVeil from '../ReactBits/DarkVeil';
+import ReactPlayer from 'react-player';
 import GradientText from '../ReactBits/GradientText';
 
 const items = [
@@ -18,20 +18,124 @@ const items = [
 ];
 
 const HeroSection = () => {
+    const [videoFailed, setVideoFailed] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+    const [videoReady, setVideoReady] = useState(false);
+
+    // This effect ensures we only render the video on the client side
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // YouTube Player API implementation
+    useEffect(() => {
+        if (isMounted && !videoFailed) {
+            // Load YouTube Player API
+            if (!window.YT) {
+                const tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                const firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            }
+
+            // Initialize player when API is ready
+            window.onYouTubeIframeAPIReady = () => {
+                new window.YT.Player('youtube-player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: 'eynlF7Ph0UA',
+                    playerVars: {
+                        autoplay: 1,
+                        controls: 0,
+                        disablekb: 1,
+                        fs: 0,
+                        iv_load_policy: 3,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0,
+                        mute: 1,
+                        loop: 1,
+                        playlist: 'eynlF7Ph0UA',
+                        playsinline: 1,
+                        cc_load_policy: 0,
+                        color: 'white',
+                        start: 0,
+                        end: 0,
+                        vq: 'hd1080'
+                    },
+                    events: {
+                        onReady: (event) => {
+                            console.log('YouTube Player ready - fading in');
+                            setVideoReady(true);
+                            // Hide all YouTube UI elements
+                            const iframe = event.target.getIframe();
+                            if (iframe) {
+                                iframe.style.pointerEvents = 'none';
+                                iframe.style.border = 'none';
+                                iframe.style.outline = 'none';
+                            }
+                        },
+                        onStateChange: (event) => {
+                            if (event.data === window.YT.PlayerState.PLAYING) {
+                                console.log('Video started playing');
+                            }
+                        },
+                        onError: (event) => {
+                            console.log('YouTube Player error:', event.data);
+                            setVideoFailed(true);
+                        }
+                    }
+                });
+            };
+
+            // If API is already loaded
+            if (window.YT && window.YT.Player) {
+                window.onYouTubeIframeAPIReady();
+            }
+        }
+    }, [isMounted, videoFailed]);
+
     return (
         <>
-            {/* SECTION 1: Main Hero with Animated Background */}
-            <section id="home" className="relative min-h-screen flex items-center overflow-visible pb-24">
+            {/* SECTION 1: Main Hero with Video Background */}
+            <section id="home" className="relative min-h-screen flex items-center overflow-hidden pb-24">
 
-                {/* START: New DarkVeil Background */}
-                <div className="absolute inset-0 z-0">
-                    <DarkVeil
-                        speed={0.3}
-                        hueShift={10.0}
-                        warpAmount={0.1}
-                    />
+                {/* START: Fade-in Video Background System */}
+                <div className="absolute inset-0 z-0 bg-black">
+                    {/* Base Layer: Always visible fallback image */}
+                    <div 
+                        className="absolute inset-0 w-full h-full bg-cover bg-center"
+                        style={{ backgroundImage: `url('/images/landing-background.png')` }}
+                    ></div>
+                    
+                    {/* Middle Layer: Gradient overlay for aesthetics */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-black opacity-70"></div>
+                    
+                    {/* Top Layer: Video with fade-in transition */}
+                    {isMounted && !videoFailed && (
+                        <div 
+                            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                                videoReady ? 'opacity-100' : 'opacity-0'
+                            }`}
+                            style={{
+                                backgroundColor: videoReady ? 'transparent' : 'rgba(255,0,0,0.3)', // Debug: red background when not ready
+                                border: videoReady ? 'none' : '2px solid red' // Debug: red border when not ready
+                            }}
+                        >
+                            <div 
+                                id="youtube-player"
+                                className="react-player-simple"
+                                style={{
+                                    border: '2px solid blue', // Debug: blue border to see container
+                                    backgroundColor: 'rgba(0,255,0,0.3)' // Debug: green background to see container
+                                }}
+                            />
+                            {/* Dark overlay for video to ensure text readability */}
+                            <div className="absolute inset-0 bg-black/40"></div>
+                        </div>
+                    )}
                 </div>
-                {/* END: New DarkVeil Background */}
+                {/* END: Fade-in Video Background System */}
 
                 {/* The existing background pattern can act as a layer on top */}
                 <div className="absolute inset-0 opacity-10 z-10">
@@ -49,11 +153,13 @@ const HeroSection = () => {
                             <div className="text-white/70 text-sm font-semibold uppercase tracking-widest">
                                 THE SMART ECOSYSTEM FOR RESEARCH EXCELLENCE
                             </div>
-
+                            <p className='text-white'>{isMounted ? 'Mounted' : 'Not Mounted'}</p>
+                            <p className='text-white'>{videoFailed ? 'Video Failed' : 'Video Loaded'}</p>
+                            <p className='text-white'>{videoReady ? 'Video Ready' : 'Video Not Ready'}</p>
                             {/* Main Headline */}
                             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight font-serif">
                                 The Smart 
-                                <GradientText colors={['#a46ede', '#E91E63']} animationSpeed={3} showBorder={false} className="inline-block">
+                                <GradientText colors={['#a46ede', '#E91E63']} animationSpeed={10} showBorder={false}>
                                     Ecosystem
                                 </GradientText> 
                                 for Research Excellence

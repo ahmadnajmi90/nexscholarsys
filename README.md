@@ -1127,6 +1127,14 @@ This integration provides administrators with valuable insights about platform u
 ## Changelog
 
 ### 2024-12-19
+- **Enhanced Hero Section with Video Background**: Replaced animated DarkVeil background with looping YouTube video background
+- Implemented robust fallback system with static gradient background for users with slow internet connections
+- Added ReactPlayer integration for seamless video playback with proper scaling and positioning
+- Enhanced user experience with dark overlay on video to ensure text readability
+- Added CSS styling for ReactPlayer to ensure proper background coverage
+- Maintained accessibility with fallback background that matches the original DarkVeil aesthetic
+
+### 2024-12-19
 - Fixed Project Hub dashboard bug where owned projects were not displaying alongside member projects
 - Modified ProjectHubController to fetch both owned and member projects, matching the comprehensive approach used for workspaces
 - Projects list now properly shows all projects a user has access to (owned + member projects)
