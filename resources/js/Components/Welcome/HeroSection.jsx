@@ -26,9 +26,9 @@ const HeroSection = () => {
                 {/* START: New DarkVeil Background */}
                 <div className="absolute inset-0 z-0">
                     <DarkVeil
-                        speed={0.3}
+                        speed={2}
                         hueShift={10.0}
-                        warpAmount={0.1}
+                        warpAmount={5}
                     />
                 </div>
                 {/* END: New DarkVeil Background */}
@@ -44,14 +44,14 @@ const HeroSection = () => {
                 <div className="relative z-20 max-w-7xl mx-auto pt-24 px-6 lg:px-12">
                     <div className="flex justify-center items-center">
                         {/* Centered Content */}
-                        <div className="space-y-10 text-center max-w-4xl">
+                        <div className="space-y-10 text-center max-w-4xl text-gray-900">
                             {/* Pre-headline */}
-                            <div className="text-white/70 text-sm font-semibold uppercase tracking-widest">
+                            <div className="text-gray-900/70 text-sm font-semibold uppercase tracking-widest">
                                 THE SMART ECOSYSTEM FOR RESEARCH EXCELLENCE
                             </div>
 
                             {/* Main Headline */}
-                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight font-serif">
+                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight tracking-tight font-serif">
                                 The Smart 
                                 <GradientText colors={['#a46ede', '#E91E63']} animationSpeed={3} showBorder={false} className="inline-block">
                                     Ecosystem
@@ -60,7 +60,7 @@ const HeroSection = () => {
                             </h1>
 
                             {/* Description */}
-                            <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-sans-serif">
+                            <p className="text-xl text-gray-900/80 max-w-2xl mx-auto leading-relaxed font-sans-serif">
                             NexScholar empowers students, researchers, academicians, and industry professionals to connect, collaborate, and thrive in a smart, data-driven academic ecosystem.
                             </p>
 
@@ -73,24 +73,22 @@ const HeroSection = () => {
                                     Start your Research Journey 
                                 </a>
                             </div>
+
+                            {/* Partner Logos */}
+                            <div className="pt-20">
+                                <div className="flex flex-wrap items-center gap-16 justify-center">
+                                    <p className="text-gray-900/80 text-sm font-semibold uppercase tracking-widest">
+                                        Supported by
+                                    </p>
+                                    <img src="/images/utm.png" alt="UTM Logo" className="h-14" />
+                                    <img src="/images/mtdc.png" alt="MTDC Logo" className="h-14" />
+                                </div>
+                            </div>
+
+                            {/* Horizontal Separator Line */}
+                            <div className="mt-8 border-b border-gray-200 max-w-xl mx-auto"></div>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            {/* SECTION 2: Partner Logos on White Background */}
-            <section className="bg-white py-4">
-                <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                    {/* Partner Logos */}
-                    <div className="pt-4">
-                        <div className="flex flex-wrap items-center gap-16 justify-center">
-                            <img src="/images/utm.png" alt="UTM Logo" className="h-14" />
-                            <img src="/images/mtdc.png" alt="MTDC Logo" className="h-14" />
-                        </div>
-                    </div>
-
-                    {/* Horizontal Separator Line */}
-                    <div className="mt-8 border-b border-gray-200 max-w-xl mx-auto"></div>
                 </div>
             </section>
         </>

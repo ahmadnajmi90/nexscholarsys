@@ -80,8 +80,8 @@ const FinanceSection = () => {
                         
                         {/* Inner Circle with Logo */}
                         <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center shadow-inner">
-                        <div className="w-28 h-28 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <Brain className="w-12 h-12 text-white" />
+                        <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-xl">
+                            <img src="/images/logo.png" alt="NexScholar Logo" className="w-12 h-12 object-contain" />
                         </div>
                         </div>
                     </div>

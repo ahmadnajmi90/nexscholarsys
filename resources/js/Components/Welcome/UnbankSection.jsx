@@ -24,7 +24,7 @@ const GetStartedSection = () => {
   ];
 
   return (
-    <section id="unbank" className="py-40 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <section id="unbank" className="py-40 bg-gradient-to-br from-purple-900 via-blue-900 to-purple-900">
       <div className="container mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left Section - Illustration */}
