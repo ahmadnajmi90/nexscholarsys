@@ -63,13 +63,32 @@ void mainImage(out vec4 fragColor,in vec2 fragCoord){
     fragColor=cppn_fn(uv,0.1*sin(0.3*uTime),0.1*sin(0.69*uTime),0.1*sin(0.44*uTime));
 }
 
-void main(){
-    vec4 col;mainImage(col,gl_FragCoord.xy);
-    col.rgb=hueShiftRGB(col.rgb,uHueShift);
-    float scanline_val=sin(gl_FragCoord.y*uScanFreq)*0.5+0.5;
-    col.rgb*=1.-(scanline_val*scanline_val)*uScan;
-    col.rgb+=(rand(gl_FragCoord.xy+uTime)-0.5)*uNoise;
-    gl_FragColor=vec4(clamp(col.rgb,0.0,1.0),1.0);
+void main() {
+    vec4 col;
+    mainImage(col, gl_FragCoord.xy);
+
+    // --- START NEW, CORRECTED COLOR LOGIC ---
+
+    // 1. Define our brand colors (Purple and Pink)
+    vec3 color1 = vec3(0.6, 0.2, 0.8); // Purple
+    vec3 color2 = vec3(0.9, 0.1, 0.4); // Pink
+
+    // 2. Define the background color (White)
+    vec3 backgroundColor = vec3(1.0, 1.0, 1.0);
+
+    // 3. Create a gradient for the nebula based on the vertical position on the screen
+    vec3 nebulaColor = mix(color1, color2, gl_FragCoord.y / uResolution.y);
+
+    // 4. Calculate the brightness (luminance) of the original animation.
+    // This value will be used as a mask to decide where to draw the nebula.
+    float mask = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+
+    // 5. Blend the white background with the colored nebula using the mask.
+    vec3 finalColor = mix(backgroundColor, nebulaColor, mask);
+
+    gl_FragColor = vec4(finalColor, 1.0);
+
+    // --- END NEW, CORRECTED COLOR LOGIC ---
 }
 `;
 

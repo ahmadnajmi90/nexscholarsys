@@ -28,27 +28,27 @@ const TestimonialsSection = () => {
     const testimonials = [
         {
             quote: "NexScholar saves me hours every week by helping students find me based on my research focus. I now receive quality postgraduate inquiries with aligned interests.",
-            name: "Dr. Hana Azmi",
+            name: "Dr. Muhammad Aliif Bin Ahmad ",
             title: "Senior Lecturer at Universiti Teknologi Malaysia",
-            image_url: "/images/people1.jpg"
+            image_url: "/images/people1.png"
         },
         {
             quote: "Before NexScholar, finding a supervisor and suitable grant was pure guesswork. Now I have access to everything—from proposal templates to funding alerts—in one place.",
-            name: "Rafiq Naim",
-            title: "PhD Candidate at UKM",
-            image_url: "/images/people2.png"
+            name: "Loh Yin Xia",
+            title: "PhD Candidate at Universiti Kebangsaan Malaysia",
+            image_url: "/images/people2.jpg"
         },
         {
             quote: "Through NexScholar's analytics dashboard, we can monitor national research trends and funding gaps. It's becoming an essential part of our grant evaluation workflow.",
-            name: "Pn. Suhaila Muda",
-            title: "Deputy Director, MOSTI Research Division",
+            name: "Wong Yit Khee",
+            title: "PhD Candidate at Universiti Teknologi Malaysia",
             image_url: "/images/people3.jpg"
         },
         {
             quote: "We use NexScholar not just for visibility—but also to validate instruments, manage research students, and build external collaboration pipelines.",
-            name: "Prof. Dr. Izzat Rahim",
-            title: "Dean of Research & Innovation, UniMAP",
-            image_url: "/images/people4.png"
+            name: "Dr. Kavintheran Thambiratnam",
+            title: "Senior Lecturer at Universiti Islam Antarabangsa Malaysia",
+            image_url: "/images/people4.jpeg"
         }
     ];
 
