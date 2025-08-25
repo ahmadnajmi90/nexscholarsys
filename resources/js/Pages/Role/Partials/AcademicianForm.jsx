@@ -1173,7 +1173,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
               {/* Associated Postgraduate Programs */}
               <div className="w-full">
                 <label htmlFor="postgraduate_program_ids" className="block text-sm font-medium text-gray-700">
-                  Associated Postgraduate Programs <span className="text-red-600">*</span>
+                  Associated Postgraduate Programs
                 </label>
                 <Select
                   id="postgraduate_program_ids"
@@ -1190,7 +1190,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   }}
                   placeholder="Select associated programs..."
                   menuPortalTarget={document.body}
-                  required
                   styles={{
                     menuPortal: (provided) => ({ ...provided, zIndex: 9999 })
                   }}
