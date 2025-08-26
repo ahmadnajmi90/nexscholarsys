@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { usePage } from '@inertiajs/react';
-import Header from '@/Components/Dashboard/New/Header';
-import FeaturedCard from '@/Components/Dashboard/New/FeaturedCard';
-import ProductGrid from '@/Components/Dashboard/New/ProductGrid';
-import UpcomingEvents from '@/Components/Dashboard/New/UpcomingEvents';
+import Header from '@/Components/Dashboard/Header';
+import FeaturedCard from '@/Components/Dashboard/FeaturedCard';
+import ProductGrid from '@/Components/Dashboard/ProductGrid';
+import UpcomingEvents from '@/Components/Dashboard/UpcomingEvents';
 
 const AcademicianDashboard = ({
   posts,

@@ -165,8 +165,8 @@ const LatestInfoSection = ({ grants = [], events = [] }) => {
                     </p>
                 </div>
 
-                {/* Tabbed Interface - Hidden on Mobile */}
-                <div className="hidden lg:flex justify-center mb-12">
+                {/* Tabbed Interface - Visible on All Screens */}
+                <div className="flex justify-center mb-12">
                     <div className="flex bg-gray-100 rounded-lg p-1">
                         <button
                             onClick={() => handleTabChange('funding')}
@@ -237,7 +237,7 @@ const LatestInfoSection = ({ grants = [], events = [] }) => {
                     {totalPages > 1 && (
                         <button
                             onClick={handleNext}
-                            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-20 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 border border-gray-200"
+                            className="hidden lg:flex absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-20 z-10 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:bg-gray-50 transition-colors duration-200 border border-gray-200"
                         >
                             <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Carousel from '../Carousel';
+import Carousel from './Carousel';
 import { TrendingUp, Users, Award, BookOpen } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
 
