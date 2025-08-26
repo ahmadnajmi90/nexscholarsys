@@ -3,6 +3,8 @@ import MainLayout from '@/Layouts/MainLayout';
 import DashboardInsights from '@/Components/Dashboard/DashboardInsights';
 import Dashboard_m from "@/Components/Dashboard/Dashboard_m";
 import AcademicianDashboard from '@/Pages/Dashboard/AcademicianDashboard';
+import AdminDashboard from '@/Pages/Dashboard/AdminDashboard';
+import FacultyAdminDashboard from '@/Pages/Dashboard/FacultyAdminDashboard';
 import useRoles from "@/Hooks/useRoles";
 import useIsDesktop from "@/Hooks/useIsDesktop";
 
@@ -27,6 +29,38 @@ const Dashboard = ({
   const isDesktop = useIsDesktop();
   console.log(events)
 
+  // Render AdminDashboard for admin users
+  if (isAdmin) {
+    return (
+      <MainLayout>
+        <AdminDashboard
+          posts={posts}
+          events={events}
+          projects={projects}
+          grants={grants}
+          totalUsers={totalUsers}
+          topViewedAcademicians={topViewedAcademicians}
+          analyticsData={analyticsData}
+        />
+      </MainLayout>
+    );
+  }
+
+  // Render FacultyAdminDashboard for faculty admin users
+  if (isFacultyAdmin) {
+    return (
+      <MainLayout>
+        <FacultyAdminDashboard
+          posts={posts}
+          events={events}
+          projects={projects}
+          grants={grants}
+          facultyAdminDashboardData={facultyAdminDashboardData}
+        />
+      </MainLayout>
+    );
+  }
+
   // Render the new AcademicianDashboard for academician, postgraduate, and undergraduate roles
   if (isAcademician || isPostgraduate || isUndergraduate) {
     return (
@@ -36,14 +70,6 @@ const Dashboard = ({
           events={events}
           projects={projects}
           grants={grants}
-          academicians={academicians}
-          universities={universities}
-          faculties={faculties}
-          users={users}
-          researchOptions={researchOptions}
-          profileIncompleteAlert={profileIncompleteAlert}
-          topViewedAcademicians={topViewedAcademicians}
-          analyticsData={analyticsData}
         />
       </MainLayout>
     );

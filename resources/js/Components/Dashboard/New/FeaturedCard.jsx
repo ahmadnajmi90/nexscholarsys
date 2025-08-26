@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Users, Calendar, Award, Bell, BookOpen, DollarSign, Globe, Clock } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 const FeaturedCard = ({ posts = [] }) => {
+  const { auth } = usePage().props;
+  const user = auth.user;
   const [currentNotification, setCurrentNotification] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -86,13 +88,13 @@ const FeaturedCard = ({ posts = [] }) => {
       <div className="flex items-center justify-between relative z-10">
         <div className={`flex-1 transition-all duration-700 ease-in-out ${
           isTransitioning ? 'opacity-0 transform translate-y-6' : 'opacity-100 transform translate-y-0'
-        }`}>
+        }${!user.academician?.scholar_profile ? ' mb-4' : ''}`}>
           <div className={`text-xs text-white font-medium mb-2 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block transition-all duration-700 ease-in-out ${
             isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
           }`}>
             {currentNotif.badge}
           </div>
-          <h2 className={`text-xl font-bold mb-2 transition-all duration-700 ease-in-out ${
+          <h2 className={`text-xl font-bold mb-2 transition-all duration-700 ease-in-out truncate max-w-[700px] ${
             isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
           }`} style={{ transitionDelay: isTransitioning ? '0ms' : '200ms' }}>
             {currentNotif.title}
@@ -112,12 +114,13 @@ const FeaturedCard = ({ posts = [] }) => {
         </div>
         
         <div className="flex-1 relative">
+          {user.academician?.scholar_profile && (
           <div className="grid grid-cols-2 gap-6">
             {[
-              { icon: BookOpen, value: '42', label: 'Publications', color: 'text-white' },
-              { icon: TrendingUp, value: '156', label: 'Citations', color: 'text-white' },
-              { icon: Award, value: '18', label: 'h-index', color: 'text-white' },
-              { icon: Users, value: '24', label: 'Students', color: 'text-white' }
+              { icon: BookOpen, value: user.academician.total_publications, label: 'Publications', color: 'text-white' },
+              { icon: TrendingUp, value: user.academician.scholar_profile.total_citations, label: 'Citations', color: 'text-white' },
+              { icon: Award, value: user.academician.scholar_profile.h_index, label: 'h-index', color: 'text-white' },
+              { icon: Users, value: user.collaborator_count, label: 'Collaborations', color: 'text-white' }
             ].map((stat, index) => {
               const IconComponent = stat.icon;
               return (
@@ -132,6 +135,7 @@ const FeaturedCard = ({ posts = [] }) => {
               );
             })}
           </div>
+          )}
         </div>
       </div>
 
@@ -150,16 +154,6 @@ const FeaturedCard = ({ posts = [] }) => {
         ))}
       </div>
 
-      {/* Enhanced Progress Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white bg-opacity-30">
-        <div 
-          className="h-full bg-white transition-all duration-100 ease-linear shadow-sm"
-          style={{ 
-            width: `${((currentNotification + 1) / notifications.length) * 100}%`,
-            animation: 'progress 5s linear infinite'
-          }}
-        />
-      </div>
     </div>
   );
 };

@@ -356,6 +356,8 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                                             ? user.undergraduate.full_name
                                             : isAdmin
                                                 ? "Admin"
+                                                : isFacultyAdmin
+                                                    ? user.full_name
                                                 : "User"}
                             </p>
                             <p className="text-xs text-gray-500 truncate">
