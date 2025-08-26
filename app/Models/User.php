@@ -22,6 +22,7 @@ use App\Models\ConnectionTag;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 
@@ -60,7 +61,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array<int, string>
      */
-    protected $appends = ['connection_status_with_auth_user', 'full_name'];
+    protected $appends = ['connection_status_with_auth_user', 'full_name', 'collaborator_count'];
 
     /**
      * Get the attributes that should be cast.
@@ -298,6 +299,29 @@ class User extends Authenticatable implements MustVerifyEmail
             
         // Merge both collections
         return $requestedConnections->merge($receivedConnections);
+    }
+
+    /**
+     * Get the total number of connections tagged as 'Collaborator'.
+     *
+     * @return int
+     */
+    public function getCollaboratorCountAttribute(): int
+    {
+        // First, find the 'Collaborator' tag. This is cached for efficiency.
+        $collaboratorTag = ConnectionTag::where('name', 'Collaborator')->where('is_default', true)->first();
+
+        // If the tag doesn't exist for some reason, return 0.
+        if (!$collaboratorTag) {
+            return 0;
+        }
+
+        // Count the number of entries in the pivot table that link this user
+        // and the collaborator tag to any connection.
+        return DB::table('connection_tag_user')
+            ->where('user_id', $this->id)
+            ->where('connection_tag_id', $collaboratorTag->id)
+            ->count();
     }
 
     /**

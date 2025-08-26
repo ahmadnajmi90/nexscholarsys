@@ -217,7 +217,7 @@ const AdminDashboardComponent = ({ totalUsers, topViewedAcademicians, analyticsD
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+                {/* <h1 className="text-2xl font-bold">Admin Dashboard</h1> */}
                 <div className="text-sm text-gray-500">
                     {gaLoaded ? (
                         <span className="text-green-500">✓ Google Analytics connected</span>

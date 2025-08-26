@@ -1,27 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import InfiniteScroll from '../ReactBits/InfiniteScroll';
 import DarkVeil from '../ReactBits/DarkVeil';
 import GradientText from '../ReactBits/GradientText';
-
-const items = [
-  { content: "AI-Powered Supervisor Matching" },
-  { content: "Semantic Research Discovery" },
-  { content: "Grant & Funding Alerts" },
-  { content: "Real-Time Analytics Dashboards" },
-  { content: "Collaborative Project Hubs" },
-  { content: "Postgraduate Recommendations" },
-  { content: "Industry Engagement Portal" },
-  { content: "Automated RAG Insights" },
-  { content: "Research Learning Hub" },
-  { content: "Seamless University Integration" },
-];
 
 const HeroSection = () => {
     return (
         <>
             {/* SECTION 1: Main Hero with Animated Background */}
-            <section id="home" className="relative min-h-screen flex items-center overflow-visible">
+            <section id="home" className="relative min-h-screen flex items-center overflow-visible pt-20">
 
                 {/* START: New DarkVeil Background */}
                 <div className="absolute inset-0 z-0">

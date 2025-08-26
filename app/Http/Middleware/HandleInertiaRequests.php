@@ -44,9 +44,24 @@ class HandleInertiaRequests extends Middleware
             'category' => 'General'
         ];
 
+        $user = $request->user();
+
+        if ($user) {
+            // Eager-load the academician relationship and its nested relationships
+            // to ensure the data is available efficiently.
+            $user->loadMissing('academician.scholarProfile', 'academician.publications');
+
+            // If the user has an academician profile, add the extra data to it.
+            if ($user->academician) {
+                // We create new properties on the academician object that will be serialized to JSON.
+                $user->academician->scholar_profile = $user->academician->scholarProfile;
+                $user->academician->total_publications = $user->academician->publications->count();
+            }
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
             'ziggy' => [
                 'url' => $request->url(),

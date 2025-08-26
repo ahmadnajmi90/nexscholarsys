@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import IconSidebar from '../Components/IconSidebar';
 import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
@@ -13,7 +14,65 @@ import NotificationBell from '../Components/Notifications/NotificationBell';
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
+    const [activeSection, setActiveSection] = useState('dashboard'); // Active section for new sidebar
     const { url } = usePage(); // Get current URL from Inertia
+
+    // Function to determine active section based on current route
+    const getActiveSectionFromRoute = (currentUrl) => {
+        const path = currentUrl.toLowerCase();
+        
+        // Dashboard section
+        if (path.includes('/dashboard')) {
+            return 'dashboard';
+        }
+        
+        // Features section
+        if (path.includes('/ai/matching') || 
+            path.includes('/postgraduate-recommendations') || 
+            path.includes('/bookmarks') || 
+            path.includes('/project-hub')) {
+            return 'features';
+        }
+        
+        // Networking section
+        if (path.includes('/connections') || 
+            path.includes('/postgraduates') || 
+            path.includes('/undergraduates') || 
+            path.includes('/academicians') || 
+            path.includes('/universities')) {
+            return 'networking';
+        }
+        
+        // Manage section
+        if (path.includes('/grants') || 
+            path.includes('/post-grants') || 
+            path.includes('/projects') || 
+            path.includes('/post-projects') || 
+            path.includes('/events') || 
+            path.includes('/post-events') || 
+            path.includes('/posts') || 
+            path.includes('/create-posts')) {
+            return 'content';
+        }
+        
+        // Settings section
+        if (path.includes('/profile') || 
+            path.includes('/role')) {
+            return 'settings';
+        }
+        
+        // Admin routes
+        if (path.includes('/roles') || 
+            path.includes('/faculty-admins') || 
+            path.includes('/admin/profiles') || 
+            path.includes('/admin/data-management') ||
+            path.includes('/faculty-admin')) {
+            return 'dashboard';
+        }
+        
+        // Default to dashboard
+        return 'dashboard';
+    };
 
     // Function to toggle sidebar
     const toggleSidebar = () => {
@@ -23,6 +82,22 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         // Save the state to localStorage
         localStorage.setItem('isSidebarOpen', newSidebarState);
     };
+
+    // Function to handle section changes
+    const handleSectionChange = (section) => {
+        setActiveSection(section);
+        // Open the sidebar when a section is selected
+        if (!isSidebarOpen) {
+            setIsSidebarOpen(true);
+            localStorage.setItem('isSidebarOpen', 'true');
+        }
+    };
+
+    // Effect to update active section when URL changes
+    useEffect(() => {
+        const newActiveSection = getActiveSectionFromRoute(url);
+        setActiveSection(newActiveSection);
+    }, [url]);
 
     // Track page views when the URL changes
     useEffect(() => {
@@ -130,9 +205,19 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 }}
             />
             
-            {/* Sidebar for Desktop */}
+            {/* New Two-Part Sidebar System for Desktop */}
             {isDesktop && (
-                <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+                <>
+                    <IconSidebar 
+                        activeSection={activeSection} 
+                        onSectionChange={handleSectionChange} 
+                    />
+                    <Sidebar 
+                        activeSection={activeSection}
+                        isOpen={isSidebarOpen} 
+                        onToggleSidebar={toggleSidebar} 
+                    />
+                </>
             )}
 
             {/* Mobile Sidebar */}
@@ -144,18 +229,21 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             {isDesktop ? (
                 // Desktop-specific content area
                 <div
-                    className={`flex-1 p-6 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'
-                        }`}
+                    className={`flex-1 transition-all duration-300 ${
+                        isSidebarOpen ? 'ml-80' : 'ml-16'
+                    }`}
                 >
                     {TopMenuOpen && <TopMenu />}
                     <Head title={title} />
-                    <div className="p-4 bg-white rounded-lg shadow">
+                    <div className={`${!title ? 'px-4 py-2' : 'p-4'} bg-white rounded-lg shadow`}>
+                        {title && (
                         <div className="flex justify-between items-center mb-4">
                             <h1 className="text-2xl font-semibold pt-2 pl-2">{title}</h1>
                             <div className="flex items-center space-x-4">
                                 {/* <NotificationBell /> */}
                             </div>
                         </div>
+                        )}
                         {children}
                     </div>
                 </div>
