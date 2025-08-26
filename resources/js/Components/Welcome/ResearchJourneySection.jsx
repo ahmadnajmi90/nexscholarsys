@@ -60,7 +60,7 @@ const ResearchJourneySection = () => {
     ];
 
     return (
-        <section id="features" className="py-40 bg-white">
+        <section id="features" className="py-20 bg-white">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
                 {/* Headline */}
                 <div className="text-center mb-24">

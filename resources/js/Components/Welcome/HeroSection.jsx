@@ -21,7 +21,7 @@ const HeroSection = () => {
     return (
         <>
             {/* SECTION 1: Main Hero with Animated Background */}
-            <section id="home" className="relative min-h-screen flex items-center overflow-visible pb-24">
+            <section id="home" className="relative min-h-screen flex items-center overflow-visible">
 
                 {/* START: New DarkVeil Background */}
                 <div className="absolute inset-0 z-0">
@@ -45,10 +45,6 @@ const HeroSection = () => {
                     <div className="flex justify-center items-center">
                         {/* Centered Content */}
                         <div className="space-y-10 text-center max-w-4xl text-gray-900">
-                            {/* Pre-headline */}
-                            <div className="text-gray-900/70 text-sm font-semibold uppercase tracking-widest">
-                                THE SMART ECOSYSTEM FOR RESEARCH EXCELLENCE
-                            </div>
 
                             {/* Main Headline */}
                             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight tracking-tight font-serif">

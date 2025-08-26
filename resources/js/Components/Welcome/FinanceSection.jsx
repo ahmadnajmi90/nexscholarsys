@@ -74,7 +74,7 @@ const FinanceSection = () => {
                 {/* DESKTOP VIEW: Features Wheel (hidden on mobile) */}
                 <div className="hidden lg:block relative w-[1000px] h-[1000px] mx-auto">
                     {/* Central Core */}
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 z-30">
                         {/* Background Circle */}
                         <div className="absolute inset-0 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full shadow-2xl"></div>
                         
