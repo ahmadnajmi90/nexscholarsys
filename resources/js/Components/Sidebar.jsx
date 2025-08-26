@@ -1,419 +1,412 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import {
-    FaTachometerAlt,
-    FaNewspaper,
-    FaUsers,
-    FaBook,
-    FaSearch,
-    FaHandshake,
-    FaUniversity,
-    FaChartBar,
-    FaCalendarAlt,
-    FaPoll,
-    FaUser,
-    FaCog,
-    FaBookReader,
-    FaBookOpen,
-    FaRobot,
-    FaBookmark,
-    FaUserShield,
-    FaDatabase,
-    FaSignOutAlt
-} from 'react-icons/fa';
-import { LayoutGrid, GraduationCap } from 'lucide-react';
+    LayoutDashboard,
+    FileText,
+    Users,
+    BookOpen,
+    Search,
+    Handshake,
+    Building2,
+    BarChart3,
+    Calendar,
+    Vote,
+    User,
+    Settings,
+    BookOpenCheck,
+    BookOpenText,
+    Bot,
+    Bookmark,
+    Shield,
+    Database,
+    LogOut,
+    GraduationCap,
+    UserCheck,
+    Building,
+    Home,
+    DollarSign,
+    FolderOpen,
+    User2,
+    Sparkles,
+    BookUser,
+    Library,
+    ChevronLeft,
+} from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const { auth, pendingRequestCount } = usePage().props;
     const user = auth.user;
 
-    const [menuOpen, setMenuOpen] = useState({
-        networking: false,
-        journal: false,
-        grant: false,
-        project: false,
-        event: false,
-        survey: false,
-        workspace: false,
-        profile: false, // Added profile toggle state
-    });
-
-    const toggleMenu = (menu) => {
-        setMenuOpen((prevState) => ({
-            ...prevState,
-            [menu]: !prevState[menu],
-        }));
+    // Animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05 // The delay between each child animating in
+            }
+        }
     };
 
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+    };
+
+    const renderQuickAccessItems = () => {
+        switch (activeSection) {
+            case 'dashboard':
+                return (
+                    <>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('dashboard')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Home className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Dashboard</span>
+                            </Link>
+                        </motion.div>
+                        {isAdmin && (
+                            <>
+                                <motion.div variants={itemVariants}>
+                                    <Link href={route('roles.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                        <Settings className="text-gray-600 mb-2 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Roles & Permissions</span>
+                                    </Link>
+                                </motion.div>
+                                <motion.div variants={itemVariants}>
+                                    <Link href={route('faculty-admins.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                        <Building2 className="text-gray-600 mb-2 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Faculty Admin</span>
+                                    </Link>
+                                </motion.div>
+                                <motion.div variants={itemVariants}>
+                                    <Link href={route('admin.profiles.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                        <Users className="text-gray-600 mb-2 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Profile Management</span>
+                                    </Link>
+                                </motion.div>
+                                <motion.div variants={itemVariants}>
+                                    <Link href={route('admin.data-management.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                        <Database className="text-gray-600 mb-2 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Data Management</span>
+                                    </Link>
+                                </motion.div>
+                            </>
+                        )}
+                        {isFacultyAdmin && (
+                            <>
+                                <motion.div variants={itemVariants}>
+                                    <Link href={route('faculty-admin.academicians')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                        <Shield className="text-gray-600 mb-2 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Verify Academicians</span>
+                                    </Link>
+                                </motion.div>
+                                <motion.div variants={itemVariants}>
+                                    <Link href={route('faculty-admin.directory')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                        <Users className="text-gray-600 mb-2 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Academicians Directory</span>
+                                    </Link>
+                                </motion.div>
+                            </>
+                        )}
+                    </>
+                );
+
+            case 'features':
+                return (
+                    <>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('ai.matching.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Bot className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">AI Matching</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('postgraduate-recommendations.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Sparkles className="w-5 h-5 text-gray-600 mb-2" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Postgraduate Recommendations</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('bookmarks.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Bookmark className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">My Bookmarks</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <LayoutGrid className="w-5 h-5 text-gray-600 mb-2" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Scholar Lab</span>
+                            </Link>
+                        </motion.div>
+                    </>
+                );
+
+            case 'networking':
+                return (
+                    <>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('connections.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
+                                <Users className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">My Network</span>
+                                {pendingRequestCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                                        {pendingRequestCount}
+                                    </span>
+                                )}
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href="/postgraduates" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <GraduationCap className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Postgraduate</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href="/undergraduates" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <BookUser className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Undergraduate</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href="/academicians" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Library className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Academician</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href="/universities" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Building className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">University</span>
+                            </Link>
+                        </motion.div>
+                    </>
+                );
+
+            case 'manage':
+                return (
+                    <>
+                        {/* Grant Management */}
+                        <motion.div variants={itemVariants}>
+                            <Link href="/grants" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <DollarSign className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Grant</span>
+                            </Link>
+                        </motion.div>
+                        {canPostGrants && (
+                            <motion.div variants={itemVariants}>
+                                <Link href={route('post-grants.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                    <DollarSign className="text-gray-600 mb-2 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Grants</span>
+                                </Link>
+                            </motion.div>
+                        )}
+
+                        {/* Project Management */}
+                        <motion.div variants={itemVariants}>
+                            <Link href="/projects" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <FolderOpen className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Project</span>
+                            </Link>
+                        </motion.div>
+                        {canPostProjects && (
+                            <motion.div variants={itemVariants}>
+                                <Link href={route('post-projects.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                    <FolderOpen className="text-gray-600 mb-2 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Projects</span>
+                                </Link>
+                            </motion.div>
+                        )}
+
+                        {/* Event Management */}
+                        <motion.div variants={itemVariants}>
+                            <Link href="/events" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Calendar className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Event</span>
+                            </Link>
+                        </motion.div>
+                        {canPostEvents && (
+                            <motion.div variants={itemVariants}>
+                                <Link href={route('post-events.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                    <Calendar className="text-gray-600 mb-2 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Event</span>
+                                </Link>
+                            </motion.div>
+                        )}
+
+                        {/* Post Management */}
+                        <motion.div variants={itemVariants}>
+                            <Link href="/posts" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <FileText className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Post</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('create-posts.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <FileText className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Post</span>
+                            </Link>
+                        </motion.div>
+                    </>
+                );
+
+            case 'settings':
+                return (
+                    <>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('profile.edit')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Settings className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">General Account Setting</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('role.edit')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <User2 className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Personal Information</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('logout')} method="post" as="button" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center w-full">
+                                <LogOut className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Log Out</span>
+                            </Link>
+                        </motion.div>
+                    </>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    const getSectionTitle = () => {
+        switch (activeSection) {
+            case 'dashboard': return 'Dashboard';
+            case 'features': return 'Features';
+            case 'networking': return 'Networking';
+            case 'manage': return 'Manage';
+            case 'settings': return 'Settings';
+            default: return 'Navigation';
+        }
+    };
+
+    const getSectionDescription = () => {
+        switch (activeSection) {
+            case 'dashboard': return 'Access your main dashboard and administrative tools.';
+            case 'features': return 'Explore AI-powered features and academic tools.';
+            case 'networking': return 'Connect with other academics and researchers.';
+            case 'manage': return 'Manage your content, grants, projects, and events.';
+            case 'settings': return 'Update your profile and account settings.';
+            default: return 'Navigate through different sections of the platform.';
+        }
+    };
+
+    if (!isOpen) return null;
+
     return (
-        <div className={`bg-white h-full fixed z-10 transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}>
-            {/* Toggle Button */}
-            <button
-                onClick={toggleSidebar}
-                className="absolute top-4 right-[-14px] w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-            >
-                {isOpen ? '<' : '>'}
-            </button>
-
-
-
-            <div className="p-4 h-full overflow-auto">
-
-                <div className="flex items-center mb-6">
-                    <a href="/" className="flex items-center space-x-2">
-                        <h2 className={`ml-2 text-lg text-blue-600 font-semibold ${!isOpen && 'hidden'}`}>Nexscholar</h2>
-                    </a>
+        <div className="fixed left-16 top-0 h-full w-64 bg-gray-100 z-10">
+            <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-gray-200 p-4 bg-gray-100">
+                    <h2 className="text-lg font-semibold text-blue-700">Nexscholar</h2>
+                    <button
+                        onClick={onToggleSidebar}
+                        className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                        <ChevronLeft className="w-5 h-5 text-gray-600" />
+                    </button>
                 </div>
 
-                {/* Navigation Sections */}
-                <nav className="space-y-4">
-                    {/* Main Section */}
-                    <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Main</h3>
-                        <Link href={route('dashboard')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaTachometerAlt className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Dashboard</span>
-                        </Link>
-                    </div>
-
-                    {/* Faculty Admin Section */}
-                    {isFacultyAdmin && (
-                        <div>
-                            <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Faculty Admin</h3>
-                            <Link href={route('faculty-admin.academicians')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                                <FaUserShield className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Verify Academicians</span>
-                            </Link>
-                            <Link href={route('faculty-admin.directory')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                                <FaUsers className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Academicians Directory</span>
-                            </Link>
+                {/* User Profile Section */}
+                <div className="p-4 bg-gray-100 border-b border-gray-200">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center border-1 border-white shadow-xl">
+                            <img
+                                src={
+                                    user.academician
+                                        ? (user.academician.profile_picture
+                                            ? `/storage/${user.academician.profile_picture}`
+                                            : "/storage/profile_pictures/default.jpg")
+                                        : user.postgraduate
+                                            ? (user.postgraduate.profile_picture
+                                                ? `/storage/${user.postgraduate.profile_picture}`
+                                                : "/storage/profile_pictures/default.jpg")
+                                            : user.undergraduate
+                                                ? (user.undergraduate.profile_picture
+                                                    ? `/storage/${user.undergraduate.profile_picture}`
+                                                    : "/storage/profile_pictures/default.jpg")
+                                                : "/storage/profile_pictures/default.jpg"
+                                }
+                                alt="Profile"
+                                className="w-full h-full object-cover rounded-full"
+                            />
                         </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                                {user.academician
+                                    ? user.academician.full_name
+                                    : user.postgraduate
+                                        ? user.postgraduate.full_name
+                                        : user.undergraduate
+                                            ? user.undergraduate.full_name
+                                            : isAdmin
+                                                ? "Admin"
+                                                : "User"}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                                {user.email}
+                            </p>
+                            <p className="text-xs text-gray-400 truncate">
+                                {isAdmin ? 'Administrator' : isFacultyAdmin ? 'Faculty Admin' : isAcademician ? 'Academician' : isPostgraduate ? 'Postgraduate' : isUndergraduate ? 'Undergraduate' : 'User'}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Stats Grid */}
+                    {isAcademician && user.academician.total_publications && user.academician.scholar_profile && (
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-gray-50 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-gray-900">{user.academician.total_publications}</div>
+                            <div className="text-xs text-gray-500">Publications</div>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-gray-900">{user.academician.scholar_profile.total_citations}</div>
+                            <div className="text-xs text-gray-500">Citations</div>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-gray-900">{user.academician.scholar_profile.h_index}</div>
+                            <div className="text-xs text-gray-500">h-index</div>
+                        </div>
+                    </div>
                     )}
+                </div>
 
-                    {/* Admin Features Section */}
-                    {isAdmin && (
-                        <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold mt-5">Admin</h3>
-                            <div className={`group relative ${!isOpen ? "w-12" : ""}`}>
-                                <Link href={route('roles.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <FaCog className="text-gray-600" />
-                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Roles & Permissions</span>
-                                </Link>
-                                <Link href={route('faculty-admins.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <FaUniversity className="text-gray-600" />
-                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Faculty Admin</span>
-                                </Link>
-                                <Link href={route('admin.profiles.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <FaUsers className="text-gray-600" />
-                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Profile Management</span>
-                                </Link>
-                                <Link href={route('admin.data-management.index')} className="flex items-center p-2 hover:bg-gray-100 rounded">
-                                    <FaDatabase className="text-gray-600" />
-                                    <span className={`ml-2 ${!isOpen && "hidden"}`}>Data Management</span>
-                                </Link>
-                                {!isOpen && (
-                                    <div className="hidden group-hover:block absolute left-full top-0 ml-2 bg-white shadow-md rounded p-2 whitespace-nowrap z-10">
-                                        <div className="py-1">Roles & Permissions</div>
-                                        <div className="py-1">Faculty Admin</div>
-                                        <div className="py-1">Profile Management</div>
-                                        <div className="py-1">Data Management</div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                {/* Quick Access Section */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <motion.h3 className="text-sm font-medium text-gray-700 mb-4" variants={itemVariants}>{getSectionTitle()}</motion.h3>
+                    
+                    <motion.div
+                        key={activeSection} // This is essential to re-trigger the animation
+                        className="grid grid-cols-2 gap-3"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        {renderQuickAccessItems()}
+                    </motion.div>
+                </div>
 
-                    {/*Researeh*/}
-                    <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features</h3>
-
-                        <Link href={route('ai.matching.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaRobot className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>AI Matching</span>
-                        </Link>
-
-                        <Link 
-                            href={route('postgraduate-recommendations.index')} 
-                            className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
-                                route().current('postgraduate-recommendations.*') ? 'bg-blue-50 text-blue-600' : ''
-                              }`}
-                        >
-                            <GraduationCap className="w-5 h-5 text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Postgraduate Recommendations</span>
-                        </Link>
-
-                        <Link href={route('bookmarks.index')} className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaBookmark className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>My Bookmarks</span>
-                        </Link>
-
-                        <Link 
-                            href={route('project-hub.index')} 
-                            className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
-                                route().current('project-hub.*') ? 'bg-blue-50 text-blue-600' : ''
-                            }`}
-                        >
-                            <LayoutGrid className="w-5 h-5 text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Scholar Lab</span>
-                        </Link>
-                        
-                        <button
-                            onClick={() => toggleMenu('networking')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaUsers className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Networking</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.networking ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.networking && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href={route('connections.index')} className="flex items-center justify-between py-2 hover:bg-gray-100 rounded">
-                                    <span>My Network</span>
-                                    {pendingRequestCount > 0 && (
-                                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-                                            {pendingRequestCount}
-                                        </span>
-                                    )}
-                                </Link>
-                                <Link href="/postgraduates" className="block py-2 hover:bg-gray-100 rounded">Postgraduate</Link>
-                                <Link href="/undergraduates" className="block py-2 hover:bg-gray-100 rounded">Undergraduate</Link>
-                                <Link href="/academicians" className="block py-2 hover:bg-gray-100 rounded">Academician</Link>
-                                <Link href="/universities" className="block py-2 hover:bg-gray-100 rounded">University</Link>
-                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Industry</Link> */}
-                            </div>
-                        )}
-
-                           
-
+                {/* Description Section */}
+                <div className="p-4 border-t border-gray-200">
+                    <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg p-3 border border-white border-opacity-50">
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                            {getSectionDescription()}
+                        </p>
                     </div>
-
-                    {/* Manage Section */}
-                    <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Manage</h3>
-                        <button
-                            onClick={() => toggleMenu('grant')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaHandshake className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Grant</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.grant ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.grant && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/grants" className="block py-2 hover:bg-gray-100 rounded">View Grant</Link>
-                                {canPostGrants && (
-                                <Link href={route('post-grants.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Grants
-                                </Link>)}
-                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Sponsorship</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">journal Collaboration</Link> */}
-                            </div>
-                        )}
-                         <button
-                            onClick={() => toggleMenu('project')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaChartBar className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Project</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.project ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.project && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/projects" className="block py-2 hover:bg-gray-100 rounded"> View Project</Link>
-                                {canPostProjects && (
-                                <Link href={route('post-projects.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Projects
-                                </Link>)}
-                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Paper</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Thesis</Link> */}
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => toggleMenu('event')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaCalendarAlt className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Event</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.event ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.event && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/events" className="block py-2 hover:bg-gray-100 rounded">View Event</Link>
-                                {canPostEvents && (
-                                <Link href={route('post-events.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Event
-                                </Link>)}
-                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
-                            </div>
-                        )}
-
-                        <button
-                            onClick={() => toggleMenu('post')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaNewspaper className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Post</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.post ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.post && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="/posts" className="block py-2 hover:bg-gray-100 rounded">View Post</Link>
-                                <Link href={route('create-posts.index')} className="block py-2 hover:bg-gray-100 rounded">Manage Post
-                                </Link>
-                                {/* <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Conference</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Talk</Link> */}
-                            </div>
-                        )}
-                    </div>
-
-                       {/* Features In Development */}
-                       {/* <div>
-                        <h3 className={`text-blue-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Features In Development </h3>
-                        <button
-                            onClick={() => toggleMenu('workspace')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaBookOpen className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Workspace</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.workspace ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.workspace && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">View Board</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Manage Board</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Members</Link>
-                            </div>
-                        )}
-                        <button
-                            onClick={() => toggleMenu('journal')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaBook className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Journal Database</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.journal ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.journal && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Discontinued Journal</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Predator Journal</Link>
-                            </div>
-                        )}
-                          <button
-                            onClick={() => toggleMenu('survey')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaPoll className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Survey</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.survey ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.survey && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (Free)</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (With Token)</Link>
-                            </div>
-                        )}
-                                <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
-                            <div className="flex items-center">
-                                <FaNewspaper className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Newsfeed</span>
-                            </div>
-                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
-                                Soon
-                            </span> */}
-                        {/* </Link>
-
-                        <Link href="#" className="flex items-center justify-between py-2 px-4 hover:bg-gray-100 rounded">
-                            <div className="flex items-center">
-                                <FaUsers className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Forums</span>
-                            </div> */}
-
-                            {/* <span className="whitespace-nowrap rounded-full border border-purple-500 px-2.5 py-0.5 text-sm text-purple-700">
-                                Soon
-                            </span> */}
-                        {/* </Link>
-                    </div> */}
-
-                    {/* Workspace Section */}
-                    {/* <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Workspace</h3>
-                        {/* <button
-                            onClick={() => toggleMenu('workspace')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaBookOpen className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Workspace</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.workspace ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.workspace && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">View Board</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Manage Board</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Members</Link>
-                            </div>
-                        )}
-                        <button
-                            onClick={() => toggleMenu('journal')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaBook className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Journal Database</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.journal ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.journal && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Discontinued Journal</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Predator Journal</Link>
-                            </div>
-                        )} */}
-                          {/* <button
-                            onClick={() => toggleMenu('survey')}
-                            className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaPoll className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Survey</span>
-                            {isOpen && <span className="ml-auto">{menuOpen.survey ? '-' : '+'}</span>}
-                        </button>
-                        {menuOpen.survey && (
-                            <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (Free)</Link>
-                                <Link href="#" className="block py-2 hover:bg-gray-100 rounded">Survey (With Token)</Link>
-                            </div>
-                        )}
-                    </div> */} 
-
-                    {/* Survey Section */}
-                    <div>
-                        <h3 className={`text-gray-500 uppercase text-xs font-bold ${!isOpen && 'hidden'}`}>Setting</h3>
-                        {/* Profile Section */}
-                        <div>
-                            <button
-                                onClick={() => toggleMenu('profile')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaUser className="text-gray-600" />
-                                <span className={`ml-2 ${!isOpen && 'hidden'}`}>Profile</span>
-                                {isOpen && <span className="ml-auto">{menuOpen.profile ? '-' : '+'}</span>}
-                            </button>
-                            {menuOpen.profile && (
-                                <div className={`${!isOpen && 'hidden'} ml-6`}>
-                                    <Link href={route('profile.edit')} className="block py-2 hover:bg-gray-100 rounded">
-                                        General Account Setting
-                                    </Link>
-                                    <Link href={route('role.edit')} className="block py-2 hover:bg-gray-100 rounded">
-                                       Personal Information
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                        <Link href={route('logout')} method="post" as="button" className="flex items-center py-2 px-4 hover:bg-gray-100 rounded">
-                            <FaSignOutAlt className="text-gray-600" />
-                            <span className={`ml-2 ${!isOpen && 'hidden'}`}>Log Out</span>
-                        </Link>
-                    </div>
-                </nav>
+                </div>
             </div>
         </div>
     );
