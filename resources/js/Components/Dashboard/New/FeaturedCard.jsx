@@ -75,7 +75,7 @@ const FeaturedCard = ({ posts = [] }) => {
   const currentNotif = notifications[currentNotification];
 
   return (
-    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 mb-8 relative overflow-hidden text-white">
+    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 md:p-8 mb-8 relative overflow-hidden text-white">
       {/* Real Background Image with Fade Overlay Effect */}
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30 transition-all duration-1000 ease-in-out"
@@ -85,16 +85,17 @@ const FeaturedCard = ({ posts = [] }) => {
       {/* Dynamic Gradient Overlay that changes with notification */}
       <div className={`absolute inset-0 bg-gradient-to-r ${currentNotif.gradient} opacity-85 transition-all duration-1000 ease-in-out`} />
       
-      <div className="flex items-center justify-between relative z-10">
-        <div className={`flex-1 transition-all duration-700 ease-in-out ${
+      <div className="flex flex-col md:flex-row items-center justify-between relative z-10 gap-6">
+        {/* Main Content */}
+        <div className={`w-full md:flex-1 transition-all duration-700 ease-in-out ${
           isTransitioning ? 'opacity-0 transform translate-y-6' : 'opacity-100 transform translate-y-0'
-        }${!user.academician?.scholar_profile ? ' mb-4' : ''}`}>
+        }${!user.academician?.scholar_profile ? 'mb-8 md:mb-4 lg:mb-4' : ''}`}>
           <div className={`text-xs text-white font-medium mb-2 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block transition-all duration-700 ease-in-out ${
             isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
           }`}>
             {currentNotif.badge}
           </div>
-          <h2 className={`text-xl font-bold mb-2 transition-all duration-700 ease-in-out truncate max-w-[700px] ${
+          <h2 className={`text-lg md:text-xl font-bold mb-2 transition-all duration-700 ease-in-out max-w-[700px] ${
             isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
           }`} style={{ transitionDelay: isTransitioning ? '0ms' : '200ms' }}>
             {currentNotif.title}
@@ -113,30 +114,31 @@ const FeaturedCard = ({ posts = [] }) => {
           </Link>
         </div>
         
-        <div className="flex-1 relative">
-          {user.academician?.scholar_profile && (
-          <div className="grid grid-cols-2 gap-6">
-            {[
-              { icon: BookOpen, value: user.academician.total_publications, label: 'Publications', color: 'text-white' },
-              { icon: TrendingUp, value: user.academician.scholar_profile.total_citations, label: 'Citations', color: 'text-white' },
-              { icon: Award, value: user.academician.scholar_profile.h_index, label: 'h-index', color: 'text-white' },
-              { icon: Users, value: user.collaborator_count, label: 'Collaborations', color: 'text-white' }
-            ].map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-opacity-30 hover:scale-105 transition-all duration-200"
-                >
-                  <IconComponent className="w-8 h-8 mx-auto mb-2 text-white" />
-                  <div className="text-lg font-bold">{stat.value}</div>
-                  <div className="text-xs opacity-80">{stat.label}</div>
-                </div>
-              );
-            })}
+        {/* Stats Section */}
+        {user.academician?.scholar_profile && (
+          <div className="w-full md:flex-1 relative mb-8 md:mb-0 lg:mb-0">
+            <div className="grid grid-cols-2 gap-4 md:gap-6">
+              {[
+                { icon: BookOpen, value: user.academician.total_publications, label: 'Publications', color: 'text-white' },
+                { icon: TrendingUp, value: user.academician.scholar_profile.total_citations, label: 'Citations', color: 'text-white' },
+                { icon: Award, value: user.academician.scholar_profile.h_index, label: 'h-index', color: 'text-white' },
+                { icon: Users, value: user.collaborator_count, label: 'Collaborations', color: 'text-white' }
+              ].map((stat, index) => {
+                const IconComponent = stat.icon;
+                return (
+                  <div
+                    key={index}
+                    className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center hover:bg-opacity-30 hover:scale-105 transition-all duration-200"
+                  >
+                    <IconComponent className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-white" />
+                    <div className="text-sm md:text-lg font-bold">{stat.value}</div>
+                    <div className="text-xs opacity-80">{stat.label}</div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Notification Dots - Positioned like in the image (bottom-left area) */}

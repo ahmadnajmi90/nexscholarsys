@@ -103,39 +103,40 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Academic Insights</h2>
-            <p className="text-gray-600">Stay updated with the latest in research, funding, and academic opportunities</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Academic Insights</h2>
+            <p className="text-gray-600 text-sm md:text-base">Stay updated with the latest in research, funding, and academic opportunities</p>
           </div>
+          {/* Hide stats on mobile */}
           {user.academician?.scholar_profile && (
-          <div className="flex items-center space-x-6">
-            {[
-              { icon: Users, value: user.collaborator_count, label: 'Collaborations', color: 'text-green-600' },
-              { icon: Award, value: user.academician.scholar_profile.total_citations, label: 'Citations', color: 'text-purple-600' },
-              { icon: BookOpen, value: user.academician.total_publications, label: 'Publications', color: 'text-orange-600' }
-            ].map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <div key={index} className="text-center">
-                  <div className="flex items-center justify-center mb-1">
-                    <IconComponent className={`w-5 h-5 ${stat.color} mr-2`} />
-                    <span className="text-2xl font-bold text-gray-900">{stat.value}</span>
+            <div className="hidden md:flex items-center space-x-6">
+              {[
+                { icon: Users, value: user.collaborator_count, label: 'Collaborations', color: 'text-green-600' },
+                { icon: Award, value: user.academician.scholar_profile.total_citations, label: 'Citations', color: 'text-purple-600' },
+                { icon: BookOpen, value: user.academician.total_publications, label: 'Publications', color: 'text-orange-600' }
+              ].map((stat, index) => {
+                const IconComponent = stat.icon;
+                return (
+                  <div key={index} className="text-center">
+                    <div className="flex items-center justify-center mb-1">
+                      <IconComponent className={`w-5 h-5 ${stat.color} mr-2`} />
+                      <span className="text-2xl font-bold text-gray-900">{stat.value}</span>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">{stat.label}</span>
                   </div>
-                  <span className="text-xs text-gray-500 font-medium">{stat.label}</span>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           )}
         </div>
         
         {/* Category Tags */}
-        <div className="flex items-center space-x-4 mb-6">
-          <span className="text-sm font-medium text-gray-500">CATEGORIES:</span>
+        <div className="flex items-center space-x-2 md:space-x-4 mb-6 overflow-x-auto">
+          <span className="text-sm font-medium text-gray-500 whitespace-nowrap">CATEGORIES:</span>
           {['All', 'Posts', 'Events', 'Funding'].map((category) => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              className={`px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                 activeCategory === category
                   ? 'bg-indigo-600 text-white shadow-lg' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -150,9 +151,9 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
       {/* Conditional Carousel Layout */}
       {activeCategory === 'All' ? (
         // Default three-carousel layout
-        <div className="grid grid-cols-9 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-9 gap-6 mb-8">
           {/* Left Column: Posts Carousel */}
-          <div className="col-span-6">
+          <div className="md:col-span-6">
             <Carousel
               items={mappedPosts}
               cardType="featured"
@@ -163,7 +164,7 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
           </div>
 
           {/* Right Column: Events and Grants Carousels */}
-          <div className="col-span-3 flex flex-col space-y-4">
+          <div className="md:col-span-3 flex flex-col space-y-4">
             <div className="h-48">
               <Carousel
                 items={mappedEvents}
@@ -186,8 +187,8 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
         </div>
       ) : (
         // Single full-width carousel for specific categories
-        <div className="grid grid-cols-9 gap-6 mb-8">
-          <div className="col-span-9">
+        <div className="grid grid-cols-1 md:grid-cols-9 gap-6 mb-8">
+          <div className="col-span-1 md:col-span-9">
             <Carousel
               items={(() => {
                 switch (activeCategory) {

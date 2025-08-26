@@ -27,7 +27,6 @@ const Dashboard = ({
 }) => {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
   const isDesktop = useIsDesktop();
-  console.log(events)
 
   // Render AdminDashboard for admin users
   if (isAdmin) {

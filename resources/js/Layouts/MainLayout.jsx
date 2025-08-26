@@ -235,7 +235,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 >
                     {TopMenuOpen && <TopMenu />}
                     <Head title={title} />
-                    <div className="p-4 bg-white rounded-lg shadow">
+                    <div className={`${!title ? 'px-4 py-2' : 'p-4'} bg-white rounded-lg shadow`}>
                         {title && (
                         <div className="flex justify-between items-center mb-4">
                             <h1 className="text-2xl font-semibold pt-2 pl-2">{title}</h1>
