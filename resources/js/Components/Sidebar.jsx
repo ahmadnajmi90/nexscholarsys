@@ -186,7 +186,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                     </>
                 );
 
-            case 'manage':
+            case 'content':
                 return (
                     <>
                         {/* Grant Management */}
@@ -287,7 +287,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
             case 'dashboard': return 'Dashboard';
             case 'features': return 'Features';
             case 'networking': return 'Networking';
-            case 'manage': return 'Manage';
+            case 'content': return 'Content';
             case 'settings': return 'Settings';
             default: return 'Navigation';
         }
@@ -298,7 +298,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
             case 'dashboard': return 'Access your main dashboard and administrative tools.';
             case 'features': return 'Explore AI-powered features and academic tools.';
             case 'networking': return 'Connect with other academics and researchers.';
-            case 'manage': return 'Manage your content, grants, projects, and events.';
+            case 'content': return 'Manage your content, grants, projects, and events.';
             case 'settings': return 'Update your profile and account settings.';
             default: return 'Navigate through different sections of the platform.';
         }
@@ -311,7 +311,9 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
             <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-200 p-4 bg-gray-100">
-                    <h2 className="text-lg font-semibold text-blue-700">Nexscholar</h2>
+                    <a href={route('welcome')} className="text-lg font-semibold text-indigo-700">
+                        Nexscholar
+                    </a>
                     <button
                         onClick={onToggleSidebar}
                         className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -323,7 +325,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                 {/* User Profile Section */}
                 <div className="p-4 bg-gray-100 border-b border-gray-200">
                     <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center border-1 border-white shadow-xl">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center border-1 border-white shadow-lg">
                             <img
                                 src={
                                     user.academician
@@ -368,7 +370,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                     {/* Stats Grid */}
                     {isAcademician && user.academician.total_publications && user.academician.scholar_profile && (
                     <div className="grid grid-cols-3 gap-2">
-                        <div className="bg-gray-50 rounded-lg p-2 text-center">
+                        <div className="bg-gray-50 rounded-lg py-2 pr-2 text-center">
                             <div className="text-lg font-bold text-gray-900">{user.academician.total_publications}</div>
                             <div className="text-xs text-gray-500">Publications</div>
                         </div>

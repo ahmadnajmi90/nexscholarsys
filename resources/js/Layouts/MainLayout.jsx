@@ -52,7 +52,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             path.includes('/post-events') || 
             path.includes('/posts') || 
             path.includes('/create-posts')) {
-            return 'manage';
+            return 'content';
         }
         
         // Settings section

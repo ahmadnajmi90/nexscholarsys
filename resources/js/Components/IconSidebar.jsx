@@ -12,7 +12,7 @@ const IconSidebar = ({ activeSection, onSectionChange }) => {
         { id: 'dashboard', icon: House, label: 'Dashboard' },
         { id: 'features', icon: Zap, label: 'Features' },
         { id: 'networking', icon: Users, label: 'Networking' },
-        { id: 'manage', icon: FolderOpen, label: 'Manage' },
+        { id: 'content', icon: FolderOpen, label: 'Content' },
         { id: 'settings', icon: Settings, label: 'Settings' },
     ];
 
@@ -20,9 +20,9 @@ const IconSidebar = ({ activeSection, onSectionChange }) => {
         <div className="fixed left-0 top-0 h-full w-16 bg-indigo-700 z-20">
             <div className="flex flex-col items-center py-4 space-y-4">
                 {/* Logo/Brand */}
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mb-4">
+                <a href={route('welcome')} className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mb-4">
                     <img src="/images/logo.png" alt="Nexscholar Logo" className="w-10 h-10 bg-white rounded-lg object-contain shadow-lg p-1" />
-                </div>
+                </a>
 
                 {/* Navigation Icons */}
                 {sections.map((section) => {
