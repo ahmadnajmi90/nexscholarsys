@@ -339,8 +339,8 @@ const UpcomingEvents = ({
       name: event.event_name || event.title || 'Untitled Event',
       shortName: event.event_name || event.title || 'Untitled Event', // Or a shortened version if available
       date: event.start_date && event.end_date ? 
-        `${new Date(event.start_date).toLocaleDateString()} - ${new Date(event.end_date).toLocaleDateString()}` : 
-        event.event_date ? new Date(event.event_date).toLocaleDateString() : 'TBA',
+        `${new Date(event.start_date).toLocaleDateString('en-GB')} - ${new Date(event.end_date).toLocaleDateString('en-GB')}` : 
+        event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB') : 'TBA',
       location: `${event.city || ''}, ${event.country || ''}`.trim() || 'Online',
       type: event.event_type || 'Conference',
       status: (() => {
@@ -351,7 +351,7 @@ const UpcomingEvents = ({
         }
         return 'Upcoming';
       })(),
-      deadline: event.registration_deadline ? new Date(event.registration_deadline).toLocaleDateString() : 'TBA',
+      deadline: event.registration_deadline ? new Date(event.registration_deadline).toLocaleDateString('en-GB') : 'TBA',
       flag: event.country_code || getCountryCode(event.country || 'Malaysia'),
       url: event.url || `/events/${event.id}`,
       category: event.event_theme || event.category || 'Academic'
