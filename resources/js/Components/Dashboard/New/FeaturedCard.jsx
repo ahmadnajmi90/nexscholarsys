@@ -1,57 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Users, Calendar, Award, Bell, BookOpen, DollarSign, Globe, Clock } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
-const FeaturedCard = () => {
+const FeaturedCard = ({ posts = [] }) => {
   const [currentNotification, setCurrentNotification] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const notifications = [
-    {
-      id: 1,
-      badge: 'AI INSIGHTS',
-      title: '5 New Students\nLooking for Supervision',
-      subtitle: 'Machine Learning & AI Research',
-      buttonText: 'View Matches',
-      backgroundImage: 'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      gradient: 'from-indigo-500 to-purple-600'
-    },
-    {
-      id: 2,
-      badge: 'FUNDING ALERT',
-      title: 'New Research Grant\nOpportunity Available',
-      subtitle: 'NSF Funding - Up to $500K Available',
-      buttonText: 'Apply Now',
-      backgroundImage: 'https://images.pexels.com/photos/259027/pexels-photo-259027.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      gradient: 'from-green-500 to-emerald-600'
-    },
-    {
-      id: 3,
-      badge: 'EVENT REMINDER',
-      title: 'ICML 2025 Conference\nRegistration Closing Soon',
-      subtitle: 'International Machine Learning Conference',
-      buttonText: 'Register Now',
-      backgroundImage: 'https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      gradient: 'from-blue-500 to-cyan-600'
-    },
-    {
-      id: 4,
-      badge: 'PUBLICATION',
-      title: 'Your Paper Has Been\nAccepted for Review',
-      subtitle: 'IEEE Transactions on Neural Networks',
-      buttonText: 'View Details',
-      backgroundImage: 'https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      gradient: 'from-orange-500 to-red-600'
-    },
-    {
-      id: 5,
-      badge: 'COLLABORATION',
-      title: 'New Research Partnership\nRequest Received',
-      subtitle: 'Stanford University - AI Ethics Project',
-      buttonText: 'View Request',
-      backgroundImage: 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      gradient: 'from-purple-500 to-pink-600'
-    }
-  ];
+  // Helper function to create a clean excerpt from HTML content
+  const createExcerpt = (html, length = 100) => {
+      if (!html) return '';
+      const plainText = html.replace(/<[^>]*>/g, '');
+      if (plainText.length <= length) return plainText;
+      return plainText.substring(0, length) + '...';
+  };
+
+  // Map the incoming 'posts' prop to the structure the component needs
+  const notifications = posts.length > 0 
+    ? posts.slice(0, 5).map(post => ({
+        id: post.id,
+        badge: post.category || 'LATEST POST',
+        title: post.title,
+        subtitle: createExcerpt(post.content, 80), // Create a short subtitle
+        buttonText: 'View Post',
+        backgroundImage: post.featured_image ? `/storage/${post.featured_image}` : '/storage/default.jpg',
+        gradient: [
+          'from-blue-500 to-cyan-600',
+          'from-purple-500 to-pink-600',
+          'from-green-500 to-teal-600',
+          'from-orange-500 to-red-600',
+          'from-indigo-500 to-violet-600'
+        ][post.id % 5], // Rotate between 5 different gradients based on post ID
+        url: route('posts.show', post.url) // Add the URL for the button link
+    }))
+    : [{ // Fallback notification when no posts are available
+        id: 1,
+        badge: 'WELCOME',
+        title: 'No Posts Available',
+        subtitle: 'Check back later for new content',
+        buttonText: 'Explore',
+        backgroundImage: '/storage/default.jpg',
+        gradient: 'from-blue-500 to-cyan-600',
+        url: route('dashboard')
+    }];
 
   // Auto-rotate notifications every 5 seconds
   useEffect(() => {
@@ -112,11 +102,13 @@ const FeaturedCard = () => {
           }`} style={{ transitionDelay: isTransitioning ? '0ms' : '400ms' }}>
             {currentNotif.subtitle}
           </p>
-          <button className={`bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all duration-700 hover:scale-105 ${
-            isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-          }`} style={{ transitionDelay: isTransitioning ? '0ms' : '600ms' }}>
-            {currentNotif.buttonText}
-          </button>
+          <Link href={currentNotif.url}>
+            <button className={`bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all duration-700 hover:scale-105 ${
+              isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
+            }`} style={{ transitionDelay: isTransitioning ? '0ms' : '600ms' }}>
+              {currentNotif.buttonText}
+            </button>
+          </Link>
         </div>
         
         <div className="flex-1 relative">
