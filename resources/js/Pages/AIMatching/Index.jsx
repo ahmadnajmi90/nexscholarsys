@@ -359,11 +359,6 @@ export default function Index({ auth, universities, faculties, users, researchOp
   
   return (
     <MainLayout title="AI Matching" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
-      <Head>
-        <title>AI Matching - Nexscholar</title>
-        <meta name="description" content="Find academic matches using AI-powered semantic search" />
-      </Head>
-      
       {/* AI Processing Modal */}
       {showProcessingModal && <AIProcessingModal />}
       
@@ -375,7 +370,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
         />
       )}
       
-      <div className="bg-white overflow-hidden shadow-sm rounded-lg">
+      <div className="bg-white">
         <div className="p-6 pb-16">
           {/* Guided Search Interface with Search Type Selector inside */}
           <GuidedSearchInterface

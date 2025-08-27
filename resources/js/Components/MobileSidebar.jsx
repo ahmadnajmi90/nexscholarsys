@@ -131,7 +131,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                     {/* Static Header */}
                     <div className={`flex items-center p-4 border-b ${activeMenu === 'main' ? 'bg-indigo-800 border-indigo-600' : 'bg-gray-50 border-gray-200'}`}>
                         {activeMenu !== 'main' && (
-                            <button 
+                                <button
                                 onClick={handleBack} 
                                 className={`p-2 mr-2 rounded-md transition-colors ${activeMenu === 'main' ? 'hover:bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}
                             >
@@ -139,8 +139,8 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                             </button>
                         )}
                         <h3 className={`text-lg font-semibold ${activeMenu === 'main' ? 'text-white ml-2' : 'text-gray-800'}`}>{currentMenuData.title}</h3>
-                    </div>
-                    
+                        </div>
+
                     {/* Animated Content */}
                     <div className="flex-1 overflow-hidden relative">
                         <AnimatePresence initial={false}>
@@ -178,8 +178,8 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                                                         <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                                                             {item.badge}
                                                         </span>
-                                                    )}
-                                                </div>
+                                    )}
+                                </div>
                                             );
 
                                             if (item.external) {
@@ -196,7 +196,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                                                 );
                                             } else {
                                                 return (
-                                                    <Link 
+                                        <Link
                                                         key={index} 
                                                         href={item.href} 
                                                         method={item.method} 
@@ -204,12 +204,12 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                                                         className="block"
                                                     >
                                                         {linkContent}
-                                                    </Link>
+                                        </Link>
                                                 );
                                             }
                                         } else { // It's a button to open a sub-menu
                                             return (
-                                                <button 
+                            <button
                                                     key={index} 
                                                     onClick={() => handleMenuClick(item.id)} 
                                                     className={`w-full flex items-center p-3 rounded-lg transition-colors text-left ${
@@ -224,20 +224,20 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                                                     <span className={activeMenu === 'main' ? 'text-white' : 'text-gray-700'}>
                                                         {item.label}
                                                     </span>
-                                                </button>
+                            </button>
                                             );
                                         }
                                     })}
                                 </nav>
                             </motion.div>
                         </AnimatePresence>
-                    </div>
+                        </div>
                 </div>
             </div>
-            
+
             {/* Overlay for Mobile */}
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-40" 
                     onClick={toggleSidebar}
                 />
