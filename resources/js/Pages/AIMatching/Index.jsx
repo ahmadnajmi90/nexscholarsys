@@ -358,7 +358,9 @@ export default function Index({ auth, universities, faculties, users, researchOp
   };
   
   return (
-    <MainLayout title="AI Matching" isPostgraduate={isPostgraduate} isUndergraduate={isUndergraduate} isFacultyAdmin={isFacultyAdmin}>
+    <>
+      <Head title="AI Matching" />
+      <MainLayout title="AI Matching">
       {/* AI Processing Modal */}
       {showProcessingModal && <AIProcessingModal />}
       
@@ -458,6 +460,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
           )}
         </div>
       </div>
-    </MainLayout>
+      </MainLayout>
+    </>
   );
 }

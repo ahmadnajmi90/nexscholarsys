@@ -7,6 +7,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useRoles from "../../Hooks/useRoles";
 import InputLabel from '@/Components/InputLabel';
+import { Head } from '@inertiajs/react';
 
 export default function Create() {
   const { auth, researchOptions, universities } = usePage().props;
@@ -152,6 +153,7 @@ export default function Create() {
 
   return (
     <MainLayout title="">
+      <Head title="Add New Project" />
       <div className="p-4">
         {/* Back Arrow */}
         <button

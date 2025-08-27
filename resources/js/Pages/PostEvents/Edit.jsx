@@ -7,6 +7,7 @@ import NationalityForm from "../Role/Partials/NationalityForm";
 import useRoles from "../../Hooks/useRoles";
 import InputLabel from '@/Components/InputLabel';
 import Select from "react-select";
+import { Head } from '@inertiajs/react';
 
 export default function Edit({ postEvent, auth }) {
   const { auth: user, researchOptions } = usePage().props;
@@ -65,6 +66,7 @@ export default function Edit({ postEvent, auth }) {
 
   return (
     <MainLayout title="">
+      <Head title="Edit Event" />
       <div className="p-4">
         <form onSubmit={handleSubmit} className="bg-white p-4 md:p-6 rounded-lg max-w-7xl mx-auto space-y-4 md:space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Edit Event</h1>
