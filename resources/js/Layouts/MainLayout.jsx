@@ -5,8 +5,8 @@ import Sidebar from '../Components/Sidebar';
 import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
-import { FaNewspaper, FaTh, FaStar, FaSearch } from "react-icons/fa";
-import { Home, Calendar1, User, FileBadge, Briefcase } from 'lucide-react'; // Modern icons
+import Dropdown from '../Components/Dropdown';
+import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
@@ -16,6 +16,13 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
     const [activeSection, setActiveSection] = useState('dashboard'); // Active section for new sidebar
     const { url } = usePage(); // Get current URL from Inertia
+    const { auth } = usePage().props; // Get current URL and auth from Inertia
+
+    // Helper function to get profile picture URL
+    const getProfilePicture = (user) => {
+        const profile = user.academician || user.postgraduate || user.undergraduate;
+        return profile?.profile_picture ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg";
+    };
 
     // Function to determine active section based on current route
     const getActiveSectionFromRoute = (currentUrl) => {
@@ -235,14 +242,55 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 >
                     {TopMenuOpen && <TopMenu />}
                     <Head title={title} />
-                    <div className={`${!title ? 'px-4 py-2' : 'p-4'} bg-white rounded-lg shadow`}>
+                    <div className={`${!title ? 'px-4 py-2' : 'p-4'} bg-white shadow min-h-screen`}>
                         {title && (
-                        <div className="flex justify-between items-center mb-4">
-                            <h1 className="text-2xl font-semibold pt-2 pl-2">{title}</h1>
-                            <div className="flex items-center space-x-4">
-                                {/* <NotificationBell /> */}
+                            // --- START: MODIFIED HEADER ---
+                            <div className="mb-4">
+                                {/* Header content with padding */}
+                                <div className="flex justify-between items-center pb-4">
+                                    <h1 className="text-2xl font-semibold">{title}</h1>
+
+                                    <div className="flex items-center space-x-4">
+                                        {/* <NotificationBell /> */}
+                                        
+                                        {/* Profile Dropdown */}
+                                        <Dropdown>
+                                            <Dropdown.Trigger>
+                                                <img
+                                                    src={getProfilePicture(auth.user)}
+                                                    alt="Profile"
+                                                    className="h-10 w-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-indigo-400 transition"
+                                                />
+                                            </Dropdown.Trigger>
+
+                                            <Dropdown.Content align="right" width="48">
+                                                <div className="px-4 py-3">
+                                                    <span className="block text-sm font-medium text-gray-900 truncate">{auth.user.full_name}</span>
+                                                    <span className="block text-sm text-gray-500 truncate">{auth.user.email}</span>
+                                                </div>
+                                                <div className="border-t border-gray-200"></div>
+                                                <Dropdown.Link href={route('profile.edit')}>
+                                                    <Settings className="w-4 h-4 mr-2" />
+                                                    General Account Setting
+                                                </Dropdown.Link>
+                                                <Dropdown.Link href={route('role.edit')}>
+                                                    <User2 className="w-4 h-4 mr-2" />
+                                                    Personal Information
+                                                </Dropdown.Link>
+                                                <div className="border-t border-gray-200"></div>
+                                                <Dropdown.Link href={route('logout')} method="post" as="button" className="w-full text-left text-red-600 hover:bg-red-50">
+                                                    <LogOut className="w-4 h-4 mr-2" />
+                                                    Log Out
+                                                </Dropdown.Link>
+                                            </Dropdown.Content>
+                                        </Dropdown>
+                                    </div>
+                                </div>
+                                
+                                {/* Full-width border line */}
+                                <div className="border-b border-gray-200 -mx-4"></div>
                             </div>
-                        </div>
+                            // --- END: MODIFIED HEADER ---
                         )}
                         {children}
                     </div>

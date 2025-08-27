@@ -7,6 +7,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useRoles from "../../Hooks/useRoles";
 import InputLabel from '@/Components/InputLabel';
+import { Head } from '@inertiajs/react';
 
 export default function Edit({ postGrant, auth }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -108,6 +109,7 @@ export default function Edit({ postGrant, auth }) {
 
   return (
     <MainLayout title="">
+      <Head title="Edit Grant" />
       <div className="p-4">
         {/* Back Arrow */}
         <button

@@ -7,6 +7,7 @@ import AdminDashboard from '@/Pages/Dashboard/AdminDashboard';
 import FacultyAdminDashboard from '@/Pages/Dashboard/FacultyAdminDashboard';
 import useRoles from "@/Hooks/useRoles";
 import useIsDesktop from "@/Hooks/useIsDesktop";
+import { Head } from '@inertiajs/react';
 
 const Dashboard = ({
   totalUsers,
@@ -32,6 +33,7 @@ const Dashboard = ({
   if (isAdmin) {
     return (
       <MainLayout>
+        <Head title="Dashboard" />
         <AdminDashboard
           posts={posts}
           events={events}
@@ -49,6 +51,7 @@ const Dashboard = ({
   if (isFacultyAdmin) {
     return (
       <MainLayout>
+        <Head title="Dashboard" />
         <FacultyAdminDashboard
           posts={posts}
           events={events}
@@ -64,6 +67,7 @@ const Dashboard = ({
   if (isAcademician || isPostgraduate || isUndergraduate) {
     return (
       <MainLayout>
+        <Head title="Dashboard" />
         <AcademicianDashboard
           posts={posts}
           events={events}
@@ -77,6 +81,7 @@ const Dashboard = ({
   // For other roles, use the existing dashboard components
   return (
     <MainLayout>
+      <Head title="Dashboard" />
       {isDesktop ? (
         <DashboardInsights
           totalUsers={totalUsers}

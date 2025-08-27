@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
+import { Head } from '@inertiajs/react';
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -35,6 +36,7 @@ const Index = () => {
 
   return (
     <MainLayout title="">
+      <Head title="Your Grants" />
       {/* Wrap everything in a centered container */}
       <div className="max-w-8xl mx-auto px-4 pt-20 md:pt-0 lg:pt-0">
         <div className="flex justify-between items-center my-4">

@@ -4,6 +4,7 @@ import MainLayout from "../../Layouts/MainLayout";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useRoles from "../../Hooks/useRoles";
+import { Head } from '@inertiajs/react';
 
 // A simple tag input component that lets users type and add tags.
 function TagInput({ tags, setTags }) {
@@ -112,6 +113,7 @@ export default function Create() {
 
   return (
     <MainLayout title="">
+      <Head title="Add New Post" />
       <div className="p-4">
         <form
           onSubmit={handleSubmit}
