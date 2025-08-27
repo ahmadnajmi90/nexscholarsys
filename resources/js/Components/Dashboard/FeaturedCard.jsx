@@ -6,7 +6,6 @@ const FeaturedCard = ({ posts = [] }) => {
   const { auth } = usePage().props;
   const user = auth.user;
   const [currentNotification, setCurrentNotification] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Helper function to create a clean excerpt from HTML content
   const createExcerpt = (html, length = 100) => {
@@ -47,68 +46,63 @@ const FeaturedCard = ({ posts = [] }) => {
 
   // Auto-rotate notifications every 5 seconds
   useEffect(() => {
+    if (notifications.length <= 1) return;
     const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentNotification((prev) => (prev + 1) % notifications.length);
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 50);
-      }, 250);
+      setCurrentNotification((prev) => (prev + 1) % notifications.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, [notifications.length]);
 
   const handleBulletClick = (index) => {
-    if (index !== currentNotification) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentNotification(index);
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 50);
-      }, 250);
-    }
+    setCurrentNotification(index);
   };
 
   const currentNotif = notifications[currentNotification];
 
+  if (notifications.length === 0) {
+    return <div className="bg-gray-200 rounded-2xl p-8 mb-8 h-full min-h-[200px]"></div>;
+  }
+
   return (
-    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 md:p-8 mb-8 relative overflow-hidden text-white">
-      {/* Real Background Image with Fade Overlay Effect */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-30 transition-all duration-1000 ease-in-out"
-        style={{ backgroundImage: `url(${currentNotif.backgroundImage})` }}
-      />
+    <div className="rounded-2xl p-6 md:p-8 mb-8 relative overflow-hidden text-white min-h-[200px]">
       
-      {/* Dynamic Gradient Overlay that changes with notification */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${currentNotif.gradient} opacity-85 transition-all duration-1000 ease-in-out`} />
+      {/* START: New Robust Background Rendering */}
+      <div className="absolute inset-0 z-0">
+        {notifications.map((notif, index) => (
+          <div
+            key={notif.id}
+            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
+              index === currentNotification ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={notif.backgroundImage}
+              alt={notif.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div className={`absolute inset-0 bg-gradient-to-r ${notif.gradient} opacity-85`} />
+          </div>
+        ))}
+      </div>
+      {/* END: New Robust Background Rendering */}
       
       <div className="flex flex-col md:flex-row items-center justify-between relative z-10 gap-6">
         {/* Main Content */}
         <div className={`w-full md:flex-1 transition-all duration-700 ease-in-out ${
-          isTransitioning ? 'opacity-0 transform translate-y-6' : 'opacity-100 transform translate-y-0'
-        }${!user.academician?.scholar_profile ? 'mb-8 md:mb-4 lg:mb-4' : ''}`}>
-          <div className={`text-xs text-white font-medium mb-2 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block transition-all duration-700 ease-in-out ${
-            isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-          }`}>
+          !user.academician?.scholar_profile ? 'mb-8 md:mb-4 lg:mb-4' : ''
+        }`}>
+          <div className="text-xs text-white font-medium mb-2 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block transition-all duration-700 ease-in-out">
             {currentNotif.badge}
           </div>
-          <h2 className={`text-lg md:text-xl font-bold mb-2 transition-all duration-700 ease-in-out max-w-[700px] ${
-            isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-          }`} style={{ transitionDelay: isTransitioning ? '0ms' : '200ms' }}>
+          <h2 className="text-lg md:text-xl font-bold mb-2 transition-all duration-700 ease-in-out max-w-[700px] line-clamp-1">
             {currentNotif.title}
           </h2>
-          <p className={`text-sm opacity-90 mb-4 transition-all duration-700 ease-in-out ${
-            isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-          }`} style={{ transitionDelay: isTransitioning ? '0ms' : '400ms' }}>
+          <p className="text-sm opacity-90 mb-4 transition-all duration-700 ease-in-out">
             {currentNotif.subtitle}
           </p>
           <Link href={currentNotif.url}>
-            <button className={`bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all duration-700 hover:scale-105 ${
-              isTransitioning ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-            }`} style={{ transitionDelay: isTransitioning ? '0ms' : '600ms' }}>
+            <button className="bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all duration-700 hover:scale-105">
               {currentNotif.buttonText}
             </button>
           </Link>
@@ -128,7 +122,7 @@ const FeaturedCard = ({ posts = [] }) => {
                 return (
                   <div
                     key={index}
-                    className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center hover:bg-opacity-30 hover:scale-105 transition-all duration-200"
+                    className="bg-white bg-opacity-20 backdrop-blur-md rounded-xl p-3 md:p-4 text-center hover:bg-opacity-30 hover:scale-105 transition-all duration-200"
                   >
                     <IconComponent className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-white" />
                     <div className="text-sm md:text-lg font-bold">{stat.value}</div>

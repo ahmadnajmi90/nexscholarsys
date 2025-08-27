@@ -6,7 +6,6 @@ import { usePage } from '@inertiajs/react';
 const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
   const { auth } = usePage().props;
   const user = auth.user;
-  console.log(user);
   // State for active category tab
   const [activeCategory, setActiveCategory] = useState('All');
   // Helper function to strip HTML tags
