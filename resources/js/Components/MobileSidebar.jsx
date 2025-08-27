@@ -1,384 +1,246 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    FaTachometerAlt,
-    FaUsers,
-    FaHandshake,
-    FaChartBar,
-    FaCalendarAlt,
-    FaPoll,
-    FaUser,
-    FaCog,
-    FaBookOpen,
-    FaNewspaper,
-    FaFilter,
-    FaBookmark,
-    FaSearch,
-    FaRobot,
-    FaUserShield,
-    FaSignOutAlt
-} from 'react-icons/fa';
-import { LayoutGrid, GraduationCap } from 'lucide-react';
+    Home, Sparkles, Users, FolderOpen, Settings, ChevronLeft,
+    GraduationCap, LayoutGrid, Shield, Calendar,
+    FileText, ClipboardList, LogOut, Bookmark, Building2, Database, User2, BookUser, Library, Building, DollarSign
+} from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
 const MobileSidebar = ({ isOpen, toggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
-    const { pendingRequestCount } = usePage().props;
-    const [menuOpen, setMenuOpen] = useState({
-        networking: false,
-        grant: false,
-        project: false,
-        event: false,
-        survey: false,
-        profile: false,
-        admin: false,
-    });
+    const { auth, pendingRequestCount } = usePage().props;
+    const [menuHistory, setMenuHistory] = useState(['main']);
+    const activeMenu = menuHistory[menuHistory.length - 1];
 
-    const toggleMenu = (menu) => {
-        setMenuOpen((prevState) => ({
-            ...prevState,
-            [menu]: !prevState[menu],
-        }));
+    // --- NAVIGATION STRUCTURE ---
+    const navigationData = {
+        main: {
+            title: 'NexScholar',
+            items: [
+                { id: 'dashboard', label: 'Dashboard', icon: Home },
+                { id: 'features', label: 'Features', icon: Sparkles },
+                { id: 'networking', label: 'Networking', icon: Users },
+                { id: 'manage', label: 'Manage', icon: FolderOpen },
+                { id: 'survey', label: 'Survey', icon: ClipboardList },
+                { id: 'settings', label: 'Settings', icon: Settings },
+            ]
+        },
+        dashboard: {
+            title: 'Dashboard',
+            items: [
+                { label: 'Dashboard Overview', href: route('dashboard'), icon: Home },
+                // Faculty Admin items
+                ...(isFacultyAdmin ? [
+                    { label: 'Verify Academicians', href: route('faculty-admin.academicians'), icon: Shield },
+                    { label: 'Academicians Directory', href: route('faculty-admin.directory'), icon: Users },
+                ] : []),
+                // Admin items
+                ...(isAdmin ? [
+                    { label: 'Faculty Admin', href: route('faculty-admins.index'), icon: Building2 },
+                    { label: 'Roles & Permissions', href: route('roles.index'), icon: Settings },
+                    { label: 'Profile Management', href: route('admin.profiles.index'), icon: Users },
+                    { label: 'Data Management', href: route('admin.data-management.index'), icon: Database },
+                ] : []),
+            ]
+        },
+        features: {
+            title: 'Features',
+            items: [
+                { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles },
+                { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap },
+                { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
+                { label: 'Scholar Lab', href: route('project-hub.index'), icon: LayoutGrid },
+            ]
+        },
+        networking: {
+            title: 'Networking',
+            items: [
+                { label: 'My Network', href: route('connections.index'), icon: Users, badge: pendingRequestCount },
+                { label: 'Postgraduate', href: '/postgraduates', icon: GraduationCap },
+                { label: 'Undergraduate', href: '/undergraduates', icon: BookUser },
+                { label: 'Academician', href: '/academicians', icon: Library },
+                { label: 'University', href: '/universities', icon: Building },
+            ]
+        },
+        manage: {
+            title: 'Manage',
+            items: [
+                // Grant Management
+                { label: 'View Grant', href: '/grants', icon: DollarSign },
+                ...(canPostGrants ? [{ label: 'Manage Grants', href: route('post-grants.index'), icon: DollarSign }] : []),
+                // Project Management
+                { label: 'View Project', href: '/projects', icon: FolderOpen },
+                ...(canPostProjects ? [{ label: 'Manage Project', href: route('post-projects.index'), icon: FolderOpen }] : []),
+                // Event Management
+                { label: 'View Event', href: '/events', icon: Calendar },
+                ...(canPostEvents ? [{ label: 'Manage Event', href: route('post-events.index'), icon: Calendar }] : []),
+                // Post Management
+                { label: 'View Post', href: '/posts', icon: FileText },
+                { label: 'Manage Post', href: route('create-posts.index'), icon: FileText },
+            ]
+        },
+        survey: {
+            title: 'Survey',
+            items: [
+                { label: 'Free Survey', href: 'https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform', icon: ClipboardList, external: true },
+            ]
+        },
+        settings: {
+            title: 'Settings',
+            items: [
+                { label: 'General Account Setting', href: route('profile.edit'), icon: Settings },
+                { label: 'Personal Information', href: route('role.edit'), icon: User2 },
+                { label: 'Log Out', href: route('logout'), method: 'post', as: 'button', icon: LogOut },
+            ]
+        },
     };
+
+    const handleMenuClick = (menuId) => {
+        setMenuHistory([...menuHistory, menuId]);
+    };
+
+    const handleBack = () => {
+        setMenuHistory(menuHistory.slice(0, -1));
+    };
+
+    const animationVariants = {
+        enter: (direction) => ({
+            x: direction > 0 ? '100%' : '-100%',
+            opacity: 0
+        }),
+        center: {
+            zIndex: 1,
+            x: 0,
+            opacity: 1
+        },
+        exit: (direction) => ({
+            zIndex: 0,
+            x: direction < 0 ? '100%' : '-100%',
+            opacity: 0
+        })
+    };
+
+    const currentMenuData = navigationData[activeMenu];
 
     return (
         <>
-            {/* Sidebar */}
-            <div
-                className={`fixed top-0 left-0 h-full w-64 bg-white shadow-md z-40 transform transition-transform duration-300 ${
-                    isOpen ? 'translate-x-0' : '-translate-x-full'
-                } lg:translate-x-0`}
-            >
-                <div className="p-4 h-full overflow-auto">
-                    {/* Header */}
-                    <div className="flex items-center mb-6">
-                        <a href="/" className="flex items-center space-x-2">
-                            <h2 className="text-lg text-blue-600 font-semibold">NexScholar</h2>
-                        </a>
+            <div className={`fixed top-0 left-0 h-full w-64 shadow-lg z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${activeMenu === 'main' ? 'bg-indigo-700' : 'bg-white'}`}>
+                <div className="flex flex-col h-full overflow-hidden">
+                    {/* Static Header */}
+                    <div className={`flex items-center p-4 border-b ${activeMenu === 'main' ? 'bg-indigo-800 border-indigo-600' : 'bg-gray-50 border-gray-200'}`}>
+                        {activeMenu !== 'main' && (
+                            <button 
+                                onClick={handleBack} 
+                                className={`p-2 mr-2 rounded-md transition-colors ${activeMenu === 'main' ? 'hover:bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                        )}
+                        <h3 className={`text-lg font-semibold ${activeMenu === 'main' ? 'text-white ml-2' : 'text-gray-800'}`}>{currentMenuData.title}</h3>
                     </div>
+                    
+                    {/* Animated Content */}
+                    <div className="flex-1 overflow-hidden relative">
+                        <AnimatePresence initial={false}>
+                            <motion.div
+                                key={activeMenu}
+                                custom={1}
+                                variants={animationVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+                                className="absolute inset-0"
+                            >
+                                {/* Menu Items */}
+                                <nav className="h-full overflow-y-auto p-4 space-y-1">
+                                    {currentMenuData.items.map((item, index) => {
+                                        const Icon = item.icon;
 
-                    {/* Navigation Sections */}
-                    <nav className="space-y-4">
-                        {/* Main Section */}
-                        <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Main</h3>
-                            <Link
-                                href={route('dashboard')}
-                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaTachometerAlt className="text-gray-600" />
-                                <span className="ml-2">Dashboard</span>
-                            </Link>
-                        </div>
+                                        if (item.href) { // It's a link
+                                            const linkContent = (
+                                                <div className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                                                    activeMenu === 'main' 
+                                                        ? 'hover:bg-indigo-600' 
+                                                        : 'hover:bg-gray-100'
+                                                }`}>
+                                                    <span className={`flex items-center ${
+                                                        activeMenu === 'main' ? 'text-white' : 'text-gray-700'
+                                                    }`}>
+                                                        {Icon && <Icon className={`w-5 h-5 mr-3 ${
+                                                            activeMenu === 'main' ? 'text-indigo-200' : 'text-gray-600'
+                                                        }`} />}
+                                                        {item.label}
+                                                    </span>
+                                                    {item.badge > 0 && (
+                                                        <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
 
-                        {/* Faculty Admin Section */}
-                        {isFacultyAdmin && (
-                            <div>
-                                <h3 className="text-gray-500 uppercase text-xs font-bold">Faculty Admin</h3>
-                                <Link
-                                    href={route('faculty-admin.academicians')}
-                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                                >
-                                    <FaUserShield className="text-gray-600" />
-                                    <span className="ml-2">Verify Academicians</span>
-                                </Link>
-                                <Link
-                                    href={route('faculty-admin.directory')}
-                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                                >
-                                    <FaUsers className="text-gray-600" />
-                                    <span className="ml-2">Academicians Directory</span>
-                                </Link>
-                            </div>
-                        )}
-
-                        {/* Admin Features Section */}
-                        {isAdmin && (
-                            <div>
-                                <h3 className="text-gray-500 uppercase text-xs font-bold">Admin Features</h3>
-                                <Link
-                                    href={route('faculty-admins.index')}
-                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                                >
-                                    <FaTachometerAlt className="text-gray-600" />
-                                    <span className="ml-2">Create Faculty Admin</span>
-                                </Link>
-                                <Link
-                                    href={route('roles.index')}
-                                    className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                                >
-                                    <FaTachometerAlt className="text-gray-600" />
-                                    <span className="ml-2">Assign Abilities</span>
-                                </Link>
-                            </div>
-                        )}
-
-                        {/* Admin Section */}
-                        {isAdmin && (
-                            <div>
-                                <h3 className="text-gray-500 uppercase text-xs font-bold">Admin</h3>
-                                <button
-                                    onClick={() => toggleMenu('admin')}
-                                    className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                                >
-                                    <FaCog className="text-gray-600" />
-                                    <span className="ml-2">Admin Tools</span>
-                                    <span className="ml-auto">{menuOpen.admin ? '-' : '+'}</span>
-                                </button>
-                                {menuOpen.admin && (
-                                    <div className="ml-6">
-                                        <Link href={route('roles.index')} className="block py-2 hover:bg-gray-100 rounded">
-                                            Roles & Permissions
-                                        </Link>
-                                        <Link href={route('faculty-admins.index')} className="block py-2 hover:bg-gray-100 rounded">
-                                            Faculty Admin
-                                        </Link>
-                                        <Link href={route('admin.profiles.index')} className="block py-2 hover:bg-gray-100 rounded">
-                                            Profile Management
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Features Section */}
-                        <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Features</h3>
-                            <Link
-                                href={route('ai.matching.index')}
-                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaRobot className="text-gray-600" />
-                                <span className="ml-2">AI Matching</span>
-                            </Link>
-                            <Link
-                                href={route('postgraduate-recommendations.index')}
-                                className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
-                                    route().current('postgraduate-recommendations.*') ? 'bg-blue-50 text-blue-600' : ''
-                                }`}
-                            >
-                                <GraduationCap className="w-5 h-5 text-gray-600" />
-                                <span className="ml-2">Postgraduate Recommendations</span>
-                            </Link>
-                            <Link
-                                href={route('bookmarks.index')}
-                                className="flex items-center py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaBookmark className="text-gray-600" />
-                                <span className="ml-2">My Bookmarks</span>
-                            </Link>
-                            
-                            <Link 
-                                href={route('project-hub.index')} 
-                                className={`flex items-center py-2 px-4 hover:bg-gray-100 rounded ${
-                                    route().current('project-hub.*') ? 'bg-blue-50 text-blue-600' : ''
-                                }`}
-                            >
-                                <LayoutGrid className="w-5 h-5 text-gray-600" />
-                                <span className="ml-2">Scholar Lab</span>
-                            </Link>
-                            
-                            <button
-                                onClick={() => toggleMenu('networking')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaUsers className="text-gray-600" />
-                                <span className="ml-2">Networking</span>
-                                <span className="ml-auto">{menuOpen.networking ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.networking && (
-                                <div className="ml-6">
-                                    <Link href={route('connections.index')} className="flex items-center justify-between py-2 hover:bg-gray-100 rounded">
-                                        <span>My Network</span>
-                                        {pendingRequestCount > 0 && (
-                                            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-                                                {pendingRequestCount}
-                                            </span>
-                                        )}
-                                    </Link>
-                                    <Link href="/postgraduates" className="block py-2 hover:bg-gray-100 rounded">
-                                        Postgraduate
-                                    </Link>
-                                    <Link href="/undergraduates" className="block py-2 hover:bg-gray-100 rounded">
-                                        Undergraduate
-                                    </Link>
-                                    <Link href="/academicians" className="block py-2 hover:bg-gray-100 rounded">
-                                        Academician
-                                    </Link>
-                                    <Link href="/universities" className="block py-2 hover:bg-gray-100 rounded">
-                                        University
-                                    </Link>
-                                </div>
-                            )}
-                            
-                        </div>
-
-                        {/* Manage Section */}
-                        <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Manage</h3>
-                            <button
-                                onClick={() => toggleMenu('grant')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaHandshake className="text-gray-600" />
-                                <span className="ml-2">Grant</span>
-                                <span className="ml-auto">{menuOpen.grant ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.grant && (
-                                <div className="ml-6">
-                                    <Link href="/grants" className="block py-2 hover:bg-gray-100 rounded">
-                                        View Grant
-                                    </Link>
-                                    {canPostGrants && (
-                                        <Link
-                                            href={route('post-grants.index')}
-                                            className="block py-2 hover:bg-gray-100 rounded"
-                                        >
-                                            Manage Grants
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                            <button
-                                onClick={() => toggleMenu('project')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaChartBar className="text-gray-600" />
-                                <span className="ml-2">Project</span>
-                                <span className="ml-auto">{menuOpen.project ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.project && (
-                                <div className="ml-6">
-                                    <Link href="/projects" className="block py-2 hover:bg-gray-100 rounded">
-                                        View project
-                                    </Link>
-                                    {canPostProjects && (
-                                        <Link
-                                            href={route('post-projects.index')}
-                                            className="block py-2 hover:bg-gray-100 rounded"
-                                        >
-                                            Manage project
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                            <button
-                                onClick={() => toggleMenu('event')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaCalendarAlt className="text-gray-600" />
-                                <span className="ml-2">Event</span>
-                                <span className="ml-auto">{menuOpen.event ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.event && (
-                                <div className="ml-6">
-                                    <Link href="/events" className="block py-2 hover:bg-gray-100 rounded">
-                                        View event
-                                    </Link>
-                                    {canPostEvents && (
-                                        <Link
-                                            href={route('post-events.index')}
-                                            className="block py-2 hover:bg-gray-100 rounded"
-                                        >
-                                            Manage event
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                            <button
-                                onClick={() => toggleMenu('post')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaNewspaper className="text-gray-600" />
-                                <span className="ml-2">Post</span>
-                                <span className="ml-auto">{menuOpen.post ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.post && (
-                                <div className="ml-6">
-                                    <Link href="/posts" className="block py-2 hover:bg-gray-100 rounded">
-                                        View post
-                                    </Link>
-                                    <Link
-                                        href={route('create-posts.index')}
-                                        className="block py-2 hover:bg-gray-100 rounded"
-                                    >
-                                        Manage post
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Survey Section */}
-                        <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Survey</h3>
-                            <button
-                                onClick={() => toggleMenu('survey')}
-                                className="flex items-center w-full py-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaPoll className="text-gray-600" />
-                                <span className="ml-2">Survey</span>
-                                <span className="ml-auto">{menuOpen.survey ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.survey && (
-                                <div className="ml-6">
-                                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform" className="block py-2 hover:bg-gray-100 rounded" target="_blank" rel="noopener noreferrer">
-                                        Free Survey
-                                    </a>
-                                    {/* <Link href="/survey/with-token" className="block py-2 hover:bg-gray-100 rounded">
-                                        Survey With Token
-                                    </Link> */}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Profile Section */}
-                        <div>
-                            <h3 className="text-gray-500 uppercase text-xs font-bold">Settings</h3>
-                            <button
-                                onClick={() => toggleMenu('profile')}
-                                className="flex items-center w-full pt-2 px-4 hover:bg-gray-100 rounded"
-                            >
-                                <FaUser className="text-gray-600" />
-                                <span className="ml-2">Profile</span>
-                                <span className="ml-auto">{menuOpen.profile ? '-' : '+'}</span>
-                            </button>
-                            {menuOpen.profile && (
-                                <div className="ml-6">
-                                    <Link
-                                        href={route('profile.edit')}
-                                        className="block py-2 hover:bg-gray-100 rounded"
-                                    >
-                                        General Account Setting
-                                    </Link>
-                                    <Link
-                                        href={route('role.edit')}
-                                        className="block py-2 hover:bg-gray-100 rounded"
-                                    >
-                                        Personal Information
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-
-                        <Link
-                            href={route('logout')}
-                            method="post"
-                            as="button"
-                            className="flex items-center px-4 hover:bg-gray-100 rounded"
-                        >
-                            <FaSignOutAlt className="text-gray-600" />
-                            <span className="ml-2">Log Out</span>
-                        </Link>
-                    </nav>
+                                            if (item.external) {
+                                                return (
+                                                    <a 
+                                                        key={index} 
+                                                        href={item.href} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="block"
+                                                    >
+                                                        {linkContent}
+                                                    </a>
+                                                );
+                                            } else {
+                                                return (
+                                                    <Link 
+                                                        key={index} 
+                                                        href={item.href} 
+                                                        method={item.method} 
+                                                        as={item.as || 'a'} 
+                                                        className="block"
+                                                    >
+                                                        {linkContent}
+                                                    </Link>
+                                                );
+                                            }
+                                        } else { // It's a button to open a sub-menu
+                                            return (
+                                                <button 
+                                                    key={index} 
+                                                    onClick={() => handleMenuClick(item.id)} 
+                                                    className={`w-full flex items-center p-3 rounded-lg transition-colors text-left ${
+                                                        activeMenu === 'main' 
+                                                            ? 'hover:bg-indigo-600' 
+                                                            : 'hover:bg-gray-100'
+                                                    }`}
+                                                >
+                                                    {Icon && <Icon className={`w-5 h-5 mr-3 ${
+                                                        activeMenu === 'main' ? 'text-indigo-200' : 'text-gray-600'
+                                                    }`} />}
+                                                    <span className={activeMenu === 'main' ? 'text-white' : 'text-gray-700'}>
+                                                        {item.label}
+                                                    </span>
+                                                </button>
+                                            );
+                                        }
+                                    })}
+                                </nav>
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
-
+            
             {/* Overlay for Mobile */}
             {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40" 
                     onClick={toggleSidebar}
-                ></div>
+                />
             )}
         </>
     );
