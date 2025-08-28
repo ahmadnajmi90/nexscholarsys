@@ -42,7 +42,7 @@ const AcademicianDashboard = ({
   };
 
   return (
-    <div className="container mx-auto px-4 py-20 md:py-8 lg:py-8">
+    <div className="container mx-auto px-4 pt-20 md:pt-4 lg:pt-4">
       {/* Header with welcome message and tabs */}
       <Header 
         user={user}

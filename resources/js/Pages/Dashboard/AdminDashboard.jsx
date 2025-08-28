@@ -16,6 +16,7 @@ const AdminDashboard = ({
   totalUsers,
   topViewedAcademicians,
   analyticsData,
+  userMotivationData,
 }) => {
   const { auth } = usePage().props;
   const user = auth.user;
@@ -56,6 +57,7 @@ const AdminDashboard = ({
             totalUsers={totalUsers}
             topViewedAcademicians={topViewedAcademicians}
             analyticsData={analyticsData}
+            userMotivationData={userMotivationData}
           />
         )}
 

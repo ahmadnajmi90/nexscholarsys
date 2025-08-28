@@ -6,6 +6,7 @@ const FeaturedCard = ({ posts = [] }) => {
   const { auth } = usePage().props;
   const user = auth.user;
   const [currentNotification, setCurrentNotification] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Helper function to create a clean excerpt from HTML content
   const createExcerpt = (html, length = 100) => {
@@ -48,13 +49,22 @@ const FeaturedCard = ({ posts = [] }) => {
   useEffect(() => {
     if (notifications.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentNotification((prev) => (prev + 1) % notifications.length);
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentNotification((prev) => (prev + 1) % notifications.length);
+        setIsAnimating(false);
+      }, 300); // Animation duration
     }, 5000);
     return () => clearInterval(interval);
   }, [notifications.length]);
 
   const handleBulletClick = (index) => {
-    setCurrentNotification(index);
+    if (index === currentNotification) return; // Don't animate if clicking the same slide
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentNotification(index);
+      setIsAnimating(false);
+    }, 300); // Animation duration
   };
 
   const currentNotif = notifications[currentNotification];
@@ -92,17 +102,25 @@ const FeaturedCard = ({ posts = [] }) => {
         <div className={`w-full md:flex-1 transition-all duration-700 ease-in-out ${
           !user.academician?.scholar_profile ? 'mb-8 md:mb-4 lg:mb-4' : ''
         }`}>
-          <div className="text-xs text-white font-medium mb-2 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block transition-all duration-700 ease-in-out">
+          <div className={`text-xs text-white font-medium mb-2 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block transition-all duration-500 ease-out transform ${
+            isAnimating ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+          }`}>
             {currentNotif.badge}
           </div>
-          <h2 className="text-lg md:text-xl font-bold mb-2 transition-all duration-700 ease-in-out max-w-[700px] line-clamp-1">
+          <h2 className={`text-lg md:text-xl font-bold mb-2 transition-all duration-500 ease-out transform max-w-[700px] line-clamp-1 ${
+            isAnimating ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+          }`}>
             {currentNotif.title}
           </h2>
-          <p className="text-sm opacity-90 mb-4 transition-all duration-700 ease-in-out">
+          <p className={`text-sm opacity-90 mb-4 transition-all duration-500 ease-out transform ${
+            isAnimating ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+          }`}>
             {currentNotif.subtitle}
           </p>
           <Link href={currentNotif.url}>
-            <button className="bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all duration-700 hover:scale-105">
+            <button className={`bg-white text-indigo-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all duration-500 ease-out transform hover:scale-105 ${
+              isAnimating ? 'translate-y-4 opacity-0 scale-95' : 'translate-y-0 opacity-100 scale-100'
+            }`}>
               {currentNotif.buttonText}
             </button>
           </Link>

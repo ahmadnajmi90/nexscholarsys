@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
 import Carousel from './Carousel';
-import { TrendingUp, Users, Award, BookOpen } from 'lucide-react';
+import { TrendingUp, Users, Award, BookOpen, Newspaper, Calendar, DollarSign, FolderOpen } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
+import useIsDesktop from '@/Hooks/useIsDesktop';
 
-const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
+const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) => {
   const { auth } = usePage().props;
   const user = auth.user;
-  // State for active category tab
   const [activeCategory, setActiveCategory] = useState('All');
-  // Helper function to strip HTML tags
+  const isDesktop = useIsDesktop();
+
   const stripHtml = (html) => {
-    if (typeof window === 'undefined') return ''; // Avoid server-side errors
+    if (typeof window === 'undefined') return '';
     const tmp = document.createElement('DIV');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
   };
 
-  // Helper function to map post to card format
+  // --- Data Mapping Functions ---
   const mapPostToCard = (post) => ({
     id: `post-${post.id}`,
     title: post.title || 'Untitled Post',
@@ -43,7 +44,6 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
     url: `/posts/${post.url}`,
   });
 
-  // Helper function to map event to card format
   const mapEventToCard = (event) => ({
     id: `event-${event.id}`,
     title: event.event_name || 'Untitled Event',
@@ -57,6 +57,9 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
     }),
     author: event.author_id || 'Organizer',
     readTime: 'Event',
+    views: event.total_views || '0',
+    likes: event.total_likes || '0',
+    shares: event.total_shares || '0',
     type: 'event',
     category: event.event_type || 'Conference',
     bgColor: 'from-purple-600 to-purple-800',
@@ -67,7 +70,6 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
     url: `/events/${event.url}`,
   });
 
-  // Helper function to map grant to card format
   const mapGrantToCard = (grant) => ({
     id: `grant-${grant.id}`,
     title: grant.title || 'Untitled Grant',
@@ -81,6 +83,9 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
     }),
     author: grant.sponsored_by || 'Funder',
     readTime: 'Grant',
+    views: grant.total_views || '0',
+    likes: grant.total_likes || '0',
+    shares: grant.total_shares || '0',
     type: 'grant',
     category: grant.grant_type || 'Funding',
     bgColor: 'from-green-600 to-green-800',
@@ -91,14 +96,70 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
     url: `/grants/${grant.url}`,
   });
 
-  // Map data for carousels (first 5 items from each array)
+  const mapProjectToCard = (project) => ({
+    id: `project-${project.id}`,
+    title: project.title || 'Untitled Project',
+    subtitle: project.category || 'Project',
+    description: project.description ? stripHtml(project.description).substring(0, 120) + '...' : '',
+    status: 'Project',
+    date: new Date(project.created_at).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }),
+    author: project.author?.name || 'Unknown Author',
+    readTime: 'Project',
+    views: project.total_views || '0',
+    likes: project.total_likes || '0',
+    shares: project.total_shares || '0',
+    type: 'project',
+    category: project.category || 'Research',
+    bgColor: 'from-cyan-900 to-teal-900',
+    statusColor: 'bg-cyan-500 text-white',
+    backgroundImage: project.image ? `/storage/${project.image}` : 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg',
+    icon: FolderOpen,
+    url: `/projects/${project.url}`,
+  });
+
   const mappedPosts = posts.slice(0, 5).map(mapPostToCard);
   const mappedEvents = events.slice(0, 5).map(mapEventToCard);
   const mappedGrants = grants.slice(0, 5).map(mapGrantToCard);
+  const mappedProjects = projects.slice(0, 5).map(mapProjectToCard);
+  
+  // Combine all for the single carousel view
+  const allMappedActivities = {
+    'Posts': mappedPosts,
+    'Events': mappedEvents,
+    'Funding': mappedGrants,
+    'Projects': mappedProjects
+  };
+
+  // Debug logging
+  console.log('allMappedActivities:', allMappedActivities);
+  console.log('mappedPosts length:', mappedPosts.length);
+  console.log('mappedEvents length:', mappedEvents.length);
+  console.log('mappedGrants length:', mappedGrants.length);
+  console.log('mappedProjects length:', mappedProjects.length);
+
+  // --- Dynamic Category Tabs ---
+  const availableCategories = ['All'];
+  
+  // Only add categories that have data
+  if (posts.length > 0) availableCategories.push('Posts');
+  if (events.length > 0) availableCategories.push('Events');
+  if (grants.length > 0) availableCategories.push('Funding');
+  if (projects.length > 0) availableCategories.push('Projects');
+
+  // Reset active category if it's not available
+  React.useEffect(() => {
+    if (!availableCategories.includes(activeCategory)) {
+      setActiveCategory('All');
+    }
+  }, [availableCategories, activeCategory]);
 
   return (
     <div>
-      {/* Magazine Header */}
+      {/* Header and Category Tags */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -131,7 +192,7 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
         {/* Category Tags */}
         <div className="flex items-center space-x-2 md:space-x-4 mb-6 overflow-x-auto">
           <span className="text-sm font-medium text-gray-500 whitespace-nowrap">CATEGORIES:</span>
-          {['All', 'Posts', 'Events', 'Funding'].map((category) => (
+          {availableCategories.map((category) => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
@@ -147,66 +208,122 @@ const ProductGrid = ({ posts = [], events = [], grants = [] }) => {
         </div>
       </div>
 
-      {/* Conditional Carousel Layout */}
-      {activeCategory === 'All' ? (
-        // Default three-carousel layout
-        <div className="grid grid-cols-1 md:grid-cols-9 gap-6 mb-8">
-          {/* Left Column: Posts Carousel */}
-          <div className="md:col-span-6">
-            <Carousel
-              items={mappedPosts}
-              cardType="featured"
-              key="posts-carousel"
-              timer={8000}
-              className="h-96"
-            />
+      {/* --- RESPONSIVE LAYOUT SWITCH --- */}
+      {isDesktop ? (
+        // --- DESKTOP VIEW ---
+                 activeCategory === 'All' ? (
+           // Three-carousel layout for "All" category
+           <div className="grid grid-cols-1 md:grid-cols-9 gap-6 mb-8">
+             <div className="md:col-span-6">
+               <Carousel
+                 items={mappedPosts}
+                 cardType="featured"
+                 key="posts-carousel"
+                 timer={8000}
+                 className="h-96"
+               />
+             </div>
+             <div className="md:col-span-3 flex flex-col space-y-4">
+               {mappedEvents.length > 0 && (
+                 <div className="h-48">
+                   <Carousel
+                     items={mappedEvents}
+                     cardType="regular"
+                     key="events-carousel"
+                     timer={6000}
+                     className="h-full"
+                   />
+                 </div>
+               )}
+               {mappedGrants.length > 0 && (
+                 <div className="h-48">
+                   <Carousel
+                     items={mappedGrants}
+                     cardType="regular"
+                     key="grants-carousel"
+                     timer={7000}
+                     className="h-full"
+                   />
+                 </div>
+               )}
+             </div>
+           </div>
+        ) : (
+          // Single full-width carousel for specific categories
+          <div className="grid grid-cols-1 md:grid-cols-9 gap-6 mb-8">
+            <div className="col-span-1 md:col-span-9">
+              {(() => {
+                const selectedItems = allMappedActivities[activeCategory];
+                console.log('Selected category:', activeCategory);
+                console.log('Available items:', selectedItems);
+                
+                if (!selectedItems || selectedItems.length === 0) {
+                  return (
+                    <div className="h-96 flex items-center justify-center bg-gray-50 rounded-lg">
+                      <div className="text-center">
+                        <p className="text-gray-500 text-lg">No {activeCategory.toLowerCase()} available</p>
+                        <p className="text-gray-400 text-sm">Check back later for new content</p>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                                 console.log('Rendering Carousel for category:', activeCategory, 'with items:', selectedItems.length);
+                 console.log('Selected items:', selectedItems);
+                 return (
+                   <div className="h-96">
+                     <Carousel
+                       items={selectedItems}
+                       cardType="featured"
+                       key={`${activeCategory}-carousel-${selectedItems.length}`}
+                       timer={8000}
+                       className="h-full"
+                     />
+                   </div>
+                 );
+              })()}
+            </div>
           </div>
-
-          {/* Right Column: Events and Grants Carousels */}
-          <div className="md:col-span-3 flex flex-col space-y-4">
-            <div className="h-48">
+        )
+      ) : (
+        // --- MOBILE VIEW ---
+        <div className="space-y-6 mb-8">
+          {(activeCategory === 'All' || activeCategory === 'Posts') && mappedPosts.length > 0 ? (
+            <div className="h-80">
+              <Carousel
+                items={mappedPosts}
+                cardType="featured"
+                key="posts-mobile"
+              />
+            </div>
+          ) : null}
+          {(activeCategory === 'All' || activeCategory === 'Events') && mappedEvents.length > 0 ? (
+            <div className={activeCategory === 'All' ? 'h-48' : 'h-80'}>
               <Carousel
                 items={mappedEvents}
-                cardType="regular"
-                key="events-carousel"
-                timer={6000}
-                className="h-full"
+                cardType={activeCategory === 'All' ? 'regular' : 'featured'}
+                key={`events-mobile-${activeCategory}`}
               />
             </div>
-            <div className="h-48">
+          ) : null}
+          {(activeCategory === 'All' || activeCategory === 'Funding') && mappedGrants.length > 0 ? (
+            <div className={activeCategory === 'All' ? 'h-48' : 'h-80'}>
               <Carousel
                 items={mappedGrants}
-                cardType="regular"
-                key="grants-carousel"
-                timer={7000}
-                className="h-full"
+                cardType={activeCategory === 'All' ? 'regular' : 'featured'}
+                key={`grants-mobile-${activeCategory}`}
               />
             </div>
-          </div>
-        </div>
-      ) : (
-        // Single full-width carousel for specific categories
-        <div className="grid grid-cols-1 md:grid-cols-9 gap-6 mb-8">
-          <div className="col-span-1 md:col-span-9">
-            <Carousel
-              items={(() => {
-                switch (activeCategory) {
-                  case 'Posts':
-                    return mappedPosts;
-                  case 'Events':
-                    return mappedEvents;
-                  case 'Funding':
-                    return mappedGrants;
-                  default:
-                    return mappedPosts;
-                }
-              })()}
-              cardType="featured"
-              key={`${activeCategory}-carousel`}
-              timer={8000}
-              className="h-96"
-            />
-          </div>
+          ) : null}
+          {(activeCategory === 'All' || activeCategory === 'Projects') && mappedProjects.length > 0 ? (
+            <div className={activeCategory === 'All' ? 'h-48' : 'h-80'}>
+              <Carousel
+                items={mappedProjects}
+                cardType={activeCategory === 'All' ? 'regular' : 'featured'}
+                key={`projects-mobile-${activeCategory}`}
+              />
+            </div>
+          ) : null}
         </div>
       )}
     </div>

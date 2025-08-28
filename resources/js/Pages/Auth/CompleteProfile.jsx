@@ -44,7 +44,7 @@ export default function CompleteProfile({ universities, faculties }) {
 
     return (
         <GuestLayout>
-            <Head title="Register" />
+            <Head title="Complete Profile" />
 
             <form onSubmit={submit}>
                 <div className="mt-4">
