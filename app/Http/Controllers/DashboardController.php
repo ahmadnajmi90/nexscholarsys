@@ -71,8 +71,61 @@ class DashboardController extends Controller
             // Get top viewed academicians (only for admin dashboard)
             $topViewedAcademicians = null;
             $analyticsData = null;
+            $userMotivationData = null;
             
             if (BouncerFacade::is(auth()->user())->an('admin')) {
+                // START OF NEW CODE
+                $motivations = \App\Models\UserMotivation::all();
+
+                $mainReasonLabels = [
+                    'A' => 'To find a research supervisor or specific research opportunities.',
+                    'B' => 'To find students or collaborators for my research.',
+                    'C' => 'To discover and follow research projects, publications, and grants.',
+                    'D' => 'To build my academic profile and showcase my work.',
+                    'E' => 'To network with other researchers and professionals in my field.',
+                    'F' => 'To stay updated on academic events and news.',
+                    'G' => 'I\'m just exploring the platform for now.',
+                    'H' => 'Other.',
+                ];
+
+                $featuresInterestedLabels = [
+                    'A' => 'AI-powered matching (for supervisors, students, or collaborators).',
+                    'B' => 'Building and managing my detailed academic profile.',
+                    'C' => 'Accessing the directory of universities, faculties, and researchers.',
+                    'D' => 'Finding and sharing academic content (e.g., research updates, projects, events).',
+                    'E' => 'Tools for CV generation or tracking research impact (like Google Scholar integration).',
+                    'F' => 'General networking and connection features.',
+                    'G' => 'I\'m not sure yet.',
+                ];
+
+                // Process Main Reasons
+                $mainReasonCounts = $motivations->countBy('main_reason');
+                $processedMainReasons = collect($mainReasonCounts)->map(function ($count, $key) use ($mainReasonLabels) {
+                    return [
+                        'label' => $mainReasonLabels[$key] ?? $key,
+                        'count' => $count,
+                    ];
+                })->sortByDesc('count')->values();
+
+                // Process Features Interested
+                $featuresInterestedCounts = $motivations->pluck('features_interested')->flatten()->countBy();
+                $processedFeaturesInterested = collect($featuresInterestedCounts)->map(function ($count, $key) use ($featuresInterestedLabels) {
+                    return [
+                        'label' => $featuresInterestedLabels[$key] ?? $key,
+                        'count' => $count,
+                    ];
+                })->sortByDesc('count')->values();
+                
+                // Get latest additional feedback
+                $latestFeedback = $motivations->whereNotNull('additional_info')->where('additional_info', '!=', '')->sortByDesc('updated_at')->take(5)->pluck('additional_info');
+
+                $userMotivationData = [
+                    'mainReasons' => $processedMainReasons,
+                    'featuresInterested' => $processedFeaturesInterested,
+                    'latestFeedback' => $latestFeedback,
+                ];
+                // END OF NEW CODE
+
                 // Top 10 viewed academicians (global)
                 $topViewedAcademicians = Academician::orderBy('total_views', 'desc')
                     ->limit(10)
@@ -114,6 +167,7 @@ class DashboardController extends Controller
                 'profileIncompleteAlert' => $profileIncompleteAlert, // Add the alert to the props
                 'topViewedAcademicians' => $topViewedAcademicians, // Add top viewed academicians
                 'analyticsData' => $analyticsData, // Add Google Analytics data
+                'userMotivationData' => $userMotivationData, // Add user motivation analytics data
                 'facultyAdminDashboardData' => $facultyAdminDashboardData,
             ]);
         }

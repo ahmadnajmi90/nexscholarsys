@@ -29,6 +29,7 @@
         "@fullcalendar/interaction": "^6.1.17",
         "@fullcalendar/react": "^6.1.17",
         "@heroicons/react": "^2.2.0",
+        "@tailwindcss/line-clamp": "^0.4.4",
         "@tailwindcss/typography": "^0.5.16",
         "@tanstack/react-table": "^8.21.3",
         "body-parser": "latest",

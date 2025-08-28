@@ -22,6 +22,7 @@ const Dashboard = ({
   profileIncompleteAlert,
   topViewedAcademicians,
   analyticsData,
+  userMotivationData,
   facultyAdminDashboardData,
 }) => {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -40,6 +41,7 @@ const Dashboard = ({
           totalUsers={totalUsers}
           topViewedAcademicians={topViewedAcademicians}
           analyticsData={analyticsData}
+          userMotivationData={userMotivationData}
         />
       </MainLayout>
     );

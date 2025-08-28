@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { FaUsers, FaDesktop, FaChartLine, FaEye, FaCheck, FaBell, FaFile } from 'react-icons/fa';
+import UserMotivationAnalytics from './UserMotivationAnalytics';
 
-const AdminDashboardComponent = ({ totalUsers, topViewedAcademicians, analyticsData }) => {
+const AdminDashboardComponent = ({ totalUsers, topViewedAcademicians, analyticsData, userMotivationData }) => {
     const [gaLoaded, setGaLoaded] = useState(false);
     
     // Verify analytics data on component mount
@@ -86,12 +87,12 @@ const AdminDashboardComponent = ({ totalUsers, topViewedAcademicians, analyticsD
 
     // Top viewed academicians component
     const TopViewedAcademicians = ({ academicians }) => (
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="bg-white shadow rounded-lg p-6 h-full flex flex-col">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Top Viewed Academicians</h2>
                 <FaChartLine className="text-indigo-500" />
             </div>
-            <div className="space-y-3 max-h-[350px] overflow-y-auto">
+            <div className="space-y-3 flex-1 overflow-y-auto max-h-[350px] sm:max-h-none">
                 {academicians && academicians.length > 0 ? (
                     academicians.map((academician, index) => (
                         <div key={academician.id} className="flex items-center justify-between border-b pb-2">
@@ -241,6 +242,11 @@ const AdminDashboardComponent = ({ totalUsers, topViewedAcademicians, analyticsD
                         <TopPages pages={analyticsData?.topPages || []} />
                     </div>
                 </div>
+            </div>
+
+            {/* User Motivation Analytics */}
+            <div className="mt-4 shadow rounded-lg">
+                <UserMotivationAnalytics motivationData={userMotivationData} />
             </div>
         </div>
     );
