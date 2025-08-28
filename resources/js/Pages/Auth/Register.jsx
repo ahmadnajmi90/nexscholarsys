@@ -27,6 +27,7 @@ export default function Register() {
 
     return (
         <section className="bg-white">
+            <Head title="Register" />
             <div className="lg:grid lg:min-h-screen lg:grid-cols-12">
                 {/* Left Image Section */}
                 <section className="relative flex h-32 items-end bg-gray-900 lg:col-span-5 lg:h-full xl:col-span-6">

@@ -1,7 +1,5 @@
 import React from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import DashboardInsights from '@/Components/Dashboard/DashboardInsights';
-import Dashboard_m from "@/Components/Dashboard/Dashboard_m";
 import AcademicianDashboard from '@/Pages/Dashboard/AcademicianDashboard';
 import AdminDashboard from '@/Pages/Dashboard/AdminDashboard';
 import FacultyAdminDashboard from '@/Pages/Dashboard/FacultyAdminDashboard';
@@ -77,50 +75,6 @@ const Dashboard = ({
       </MainLayout>
     );
   }
-
-  // For other roles, use the existing dashboard components
-  return (
-    <MainLayout>
-      <Head title="Dashboard" />
-      {isDesktop ? (
-        <DashboardInsights
-          totalUsers={totalUsers}
-          onlineUsers={onlineUsers}
-          posts={posts}
-          events={events}
-          projects={projects}
-          grants={grants}
-          academicians={academicians}
-          universities={universities}
-          faculties={faculties}
-          users={users}
-          researchOptions={researchOptions}
-          profileIncompleteAlert={profileIncompleteAlert}
-          topViewedAcademicians={topViewedAcademicians}
-          analyticsData={analyticsData}
-          facultyAdminDashboardData={facultyAdminDashboardData}
-        />
-      ) : (
-        <Dashboard_m
-          totalUsers={totalUsers}
-          onlineUsers={onlineUsers}
-          posts={posts}
-          events={events}
-          projects={projects}
-          grants={grants}
-          academicians={academicians}
-          universities={universities}
-          faculties={faculties}
-          users={users}
-          researchOptions={researchOptions}
-          profileIncompleteAlert={profileIncompleteAlert}
-          topViewedAcademicians={topViewedAcademicians}
-          analyticsData={analyticsData}
-          facultyAdminDashboardData={facultyAdminDashboardData}
-        />
-      )}
-    </MainLayout>
-  );
 };
 
 export default Dashboard;

@@ -451,7 +451,7 @@ const UpcomingEvents = ({
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium text-gray-900">{event.date}</span>
+                        <span className="font-medium text-sm text-gray-900">{event.date}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Globe className="w-4 h-4 text-gray-400" />
