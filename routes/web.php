@@ -113,6 +113,13 @@ Route::get('/debug/routes', function() {
 
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
+// Legal document routes
+use App\Http\Controllers\LegalController;
+Route::get('/legal/terms-of-use', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/legal/privacy-policy', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/legal/cookie-policy', [LegalController::class, 'cookies'])->name('legal.cookies');
+Route::get('/legal/trust-and-security', [LegalController::class, 'security'])->name('legal.security');
+
 Route::get('welcome/posts/{post}', [WelcomeController::class, 'showPost'])->name('welcome.posts.show');
 Route::get('welcome/events/{event}', [WelcomeController::class, 'showEvent'])->name('welcome.events.show');
 Route::get('welcome/projects/{project:url}', [WelcomeController::class, 'showProject'])->name('welcome.projects.show');
