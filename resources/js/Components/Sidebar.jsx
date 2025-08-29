@@ -324,67 +324,71 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
 
                 {/* User Profile Section */}
                 <div className="p-4 bg-gray-100 border-b border-gray-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center border-1 border-white shadow-lg">
-                            <img
-                                src={
-                                    user.academician
-                                        ? (user.academician.profile_picture
-                                            ? `/storage/${user.academician.profile_picture}`
-                                            : "/storage/profile_pictures/default.jpg")
-                                        : user.postgraduate
-                                            ? (user.postgraduate.profile_picture
-                                                ? `/storage/${user.postgraduate.profile_picture}`
-                                                : "/storage/profile_pictures/default.jpg")
-                                            : user.undergraduate
-                                                ? (user.undergraduate.profile_picture
-                                                    ? `/storage/${user.undergraduate.profile_picture}`
+                    {user && (
+                        <>
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center border-1 border-white shadow-lg">
+                                    <img
+                                        src={
+                                            user.academician
+                                                ? (user.academician.profile_picture
+                                                    ? `/storage/${user.academician.profile_picture}`
                                                     : "/storage/profile_pictures/default.jpg")
-                                                : "/storage/profile_pictures/default.jpg"
-                                }
-                                alt="Profile"
-                                className="w-full h-full object-cover rounded-full"
-                            />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                                {user.academician
-                                    ? user.academician.full_name
-                                    : user.postgraduate
-                                        ? user.postgraduate.full_name
-                                        : user.undergraduate
-                                            ? user.undergraduate.full_name
-                                            : isAdmin
-                                                ? "Admin"
-                                                : isFacultyAdmin
-                                                    ? user.full_name
-                                                : "User"}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">
-                                {user.email}
-                            </p>
-                            <p className="text-xs text-gray-400 truncate">
-                                {isAdmin ? 'Administrator' : isFacultyAdmin ? 'Faculty Admin' : isAcademician ? 'Academician' : isPostgraduate ? 'Postgraduate' : isUndergraduate ? 'Undergraduate' : 'User'}
-                            </p>
-                        </div>
-                    </div>
-                    
-                    {/* Stats Grid */}
-                    {isAcademician && user.academician.total_publications && user.academician.scholar_profile && (
-                    <div className="grid grid-cols-3 gap-2">
-                        <div className="bg-gray-50 rounded-lg py-2 pr-2 text-center">
-                            <div className="text-lg font-bold text-gray-900">{user.academician.total_publications}</div>
-                            <div className="text-xs text-gray-500">Publications</div>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-2 text-center">
-                            <div className="text-lg font-bold text-gray-900">{user.academician.scholar_profile.total_citations}</div>
-                            <div className="text-xs text-gray-500">Citations</div>
-                        </div>
-                        <div className="bg-gray-50 rounded-lg p-2 text-center">
-                            <div className="text-lg font-bold text-gray-900">{user.academician.scholar_profile.h_index}</div>
-                            <div className="text-xs text-gray-500">h-index</div>
-                        </div>
-                    </div>
+                                                : user.postgraduate
+                                                    ? (user.postgraduate.profile_picture
+                                                        ? `/storage/${user.postgraduate.profile_picture}`
+                                                        : "/storage/profile_pictures/default.jpg")
+                                                    : user.undergraduate
+                                                        ? (user.undergraduate.profile_picture
+                                                            ? `/storage/${user.undergraduate.profile_picture}`
+                                                            : "/storage/profile_pictures/default.jpg")
+                                                        : "/storage/profile_pictures/default.jpg"
+                                        }
+                                        alt="Profile"
+                                        className="w-full h-full object-cover rounded-full"
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">
+                                        {user.academician
+                                            ? user.academician.full_name
+                                            : user.postgraduate
+                                                ? user.postgraduate.full_name
+                                                : user.undergraduate
+                                                    ? user.undergraduate.full_name
+                                                    : isAdmin
+                                                        ? "Admin"
+                                                        : isFacultyAdmin
+                                                            ? user.full_name
+                                                        : "User"}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                        {user.email}
+                                    </p>
+                                    <p className="text-xs text-gray-400 truncate">
+                                        {isAdmin ? 'Administrator' : isFacultyAdmin ? 'Faculty Admin' : isAcademician ? 'Academician' : isPostgraduate ? 'Postgraduate' : isUndergraduate ? 'Undergraduate' : 'User'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* Stats Grid */}
+                            {isAcademician && user.academician && user.academician.total_publications && user.academician.scholar_profile && (
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="bg-gray-50 rounded-lg py-2 pr-2 text-center">
+                                    <div className="text-lg font-bold text-gray-900">{user.academician.total_publications}</div>
+                                    <div className="text-xs text-gray-500">Publications</div>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div className="text-lg font-bold text-gray-900">{user.academician.scholar_profile.total_citations}</div>
+                                    <div className="text-xs text-gray-500">Citations</div>
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-2 text-center">
+                                    <div className="text-lg font-bold text-gray-900">{user.academician.scholar_profile.h_index}</div>
+                                    <div className="text-xs text-gray-500">h-index</div>
+                                </div>
+                            </div>
+                            )}
+                        </>
                     )}
                 </div>
 
