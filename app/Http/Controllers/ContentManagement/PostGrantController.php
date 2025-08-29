@@ -49,9 +49,7 @@ class PostGrantController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        return Inertia::render('PostGrants/Create', [
-            'auth' => Auth::user(),
-        ]);
+        return Inertia::render('PostGrants/Create');
     }
 
     public function store(Request $request)
@@ -103,7 +101,6 @@ class PostGrantController extends Controller
         $postGrant = auth()->user()->postGrants()->findOrFail($id);
         return Inertia::render('PostGrants/Edit', [
             'postGrant' => $postGrant,
-            'auth' => Auth::user(),
         ]);
     }
 

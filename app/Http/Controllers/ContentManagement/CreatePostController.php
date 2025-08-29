@@ -40,9 +40,7 @@ class CreatePostController extends Controller
 
     public function create()
     {
-        return Inertia::render('CreatePosts/Create', [
-            'auth' => Auth::user(),
-        ]);
+        return Inertia::render('CreatePosts/Create');
     }
 
     public function store(Request $request)
@@ -89,7 +87,6 @@ class CreatePostController extends Controller
     {
         $post = auth()->user()->createPosts()->findOrFail($id);
         return Inertia::render('CreatePosts/Edit', [
-            'auth' => Auth::user(),
             'post' => $post,
         ]);
     }

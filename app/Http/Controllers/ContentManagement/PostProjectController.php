@@ -71,7 +71,6 @@ class PostProjectController extends Controller
         }
 
         return Inertia::render('PostProjects/Create', [
-            'auth' => $user,
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
         ]);
@@ -161,7 +160,6 @@ class PostProjectController extends Controller
         $postProject = PostProject::where('author_id', $user->unique_id)->findOrFail($id);
         return Inertia::render('PostProjects/Edit', [
             'postProject' => $postProject,
-            'auth' => $user,
             'researchOptions' => $researchOptions,
             'universities' => UniversityList::all(),
         ]);

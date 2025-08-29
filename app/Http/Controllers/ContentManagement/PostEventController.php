@@ -68,7 +68,6 @@ class PostEventController extends Controller
         }
 
         return Inertia::render('PostEvents/Create', [
-            'auth' => Auth::user(),
             'researchOptions' => $researchOptions,
         ]);
     }
@@ -146,7 +145,6 @@ class PostEventController extends Controller
         $postEvent = auth()->user()->postEvents()->findOrFail($id);
         return Inertia::render('PostEvents/Edit', [
             'postEvent' => $postEvent,
-            'auth' => Auth::user(),
             'researchOptions' => $researchOptions,
         ]);
     }
