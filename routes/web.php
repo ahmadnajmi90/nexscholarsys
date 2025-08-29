@@ -127,13 +127,6 @@ Route::get('/faculties/{faculty}/postgraduates', [UniversityController::class, '
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/complete-profile', [ProfileCompletionController::class, 'show'])->name('profile.complete');
     Route::post('/complete-profile', [ProfileCompletionController::class, 'update']);
-    Route::get('/dashboard/post-grants', [PostGrantController::class, 'index'])->name('post-grants.index');
-    Route::get('/dashboard/post-grants/create', [PostGrantController::class, 'create'])->name('post-grants.create');
-    Route::post('/dashboard/post-grants', [PostGrantController::class, 'store'])->name('post-grants.store');
-    Route::get('/dashboard/post-grants/{id}/edit', [PostGrantController::class, 'edit'])->name('post-grants.edit');
-    Route::post('/dashboard/post-grants/{id}', [PostGrantController::class, 'update'])->name('post-grants.update');
-    Route::delete('/dashboard/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
@@ -259,6 +252,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/create-posts/{id}/edit', [CreatePostController::class, 'edit'])->name('create-posts.edit');
     Route::post('/create-posts/{id}', [CreatePostController::class, 'update'])->name('create-posts.update');
     Route::delete('/create-posts/{id}', [CreatePostController::class, 'destroy'])->name('create-posts.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/post-grants', [PostGrantController::class, 'index'])->name('post-grants.index');
+    Route::get('/post-grants/create', [PostGrantController::class, 'create'])->name('post-grants.create');
+    Route::post('/post-grants', [PostGrantController::class, 'store'])->name('post-grants.store');
+    Route::get('/post-grants/{id}/edit', [PostGrantController::class, 'edit'])->name('post-grants.edit');
+    Route::post('/post-grants/{id}', [PostGrantController::class, 'update'])->name('post-grants.update');
+    Route::delete('/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
 });
 
 // Profile pages with SEO URLs
