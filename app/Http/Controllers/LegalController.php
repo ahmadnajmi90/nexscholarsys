@@ -258,7 +258,7 @@ We believe that respecting your privacy is essential to earning your trust. Our 
 
 - **You Are in Control:** You own your data. Our platform is designed to give you full control to access, edit, and permanently delete your profile information at any time.
 - **Purposeful Data Use:** We use your data to power the services you signed up for—like matching you with scholarships and supervisors—and to improve our platform's features and AI algorithms.
-- **No Surprises:** We are transparent about how your information is handled. For a complete overview, please read our full [Privacy Policy](/privacy-policy).
+- **No Surprises:** We are transparent about how your information is handled. For a complete overview, please read our full [Privacy Policy](/legal/privacy-policy).
 
 ## 3. Platform Integrity and Responsibility
 
@@ -267,19 +267,25 @@ Creating a safe and professional network is a shared responsibility. We have est
 - **Our Role:** We act as an auxiliary to monitor the platform for inappropriate content or behavior that violates our policies, and we will take action when necessary.
 - **Your Role:** You are responsible for the content you post, the accuracy of your information, and your interactions with other users.
 
-By working together, we can maintain a high-quality and trustworthy environment. For more details, please see our [Terms of Use](/terms-of-use).
+By working together, we can maintain a high-quality and trustworthy environment. For more details, please see our [Terms of Use](/legal/terms-of-use).
 
 ## 4. Working with the Security Community
 
 We believe in the power of collaboration and welcome the help of the security community to keep our platform safe. We have a clear and safe process for security researchers to report potential vulnerabilities to us. We are committed to working with this community to verify and address any findings.
 
-If you are a security researcher and believe you have found a vulnerability, please see our [Responsible Disclosure Policy](/responsible-disclosure).
-
----
-
-**Have Questions?**
+## Have Questions?
 
 Your security and trust are our top priorities. If you have any questions or concerns, please do not hesitate to contact us at [admin@nexscholar.com](mailto:admin@nexscholar.com).
         ";
+    }
+
+    public function getTermsContentForModal()
+    {
+        return response()->json(['content' => $this->getTermsContent()]);
+    }
+
+    public function getPrivacyContentForModal()
+    {
+        return response()->json(['content' => $this->getPrivacyContent()]);
     }
 }

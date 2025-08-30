@@ -20,6 +20,10 @@ use App\Http\Controllers\Api\V1\AuthController;
 
 Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 
+// Legal Document Routes for Modal Display (Public Access)
+Route::get('/legal/terms-content', [App\Http\Controllers\LegalController::class, 'getTermsContentForModal'])->name('api.legal.terms');
+Route::get('/legal/privacy-content', [App\Http\Controllers\LegalController::class, 'getPrivacyContentForModal'])->name('api.legal.privacy');
+
 // Group A: Stateless API for External Tools (Bearer Token Authentication)
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     
@@ -99,7 +103,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 
 // Group B: Stateful "App" API for the Inertia Frontend (Session-based Authentication)
 Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () {
-    
+
     // Data Management API Routes (Admin Only) - Stateful for frontend
     Route::middleware(['admin'])->group(function () {
         // Universities - Read-only for frontend data fetching

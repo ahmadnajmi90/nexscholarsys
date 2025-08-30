@@ -10,11 +10,13 @@ import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut } 
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
+import ForceTermsModal from '../Components/ForceTermsModal';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
     const [activeSection, setActiveSection] = useState('dashboard'); // Active section for new sidebar
+    const [showTermsModal, setShowTermsModal] = useState(false); // Terms agreement modal
     const { url } = usePage(); // Get current URL from Inertia
     const { auth } = usePage().props; // Get current URL and auth from Inertia
 
@@ -181,6 +183,13 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         // when the component unmounts to prevent memory leaks
         return removeListener;
     }, []); // Empty dependencies are safe now since we check screen size directly
+
+    // Check if user needs to agree to terms
+    useEffect(() => {
+        if (auth?.user && auth.user.agreed_to_terms === false) {
+            setShowTermsModal(true);
+        }
+    }, [auth]);
 
     const isActive = (route) => url.startsWith(route); // Check if the current route matches
 
@@ -350,6 +359,9 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
 
             )}
+
+            {/* Force Terms Agreement Modal */}
+            <ForceTermsModal show={showTermsModal} />
         </div>
     );
 };

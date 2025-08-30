@@ -41,6 +41,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'is_profile_complete' => false,
+            'agreed_to_terms' => true,
         ]);
 
         event(new Registered($user));

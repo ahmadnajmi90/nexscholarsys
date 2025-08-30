@@ -2,9 +2,10 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import Modal from '@/Components/Modal';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useState } from 'react'; // Import useState if not already imported
+import { useState, useEffect } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 
 export default function Register() {
@@ -17,6 +18,13 @@ export default function Register() {
 
     const [isAgreed, setIsAgreed] = useState(false); // State for the checkbox
 
+    // --- START: New Modal Logic ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('terms'); // 'terms' or 'privacy'
+    const [termsContent, setTermsContent] = useState('');
+    const [privacyContent, setPrivacyContent] = useState('');
+    const [isLoadingContent, setIsLoadingContent] = useState(false);
+
     const submit = (e) => {
         e.preventDefault();
 
@@ -24,6 +32,55 @@ export default function Register() {
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
+
+    const openModal = (tab) => {
+        setActiveTab(tab);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+    };
+
+    useEffect(() => {
+        if (isModalOpen) {
+            const contentToFetch = activeTab === 'terms' ? termsContent : privacyContent;
+            const routeName = activeTab === 'terms' ? 'api.legal.terms' : 'api.legal.privacy';
+            const setContent = activeTab === 'terms' ? setTermsContent : setPrivacyContent;
+
+            if (!contentToFetch) { // Only fetch if content is not already loaded
+                setIsLoadingContent(true);
+                window.axios.get(route(routeName))
+                    .then(response => {
+                        setContent(response.data.content);
+                    })
+                    .catch(error => console.error(`Failed to fetch ${activeTab} content`, error))
+                    .finally(() => setIsLoadingContent(false));
+            }
+        }
+    }, [isModalOpen, activeTab]);
+
+    const renderHtmlContent = (markdown) => {
+        if (!markdown) return '';
+        return markdown
+            // First, handle markdown headings (must be before newline replacement)
+            .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h1>')
+            .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold text-gray-900 mt-4 mb-4">$1</h2>')
+            .replace(/^### (.*$)/gm, '<h3 class="text-lg font-medium text-gray-900 mt-4 mb-2">$1</h3>')
+            // Handle markdown-style links [text](/path) -> <a href="/path">text</a>
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-indigo-600 hover:text-indigo-800 underline">$1</a>')
+            // Then handle bold and italic text
+            .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+            // Remove newlines that come immediately after headings
+            .replace(/(<h[1-3][^>]*>.*?<\/h[1-3]>)\s*\n/g, '$1')
+            // Handle newlines more carefully - don't add <br /> after headings
+            .replace(/\n(?=## )/g, '') // Remove newlines before ## headings
+            .replace(/\n(?=### )/g, '') // Remove newlines before ### headings
+            .replace(/\n(?=# )/g, '') // Remove newlines before # headings
+            .replace(/\n/g, '<br />'); // Convert remaining newlines to <br />
+    };
+    // --- END: New Modal Logic ---
 
     return (
         <section className="bg-white">
@@ -124,19 +181,21 @@ export default function Register() {
                                     />
                                     <span className="ml-2 text-sm text-gray-600">
                                         I agree to the{' '}
-                                        <a
-                                            href="#"
-                                            className="text-blue-600 underline hover:text-blue-500"
+                                        <button
+                                            type="button"
+                                            onClick={() => openModal('privacy')}
+                                            className="text-blue-600 underline hover:text-blue-500 bg-transparent border-none cursor-pointer"
                                         >
-                                            data privacy
-                                        </a>{' '}
+                                            privacy policy
+                                        </button>{' '}
                                         and{' '}
-                                        <a
-                                            href="#"
-                                            className="text-blue-600 underline hover:text-blue-500"
+                                        <button
+                                            type="button"
+                                            onClick={() => openModal('terms')}
+                                            className="text-blue-600 underline hover:text-blue-500 bg-transparent border-none cursor-pointer"
                                         >
-                                            terms and conditions
-                                        </a>
+                                            terms of use
+                                        </button>
                                     </span>
                                 </label>
                             </div>
@@ -174,19 +233,77 @@ export default function Register() {
 
                                 {/* SOCIAL SIGN-IN BUTTON (GOOGLE) */}
                                 <div className="w-full">
-                                    <a
-                                        href={route('auth.google')}
-                                        className="flex items-center justify-center w-full py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg shadow-sm hover:bg-gray-50 transition"
+                                    <PrimaryButton
+                                        type="button"
+                                        className="w-full !bg-white !text-gray-700 !border-gray-300 !justify-center hover:!bg-gray-50 !py-2.5 !font-medium !shadow-sm"
+                                        disabled={processing || !isAgreed}
+                                        onClick={() => window.location.href = route('auth.google')}
                                     >
                                         <FcGoogle className="mr-2 text-xl" />
-                                        <span>Sign in with Google</span>
-                                    </a>
+                                        <span>Sign up with Google</span>
+                                    </PrimaryButton>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </main>
             </div>
+
+            {/* --- NEW TABBED MODAL --- */}
+            <Modal show={isModalOpen} onClose={closeModal} maxWidth="2xl">
+                <div className="p-6 flex flex-col h-full">
+                    <div className="flex justify-between items-center pb-2 flex-shrink-0">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            {activeTab === 'terms' ? 'Terms of Use' : 'Privacy Policy'}
+                        </h2>
+                        <button
+                            type="button"
+                            onClick={closeModal}
+                            className="text-gray-400 hover:text-gray-600"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+
+                    <div className="prose max-w-none mt-4 flex-grow overflow-y-auto max-h-[50vh] border-t border-gray-200">
+                        {isLoadingContent ? (
+                            <p>Loading...</p>
+                        ) : (
+                            <div
+                                className="text-gray-700 leading-relaxed"
+                                dangerouslySetInnerHTML={{
+                                    __html: renderHtmlContent(activeTab === 'terms' ? termsContent : privacyContent)
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    {/* --- MOVED AND REDESIGNED TAB NAVIGATION --- */}
+                    <div className="mt-6 flex justify-center flex-shrink-0">
+                        <nav className="flex space-x-2 bg-gray-50 p-1 rounded-xl">
+                            <button
+                                onClick={() => setActiveTab('terms')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                                    activeTab === 'terms' ? 'bg-white text-gray-900 shadow' : 'text-gray-600 hover:bg-white'
+                                }`}
+                            >
+                                Terms of Use
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('privacy')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                                    activeTab === 'privacy' ? 'bg-white text-gray-900 shadow' : 'text-gray-600 hover:bg-white'
+                                }`}
+                            >
+                                Privacy Policy
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </Modal>
         </section>
     );
 }
