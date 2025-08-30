@@ -43,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'unique_id',
         'is_profile_complete',
+        'agreed_to_terms',
         'email_verified_at',
     ];
 
@@ -73,6 +74,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'agreed_to_terms' => 'boolean',
         ];
     }
 

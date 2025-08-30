@@ -25,10 +25,10 @@ const FooterSection = () => {
       { name: "Service Status", href: "#" }
     ],
     "Legal & More": [
-      { name: "Terms of Use", href: "#" },
-      { name: "Privacy & PDPA Notice", href: "#" },
-      { name: "Cookie Policy", href: "#" },
-      { name: "Security & Responsible Disclosure", href: "#" }
+      { name: "Terms of Use", href: route('legal.terms') },
+      { name: "Privacy Policy", href: route('legal.privacy') },
+      { name: "Cookie Policy", href: route('legal.cookies') },
+      { name: "Trust & Security", href: route('legal.security') }
     ]
   };
 

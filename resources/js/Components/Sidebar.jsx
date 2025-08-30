@@ -372,7 +372,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                             </div>
                             
                             {/* Stats Grid */}
-                            {isAcademician && user.academician && user.academician.total_publications && user.academician.scholar_profile && (
+                            {isAcademician && user.academician && user.academician.total_publications!==0 && user.academician.scholar_profile!==null && (
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="bg-gray-50 rounded-lg py-2 pr-2 text-center">
                                     <div className="text-lg font-bold text-gray-900">{user.academician.total_publications}</div>

@@ -61,4 +61,16 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Mark the user as having agreed to terms.
+     */
+    public function agreeToTerms(Request $request)
+    {
+        $user = $request->user();
+        $user->agreed_to_terms = true;
+        $user->save();
+
+        return response()->json(['success' => true]);
+    }
 }
