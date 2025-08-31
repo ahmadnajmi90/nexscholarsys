@@ -80,16 +80,23 @@ class ProjectHubController extends Controller
 
     public function index(Request $request)
     {
-        $user = $request->user()->load('academician'); // Load auth user's profile
+        $user = $request->user()->loadMissing('academician.scholarProfile', 'academician.publications'); // Load auth user's profile with scholar profile and publications
+        
+        // If the user has an academician profile, add the extra data to it.
+        if ($user->academician) {
+            // We create new properties on the academician object that will be serialized to JSON.
+            $user->academician->scholar_profile = $user->academician->scholarProfile;
+            $user->academician->total_publications = $user->academician->publications->count();
+        }
         
         // Fetch WORKSPACES with all necessary nested data
         $workspaces = $user->workspaces()
             ->with([
-                'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
                 'members' => function($query) {
                     $query->withPivot('role');
                 },
-                'members.academician', 'members.postgraduate', 'members.undergraduate'
+                'members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate'
             ])
             ->latest()
             ->get();
@@ -98,13 +105,13 @@ class ProjectHubController extends Controller
         // Get projects where user is a member
         $memberProjects = $user->projects()
             ->with([
-                'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
                 'postProject',
                 'boards.members', // Add eager loading for board members
                 'members' => function($query) {
                     $query->withPivot('role');
                 },
-                'members.academician', 'members.postgraduate', 'members.undergraduate'
+                'members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate'
             ])
             ->latest()
             ->get();
@@ -112,13 +119,13 @@ class ProjectHubController extends Controller
         // Get projects where user is the owner
         $ownedProjects = Project::where('owner_id', $user->id)
             ->with([
-                'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+                'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
                 'postProject',
                 'boards.members', // Add eager loading for board members
                 'members' => function($query) {
                     $query->withPivot('role');
                 },
-                'members.academician', 'members.postgraduate', 'members.undergraduate'
+                'members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate'
             ])
             ->latest()
             ->get();
@@ -143,7 +150,7 @@ class ProjectHubController extends Controller
                     $query->where('connection_tags.id', $collaboratorTag->id)
                           ->where('connection_tag_user.user_id', $user->id);
                 })
-                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->with(['recipient.academician.scholarProfile', 'recipient.postgraduate', 'recipient.undergraduate'])
                 ->get()
                 ->pluck('recipient.id');
                 
@@ -154,7 +161,7 @@ class ProjectHubController extends Controller
                     $query->where('connection_tags.id', $collaboratorTag->id)
                           ->where('connection_tag_user.user_id', $user->id);
                 })
-                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->with(['requester.academician.scholarProfile', 'requester.postgraduate', 'requester.undergraduate'])
                 ->get()
                 ->pluck('requester.id');
                 
@@ -167,7 +174,7 @@ class ProjectHubController extends Controller
         
         // Then fetch the users with eager loaded relationships
         $connections = \App\Models\User::whereIn('id', $friendIds)
-            ->with(['academician', 'postgraduate', 'undergraduate'])
+            ->with(['academician.scholarProfile', 'postgraduate', 'undergraduate'])
             ->get();
         
         // Transform collections using API Resources
@@ -230,7 +237,7 @@ class ProjectHubController extends Controller
         
         // Load the workspace with all its boards and owners
         $workspace->load([
-            'owner.academician', 'owner.postgraduate', 'owner.undergraduate',
+            'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
             'boards' => function($query) use ($userId) {
                 $query->orderBy('created_at')
                       ->whereHas('members', function ($query) use ($userId) {
@@ -241,7 +248,7 @@ class ProjectHubController extends Controller
             'members' => function($query) {
                 $query->withPivot('role');
             },
-            'members.academician', 'members.postgraduate', 'members.undergraduate'
+            'members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate'
         ]);
         
         // Filter out the workspace owner from the members collection
@@ -267,7 +274,7 @@ class ProjectHubController extends Controller
                     $query->where('connection_tags.id', $collaboratorTag->id)
                           ->where('connection_tag_user.user_id', $userId);
                 })
-                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->with(['recipient.academician.scholarProfile', 'recipient.postgraduate', 'recipient.undergraduate'])
                 ->get()
                 ->pluck('recipient');
                 
@@ -278,20 +285,20 @@ class ProjectHubController extends Controller
                     $query->where('connection_tags.id', $collaboratorTag->id)
                           ->where('connection_tag_user.user_id', $userId);
                 })
-                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->with(['requester.academician.scholarProfile', 'requester.postgraduate', 'requester.undergraduate'])
                 ->get()
                 ->pluck('requester');
         } else {
             // Fallback if Collaborator tag doesn't exist - use regular connections
             $requestedConnections = \App\Models\Connection::where('requester_id', $userId)
                 ->where('status', 'accepted')
-                ->with(['recipient.academician', 'recipient.postgraduate', 'recipient.undergraduate'])
+                ->with(['recipient.academician.scholarProfile', 'recipient.postgraduate', 'recipient.undergraduate'])
                 ->get()
                 ->pluck('recipient');
                 
             $receivedConnections = \App\Models\Connection::where('recipient_id', $userId)
                 ->where('status', 'accepted')
-                ->with(['requester.academician', 'requester.postgraduate', 'requester.undergraduate'])
+                ->with(['requester.academician.scholarProfile', 'requester.postgraduate', 'requester.undergraduate'])
                 ->get()
                 ->pluck('requester');
         }
@@ -354,10 +361,10 @@ class ProjectHubController extends Controller
         // Get members based on the parent entity type with role-specific relationships
         $members = [];
         if ($parentType === 'Workspace') {
-            $parentEntity->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
+            $parentEntity->load(['members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate']);
             $members = $parentEntity->members;
         } elseif ($parentType === 'Project') {
-            $parentEntity->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
+            $parentEntity->load(['members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate']);
             $members = $parentEntity->members;
         }
         

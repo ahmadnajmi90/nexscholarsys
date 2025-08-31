@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
 import SearchBar from "@/Components/SearchBar";
+import Pagination from "@/Components/Pagination";
 import ContentSkeletonCard from "@/Pages/Components/ContentSkeletonCard";
 import { FaFilter } from "react-icons/fa";
 import DOMPurify from 'dompurify';
@@ -104,16 +105,7 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
   );
 
   return (
-    <div className="min-h-screen flex">
-      {/* Search Bar - Desktop */}
-      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
-        <SearchBar
-          placeholder="Search events..."
-          routeName="events.index"
-          className=""
-        />
-      </div>
-
+    <div className="min-h-screen">
       {/* Mobile Header with Search and Filter */}
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
@@ -129,79 +121,93 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
         />
       </div>
 
-      {/* Sidebar for Filters */}
-      <div
-        className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
-          showFilters ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
-      >
-        <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
-          Filters
-          <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
-            ✕
-          </button>
-        </h2>
-        <FilterDropdown
-          label="Event Mode"
-          options={uniqueEventModes}
-          selectedValues={eventModeFilter}
-          setSelectedValues={setEventModeFilter}
-        />
-        <FilterDropdown
-          label="Event Type"
-          options={uniqueEventTypes}
-          selectedValues={eventTypeFilter}
-          setSelectedValues={setEventTypeFilter}
-        />
-        <FilterDropdown
-          label="Event Theme"
-          options={uniqueEventThemes}
-          selectedValues={eventThemeFilter}
-          setSelectedValues={setEventThemeFilter}
-        />
-        <FilterDropdown
-          label="Country"
-          options={uniqueCountries}
-          selectedValues={countryFilter}
-          setSelectedValues={setCountryFilter}
-        />
-        <FilterDropdown
-          label="Research Area"
-          options={uniqueResearchAreas}
-          selectedValues={researchAreaFilter}
-          setSelectedValues={setResearchAreaFilter}
-        />
-        <div className="mt-4">
-          <label className="block text-gray-700 font-medium">Start Date</label>
-          <input
-            type="date"
-            value={startDateFilter}
-            onChange={(e) => setStartDateFilter(e.target.value)}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
-          />
+      {/* Two-Column Layout */}
+      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-0 md:py-2 lg:p-0 lg:py-2">
+        {/* Left Column - Filter Panel */}
+        <div className="lg:w-1/4">
+          <div
+            className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
+              showFilters ? "translate-x-0" : "-translate-x-full"
+            } lg:translate-x-0`}
+          >
+            <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+              Filters
+              <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+                ✕
+              </button>
+            </h2>
+            <FilterDropdown
+              label="Event Mode"
+              options={uniqueEventModes}
+              selectedValues={eventModeFilter}
+              setSelectedValues={setEventModeFilter}
+            />
+            <FilterDropdown
+              label="Event Type"
+              options={uniqueEventTypes}
+              selectedValues={eventTypeFilter}
+              setSelectedValues={setEventTypeFilter}
+            />
+            <FilterDropdown
+              label="Event Theme"
+              options={uniqueEventThemes}
+              selectedValues={eventThemeFilter}
+              setSelectedValues={setEventThemeFilter}
+            />
+            <FilterDropdown
+              label="Country"
+              options={uniqueCountries}
+              selectedValues={countryFilter}
+              setSelectedValues={setCountryFilter}
+            />
+            <FilterDropdown
+              label="Research Area"
+              options={uniqueResearchAreas}
+              selectedValues={researchAreaFilter}
+              setSelectedValues={setResearchAreaFilter}
+            />
+            <div className="mt-4">
+              <label className="block text-gray-700 font-medium">Start Date</label>
+              <input
+                type="date"
+                value={startDateFilter}
+                onChange={(e) => setStartDateFilter(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+              />
+            </div>
+            <div className="mt-4">
+              <label className="block text-gray-700 font-medium">End Date</label>
+              <input
+                type="date"
+                value={endDateFilter}
+                onChange={(e) => setEndDateFilter(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+              />
+            </div>
+          </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-gray-700 font-medium">End Date</label>
-          <input
-            type="date"
-            value={endDateFilter}
-            onChange={(e) => setEndDateFilter(e.target.value)}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
-          />
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            // Show skeleton cards while loading
-            Array.from({ length: 9 }, (_, index) => (
-              <ContentSkeletonCard key={index} />
-            ))
-          ) : (
-            // Show actual event cards when not loading
-            displayedEvents.map((event, index) => {
+        {/* Right Column - Search Bar and Content */}
+        <div className="lg:w-3/4">
+          {/* Search Bar - Desktop */}
+          <div className="mb-6 hidden lg:block">
+            <SearchBar
+              placeholder="Search events..."
+              routeName="events.index"
+              className=""
+            />
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoading ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 9 }, (_, index) => (
+                <ContentSkeletonCard key={index} />
+              ))
+            ) : (
+              // Show actual event cards when not loading
+              displayedEvents.map((event, index) => {
             const isEventEnded = new Date(event.end_date) < new Date();
             return (
               <div
@@ -257,36 +263,13 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center mt-6 space-x-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            ◄
-          </button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1)
-            .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-            .map((page, index, arr) => (
-              <React.Fragment key={page}>
-                {index > 0 && page - arr[index - 1] > 1 && <span className="px-2">...</span>}
-                <button
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 border rounded ${
-                    currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                  }`}
-                >
-                  {page}
-                </button>
-              </React.Fragment>
-            ))}
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            ►
-          </button>
+        <div className="mt-6">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
         </div>
       </div>
     </div>

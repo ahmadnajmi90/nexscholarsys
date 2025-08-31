@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 import StudentProfileCard from '@/Pages/Networking/partials/StudentProfileCard';
 import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const PostgraduateList = ({ postgraduates, faculties, researchOptions, universities, faculty, university, users, skills, searchQuery }) => {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -36,8 +36,9 @@ const PostgraduateList = ({ postgraduates, faculties, researchOptions, universit
   }, [faculty.id]);
   
   return (
-    <MainLayout title="Postgraduate List">
+    <MainLayout title="">
       {/* Faculty Banner and Details */}
+      <Head title="Postgraduate List" />
       <div className="relative bg-gray-200">
         <div className="w-full h-64 overflow-hidden">
           <img
@@ -62,7 +63,7 @@ const PostgraduateList = ({ postgraduates, faculties, researchOptions, universit
 
       {/* Navigation Tabs */}
       <div className="md:mt-40 mt-36 border-b border-gray-300 mb-10">
-          <div className="flex md:space-x-16 space-x-6 md:ml-0 ml-4">
+          <div className="flex space-x-6 md:ml-0 ml-4">
           <Link
             href={route('faculties.academicians', faculty.id)}
             className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
