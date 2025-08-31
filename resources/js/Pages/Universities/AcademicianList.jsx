@@ -73,7 +73,7 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
 
             {/* Navigation Tabs */}
             <div className="md:mt-40 mt-36 border-b border-gray-300 mb-10">
-                <div className="flex md:space-x-16 space-x-6 md:ml-0 ml-4">
+                <div className="flex space-x-6 md:ml-0 ml-4">
                     {/* <Link
                         href="#"
                         className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"

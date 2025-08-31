@@ -934,7 +934,7 @@ style.textContent = `
         .board-scroll-container {
             overflow-y: hidden;
             overflow-x: auto;
-            width: calc(70rem);
+            width: calc(68rem);
             max-width: 100%;
         }
         

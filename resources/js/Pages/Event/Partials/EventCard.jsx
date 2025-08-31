@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import FilterDropdown from "@/Components/FilterDropdown";
 import SearchBar from "@/Components/SearchBar";
+import Pagination from "@/Components/Pagination";
 import ContentSkeletonCard from "@/Pages/Components/ContentSkeletonCard";
 import { FaFilter } from "react-icons/fa";
 import DOMPurify from 'dompurify';
@@ -262,36 +263,12 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center mt-6 space-x-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            ◄
-          </button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1)
-            .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-            .map((page, index, arr) => (
-              <React.Fragment key={page}>
-                {index > 0 && page - arr[index - 1] > 1 && <span className="px-2">...</span>}
-                <button
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 border rounded ${
-                    currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                  }`}
-                >
-                  {page}
-                </button>
-              </React.Fragment>
-            ))}
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            ►
-          </button>
+        <div className="mt-6">
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
         </div>
       </div>

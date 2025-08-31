@@ -40,6 +40,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const { auth, pendingRequestCount } = usePage().props;
     const user = auth.user;
+    console.log(user);
 
     // Animation variants
     const containerVariants = {
