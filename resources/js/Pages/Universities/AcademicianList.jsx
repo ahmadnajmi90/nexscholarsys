@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 import AcademicianProfileCard from '@/Pages/Networking/partials/AcademicianProfileCard';
 import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
-import { Link } from '@inertiajs/react';
+import { Link, Head } from '@inertiajs/react';
 
 const AcademicianList = ({ academicians, faculties, researchOptions, universities, faculty, university, users, searchQuery }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -37,6 +37,7 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
     
     return (
         <MainLayout title="">
+            <Head title="Academician List" />
 
              {/* faculty Banner and Details Section */}
              <div className="relative bg-gray-200">

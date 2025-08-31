@@ -213,7 +213,7 @@ const ProfileGridWithDualFilter = ({
       </div>
 
       {/* Two-Column Layout */}
-      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-0 lg:p-0">
+      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-0 md:py-2 lg:p-0 lg:py-2">
         {/* Left Column - Filter Panel */}
         <div className="lg:w-1/4">
           <div

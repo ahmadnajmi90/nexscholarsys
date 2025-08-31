@@ -38,6 +38,7 @@ const FacultyList = ({ faculties, university }) => {
 
     return (
         <MainLayout>
+            <Head title="Faculty List" />
             {/* University Banner and Details Section */}
             <div className="relative bg-gray-200">
                 {/* Banner Image */}
@@ -113,7 +114,7 @@ const FacultyList = ({ faculties, university }) => {
             </div>
 
             {/* Main Content */}
-            <div className="px-8 mt-10">
+            <div className="px-8 mt-10 mb-10">
                 {/* Search Bar - Desktop */}
                 <div className="mb-6 hidden lg:block">
                     <SearchBar
