@@ -74,16 +74,7 @@ const ProjectCard = ({ projects, isLoading }) => {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Search Bar - Desktop */}
-      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
-        <SearchBar
-          placeholder="Search projects..."
-          routeName="projects.index"
-          className=""
-        />
-      </div>
-
+    <div className="min-h-screen">
       {/* Mobile Header with Search and Filter */}
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
@@ -112,172 +103,187 @@ const ProjectCard = ({ projects, isLoading }) => {
         />
       </div>
 
-      {/* Sidebar for Filters */}
-      <div
-        className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
-          showFilters ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
-      >
-        <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
-          Filters
-          <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
-            ✕
-          </button>
-        </h2>
-        <FilterDropdown
-          label="Purpose"
-          options={uniqueTypeOptions}
-          selectedValues={typeFilter}
-          setSelectedValues={setTypeFilter}
-        />
-        <FilterDropdown
-          label="Country"
-          options={uniqueCountryOptions}
-          selectedValues={countryFilter}
-          setSelectedValues={setCountryFilter}
-        />
-        <FilterDropdown
-          label="Project Theme"
-          options={uniqueThemeOptions}
-          selectedValues={themeFilter}
-          setSelectedValues={setThemeFilter}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            // Show skeleton cards while loading
-            Array.from({ length: 9 }, (_, index) => (
-              <ContentSkeletonCard key={index} />
-            ))
-          ) : (
-            // Show actual project cards when not loading
-            displayedProjects.map((project, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 relative"
-            >
-              <img
-                src={project.image ? `/storage/${project.image}` : "/storage/default.jpg"}
-                alt={project.title}
-                className="w-full h-48 object-cover"
-              />
-              {/* Purpose Labels */}
-              <div className="absolute top-2 left-2 flex flex-wrap gap-2">
-                {Array.isArray(project.purpose) ? (
-                  project.purpose.map((purpose, index) => {
-                    let labelText = "";
-                    let labelColor = "bg-blue-500"; // default color
-
-                    switch (purpose) {
-                      case "For Showcase":
-                        labelText = "Showcase";
-                        labelColor = "bg-purple-500";
-                        break;
-                      case "Seek for Postgraduate":
-                        labelText = "Grant for Postgraduate";
-                        labelColor = "bg-green-500";
-                        break;
-                      case "Seek for Undergraduate":
-                        labelText = "Grant for Undergraduate";
-                        labelColor = "bg-yellow-500";
-                        break;
-                      case "Seek for Academician Collaboration":
-                        labelText = "Academician Collaboration";
-                        labelColor = "bg-indigo-500";
-                        break;
-                      case "Seek for Industrial Collaboration":
-                        labelText = "Industry Collaboration";
-                        labelColor = "bg-orange-500";
-                        break;
-                      default:
-                        labelText = purpose;
-                    }
-
-                    return (
-                      <span
-                        key={index}
-                        className={`${labelColor} text-white text-xs font-semibold px-2 py-1 rounded`}
-                      >
-                        {labelText}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                    {project.purpose}
-                  </span>
-                )}
-              </div>
-              <div className="p-8">
-                <h2
-                  className="text-lg font-semibold text-gray-800 text-center truncate"
-                  style={{ maxWidth: "100%" }}
-                  title={project.title}
-                >
-                  {project.title}
-                </h2>
-                <p
-                  className="text-gray-600 h-12 mt-4 text-center font-extralight"
-                  style={{
-                    maxWidth: "100%",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                  }}
-                >
-                  <TruncatedText 
-                    html={project.description || "No description available."}
-                    maxLength={100}
-                  />
-                </p>
-              </div>
-              <Link
-                href={route("projects.show", project.url)}
-                className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
-              >
-                View Details
-              </Link>
-            </div>
-          ))
-          )}
+      {/* Two-Column Layout */}
+      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-0 lg:p-0">
+        {/* Left Column - Filter Panel */}
+        <div className="lg:w-1/4">
+          <div
+            className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
+              showFilters ? "translate-x-0" : "-translate-x-full"
+            } lg:translate-x-0`}
+          >
+            <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+              Filters
+              <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+                ✕
+              </button>
+            </h2>
+            <FilterDropdown
+              label="Purpose"
+              options={uniqueTypeOptions}
+              selectedValues={typeFilter}
+              setSelectedValues={setTypeFilter}
+            />
+            <FilterDropdown
+              label="Country"
+              options={uniqueCountryOptions}
+              selectedValues={countryFilter}
+              setSelectedValues={setCountryFilter}
+            />
+            <FilterDropdown
+              label="Project Theme"
+              options={uniqueThemeOptions}
+              selectedValues={themeFilter}
+              setSelectedValues={setThemeFilter}
+            />
+          </div>
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-center mt-6 space-x-2 items-center">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            ◄
-          </button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1)
-            .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-            .map((page, index, arr) => (
-              <React.Fragment key={page}>
-                {index > 0 && page - arr[index - 1] > 1 && <span className="px-2">...</span>}
-                <button
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 border rounded ${
-                    currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
-                  }`}
+        {/* Right Column - Search Bar and Content */}
+        <div className="lg:w-3/4">
+          {/* Search Bar - Desktop */}
+          <div className="mb-6 hidden lg:block">
+            <SearchBar
+              placeholder="Search projects..."
+              routeName="projects.index"
+              className=""
+            />
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoading ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 9 }, (_, index) => (
+                <ContentSkeletonCard key={index} />
+              ))
+            ) : (
+              // Show actual project cards when not loading
+              displayedProjects.map((project, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-lg shadow-md overflow-hidden text-center pb-8 relative"
+              >
+                <img
+                  src={project.image ? `/storage/${project.image}` : "/storage/default.jpg"}
+                  alt={project.title}
+                  className="w-full h-48 object-cover"
+                />
+                {/* Purpose Labels */}
+                <div className="absolute top-2 left-2 flex flex-wrap gap-2">
+                  {Array.isArray(project.purpose) ? (
+                    project.purpose.map((purpose, index) => {
+                      let labelText = "";
+                      let labelColor = "bg-blue-500"; // default color
+
+                      switch (purpose) {
+                        case "For Showcase":
+                          labelText = "Showcase";
+                          labelColor = "bg-purple-500";
+                          break;
+                        case "Seek for Postgraduate":
+                          labelText = "Grant for Postgraduate";
+                          labelColor = "bg-green-500";
+                          break;
+                        case "Seek for Undergraduate":
+                          labelText = "Grant for Undergraduate";
+                          labelColor = "bg-yellow-500";
+                          break;
+                        case "Seek for Academician Collaboration":
+                          labelText = "Academician Collaboration";
+                          labelColor = "bg-indigo-500";
+                          break;
+                        case "Seek for Industrial Collaboration":
+                          labelText = "Industry Collaboration";
+                          labelColor = "bg-orange-500";
+                          break;
+                        default:
+                          labelText = purpose;
+                      }
+
+                      return (
+                        <span
+                          key={index}
+                          className={`${labelColor} text-white text-xs font-semibold px-2 py-1 rounded`}
+                        >
+                          {labelText}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <span className="bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                      {project.purpose}
+                    </span>
+                  )}
+                </div>
+                <div className="p-8">
+                  <h2
+                    className="text-lg font-semibold text-gray-800 text-center truncate"
+                    style={{ maxWidth: "100%" }}
+                    title={project.title}
+                  >
+                    {project.title}
+                  </h2>
+                  <p
+                    className="text-gray-600 h-12 mt-4 text-center font-extralight"
+                    style={{
+                      maxWidth: "100%",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                    }}
+                  >
+                    <TruncatedText 
+                      html={project.description || "No description available."}
+                      maxLength={100}
+                    />
+                  </p>
+                </div>
+                <Link
+                  href={route("projects.show", project.url)}
+                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
                 >
-                  {page}
-                </button>
-              </React.Fragment>
-            ))}
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-          >
-            ►
-          </button>
+                  View Details
+                </Link>
+              </div>
+            ))
+            )}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center mt-6 space-x-2 items-center">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            >
+              ◄
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1)
+              .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+              .map((page, index, arr) => (
+                <React.Fragment key={page}>
+                  {index > 0 && page - arr[index - 1] > 1 && <span className="px-2">...</span>}
+                  <button
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 border rounded ${
+                      currentPage === page ? "bg-blue-500 text-white" : "bg-white text-gray-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                </React.Fragment>
+              ))}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border rounded bg-white text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            >
+              ►
+            </button>
+          </div>
         </div>
       </div>
     </div>

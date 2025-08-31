@@ -104,16 +104,7 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
   );
 
   return (
-    <div className="min-h-screen flex">
-      {/* Search Bar - Desktop */}
-      <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
-        <SearchBar
-          placeholder="Search events..."
-          routeName="events.index"
-          className=""
-        />
-      </div>
-
+    <div className="min-h-screen">
       {/* Mobile Header with Search and Filter */}
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
@@ -129,79 +120,93 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
         />
       </div>
 
-      {/* Sidebar for Filters */}
-      <div
-        className={`fixed lg:relative top-0 left-0 lg:block lg:w-1/4 w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
-          showFilters ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
-      >
-        <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
-          Filters
-          <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
-            ✕
-          </button>
-        </h2>
-        <FilterDropdown
-          label="Event Mode"
-          options={uniqueEventModes}
-          selectedValues={eventModeFilter}
-          setSelectedValues={setEventModeFilter}
-        />
-        <FilterDropdown
-          label="Event Type"
-          options={uniqueEventTypes}
-          selectedValues={eventTypeFilter}
-          setSelectedValues={setEventTypeFilter}
-        />
-        <FilterDropdown
-          label="Event Theme"
-          options={uniqueEventThemes}
-          selectedValues={eventThemeFilter}
-          setSelectedValues={setEventThemeFilter}
-        />
-        <FilterDropdown
-          label="Country"
-          options={uniqueCountries}
-          selectedValues={countryFilter}
-          setSelectedValues={setCountryFilter}
-        />
-        <FilterDropdown
-          label="Research Area"
-          options={uniqueResearchAreas}
-          selectedValues={researchAreaFilter}
-          setSelectedValues={setResearchAreaFilter}
-        />
-        <div className="mt-4">
-          <label className="block text-gray-700 font-medium">Start Date</label>
-          <input
-            type="date"
-            value={startDateFilter}
-            onChange={(e) => setStartDateFilter(e.target.value)}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
-          />
+      {/* Two-Column Layout */}
+      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-0 lg:p-0">
+        {/* Left Column - Filter Panel */}
+        <div className="lg:w-1/4">
+          <div
+            className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-gray-100 border-r rounded-lg p-4 transition-transform duration-300 z-50 ${
+              showFilters ? "translate-x-0" : "-translate-x-full"
+            } lg:translate-x-0`}
+          >
+            <h2 className="text-lg font-semibold mb-4 flex justify-between items-center">
+              Filters
+              <button onClick={() => setShowFilters(false)} className="text-gray-600 lg:hidden">
+                ✕
+              </button>
+            </h2>
+            <FilterDropdown
+              label="Event Mode"
+              options={uniqueEventModes}
+              selectedValues={eventModeFilter}
+              setSelectedValues={setEventModeFilter}
+            />
+            <FilterDropdown
+              label="Event Type"
+              options={uniqueEventTypes}
+              selectedValues={eventTypeFilter}
+              setSelectedValues={setEventTypeFilter}
+            />
+            <FilterDropdown
+              label="Event Theme"
+              options={uniqueEventThemes}
+              selectedValues={eventThemeFilter}
+              setSelectedValues={setEventThemeFilter}
+            />
+            <FilterDropdown
+              label="Country"
+              options={uniqueCountries}
+              selectedValues={countryFilter}
+              setSelectedValues={setCountryFilter}
+            />
+            <FilterDropdown
+              label="Research Area"
+              options={uniqueResearchAreas}
+              selectedValues={researchAreaFilter}
+              setSelectedValues={setResearchAreaFilter}
+            />
+            <div className="mt-4">
+              <label className="block text-gray-700 font-medium">Start Date</label>
+              <input
+                type="date"
+                value={startDateFilter}
+                onChange={(e) => setStartDateFilter(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+              />
+            </div>
+            <div className="mt-4">
+              <label className="block text-gray-700 font-medium">End Date</label>
+              <input
+                type="date"
+                value={endDateFilter}
+                onChange={(e) => setEndDateFilter(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
+              />
+            </div>
+          </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-gray-700 font-medium">End Date</label>
-          <input
-            type="date"
-            value={endDateFilter}
-            onChange={(e) => setEndDateFilter(e.target.value)}
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200"
-          />
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 py-6 sm:py-4 lg:py-0 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            // Show skeleton cards while loading
-            Array.from({ length: 9 }, (_, index) => (
-              <ContentSkeletonCard key={index} />
-            ))
-          ) : (
-            // Show actual event cards when not loading
-            displayedEvents.map((event, index) => {
+        {/* Right Column - Search Bar and Content */}
+        <div className="lg:w-3/4">
+          {/* Search Bar - Desktop */}
+          <div className="mb-6 hidden lg:block">
+            <SearchBar
+              placeholder="Search events..."
+              routeName="events.index"
+              className=""
+            />
+          </div>
+
+          {/* Main Content */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoading ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 9 }, (_, index) => (
+                <ContentSkeletonCard key={index} />
+              ))
+            ) : (
+              // Show actual event cards when not loading
+              displayedEvents.map((event, index) => {
             const isEventEnded = new Date(event.end_date) < new Date();
             return (
               <div
@@ -287,6 +292,7 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
           >
             ►
           </button>
+        </div>
         </div>
       </div>
     </div>

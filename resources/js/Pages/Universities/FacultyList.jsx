@@ -103,8 +103,8 @@ const FacultyList = ({ faculties, university }) => {
                 </div>
             </div>
 
-            {/* Search Bar - Desktop */}
-            <div className="fixed top-20 left-4 z-50 lg:left-auto lg:right-20 hidden lg:block">
+            {/* Mobile Header with Search */}
+            <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
                 <SearchBar
                     placeholder="Search faculties..."
                     onSearch={handleSearch}
@@ -112,8 +112,18 @@ const FacultyList = ({ faculties, university }) => {
                 />
             </div>
 
-            {/* Faculty List Section */}
-            <div className="flex-1 px-8 mt-10">
+            {/* Main Content */}
+            <div className="px-8 mt-10">
+                {/* Search Bar - Desktop */}
+                <div className="mb-6 hidden lg:block">
+                    <SearchBar
+                        placeholder="Search faculties..."
+                        onSearch={handleSearch}
+                        className=""
+                    />
+                </div>
+
+                {/* Faculty List Section */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
                     {isLoading ? (
                         // Show skeleton cards while loading
