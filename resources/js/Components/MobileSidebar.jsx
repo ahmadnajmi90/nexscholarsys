@@ -69,7 +69,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
             items: [
                 // Grant Management
                 { label: 'View Grant', href: '/grants', icon: DollarSign },
-                ...(canPostGrants ? [{ label: 'Manage Grants', href: route('post-grants.index'), icon: DollarSign }] : []),
+                ...(canPostGrants ? [{ label: 'Manage Funding', href: route('funding.index'), icon: DollarSign }] : []),
                 // Project Management
                 { label: 'View Project', href: '/projects', icon: FolderOpen },
                 ...(canPostProjects ? [{ label: 'Manage Project', href: route('post-projects.index'), icon: FolderOpen }] : []),

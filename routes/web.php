@@ -11,7 +11,7 @@ use App\Http\Controllers\PostgraduateController;
 use App\Http\Controllers\UndergraduateController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ContentManagement\PostGrantController;
+use App\Http\Controllers\ContentManagement\FundingController;
 use Silber\Bouncer\BouncerFacade;
 use App\Http\Controllers\RoleProfileController;
 use App\Http\Controllers\ContentManagement\PostProjectController;
@@ -263,12 +263,12 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/post-grants', [PostGrantController::class, 'index'])->name('post-grants.index');
-    Route::get('/post-grants/create', [PostGrantController::class, 'create'])->name('post-grants.create');
-    Route::post('/post-grants', [PostGrantController::class, 'store'])->name('post-grants.store');
-    Route::get('/post-grants/{id}/edit', [PostGrantController::class, 'edit'])->name('post-grants.edit');
-    Route::post('/post-grants/{id}', [PostGrantController::class, 'update'])->name('post-grants.update');
-    Route::delete('/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
+    Route::get('/funding', [FundingController::class, 'index'])->name('funding.index');
+    Route::get('/funding/create', [FundingController::class, 'create'])->name('funding.create');
+    Route::post('/funding', [FundingController::class, 'store'])->name('funding.store');
+    Route::get('/funding/{id}/edit', [FundingController::class, 'edit'])->name('funding.edit');
+    Route::post('/funding/{id}', [FundingController::class, 'update'])->name('funding.update');
+    Route::delete('/funding/{id}', [FundingController::class, 'destroy'])->name('funding.destroy');
 });
 
 // Profile pages with SEO URLs

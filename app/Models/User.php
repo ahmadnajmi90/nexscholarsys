@@ -11,6 +11,7 @@ use App\Models\Academician;
 use App\Models\Industry;
 use App\Models\Postgraduate;
 use App\Models\PostGrant;
+use App\Models\PostScholarship;
 use App\Models\PostProject;
 use App\Models\PostEvent;
 use App\Models\Undergraduate;
@@ -124,6 +125,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PostGrant::class, 'author_id', 'unique_id');
     }
 
+    public function postScholarships()
+    {
+        return $this->hasMany(PostScholarship::class, 'author_id', 'unique_id');
+    }
+
     public function postProjects()
     {
         return $this->hasMany(PostProject::class, 'author_id', 'unique_id');
@@ -153,7 +159,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(PostGrant::class, 'grant_user_likes')->withTimestamps();
     }
-    
+
+    public function likedScholarships()
+    {
+        return $this->belongsToMany(PostScholarship::class, 'grant_user_likes')->withTimestamps();
+    }
+
     public function likedProjects()
     {
         return $this->belongsToMany(PostProject::class, 'project_user_likes')->withTimestamps();
