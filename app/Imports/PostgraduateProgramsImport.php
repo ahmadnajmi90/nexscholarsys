@@ -31,10 +31,10 @@ class PostgraduateProgramsImport implements ToModel, WithHeadingRow, SkipsEmptyR
                 return null;
             }
 
-            // 1. Determine program_type from name
-            $programType = $this->determineProgramType($row['name']);
+            // 1. Determine program_type from Excel column or name
+            $programType = $this->determineProgramType($row['name'], $row['program_type'] ?? null);
             if (!$programType) {
-                $this->skippedRows[] = ['row' => $row, 'reason' => 'Unable to determine program type from name'];
+                $this->skippedRows[] = ['row' => $row, 'reason' => 'Unable to determine program type from Excel column or name'];
                 return null;
             }
 
@@ -103,17 +103,32 @@ class PostgraduateProgramsImport implements ToModel, WithHeadingRow, SkipsEmptyR
     }
 
     /**
-     * Determine program type from program name.
+     * Determine program type from Excel column or program name.
+     * Implements two-step validation: Excel column priority, then name analysis.
      */
-    private function determineProgramType(string $name): ?string
+    private function determineProgramType(string $name, ?string $programTypeFromExcel): ?string
     {
-        $name = strtolower($name);
+        // Step 1: Prioritize the Excel program_type column
+        if (!empty($programTypeFromExcel)) {
+            $excelType = strtolower(trim($programTypeFromExcel));
 
-        if (str_contains($name, 'master') || str_contains($name, 'msc') || str_contains($name, 'm.sc')) {
+            if (in_array($excelType, ['master', 'masters'])) {
+                return 'Master';
+            }
+
+            if (in_array($excelType, ['phd', 'doctor'])) {
+                return 'PhD';
+            }
+        }
+
+        // Step 2: Fallback to name analysis if Excel column is empty or doesn't match
+        $nameLower = strtolower($name);
+
+        if (str_contains($nameLower, 'master') || str_contains($nameLower, 'msc') || str_contains($nameLower, 'm.sc')) {
             return 'Master';
         }
 
-        if (str_contains($name, 'doctor') || str_contains($name, 'phd')) {
+        if (str_contains($nameLower, 'doctor') || str_contains($nameLower, 'phd')) {
             return 'PhD';
         }
 
