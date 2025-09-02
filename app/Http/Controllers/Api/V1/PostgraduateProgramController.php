@@ -12,6 +12,7 @@ use App\Models\PostgraduateProgram;
 use App\Services\PostgraduateProgramService;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use ReflectionClass;
 
 /**
  * @OA\Tag(
@@ -441,27 +442,36 @@ class PostgraduateProgramController extends Controller
     }
 
     /**
-     * Import postgraduate programs from file.
+     * Import postgraduate programs from file or data.
      *
      * @OA\Post(
      * path="/api/v1/postgraduate-programs/import",
      * operationId="importPostgraduatePrograms",
      * tags={"Postgraduate Programs"},
-     * summary="Import postgraduate programs from file",
-     * description="Imports postgraduate programs from an Excel or CSV file with automatic data cleaning, enrichment, and validation.",
+     * summary="Import postgraduate programs from file or data",
+     * description="Imports postgraduate programs from an Excel/CSV file or JSON data with automatic data cleaning, enrichment, and validation.",
      * @OA\RequestBody(
      * required=true,
-     * @OA\MediaType(
-     * mediaType="multipart/form-data",
-     * @OA\Schema(
-     * @OA\Property(
-     * property="file",
-     * type="string",
-     * format="binary",
-     * description="Excel or CSV file to import"
-     * )
-     * )
-     * )
+     * @OA\OneOf({
+     *     @OA\Schema(
+     *         @OA\Property(property="file", type="string", format="binary", description="Excel or CSV file to import")
+     *     ),
+     *     @OA\Schema(
+     *         @OA\Property(property="programs", type="array", description="Array of program data to import",
+     *             @OA\Items(
+     *                 @OA\Property(property="name", type="string", example="Master of Computer Science"),
+     *                 @OA\Property(property="program_type", type="string", enum={"Master", "PhD"}, example="Master"),
+     *                 @OA\Property(property="university_id", type="integer", example=1),
+     *                 @OA\Property(property="faculty_id", type="integer", nullable=true, example=1),
+     *                 @OA\Property(property="description", type="string", nullable=true, example="A comprehensive program"),
+     *                 @OA\Property(property="duration_years", type="string", nullable=true, example="2 years"),
+     *                 @OA\Property(property="funding_info", type="string", nullable=true, example="Scholarships available"),
+     *                 @OA\Property(property="application_url", type="string", nullable=true, example="https://example.com/apply"),
+     *                 @OA\Property(property="country", type="string", nullable=true, example="Malaysia")
+     *             )
+     *         )
+     *     )
+     * })
      * ),
      * @OA\Response(
      * response=200,
@@ -492,30 +502,131 @@ class PostgraduateProgramController extends Controller
      */
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|extensions:xlsx,csv|max:2048',
-        ]);
-
-        try {
-            // Process the file using the import class
-            $import = new PostgraduateProgramsImport();
-            Excel::import($import, $request->file('file'));
-
-            $processedCount = count($import->getProcessedRows());
-            $skippedRows = $import->getSkippedRows();
-            $skippedCount = count($skippedRows);
-
-            return response()->json([
-                'message' => 'Postgraduate programs imported successfully.',
-                'processed_count' => $processedCount,
-                'skipped_count' => $skippedCount,
-                'skipped_rows' => $skippedRows,
+        // Check if file upload or JSON data import
+        if ($request->hasFile('file')) {
+            // File upload validation
+            $request->validate([
+                'file' => 'required|extensions:xlsx,csv|max:2048',
             ]);
 
-        } catch (\Exception $e) {
+            try {
+                // Process the file using the import class
+                $import = new PostgraduateProgramsImport();
+                Excel::import($import, $request->file('file'));
+
+                $processedCount = count($import->getProcessedRows());
+                $skippedRows = $import->getSkippedRows();
+                $skippedCount = count($skippedRows);
+
+                return response()->json([
+                    'message' => 'Postgraduate programs imported successfully.',
+                    'processed_count' => $processedCount,
+                    'skipped_count' => $skippedCount,
+                    'skipped_rows' => $skippedRows,
+                ]);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Failed to import postgraduate programs: ' . $e->getMessage()
+                ], 500);
+            }
+        } elseif ($request->has('programs')) {
+            // JSON data validation and import
+            $validated = $request->validate([
+                'programs' => 'required|array|min:1',
+                'programs.*.name' => 'required|string|max:255',
+                'programs.*.program_type' => 'nullable|string|in:Master,PhD',
+                'programs.*.university_id' => 'nullable|integer|exists:university_list,id',
+                'programs.*.faculty_id' => 'nullable|integer|exists:faculty_list,id',
+                'programs.*.description' => 'nullable|string',
+                'programs.*.duration_years' => 'nullable|string',
+                'programs.*.funding_info' => 'nullable|string',
+                'programs.*.application_url' => 'nullable|url',
+                'programs.*.country' => 'nullable|string|max:100',
+            ]);
+
+            try {
+                $imported = 0;
+                $errors = [];
+
+                foreach ($validated['programs'] as $index => $programData) {
+                    try {
+                        // Apply the same cleaning and enrichment logic as the import class
+                        $import = new PostgraduateProgramsImport();
+                        $reflection = new \ReflectionClass($import);
+
+                        // Clean and enrich the data using the same methods
+                        $programType = $reflection->getMethod('determineProgramType')
+                            ->invoke($import, $programData['name'], $programData['program_type'] ?? null);
+
+                        if (!$programType) {
+                            $errors[] = ['row' => $index + 1, 'reason' => 'Unable to determine program type'];
+                            continue;
+                        }
+
+                        $universityId = $reflection->getMethod('resolveUniversityId')
+                            ->invoke($import, $programData['university_id'] ?? null);
+
+                        if (!$universityId) {
+                            $errors[] = ['row' => $index + 1, 'reason' => 'Unable to resolve university'];
+                            continue;
+                        }
+
+                        $facultyId = $reflection->getMethod('resolveFacultyId')
+                            ->invoke($import, $programData['faculty_id'] ?? null, $universityId);
+
+                        $country = $reflection->getMethod('deriveCountryFromUniversity')
+                            ->invoke($import, $universityId);
+
+                        $description = $reflection->getMethod('cleanDescription')
+                            ->invoke($import, $programData['description'] ?? null);
+
+                        $durationYears = $reflection->getMethod('cleanDurationYears')
+                            ->invoke($import, $programData['duration_years'] ?? null);
+
+                        $fundingInfo = $reflection->getMethod('setDefaultFundingInfo')
+                            ->invoke($import, $programData['funding_info'] ?? null);
+
+                        // Create the program
+                        PostgraduateProgram::updateOrCreate(
+                            [
+                                'name' => trim($programData['name']),
+                                'university_id' => $universityId,
+                            ],
+                            [
+                                'program_type' => $programType,
+                                'faculty_id' => $facultyId,
+                                'description' => $description,
+                                'duration_years' => $durationYears,
+                                'funding_info' => $fundingInfo,
+                                'application_url' => $programData['application_url'] ?? null,
+                                'country' => $country,
+                            ]
+                        );
+
+                        $imported++;
+
+                    } catch (\Exception $e) {
+                        $errors[] = ['row' => $index + 1, 'reason' => 'Processing error: ' . $e->getMessage()];
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Postgraduate programs imported successfully.',
+                    'processed_count' => $imported,
+                    'skipped_count' => count($errors),
+                    'skipped_rows' => $errors,
+                ]);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Failed to import postgraduate programs: ' . $e->getMessage()
+                ], 500);
+            }
+        } else {
             return response()->json([
-                'error' => 'Failed to import postgraduate programs: ' . $e->getMessage()
-            ], 500);
+                'error' => 'Either a file upload or programs data is required.'
+            ], 400);
         }
     }
 }

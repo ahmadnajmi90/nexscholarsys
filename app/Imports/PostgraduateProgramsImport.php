@@ -71,7 +71,7 @@ class PostgraduateProgramsImport implements ToModel, WithHeadingRow, SkipsEmptyR
                     'description' => $description,
                     'duration_years' => $durationYears,
                     'funding_info' => $fundingInfo,
-                    'application_url' => $row['application_url'] ?? null,
+                'application_url' => $row['application_url'] ?? null,
                     'country' => $country,
                 ]
             );
