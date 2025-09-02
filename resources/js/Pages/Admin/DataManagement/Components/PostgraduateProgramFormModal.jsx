@@ -24,7 +24,6 @@ export default function PostgraduateProgramFormModal({ isOpen, onClose, mode = '
   const [previewData, setPreviewData] = useState([]);
   const [isImportLoading, setIsImportLoading] = useState(false);
   const isEdit = mode === 'edit' && currentProgram;
-  console.log(currentProgram);
 
   useEffect(() => {
     if (!isOpen) return;

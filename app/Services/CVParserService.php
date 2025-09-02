@@ -29,11 +29,14 @@ class CVParserService
             // Verify this path is exactly correct on your machine.
             $pathToBinary = config('services.poppler.path');
 
+            // 1. Extract text without forcing any encoding at the command level.
             $text = (new Pdf($pathToBinary))
                 ->setPdf($fullPath)
                 ->text();
 
-            return $text;
+            // 2. Force the extracted text to be valid UTF-8.
+            // This is a more robust method to clean up malformed characters.
+            return mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
 
         } catch (\Exception $e) {
             Log::error("CVParserService: Failed to extract text from PDF. Error: " . $e->getMessage());
