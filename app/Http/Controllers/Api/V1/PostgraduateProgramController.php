@@ -337,13 +337,13 @@ class PostgraduateProgramController extends Controller
 
     /**
      * Preview import data from file.
-     * 
+     *
      * @OA\Post(
      * path="/api/v1/postgraduate-programs/preview-import",
      * operationId="previewImportPostgraduatePrograms",
      * tags={"Postgraduate Programs"},
      * summary="Preview import data from file",
-     * description="Uploads a file and returns preview of the data to be imported.",
+     * description="Uploads a file and returns preview of the cleaned and enriched data to be imported, including information about skipped rows.",
      * @OA\RequestBody(
      * required=true,
      * @OA\MediaType(
@@ -362,8 +362,24 @@ class PostgraduateProgramController extends Controller
      * response=200,
      * description="Preview data returned successfully",
      * @OA\JsonContent(
-     * type="array",
-     * @OA\Items(type="object")
+     * @OA\Property(property="processed_rows", type="array", description="Successfully processed rows with original and cleaned data",
+     *     @OA\Items(
+     *         @OA\Property(property="original", type="object", description="Original row data from file"),
+     *         @OA\Property(property="processed", type="object", description="Cleaned and enriched data"),
+     *         @OA\Property(property="changes", type="object", description="Changes made during processing")
+     *     )
+     * ),
+     * @OA\Property(property="skipped_rows", type="array", description="Rows that were skipped during processing",
+     *     @OA\Items(
+     *         @OA\Property(property="row", type="object", description="Original row data"),
+     *         @OA\Property(property="reason", type="string", description="Reason why the row was skipped")
+     *     )
+     * ),
+     * @OA\Property(property="summary", type="object",
+     *     @OA\Property(property="total_rows", type="integer", description="Total rows in file"),
+     *     @OA\Property(property="processed_count", type="integer", description="Successfully processed rows"),
+     *     @OA\Property(property="skipped_count", type="integer", description="Skipped rows")
+     * )
      * )
      * ),
      * @OA\Response(
@@ -384,38 +400,65 @@ class PostgraduateProgramController extends Controller
             'file' => 'required|extensions:xlsx,csv|max:2048',
         ]);
 
-        $data = Excel::toArray(new PostgraduateProgramsImport, $request->file('file'));
+        try {
+            // Get raw data first to count total rows
+            $rawData = Excel::toArray([], $request->file('file'));
+            $totalRows = count($rawData[0] ?? []);
 
-        return response()->json($data[0] ?? []);
+            // Process data using the import class
+            $import = new PostgraduateProgramsImport();
+            Excel::import($import, $request->file('file'));
+
+            $processedRows = $import->getProcessedRows();
+            $skippedRows = $import->getSkippedRows();
+
+            // Return the cleaned and enriched data as an array for frontend compatibility
+            // Include additional metadata in headers for future frontend enhancements
+            $previewArray = array_map(function($processedRow) {
+                return $processedRow['processed'];
+            }, $processedRows);
+
+            return response()->json($previewArray, 200, [
+                'X-Total-Rows' => $totalRows,
+                'X-Processed-Count' => count($processedRows),
+                'X-Skipped-Count' => count($skippedRows),
+                'X-Import-Metadata' => json_encode([
+                    'processed_rows' => $processedRows,
+                    'skipped_rows' => $skippedRows,
+                    'summary' => [
+                        'total_rows' => $totalRows,
+                        'processed_count' => count($processedRows),
+                        'skipped_count' => count($skippedRows),
+                    ]
+                ])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to process import file: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Import postgraduate programs from data.
-     * 
+     * Import postgraduate programs from file.
+     *
      * @OA\Post(
      * path="/api/v1/postgraduate-programs/import",
      * operationId="importPostgraduatePrograms",
      * tags={"Postgraduate Programs"},
-     * summary="Import postgraduate programs",
-     * description="Imports multiple postgraduate programs from provided data.",
+     * summary="Import postgraduate programs from file",
+     * description="Imports postgraduate programs from an Excel or CSV file with automatic data cleaning, enrichment, and validation.",
      * @OA\RequestBody(
      * required=true,
-     * @OA\JsonContent(
-     * required={"programs"},
+     * @OA\MediaType(
+     * mediaType="multipart/form-data",
+     * @OA\Schema(
      * @OA\Property(
-     * property="programs",
-     * type="array",
-     * @OA\Items(
-     * required={"name", "program_type", "university_id"},
-     * @OA\Property(property="name", type="string", example="Master of Computer Science"),
-     * @OA\Property(property="program_type", type="string", enum={"Master", "PhD"}, example="Master"),
-     * @OA\Property(property="university_id", type="integer", example=1),
-     * @OA\Property(property="faculty_id", type="integer", nullable=true, example=1),
-     * @OA\Property(property="description", type="string", nullable=true, example="A comprehensive program"),
-     * @OA\Property(property="duration_years", type="string", nullable=true, example="2"),
-     * @OA\Property(property="funding_info", type="string", nullable=true, example="Scholarships available"),
-     * @OA\Property(property="application_url", type="string", nullable=true, example="https://example.com/apply"),
-     * @OA\Property(property="country", type="string", nullable=true, example="Malaysia")
+     * property="file",
+     * type="string",
+     * format="binary",
+     * description="Excel or CSV file to import"
      * )
      * )
      * )
@@ -423,7 +466,17 @@ class PostgraduateProgramController extends Controller
      * @OA\Response(
      * response=200,
      * description="Postgraduate programs imported successfully",
-     * @OA\JsonContent(ref="#/components/schemas/Success")
+     * @OA\JsonContent(
+     * @OA\Property(property="message", type="string", example="Postgraduate programs imported successfully"),
+     * @OA\Property(property="processed_count", type="integer", description="Number of successfully processed rows"),
+     * @OA\Property(property="skipped_count", type="integer", description="Number of skipped rows"),
+     * @OA\Property(property="skipped_rows", type="array", description="Details of skipped rows",
+     *     @OA\Items(
+     *         @OA\Property(property="row", type="object", description="Original row data"),
+     *         @OA\Property(property="reason", type="string", description="Reason why the row was skipped")
+     *     )
+     * )
+     * )
      * ),
      * @OA\Response(
      * response=400,
@@ -439,37 +492,30 @@ class PostgraduateProgramController extends Controller
      */
     public function import(Request $request)
     {
-        $validated = $request->validate([
-            'programs' => 'required|array',
-            'programs.*.name' => 'required|string',
-            'programs.*.program_type' => 'required|string|in:Master,PhD',
-            'programs.*.university_id' => 'required|integer|exists:university_list,id',
-            'programs.*.faculty_id' => 'nullable|integer|exists:faculty_list,id',
-            'programs.*.description' => 'nullable|string',
-            'programs.*.duration_years' => 'nullable|string',
-            'programs.*.funding_info' => 'nullable|string',
-            'programs.*.application_url' => 'nullable|string',
-            'programs.*.country' => 'nullable|string',
+        $request->validate([
+            'file' => 'required|extensions:xlsx,csv|max:2048',
         ]);
 
-        foreach ($validated['programs'] as $programData) {
-            PostgraduateProgram::updateOrCreate(
-                [
-                    'name' => $programData['name'],
-                    'university_id' => $programData['university_id'],
-                ],
-                [
-                    'program_type' => $programData['program_type'] ?? 'Master',
-                    'faculty_id' => $programData['faculty_id'] ?? null,
-                    'description' => $programData['description'] ?? null,
-                    'duration_years' => $programData['duration_years'] ?? null,
-                    'funding_info' => $programData['funding_info'] ?? null,
-                    'application_url' => $programData['application_url'] ?? null,
-                    'country' => $programData['country'] ?? null,
-                ]
-            );
-        }
+        try {
+            // Process the file using the import class
+            $import = new PostgraduateProgramsImport();
+            Excel::import($import, $request->file('file'));
 
-        return response()->json(['message' => 'Postgraduate Programs imported successfully.']);
+            $processedCount = count($import->getProcessedRows());
+            $skippedRows = $import->getSkippedRows();
+            $skippedCount = count($skippedRows);
+
+            return response()->json([
+                'message' => 'Postgraduate programs imported successfully.',
+                'processed_count' => $processedCount,
+                'skipped_count' => $skippedCount,
+                'skipped_rows' => $skippedRows,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to import postgraduate programs: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
