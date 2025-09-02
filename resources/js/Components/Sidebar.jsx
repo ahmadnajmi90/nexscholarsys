@@ -191,14 +191,14 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                     <>
                         {/* Grant Management */}
                         <motion.div variants={itemVariants}>
-                            <Link href="/grants" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                            <Link href="/funding" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
                                 <DollarSign className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Grant</span>
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Funding</span>
                             </Link>
                         </motion.div>
                         {canPostGrants && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('funding.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Link href={route('funding.admin.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
                                     <DollarSign className="text-gray-600 mb-2 w-5 h-5" />
                                     <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Funding</span>
                                 </Link>

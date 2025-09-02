@@ -9,7 +9,7 @@ export default function WelcomeLayout({ children, auth }) {
     <div>
       {/* Public Header */}
       <header className="w-full bg-white shadow-md">
-        <div className="container mx-auto flex justify-between items-center py-4 px-6">
+        <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6 md:px-8 lg:px-0">
           <div className="text-blue-600 text-lg font-bold">Nexscholar</div>
           <div className="flex items-center space-x-4">
              {auth?.user ? (

@@ -11,7 +11,7 @@ import NewsEventsSection from '../Components/Welcome/NewsEventsSection';
 import SubscribeSection from '../Components/Welcome/SubscribeSection';
 import Footer from '../Components/Welcome/Footer';
 
-const Welcome = ({ posts, events, grants, auth }) => {
+const Welcome = ({ posts, events, grants, scholarships, auth }) => {
     const sectionVariants = {
         hidden: { opacity: 0, y: 50 },
         visible: {
@@ -44,7 +44,7 @@ const Welcome = ({ posts, events, grants, auth }) => {
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.2 }}
             >
-                <LatestInfoSection events={events} grants={grants} />
+                <LatestInfoSection events={events} grants={grants} scholarships={scholarships} />
             </motion.div>
 
             <motion.div

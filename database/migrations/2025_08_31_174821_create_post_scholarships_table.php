@@ -29,6 +29,9 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('attachment')->nullable(); // Suggested
             $table->enum('status', ['draft', 'published'])->default('draft'); // Restrict to valid values
+            $table->unsignedInteger('total_views')->default(0);
+            $table->unsignedInteger('total_likes')->default(0);
+            $table->unsignedInteger('total_shares')->default(0);
             $table->timestamps();
         });
     }

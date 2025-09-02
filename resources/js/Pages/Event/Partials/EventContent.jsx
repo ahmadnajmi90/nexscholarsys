@@ -151,28 +151,19 @@ export default function EventContent({
   };
 
   return (
-    <div className="px-10 md:px-16">
-      <div className="max-w-8xl mx-auto py-6">
-        {/* Back Arrow */}
-        {!isWelcome ? (
-            <div className="absolute top-[1.8rem] left-2 md:top-[5.5rem] md:left-[19.5rem] z-10">
-            <Link 
+    <div className="px-6 md:px-8 lg:px-4">
+        <div className="max-w-8xl mx-auto py-4 lg:pt-4">
+        {/* Back Button */}
+        <div className="mb-6">
+            <Link
                 onClick={() => window.history.back()}
-                className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                aria-label="Go back to previous page"
             >
-                <FaArrowLeft className="text-lg md:text-xl" />
+                <FaArrowLeft className="text-sm" />
+                Back
             </Link>
-            </div>
-            ) : (
-            <div className="absolute top-[6.2rem] left-2 md:top-[6.1rem] md:left-[1rem] z-10">
-                <Link 
-                onClick={() => window.history.back()}
-                className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600"
-                >
-                <FaArrowLeft className="text-lg md:text-xl" />
-                </Link>
-            </div>
-        )}
+        </div>
 
         {/* Title */}
         {event.event_name && (
@@ -302,7 +293,7 @@ export default function EventContent({
             <h2 className="text-xl font-bold mb-2">Description</h2>
             <SafeHTML
               html={event.description}
-              className="mb-4 text-gray-700 prose w-full text-justify max-w-none break-words"
+              className="mb-4 text-gray-700 prose w-full text-left max-w-none break-words leading-relaxed"
             />
           </div>
         )}

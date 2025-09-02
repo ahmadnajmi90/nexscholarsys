@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, Head } from '@inertiajs/react';
 import { FaArrowLeft } from 'react-icons/fa';
 import WelcomeLayout from '@/Layouts/WelcomeLayout';
 import PostContent from './Partials/PostContent';
@@ -9,7 +9,8 @@ export default function WelcomePostShow() {
   
   return (
     <WelcomeLayout auth={auth}>
-      <PostContent 
+      <Head title={post.title} />
+        <PostContent 
         post={post} 
         academicians={academicians} 
         postgraduates={postgraduates} 

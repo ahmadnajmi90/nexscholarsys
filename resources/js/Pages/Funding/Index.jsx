@@ -37,7 +37,7 @@ const Index = () => {
 
   const handleTabChange = (newType) => {
     setActiveTab(newType);
-    router.get(route('funding.index', { type: newType }), {}, {
+    router.get(route('funding.admin.index', { type: newType }), {}, {
       preserveState: false,
       preserveScroll: false
     });
@@ -51,7 +51,7 @@ const Index = () => {
         <div className="flex justify-between items-center my-4">
           <h1 className="text-2xl font-semibold">Your Funding</h1>
           <Link
-            href={route('funding.create', { type: activeTab === 'grants' ? 'grant' : 'scholarship' })}
+            href={route('funding.admin.create', { type: activeTab === 'grants' ? 'grant' : 'scholarship' })}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             Add New {activeTab === 'grants' ? 'Grant' : 'Scholarship'}
@@ -88,7 +88,7 @@ const Index = () => {
         
         {/* Search bar */}
         <div className="mb-4">
-          <form id="search-form" method="GET" action={route('funding.index', { type: activeTab })}>
+          <form id="search-form" method="GET" action={route('funding.admin.index', { type: activeTab })}>
             <input
               type="text"
               name="search"
@@ -136,7 +136,7 @@ const Index = () => {
                   </td>
                   <td className="py-2 px-4 text-center">
                     <Link
-                      href={route('funding.edit', { id: item.id, type: activeTab })}
+                      href={route('funding.admin.edit', { id: item.id, type: activeTab })}
                       title="Edit"
                       className="inline-block mr-2"
                     >
@@ -145,7 +145,7 @@ const Index = () => {
                       </div>
                     </Link>
                     <Link
-                      href={route('funding.destroy', { id: item.id, type: activeTab })}
+                      href={route('funding.admin.destroy', { id: item.id, type: activeTab })}
                       method="delete"
                       as="button"
                       title="Delete"
@@ -192,7 +192,7 @@ const Index = () => {
 
                 <div className="flex space-x-4">
                   <Link
-                    href={route('funding.edit', { id: item.id, type: activeTab })}
+                    href={route('funding.admin.edit', { id: item.id, type: activeTab })}
                     title="Edit"
                     className="inline-block"
                   >
@@ -201,7 +201,7 @@ const Index = () => {
                     </div>
                   </Link>
                   <Link
-                    href={route('funding.destroy', { id: item.id, type: activeTab })}
+                    href={route('funding.admin.destroy', { id: item.id, type: activeTab })}
                     method="delete"
                     as="button"
                     title="Delete"

@@ -4,7 +4,7 @@ import { TrendingUp, Users, Award, BookOpen, Newspaper, Calendar, DollarSign, Fo
 import { usePage } from '@inertiajs/react';
 import useIsDesktop from '@/Hooks/useIsDesktop';
 
-const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) => {
+const ProductGrid = ({ posts = [], events = [], grants = [], scholarships = [], projects = [] }) => {
   const { auth } = usePage().props;
   const user = auth.user;
   const [activeCategory, setActiveCategory] = useState('All');
@@ -70,30 +70,34 @@ const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) =>
     url: `/events/${event.url}`,
   });
 
-  const mapGrantToCard = (grant) => ({
-    id: `grant-${grant.id}`,
-    title: grant.title || 'Untitled Grant',
-    subtitle: Array.isArray(grant.grant_theme) ? grant.grant_theme.join(', ') : 'Grant',
-    description: grant.description ? stripHtml(grant.description).substring(0, 120) + '...' : '',
-    status: 'Grant',
-    date: new Date(grant.application_deadline).toLocaleDateString('en-GB', {
+  const mapFundingToCard = (funding, type) => ({
+    id: `${type}-${funding.id}`,
+    title: funding.title || `Untitled ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+    subtitle: type === 'grant'
+      ? (Array.isArray(funding.grant_theme) ? funding.grant_theme.join(', ') : 'Grant')
+      : (Array.isArray(funding.scholarship_type) ? funding.scholarship_type.join(', ') : 'Scholarship'),
+    description: funding.description ? stripHtml(funding.description).substring(0, 120) + '...' : '',
+    status: type === 'grant' ? 'Grant' : 'Scholarship',
+    date: new Date(funding.application_deadline).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     }),
-    author: grant.sponsored_by || 'Funder',
-    readTime: 'Grant',
-    views: grant.total_views || '0',
-    likes: grant.total_likes || '0',
-    shares: grant.total_shares || '0',
-    type: 'grant',
-    category: grant.grant_type || 'Funding',
-    bgColor: 'from-green-600 to-green-800',
-    statusColor: 'bg-green-500 text-white',
-    backgroundImage: grant.image
-      ? `/storage/${grant.image}`
-      : 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=800',
-    url: `/grants/${grant.url}`,
+    author: funding.sponsored_by || 'Funder',
+    readTime: type === 'grant' ? 'Grant' : 'Scholarship',
+    views: funding.total_views || '0',
+    likes: funding.total_likes || '0',
+    shares: funding.total_shares || '0',
+    type: type,
+    category: type === 'grant' ? (funding.grant_type || 'Funding') : (funding.scholarship_type || 'Scholarship'),
+    bgColor: type === 'grant' ? 'from-green-600 to-green-800' : 'from-blue-600 to-blue-800',
+    statusColor: type === 'grant' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white',
+    backgroundImage: funding.image
+      ? `/storage/${funding.image}`
+      : type === 'grant'
+        ? 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=800'
+        : 'https://images.pexels.com/photos/267885/pexels-photo-267885.jpeg?auto=compress&cs=tinysrgb&w=800',
+    url: type === 'grant' ? `/funding/grants/${funding.url}` : `/funding/scholarships/${funding.url}`,
   });
 
   const mapProjectToCard = (project) => ({
@@ -123,14 +127,44 @@ const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) =>
 
   const mappedPosts = posts.slice(0, 5).map(mapPostToCard);
   const mappedEvents = events.slice(0, 5).map(mapEventToCard);
-  const mappedGrants = grants.slice(0, 5).map(mapGrantToCard);
+
+  // Combine grants and scholarships into funding
+  const allFundingItems = [
+    ...grants.map(grant => ({ ...grant, fundingType: 'grant' })),
+    ...scholarships.map(scholarship => ({ ...scholarship, fundingType: 'scholarship' }))
+  ].sort((a, b) => {
+    const today = new Date();
+    const deadlineA = new Date(a.application_deadline);
+    const deadlineB = new Date(b.application_deadline);
+
+    const isEndedA = deadlineA < today;
+    const isEndedB = deadlineB < today;
+
+    // If one is ended and the other is not, put active first
+    if (!isEndedA && isEndedB) return -1;
+    if (isEndedA && !isEndedB) return 1;
+
+    // If both are active, sort by deadline ascending (closest first)
+    if (!isEndedA && !isEndedB) {
+      return deadlineA - deadlineB;
+    }
+
+    // If both are ended, sort by deadline descending (furthest first)
+    if (isEndedA && isEndedB) {
+      return deadlineB - deadlineA;
+    }
+
+    return 0;
+  });
+
+  const mappedFunding = allFundingItems.slice(0, 5).map(item => mapFundingToCard(item, item.fundingType));
   const mappedProjects = projects.slice(0, 5).map(mapProjectToCard);
   
   // Combine all for the single carousel view
   const allMappedActivities = {
     'Posts': mappedPosts,
     'Events': mappedEvents,
-    'Funding': mappedGrants,
+    'Funding': mappedFunding,
     'Projects': mappedProjects
   };
 
@@ -138,7 +172,7 @@ const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) =>
   console.log('allMappedActivities:', allMappedActivities);
   console.log('mappedPosts length:', mappedPosts.length);
   console.log('mappedEvents length:', mappedEvents.length);
-  console.log('mappedGrants length:', mappedGrants.length);
+  console.log('mappedFunding length:', mappedFunding.length);
   console.log('mappedProjects length:', mappedProjects.length);
 
   // --- Dynamic Category Tabs ---
@@ -147,7 +181,12 @@ const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) =>
   // Only add categories that have data
   if (posts.length > 0) availableCategories.push('Posts');
   if (events.length > 0) availableCategories.push('Events');
-  if (grants.length > 0) availableCategories.push('Funding');
+  if (grants.length > 0 || scholarships.length > 0) availableCategories.push('Funding');
+
+  // Update the carousel data to use mappedFunding
+  if (grants.length > 0 || scholarships.length > 0) {
+    allMappedActivities['Funding'] = mappedFunding;
+  }
   if (projects.length > 0) availableCategories.push('Projects');
 
   // Reset active category if it's not available
@@ -235,12 +274,12 @@ const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) =>
                    />
                  </div>
                )}
-               {mappedGrants.length > 0 && (
+               {mappedFunding.length > 0 && (
                  <div className="h-48">
                    <Carousel
-                     items={mappedGrants}
+                     items={mappedFunding}
                      cardType="regular"
-                     key="grants-carousel"
+                     key="funding-carousel"
                      timer={7000}
                      className="h-full"
                    />
@@ -306,12 +345,12 @@ const ProductGrid = ({ posts = [], events = [], grants = [], projects = [] }) =>
               />
             </div>
           ) : null}
-          {(activeCategory === 'All' || activeCategory === 'Funding') && mappedGrants.length > 0 ? (
+          {(activeCategory === 'All' || activeCategory === 'Funding') && mappedFunding.length > 0 ? (
             <div className={activeCategory === 'All' ? 'h-48' : 'h-80'}>
               <Carousel
-                items={mappedGrants}
+                items={mappedFunding}
                 cardType={activeCategory === 'All' ? 'regular' : 'featured'}
-                key={`grants-mobile-${activeCategory}`}
+                key={`funding-mobile-${activeCategory}`}
               />
             </div>
           ) : null}

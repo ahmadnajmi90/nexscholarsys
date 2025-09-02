@@ -141,7 +141,7 @@ export default function Edit({ fundingItem, auth, type }) {
     }
 
     // Submit the clean payload
-    post(route("funding.update", { id: fundingItem.id }), {
+    post(route("funding.admin.update", { id: fundingItem.id }), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
       onSuccess: () => {

@@ -68,8 +68,8 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
             title: 'Manage',
             items: [
                 // Grant Management
-                { label: 'View Grant', href: '/grants', icon: DollarSign },
-                ...(canPostGrants ? [{ label: 'Manage Funding', href: route('funding.index'), icon: DollarSign }] : []),
+                { label: 'View Funding', href: '/funding', icon: DollarSign },
+                ...(canPostGrants ? [{ label: 'Manage Funding', href: route('funding.admin.index'), icon: DollarSign }] : []),
                 // Project Management
                 { label: 'View Project', href: '/projects', icon: FolderOpen },
                 ...(canPostProjects ? [{ label: 'Manage Project', href: route('post-projects.index'), icon: FolderOpen }] : []),

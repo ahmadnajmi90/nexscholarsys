@@ -116,10 +116,10 @@ class FundingController extends Controller
 
             if ($type === 'grant') {
                 $this->fundingService->createGrant($validated);
-                return redirect()->route('funding.index', ['type' => 'grants'])->with('success', 'Grant created successfully.');
+                return redirect()->route('funding.admin.index', ['type' => 'grants'])->with('success', 'Grant created successfully.');
             } else {
                 $this->fundingService->createScholarship($validated);
-                return redirect()->route('funding.index', ['type' => 'scholarships'])->with('success', 'Scholarship created successfully.');
+                return redirect()->route('funding.admin.index', ['type' => 'scholarships'])->with('success', 'Scholarship created successfully.');
             }
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
@@ -212,10 +212,10 @@ class FundingController extends Controller
 
             if ($type === 'grant') {
                 $this->fundingService->updateGrant($fundingItem, $validated);
-                return redirect()->route('funding.index', ['type' => 'grants'])->with('success', 'Grant updated successfully.');
+                return redirect()->route('funding.admin.index', ['type' => 'grants'])->with('success', 'Grant updated successfully.');
             } else {
                 $this->fundingService->updateScholarship($fundingItem, $validated);
-                return redirect()->route('funding.index', ['type' => 'scholarships'])->with('success', 'Scholarship updated successfully.');
+                return redirect()->route('funding.admin.index', ['type' => 'scholarships'])->with('success', 'Scholarship updated successfully.');
             }
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
@@ -233,11 +233,11 @@ class FundingController extends Controller
         if ($type === 'grants') {
             $fundingItem = Auth::user()->postGrants()->findOrFail($id);
             $this->fundingService->deleteGrant($fundingItem);
-            return redirect()->route('funding.index', ['type' => 'grants'])->with('success', 'Grant deleted successfully.');
+            return redirect()->route('funding.admin.index', ['type' => 'grants'])->with('success', 'Grant deleted successfully.');
         } else {
             $fundingItem = Auth::user()->postScholarships()->findOrFail($id);
             $this->fundingService->deleteScholarship($fundingItem);
-            return redirect()->route('funding.index', ['type' => 'scholarships'])->with('success', 'Scholarship deleted successfully.');
+            return redirect()->route('funding.admin.index', ['type' => 'scholarships'])->with('success', 'Scholarship deleted successfully.');
         }
     }
 } 

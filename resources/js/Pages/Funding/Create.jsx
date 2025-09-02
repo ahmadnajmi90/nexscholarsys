@@ -153,7 +153,7 @@ export default function Create() {
     }
 
     // Submit the clean payload
-    post(route("funding.store"), {
+    post(route("funding.admin.store"), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
       onSuccess: () => {

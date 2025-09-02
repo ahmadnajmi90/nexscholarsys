@@ -14,6 +14,7 @@ const Dashboard = ({
   events,
   projects,
   grants,
+  scholarships,
   academicians,
   universities,
   faculties,
@@ -38,6 +39,7 @@ const Dashboard = ({
           events={events}
           projects={projects}
           grants={grants}
+          scholarships={scholarships}
           totalUsers={totalUsers}
           topViewedAcademicians={topViewedAcademicians}
           analyticsData={analyticsData}
@@ -57,6 +59,7 @@ const Dashboard = ({
           events={events}
           projects={projects}
           grants={grants}
+          scholarships={scholarships}
           facultyAdminDashboardData={facultyAdminDashboardData}
         />
       </MainLayout>
@@ -73,6 +76,7 @@ const Dashboard = ({
           events={events}
           projects={projects}
           grants={grants}
+          scholarships={scholarships}
         />
       </MainLayout>
     );
