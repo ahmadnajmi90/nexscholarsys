@@ -40,7 +40,7 @@ const Index = () => {
     <MainLayout title="">
       <Head title="Your Projects" />
       {/* Center content and add padding */}
-      <div className="max-w-8xl mx-auto px-4 pt-20 md:pt-0 lg:pt-0">
+      <div className="max-w-8xl mx-auto px-4 py-20 md:py-20 lg:py-4">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold">Your Projects</h1>
           <Link
@@ -66,22 +66,22 @@ const Index = () => {
         </div>
 
         {/* Desktop View: Table */}
-        <div className="hidden md:block overflow-x-auto bg-white rounded-lg shadow-md p-4">
+        <div className="hidden md:block overflow-x-auto bg-white shadow-md">
           <table className="min-w-full bg-white border">
-            <thead>
+            <thead className="bg-gray-50">
               <tr>
-                <th className="py-2 px-4 border-b text-left">Title</th>
-                <th className="py-2 px-4 border-b">Category</th>
-                <th className="py-2 px-4 border-b">Date of Published</th>
-                <th className="py-2 px-4 border-b">Statistics</th>
-                <th className="py-2 px-4 border-b">Actions</th>
+                <th className="py-2 px-4 border-b text-left w-2/5">Title</th>
+                <th className="py-2 px-4 border-b w-3/20 text-left">Category</th>
+                <th className="py-2 px-4 border-b w-3/20">Date of Published</th>
+                <th className="py-2 px-4 border-b w-1/5">Statistics</th>
+                <th className="py-2 px-4 border-b w-1/6">Actions</th>
               </tr>
             </thead>
             <tbody>
               {postProjects.data.map(project => (
-                <tr key={project.id} className="border-b">
-                  <td className="py-2 px-4 font-semibold text-left">{project.title}</td>
-                  <td className="py-2 px-4 text-center">{project.category}</td>
+                <tr key={project.id} className="border-b py-2 hover:bg-gray-50">
+                  <td className="py-2 px-4 font-semibold text-left max-w-sm truncate">{project.title}</td>
+                  <td className="py-2 px-4 text-left">{project.category}</td>
                   <td className="py-2 px-4 text-center">{formatDate(project.created_at)}</td>
                   <td className="py-2 px-4 text-center">
                       <div className="flex justify-center space-x-2 items-center">
@@ -185,7 +185,7 @@ const Index = () => {
         </div>
 
         {/* Pagination Links */}
-        <div className="mt-4 flex justify-center">
+        <div className="mt-8 flex justify-center">
           {postProjects.links.map((link, index) => (
             <Link
               key={index}

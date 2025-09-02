@@ -171,5 +171,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::apiResource('posts', \App\Http\Controllers\Api\V1\ContentManagement\CreatePostController::class);
     Route::apiResource('events', \App\Http\Controllers\Api\V1\ContentManagement\PostEventController::class);
     Route::apiResource('grants', \App\Http\Controllers\Api\V1\ContentManagement\PostGrantController::class);
+    Route::apiResource('scholarships', \App\Http\Controllers\Api\V1\ContentManagement\PostScholarshipController::class);
     Route::apiResource('projects', \App\Http\Controllers\Api\V1\ContentManagement\PostProjectController::class);
 });

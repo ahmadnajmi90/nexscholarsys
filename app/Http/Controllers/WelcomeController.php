@@ -6,6 +6,7 @@ use App\Models\CreatePost;
 use App\Models\PostEvent;
 use App\Models\PostProject;
 use App\Models\PostGrant;
+use App\Models\PostScholarship;
 use App\Models\FieldOfResearch;
 use App\Models\UniversityList;
 use App\Models\User;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 
 class WelcomeController extends Controller
 {
@@ -45,6 +47,12 @@ class WelcomeController extends Controller
             ->take(9)
             ->get();
 
+        $scholarships = \App\Models\PostScholarship::where('status', 'published')
+            ->where('application_deadline', '>=', $today)
+            ->orderBy('application_deadline', 'asc')
+            ->take(9)
+            ->get();
+
         return Inertia::render('Welcome', [
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
@@ -53,6 +61,7 @@ class WelcomeController extends Controller
             'posts' => $posts,
             'events' => $events,
             'grants' => $grants,
+            'scholarships' => $scholarships,
         ]);
     }
     
@@ -260,8 +269,23 @@ class WelcomeController extends Controller
         ]);
     }
 
-    public function showGrant(PostGrant $grant)
+    public function showFunding(Request $request, $url)
     {
+        // Determine the type from the route name
+        $routeName = $request->route()->getName();
+
+        if (str_contains($routeName, 'grant')) {
+            $funding = PostGrant::where('url', $url)->firstOrFail();
+        } elseif (str_contains($routeName, 'scholarship')) {
+            $funding = PostScholarship::where('url', $url)->firstOrFail();
+        } else {
+            // Fallback: Try to find a grant first, then scholarship
+            $funding = PostGrant::where('url', $url)->first();
+            if (!$funding) {
+                $funding = PostScholarship::where('url', $url)->firstOrFail();
+            }
+        }
+
         // Get the current user (authenticated or null) if available
         $user = Auth::check() ? Auth::user() : null;
         
@@ -269,47 +293,73 @@ class WelcomeController extends Controller
         $ipAddress = !$user ? request()->ip() : null;
         
         // Record the view using our new tracking system
-        $grant->recordView($user ? $user->id : null, $ipAddress);
-        
-        // Get 3 latest grants excluding the current grant, ordered by application_deadline
-        $relatedGrants = PostGrant::where('id', '!=', $grant->id)
+        $funding->recordView($user ? $user->id : null, $ipAddress);
+
+        // Get 3 latest funding items excluding the current one, ordered by application_deadline
+        $relatedGrants = PostGrant::where('id', '!=', $funding->id)
             ->where('status', 'published')
             ->where('application_deadline', '>=', now())
             ->orderBy('application_deadline', 'asc')
             ->take(3)
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->type = 'grant';
+                return $item;
+            });
+
+        $relatedScholarships = PostScholarship::where('id', '!=', $funding->id)
+            ->where('status', 'published')
+            ->where('application_deadline', '>=', now())
+            ->orderBy('application_deadline', 'asc')
+            ->take(3)
+            ->get()
+            ->map(function ($item) {
+                $item->type = 'scholarship';
+                return $item;
+            });
+
+        // Merge and take 3 most recent, ensure it's an array
+        $relatedFunding = $relatedGrants->merge($relatedScholarships)
+            ->sortBy('application_deadline')
+            ->take(3)
+            ->values(); // Reset keys to ensure proper array structure
 
         // Clean description for meta tags
-        $description = strip_tags($grant->description);
+        $description = strip_tags($funding->description);
         $description = str_replace(["\n", "\r", "\t"], ' ', $description);
         $description = preg_replace('/\s+/', ' ', $description);
         $description = substr($description, 0, 200) . '...';
 
         // Handle image URL and dimensions
-        $imageUrl = $grant->image 
-            ? url('storage/' . $grant->image) 
+        $imageUrl = $funding->image
+            ? url('storage/' . $funding->image)
             : url('storage/default.jpg');
 
         // Get image dimensions
-        $imagePath = $grant->image 
-            ? storage_path('app/public/' . $grant->image)
+        $imagePath = $funding->image
+            ? storage_path('app/public/' . $funding->image)
             : public_path('storage/default.jpg');
             
         $imageSize = @getimagesize($imagePath);
         $imageWidth = $imageSize ? $imageSize[0] : 1200;
         $imageHeight = $imageSize ? $imageSize[1] : 630;
 
+        $category = $funding instanceof PostGrant ? 'Grant' : 'Scholarship';
+
+        // Generate the correct route based on funding type
+        $routeName = $funding instanceof PostGrant ? 'welcome.funding.show.grant' : 'welcome.funding.show.scholarship';
+
         // Prepare meta tags
         $metaTags = [
-            'title' => $grant->title,
+            'title' => $funding->title,
             'description' => $description,
             'image' => $imageUrl,
             'image_width' => $imageWidth,
             'image_height' => $imageHeight,
             'type' => 'article',
-            'url' => url()->current(),
-            'published_time' => $grant->created_at->toIso8601String(),
-            'category' => 'Grant',
+            'url' => route($routeName, $funding),
+            'published_time' => $funding->created_at->toIso8601String(),
+            'category' => $category,
             'site_name' => 'NexScholar',
             'locale' => 'en_US'
         ];
@@ -317,11 +367,20 @@ class WelcomeController extends Controller
         // Store in session for blade template
         Session::put('meta', $metaTags);
 
-        return Inertia::render('Grant/WelcomeGrantShow', [
-            'grant' => $grant,
+        // Add type to funding item for frontend
+        $funding->type = $funding instanceof PostGrant ? 'grant' : 'scholarship';
+
+        // Add type to related funding items
+        $relatedFunding = $relatedFunding->map(function ($item) {
+            $item->type = $item instanceof PostGrant ? 'grant' : 'scholarship';
+            return $item;
+        });
+
+        return Inertia::render('Funding/WelcomeFundingShow', [
+            'fundingItem' => $funding,
             'academicians' => Academician::all(),
             'metaTags' => $metaTags,
-            'relatedGrants' => $relatedGrants
+            'relatedFunding' => $relatedFunding
         ]);
     }
 } 

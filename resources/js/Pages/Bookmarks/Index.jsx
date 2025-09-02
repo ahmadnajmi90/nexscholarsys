@@ -158,10 +158,10 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
             />
             <div className="flex justify-between items-center mt-3">
               <a 
-                href={route('grants.show', bookmarkable.url)} 
+                href={route('funding.show', { url: bookmarkable.url })} 
                 className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition"
               >
-                View Grant
+                View Funding
               </a>
               <button 
                 onClick={() => onRemove(bookmark.id)}

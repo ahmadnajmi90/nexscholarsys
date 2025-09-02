@@ -68,7 +68,27 @@ export default function Edit({ postEvent, auth }) {
     <MainLayout title="">
       <Head title="Edit Event" />
       <div className="p-4">
-        <form onSubmit={handleSubmit} className="bg-white p-4 md:p-6 rounded-lg max-w-7xl mx-auto space-y-4 md:space-y-6">
+        {/* Back Button */}
+        <div className="mb-4">
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              className="w-4 h-4 mr-2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white p-6 lg:p-0 rounded-lg max-w-7xl mx-auto space-y-4 md:space-y-6">
           <h1 className="text-xl font-bold text-gray-700 text-center">Edit Event</h1>
 
           {/* Event Name */}
@@ -364,10 +384,10 @@ export default function Edit({ postEvent, auth }) {
                 <input
                   type="checkbox"
                   id="usePersonalEmail"
-                  checked={data.contact_email === auth.email}
+                  checked={data.contact_email === auth.user.email}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setData("contact_email", auth.email);
+                      setData("contact_email", auth.user.email);
                     } else {
                       setData("contact_email", "");
                     }
@@ -375,7 +395,7 @@ export default function Edit({ postEvent, auth }) {
                   className="form-checkbox h-5 w-5 text-blue-600"
                 />
                 <InputLabel htmlFor="usePersonalEmail" className="ml-2 text-gray-700">
-                  Use personal email ({auth.email})
+                  Use personal email ({auth.user.email})
                 </InputLabel>
               </div>
             </div>

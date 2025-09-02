@@ -14,6 +14,7 @@ const FacultyAdminDashboard = ({
   events,
   projects,
   grants,
+  scholarships,
   facultyAdminDashboardData,
 }) => {
   const { auth } = usePage().props;
@@ -94,7 +95,7 @@ const FacultyAdminDashboard = ({
         {activeTab === 'Overview' && (
           <>
             <FeaturedCard posts={posts} />
-            <ProductGrid posts={posts} events={events} grants={grants} projects={projects} />
+            <ProductGrid posts={posts} events={events} grants={grants} scholarships={scholarships} projects={projects} />
             <UpcomingEvents
               events={events}
               eventsPage={eventsPage}

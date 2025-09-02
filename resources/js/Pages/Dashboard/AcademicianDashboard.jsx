@@ -10,6 +10,7 @@ const AcademicianDashboard = ({
   events,
   projects,
   grants,
+  scholarships,
 }) => {
   // Get authenticated user from Inertia props
   const { auth } = usePage().props;
@@ -62,6 +63,7 @@ const AcademicianDashboard = ({
             posts={posts}
             events={events}
             grants={grants}
+            scholarships={scholarships}
           />
 
           {/* Upcoming Events Section */}

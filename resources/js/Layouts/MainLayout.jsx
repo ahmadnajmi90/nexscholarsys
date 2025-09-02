@@ -54,7 +54,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         
         // Manage section
         if (path.includes('/grants') || 
-            path.includes('/post-grants') || 
+            path.includes('/funding') || 
             path.includes('/projects') || 
             path.includes('/post-projects') || 
             path.includes('/events') || 

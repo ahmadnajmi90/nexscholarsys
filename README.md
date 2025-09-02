@@ -38,10 +38,62 @@ Nexscholar is a modern academic and research platform built with Laravel 11 and 
 - **Section Transitions**: Viewport-based fade-in animations for content sections as users scroll
 
 ### Content Management
-- Create and manage academic posts, research projects, events, and grants
+- Create and manage academic posts, research projects, events, and funding opportunities
+- **Unified Funding System**: Manage both grants and scholarships under a single, cohesive interface
 - Track content views, likes, and sharing metrics
 - Support for rich text editing and media galleries
 - Bookmark functionality for saving important content
+
+### Funding System
+
+The Nexscholar platform features a comprehensive and unified funding management system that combines grants and scholarships under a single, intuitive interface while maintaining specialized functionality for each funding type.
+
+#### Key Features
+
+1. **Unified Interface**
+   - Single management dashboard for both grants and scholarships
+   - Tabbed navigation to switch between funding types
+   - Consistent user experience across all funding operations
+   - Shared filtering and search capabilities
+
+2. **Specialized Funding Types**
+   - **Grants**: Research funding awarded to academicians for specific projects
+     - Includes cycle information (annual, biannual, etc.)
+     - Supports grant-specific themes and types
+     - Targeted at academic researchers and institutions
+   - **Scholarships**: Financial aid awarded directly to students
+     - Includes scholarship-specific themes and types
+     - Supports merit-based and need-based funding
+     - Targeted at postgraduate and undergraduate students
+
+3. **Advanced Management**
+   - **Admin Interface**: Dedicated admin panel for creating and managing funding opportunities
+   - **Rich Content**: Support for detailed descriptions, application deadlines, and requirements
+   - **Media Support**: Image uploads and document attachments for each funding opportunity
+   - **Status Tracking**: Published/draft status management with application deadline tracking
+   - **Tagging System**: Flexible tagging for better organization and filtering
+
+4. **Smart Filtering & Search**
+   - Filter by funding type (grant vs scholarship)
+   - Filter by themes and categories
+   - Country-based filtering for international opportunities
+   - Deadline-based sorting (active vs expired opportunities)
+   - Global search across titles and descriptions
+
+5. **User Experience Features**
+   - **Responsive Design**: Optimized for both desktop and mobile devices
+   - **Interactive Cards**: Visual funding cards with type indicators and status badges
+   - **Detailed Views**: Comprehensive funding detail pages with all relevant information
+   - **Application Tracking**: Clear deadline indicators and application status
+   - **SEO-Optimized**: Funding opportunities accessible via clean URLs for sharing
+
+#### Technical Architecture
+
+- **Separate Models**: `PostGrant` and `PostScholarship` models with shared base functionality
+- **Unified Service Layer**: `FundingService` handles both funding types with specialized methods
+- **Flexible Routing**: Dedicated routes for each funding type while maintaining unified management
+- **File Management**: Organized storage structure with separate directories for each funding type
+- **Database Relations**: Proper relationships with user authentication and authorization
 
 ### User Profiles
 - Role-specific profiles for Academicians, Postgraduates, Undergraduates, and Industry professionals
@@ -1126,6 +1178,18 @@ This integration provides administrators with valuable insights about platform u
 
 ## Changelog
 
+### 2024-12-20
+- **Unified Funding System**: Merged scholarships and grants under a single, cohesive funding management interface
+- **New Funding Architecture**: Implemented `FundingController` to handle both grant and scholarship operations
+- **Enhanced Funding Service**: Created `FundingService` with specialized methods for grant and scholarship management
+- **Unified Frontend Interface**: Redesigned funding pages with tabbed navigation for grants and scholarships
+- **Improved User Experience**: Added type-specific filtering, unified search, and consistent UI patterns
+- **Technical Improvements**: Separate models (`PostGrant`, `PostScholarship`) with shared base functionality
+- **File Management**: Organized storage structure with dedicated directories for each funding type
+- **API Enhancements**: Updated routing structure with dedicated endpoints for each funding type
+- **SEO Optimization**: Clean URLs for individual funding opportunities (`/funding/grants/title` or `/funding/scholarships/title`)
+- **Admin Interface**: Unified admin panel for managing all funding opportunities
+
 ### 2024-12-19
 - Fixed Project Hub dashboard bug where owned projects were not displaying alongside member projects
 - Modified ProjectHubController to fetch both owned and member projects, matching the comprehensive approach used for workspaces
@@ -1171,6 +1235,16 @@ This integration provides administrators with valuable insights about platform u
 ## License
 
 The Nexscholar platform is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+### Route Organization Features
+
+1. **Unified Funding Interface**: Single controller manages both grants and scholarships with type-specific routes
+2. **SEO-Friendly URLs**: Clean, descriptive URLs for individual funding opportunities (`/funding/grants/title` or `/funding/scholarships/title`)
+3. **Middleware Protection**: Authentication and verification middleware ensure secure access
+4. **RESTful Design**: Standard RESTful patterns for CRUD operations on funding content
+5. **Route Model Binding**: Automatic model resolution for grants and scholarships using custom route keys
+6. **Welcome Routes**: Public access routes for unauthenticated users to view funding opportunities
 
 ## API Usage with Postman/n8n
 

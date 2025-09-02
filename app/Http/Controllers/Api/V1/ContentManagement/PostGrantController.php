@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\ContentManagement;
 
 use App\Http\Controllers\Controller;
 use App\Models\PostGrant;
-use App\Services\PostGrantService;
+use App\Services\FundingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -18,11 +18,11 @@ use App\Http\Resources\PostGrantResource;
  */
 class PostGrantController extends Controller
 {
-    protected $postGrantService;
+    protected $fundingService;
 
-    public function __construct(PostGrantService $postGrantService)
+    public function __construct(FundingService $fundingService)
     {
-        $this->postGrantService = $postGrantService;
+        $this->fundingService = $fundingService;
     }
 
     /**
@@ -180,7 +180,7 @@ class PostGrantController extends Controller
                 'status' => 'nullable',
             ]);
 
-            $grant = $this->postGrantService->createGrant($validated);
+            $grant = $this->fundingService->createGrant($validated);
 
             return new PostGrantResource($grant);
         } catch (ValidationException $e) {
@@ -286,7 +286,7 @@ class PostGrantController extends Controller
                 ],
             ]);
 
-            $updatedGrant = $this->postGrantService->updateGrant($postGrant, $validated);
+            $updatedGrant = $this->fundingService->updateGrant($postGrant, $validated);
 
             return new PostGrantResource($updatedGrant);
         } catch (ValidationException $e) {
@@ -330,7 +330,7 @@ class PostGrantController extends Controller
     public function destroy($id)
     {
         $postGrant = auth()->user()->postGrants()->findOrFail($id);
-        $this->postGrantService->deleteGrant($postGrant);
+        $this->fundingService->deleteGrant($postGrant);
 
         return response()->json([
             'message' => 'Grant deleted successfully'

@@ -159,6 +159,7 @@ class DashboardController extends Controller
                 'posts' => CreatePost::orderBy('created_at', 'desc')->get(),
                 'projects' => PostProject::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
                 'grants' => PostGrant::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
+                'scholarships' => \App\Models\PostScholarship::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
                 'academicians' => $academicians ?? null,
                 'universities' => UniversityList::all(),
                 'faculties' => FacultyList::all(),

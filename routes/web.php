@@ -11,14 +11,14 @@ use App\Http\Controllers\PostgraduateController;
 use App\Http\Controllers\UndergraduateController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ContentManagement\PostGrantController;
+use App\Http\Controllers\ContentManagement\FundingController;
 use Silber\Bouncer\BouncerFacade;
 use App\Http\Controllers\RoleProfileController;
 use App\Http\Controllers\ContentManagement\PostProjectController;
 use App\Http\Controllers\ContentManagement\PostEventController;
 use App\Http\Controllers\ShowProjectController;
 use App\Http\Controllers\ShowEventController;
-use App\Http\Controllers\ShowGrantController;
+use App\Http\Controllers\ShowFundingController;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\FacultyAdminController;
@@ -80,6 +80,15 @@ Route::bind('post', function ($value) {
 Route::bind('grant', function ($value) {
     return PostGrant::where('url', $value)->firstOrFail();
 });
+Route::bind('funding', function ($value) {
+    // Try to find a grant first
+    $funding = PostGrant::where('url', $value)->first();
+    // If not found, try to find a scholarship
+    if (!$funding) {
+        $funding = \App\Models\PostScholarship::where('url', $value)->firstOrFail();
+    }
+    return $funding;
+});
 Route::bind('event', function ($value) {
     return PostEvent::where('url', $value)->firstOrFail();
 });
@@ -123,7 +132,8 @@ Route::get('/legal/trust-and-security', [LegalController::class, 'security'])->n
 Route::get('welcome/posts/{post}', [WelcomeController::class, 'showPost'])->name('welcome.posts.show');
 Route::get('welcome/events/{event}', [WelcomeController::class, 'showEvent'])->name('welcome.events.show');
 Route::get('welcome/projects/{project:url}', [WelcomeController::class, 'showProject'])->name('welcome.projects.show');
-Route::get('welcome/grants/{grant}', [WelcomeController::class, 'showGrant'])->name('welcome.grants.show');
+Route::get('welcome/funding/grants/{url}', [WelcomeController::class, 'showFunding'])->name('welcome.funding.show.grant');
+Route::get('welcome/funding/scholarships/{url}', [WelcomeController::class, 'showFunding'])->name('welcome.funding.show.scholarship');
 
 Route::get('/universities', [UniversityController::class, 'index'])->name('universities.index'); // University list
 Route::get('/universities/{university}/faculties', [UniversityController::class, 'faculties'])->name('universities.faculties'); // Faculty list
@@ -227,13 +237,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('posts/{url}/share', [ShowPostController::class, 'share'])->name('posts.share');
 });
 
-Route::resource('grants', ShowGrantController::class)
+Route::resource('funding', ShowFundingController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::get('grants/{grant}', [ShowGrantController::class, 'show'])->name('grants.show');
-Route::post('grants/{url}/toggle-like', [ShowGrantController::class, 'toggleLike'])->name('grants.toggleLike');
-Route::post('grants/{url}/share', [ShowGrantController::class, 'share'])->name('grants.share');
+Route::get('funding/grants/{url}', [ShowFundingController::class, 'show'])->name('funding.show.grant');
+Route::get('funding/scholarships/{url}', [ShowFundingController::class, 'show'])->name('funding.show.scholarship');
+Route::post('funding/grants/{url}/toggle-like', [ShowFundingController::class, 'toggleLike'])->name('funding.toggleLike.grant');
+Route::post('funding/scholarships/{url}/toggle-like', [ShowFundingController::class, 'toggleLike'])->name('funding.toggleLike.scholarship');
+Route::post('funding/grants/{url}/share', [ShowFundingController::class, 'share'])->name('funding.share.grant');
+Route::post('funding/scholarships/{url}/share', [ShowFundingController::class, 'share'])->name('funding.share.scholarship');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/post-projects', [PostProjectController::class, 'index'])->name('post-projects.index');
@@ -263,12 +276,12 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/post-grants', [PostGrantController::class, 'index'])->name('post-grants.index');
-    Route::get('/post-grants/create', [PostGrantController::class, 'create'])->name('post-grants.create');
-    Route::post('/post-grants', [PostGrantController::class, 'store'])->name('post-grants.store');
-    Route::get('/post-grants/{id}/edit', [PostGrantController::class, 'edit'])->name('post-grants.edit');
-    Route::post('/post-grants/{id}', [PostGrantController::class, 'update'])->name('post-grants.update');
-    Route::delete('/post-grants/{id}', [PostGrantController::class, 'destroy'])->name('post-grants.destroy');
+    Route::get('/funding-admin', [FundingController::class, 'index'])->name('funding.admin.index');
+    Route::get('/funding-admin/create', [FundingController::class, 'create'])->name('funding.admin.create');
+    Route::post('/funding-admin', [FundingController::class, 'store'])->name('funding.admin.store');
+    Route::get('/funding-admin/{id}/edit', [FundingController::class, 'edit'])->name('funding.admin.edit');
+    Route::post('/funding-admin/{id}', [FundingController::class, 'update'])->name('funding.admin.update');
+    Route::delete('/funding-admin/{id}', [FundingController::class, 'destroy'])->name('funding.admin.destroy');
 });
 
 // Profile pages with SEO URLs

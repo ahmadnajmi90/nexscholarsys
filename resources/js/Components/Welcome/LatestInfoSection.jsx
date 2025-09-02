@@ -6,7 +6,9 @@ const InfoCard = ({ tag, organization, title, location, displayField, deadline, 
 
         let routeName = '';
         if (type === 'grant') {
-            routeName = route("welcome.grants.show", url);
+            routeName = route("welcome.funding.show.grant", url);
+        } else if (type === 'scholarship') {
+            routeName = route("welcome.funding.show.scholarship", url);
         } else if (type === 'event') {
             routeName = route("welcome.events.show", url);
         }
@@ -20,10 +22,21 @@ const InfoCard = ({ tag, organization, title, location, displayField, deadline, 
         <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
-                <span className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${
+                    type === 'grant' ? 'bg-blue-600' :
+                    type === 'scholarship' ? 'bg-purple-600' :
+                    'bg-purple-600'
+                }`}>
                     {tag}
                 </span>
-                <span className="text-gray-500 text-sm font-medium line-clamp-1 max-w-[200px]">{organization}</span>
+                <div className="text-right max-w-[200px]">
+                    <span className="text-gray-700 text-sm font-semibold line-clamp-1 truncate block">{organization}</span>
+                    {(type === 'grant' || type === 'scholarship') && (
+                        <span className="text-gray-500 text-xs block mt-1">
+                            {type === 'grant' ? 'Research Funding' : 'Education Support'}
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Title */}
@@ -31,19 +44,19 @@ const InfoCard = ({ tag, organization, title, location, displayField, deadline, 
                 {title}
             </h3>
 
-            {/* Conditional Content based on tag */}
-            {tag.includes('Grant') || tag.includes('Fund') || tag.includes('Initiative') ? (
+            {/* Conditional Content based on type */}
+            {(type === 'grant' || type === 'scholarship') ? (
                 <>
-                    {/* Location for Grants */}
+                    {/* Location for Funding */}
                     <div className="flex items-center mb-3">
-                        <svg className="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{color: type === 'grant' ? '#2563eb' : '#7c3aed'}}>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <span className="text-blue-600 font-semibold text-normal">{location}</span>
+                        <span className="font-semibold text-normal" style={{color: type === 'grant' ? '#2563eb' : '#7c3aed'}}>{location}</span>
                     </div>
 
-                    {/* Deadline for Grants */}
+                    {/* Deadline for Funding */}
                     <div className="flex items-center mb-4">
                         <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -86,11 +99,17 @@ const InfoCard = ({ tag, organization, title, location, displayField, deadline, 
             </div>
 
             {/* Action Button */}
-            <button 
+            <button
                 onClick={handleViewDetails}
-                className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center"
+                className={`w-full text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200 flex items-center justify-center ${
+                    type === 'grant' ? 'bg-blue-600 hover:bg-blue-700' :
+                    type === 'scholarship' ? 'bg-purple-600 hover:bg-purple-700' :
+                    'bg-purple-600 hover:bg-purple-700'
+                }`}
             >
-                Apply Now
+                {type === 'grant' ? 'Apply for Grant' :
+                 type === 'scholarship' ? 'Apply for Scholarship' :
+                 'Apply Now'}
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
                 </svg>
@@ -99,22 +118,64 @@ const InfoCard = ({ tag, organization, title, location, displayField, deadline, 
     );
 };
 
-const LatestInfoSection = ({ grants = [], events = [] }) => {
+const LatestInfoSection = ({ grants = [], scholarships = [], events = [] }) => {
     const [activeTab, setActiveTab] = useState('funding');
     const [currentPage, setCurrentPage] = useState(0);
 
-    // Map backend data to component structure
-    const fundingData = grants.map(grant => ({
-        tag: grant.grant_type,
-        organization: grant.sponsored_by,
-        title: grant.title,
-        location: grant.country ? grant.country : 'N/A',
+    // Map backend data to component structure with better sponsorship handling
+    const grantData = grants.map(grant => ({
+        type: 'grant',
+        tag: grant.grant_type || 'Grant',
+        organization: grant.sponsored_by || 'Funding Organization',
+        title: grant.title || 'Untitled Grant',
+        location: grant.country || 'Global',
         deadline: new Date(grant.application_deadline).toLocaleDateString(),
-        description: grant.description.replace(/<[^>]*>/g, ''), // Strip HTML tags
-        keywords: Array.isArray(grant.grant_theme) ? grant.grant_theme : ['N/A'],
+        description: grant.description ? grant.description.replace(/<[^>]*>/g, '').trim() : 'No description available.',
+        keywords: Array.isArray(grant.grant_theme) && grant.grant_theme.length > 0 ? grant.grant_theme : ['Research'],
         url: grant.url,
-        type: 'grant'
+        type: 'grant',
+        application_deadline: grant.application_deadline
     }));
+
+    const scholarshipData = scholarships.map(scholarship => ({
+        type: 'scholarship',
+        tag: Array.isArray(scholarship.scholarship_type) && scholarship.scholarship_type.length > 0
+            ? scholarship.scholarship_type[0]
+            : scholarship.scholarship_type || 'Scholarship',
+        organization: scholarship.sponsored_by || 'Educational Institution',
+        title: scholarship.title || 'Untitled Scholarship',
+        location: scholarship.country || 'Global',
+        deadline: new Date(scholarship.application_deadline).toLocaleDateString(),
+        description: scholarship.description ? scholarship.description.replace(/<[^>]*>/g, '').trim() : 'No description available.',
+        keywords: Array.isArray(scholarship.scholarship_type) && scholarship.scholarship_type.length > 0
+            ? scholarship.scholarship_type
+            : [scholarship.scholarship_type || 'Education'],
+        url: scholarship.url,
+        type: 'scholarship',
+        application_deadline: scholarship.application_deadline
+    }));
+
+    // Combine all funding data
+    const allFundingData = [...grantData, ...scholarshipData];
+
+    // Filter only active funding (deadline >= today) and sort by closest deadline first, then take first 9
+    const today = new Date();
+    const activeFundingData = allFundingData
+        .filter(item => new Date(item.application_deadline) >= today)
+        .sort((a, b) => new Date(a.application_deadline) - new Date(b.application_deadline))
+        .slice(0, 9);
+
+    // For display purposes, we still want to show some ended items if we don't have enough active ones
+    // But prioritize active items
+    const fundingData = activeFundingData.length >= 9
+        ? activeFundingData
+        : [
+            ...activeFundingData,
+            ...allFundingData
+                .filter(item => new Date(item.application_deadline) < today)
+                .sort((a, b) => new Date(b.application_deadline) - new Date(a.application_deadline))
+                .slice(0, 9 - activeFundingData.length)
+        ];
 
     const eventsData = events.map(event => ({
         tag: event.event_type,

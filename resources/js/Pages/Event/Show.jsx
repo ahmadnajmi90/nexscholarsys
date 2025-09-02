@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, Head } from '@inertiajs/react';
 import { FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaRegClock, FaThumbsUp, FaShare, FaTimesCircle, FaUniversity } from 'react-icons/fa';
 import MainLayout from '@/Layouts/MainLayout';
 import EventContent from './Partials/EventContent';
@@ -9,6 +9,7 @@ export default function Show() {
   const { event, auth, academicians, researchOptions, relatedEvents } = usePage().props;
   return (
     <MainLayout auth={auth}>
+      <Head title={event.event_name} />
       <EventContent 
         event={event} 
         academicians={academicians}

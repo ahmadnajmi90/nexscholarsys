@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, Head } from '@inertiajs/react';
 import { FaArrowLeft } from 'react-icons/fa';
 import MainLayout from '@/Layouts/MainLayout';
 import ProjectContent from './Partials/ProjectContent';
@@ -9,6 +9,7 @@ export default function Show() {
   console.log(relatedProjects);
   return (
     <MainLayout auth={auth}>
+      <Head title={project.title} />
       <ProjectContent 
         project={project} 
         academicians={academicians}
