@@ -2,10 +2,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { 
-  FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, 
-  FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes,
-  FaUsers
+  FaEye, FaHeart, FaRegHeart, FaShareAlt,
+  FaLink, FaFacebook, FaWhatsapp, FaLinkedin
 } from 'react-icons/fa';
+import {
+  ArrowLeft, Briefcase, Users, Calendar, Building,
+  FileText, Mail, ExternalLink
+} from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import { Helmet } from 'react-helmet';
@@ -219,15 +222,15 @@ export default function ProjectContent({ project, previous, next, academicians, 
         <div className="max-w-8xl mx-auto py-4 lg:pt-4">
         {/* Back Button */}
         <div className="mb-6">
-            <Link
+            <Link 
                 onClick={() => window.history.back()}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 aria-label="Go back to previous page"
             >
-                <FaArrowLeft className="text-sm" />
+                <ArrowLeft className="w-4 h-4" />
                 Back
             </Link>
-        </div>
+            </div>
 
         {/* Title */}
         {project.title && (
@@ -368,151 +371,237 @@ export default function ProjectContent({ project, previous, next, academicians, 
         )}
 
         {/* Project Details */}
-        <div className="mb-4 space-y-2">
+        <div className="mt-8 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-2 border-b-2 border-gray-200">
+            Project Details
+          </h2>
+
+          {/* Two-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            {/* Left Column */}
+            <div className="space-y-6">
+
+              {/* Key Information */}
+              {(project.project_theme || project.purpose || project.field_of_research || project.category) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Briefcase className="w-5 h-5 text-blue-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Key Information</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
           {project.project_theme && (
-            <p>
-              <span className="font-semibold">Project Theme:</span> {project.project_theme}
-            </p>
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-32">Theme:</span>
+                        <span className="text-gray-900">{project.project_theme}</span>
+                      </div>
           )}
           {project.purpose && (
-            <p>
-              <span className="font-semibold">Purpose:</span> {Array.isArray(project.purpose) ? project.purpose.join(", ") : project.purpose}
-            </p>
-          )}
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-32 mt-0.5">Purpose:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.isArray(project.purpose) ? project.purpose.map((purpose, index) => (
+                            <span
+                              key={index}
+                              className="px-4 md:px-2.5 lg:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium border border-gray-200 w-3/4 ml-6 md:ml-6 lg:ml-0"
+                            >
+                              {purpose}
+                            </span>
+                          )) : (
+                            <span className="px-4 md:px-2.5 lg:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium border border-gray-200 w-3/4 ml-6 md:ml-6 lg:ml-0">
+                              {project.purpose}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {project.field_of_research && getResearchNames() && (
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-32 mt-0.5">Research Field:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {getResearchNames().split(', ').map((field, index) => (
+                            <span
+                              key={index}
+                              className="px-4 md:px-2.5 lg:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium border border-gray-200 w-3/4 ml-6 md:ml-6 lg:ml-0"
+                            >
+                              {field.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {project.category && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-32">Category:</span>
+                        <span className="text-gray-900">{project.category}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Student Requirements */}
+              {(project.student_nationality || project.student_level || project.student_mode_study) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Users className="w-5 h-5 text-green-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Student Requirements</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
+                    {project.student_nationality && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-32">Nationality:</span>
+                        <span className="text-gray-900">{project.student_nationality}</span>
+                      </div>
+                    )}
+                    {project.student_level && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-32">Student Level:</span>
+                        <span className="text-gray-900">{Array.isArray(project.student_level) ? project.student_level.join(', ') : project.student_level}</span>
+                      </div>
+                    )}
+                    {project.student_mode_study && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-32">Mode of Study:</span>
+                        <span className="text-gray-900">{Array.isArray(project.student_mode_study) ? project.student_mode_study.join(', ') : project.student_mode_study}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+
+              {/* Schedule & Duration */}
+              {(project.start_date || project.end_date || project.application_deadline || project.duration) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Calendar className="w-5 h-5 text-orange-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Schedule & Duration</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
           {project.start_date && (
-            <p>
-              <span className="font-semibold">Start Date:</span>{" "}
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-24">Start:</span>
+                        <span className="text-gray-900">
               {new Date(project.start_date).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
-            </p>
+                        </span>
+                      </div>
           )}
           {project.end_date && (
-            <p>
-              <span className="font-semibold">End Date:</span>{" "}
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-24">End:</span>
+                        <span className="text-gray-900">
               {new Date(project.end_date).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
-            </p>
+                        </span>
+                      </div>
           )}
           {project.application_deadline && (
-            <p>
-              <span className="font-semibold">Application Deadline:</span>{" "}
+                      <div className="flex items-center">
+                        <span className="text-red-600 font-medium w-24">Deadline:</span>
+                        <span className={`font-semibold ${new Date(project.application_deadline) < new Date() ? 'text-red-600' : 'text-red-600'}`}>
               {new Date(project.application_deadline).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
-            </p>
+                          {new Date(project.application_deadline) < new Date() && (
+                            <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-semibold">
+                              Ended
+                            </span>
+                          )}
+                        </span>
+                      </div>
           )}
           {project.duration && (
-            <p>
-              <span className="font-semibold">Duration:</span> {project.duration} <span>(months)</span>
-            </p>
-          )}
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-24">Duration:</span>
+                        <span className="text-gray-900">{project.duration} months</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Organization & Contact */}
+              {(project.sponsored_by || project.university || project.email || project.application_url) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Building className="w-5 h-5 text-purple-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Organization & Contact</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
           {project.sponsored_by && (
-            <p>
-              <span className="font-semibold">Sponsored By:</span> {project.sponsored_by}
-            </p>
-          )}
-          {project.category && (
-            <p>
-              <span className="font-semibold">Category:</span> {project.category}
-            </p>
-          )}
-          {project.field_of_research && getResearchNames() && (
-            <p>
-              <span className="font-semibold">Field of Research:</span> {getResearchNames()}
-            </p>
-          )}
-          {project.supervisor_category && (
-            <p>
-              <span className="font-semibold">Supervisor Category:</span> {project.supervisor_category}
-            </p>
-          )}
-          {project.supervisor_name && (
-            <p>
-              <span className="font-semibold">Supervisor Name:</span> {project.supervisor_name}
-            </p>
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 text-gray-500 mr-1" />
+                        <span className="text-gray-600 font-medium w-24">Sponsor:</span>
+                        <span className="text-gray-900 font-medium">{project.sponsored_by}</span>
+                      </div>
           )}
           {project.university && getUniversityName() && (
-            <p>
-              <span className="font-semibold">University:</span> {getUniversityName()}
-            </p>
+                      <div className="flex items-center">
+                        <Building className="w-4 h-4 text-gray-500 mr-1" />
+                        <span className="text-gray-600 font-medium w-24">University:</span>
+                        <span className="text-gray-900">{getUniversityName()}</span>
+                      </div>
           )}
           {project.email && (
-            <p>
-              <span className="font-semibold">Email:</span> {project.email}
-            </p>
-          )}
-          {project.origin_country && (
-            <p>
-              <span className="font-semibold">Origin Country:</span> {project.origin_country}
-            </p>
-          )}
-          {project.student_nationality && (
-            <p>
-              <span className="font-semibold">Student Nationality:</span> {project.student_nationality}
-            </p>
-          )}
-          {project.student_level && (
-            <p>
-              <span className="font-semibold">This project is for:</span> {Array.isArray(project.student_level) ? project.student_level.join(', ') : project.student_level}
-            </p>
-          )}
-          {project.student_mode_study && (
-            <p>
-              <span className="font-semibold">Mode of Study:</span> {Array.isArray(project.student_mode_study) ? project.student_mode_study.join(', ') : project.student_mode_study}
-            </p>
-          )}
-          {project.appointment_type && (
-            <p>
-              <span className="font-semibold">Appointment Type:</span> {project.appointment_type}
-            </p>
-          )}
-          {project.purpose_of_collaboration && (
-            <p>
-              <span className="font-semibold">Purpose of Collaboration:</span> {project.purpose_of_collaboration}
-            </p>
-          )}
-          {project.amount && (
-            <p>
-              <span className="font-semibold">Amount:</span> {project.amount}
-            </p>
+                      <div className="flex items-center">
+                        <Mail className="w-4 h-4 text-gray-500 mr-1" />
+                        <span className="text-gray-600 font-medium w-24">Email:</span>
+                        <a href={`mailto:${project.email}`} className="text-blue-600 hover:text-blue-800 underline">
+                          {project.email}
+                        </a>
+                      </div>
           )}
           {project.application_url && (
-            <p>
-              <span className="font-semibold">Application:</span>
+                      <div className="flex items-center">
+                        <ExternalLink className="w-4 h-4 text-gray-500 mr-1" />
+                        <span className="text-gray-600 font-medium w-24">Application:</span>
               <a
                 href={project.application_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-2 text-blue-500 underline"
+                          className="text-blue-600 hover:text-blue-800 underline"
               >
                 Apply
               </a>
-            </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
           )}
+
+            </div>
+          </div>
         </div>
 
         {/* Attachment */}
         {project.attachment && (
           <div className="mb-2">
-            <p>
-              <span className="font-semibold">Attachment:</span>{" "}
+            <div className="flex items-center">
+              <FileText className="w-4 h-4 text-gray-500 mr-1" />
+              <span className="text-gray-600 font-medium mr-2">Attachment:</span>
               <a
                 href={`/storage/${project.attachment}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 underline"
+                className="text-blue-600 hover:text-blue-800 underline"
               >
                 View Attachment
               </a>
-            </p>
+            </div>
           </div>
         )}
 

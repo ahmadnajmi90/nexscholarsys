@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Bookmark;
 use App\Models\Academician;
 use App\Models\PostGrant;
+use App\Models\PostScholarship;
 use App\Models\PostProject;
 use App\Models\PostEvent;
 use App\Models\CreatePost;
@@ -199,6 +200,7 @@ class BookmarkController extends Controller
         return match ($type) {
             'academician' => Academician::class,
             'grant' => PostGrant::class,
+            'scholarship' => PostScholarship::class,
             'project' => PostProject::class,
             'event' => PostEvent::class,
             'post' => CreatePost::class,

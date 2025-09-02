@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaBookmark, FaRegBookmark } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import BookmarkHandler from '@/Utils/BookmarkHandler';
 
 const BookmarkButton = ({ 
@@ -44,24 +44,13 @@ const BookmarkButton = ({
       
       // Show success message
       toast.success(
-        response.is_bookmarked 
-          ? 'Added to bookmarks' 
-          : 'Removed from bookmarks',
-        {
-          position: "bottom-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        }
+        response.is_bookmarked
+          ? 'Added to bookmarks'
+          : 'Removed from bookmarks'
       );
     } catch (error) {
       console.error('Error toggling bookmark:', error);
-      toast.error('Failed to update bookmark. Please try again.', {
-        position: "bottom-right",
-        autoClose: 3000,
-      });
+      toast.error('Failed to update bookmark. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { FaTrash, FaFilter } from 'react-icons/fa';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import BookmarkButton from '@/Components/BookmarkButton';
 import DOMPurify from 'dompurify';
 
@@ -62,7 +62,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
                 alt={bookmarkable.full_name} 
               />
               <div>
-                <h3 className="font-semibold">{bookmarkable.full_name}</h3>
+                <h3 className="font-semibold line-clamp-1">{bookmarkable.full_name}</h3>
                 <p className="text-sm text-gray-600">{bookmarkable.current_position}</p>
               </div>
             </div>
@@ -94,7 +94,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
                 alt={bookmarkable.full_name} 
               />
               <div>
-                <h3 className="font-semibold">{bookmarkable.full_name}</h3>
+                <h3 className="font-semibold line-clamp-1">{bookmarkable.full_name}</h3>
                 <p className="text-sm text-gray-600">Undergraduate Student</p>
               </div>
             </div>
@@ -126,7 +126,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
                 alt={bookmarkable.full_name} 
               />
               <div>
-                <h3 className="font-semibold">{bookmarkable.full_name}</h3>
+                <h3 className="font-semibold line-clamp-1">{bookmarkable.full_name}</h3>
                 <p className="text-sm text-gray-600">Postgraduate Student</p>
               </div>
             </div>
@@ -151,19 +151,55 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
       case 'App\\Models\\PostGrant':
         return (
           <div className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="font-semibold">{bookmarkable.title}</h3>
-            <TruncatedText 
+            <div className="flex items-center mb-2">
+              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium mr-2">
+                Grant
+              </span>
+            </div>
+            <h3 className="font-semibold line-clamp-1">{bookmarkable.title}</h3>
+            <TruncatedText
               text={bookmarkable.description}
               className="text-sm text-gray-600 line-clamp-2"
             />
             <div className="flex justify-between items-center mt-3">
-              <a 
-                href={route('funding.show', { url: bookmarkable.url })} 
+              <a
+                href={route('funding.show.grant', bookmarkable.url)}
                 className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition"
               >
-                View Funding
+                View Grant
               </a>
-              <button 
+              <button
+                onClick={() => onRemove(bookmark.id)}
+                className="text-red-500 hover:text-red-700"
+                aria-label="Remove bookmark"
+              >
+                <FaTrash />
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'App\\Models\\PostScholarship':
+        return (
+          <div className="p-4 bg-white rounded-lg shadow-md">
+            <div className="flex items-center mb-2">
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium mr-2">
+                Scholarship
+              </span>
+            </div>
+            <h3 className="font-semibold line-clamp-1">{bookmarkable.title}</h3>
+            <TruncatedText
+              text={bookmarkable.description}
+              className="text-sm text-gray-600 line-clamp-2"
+            />
+            <div className="flex justify-between items-center mt-3">
+              <a
+                href={route('funding.show.scholarship', bookmarkable.url)}
+                className="px-3 py-1 bg-purple-500 text-white text-sm rounded hover:bg-purple-600 transition"
+              >
+                View Scholarship
+              </a>
+              <button
                 onClick={() => onRemove(bookmark.id)}
                 className="text-red-500 hover:text-red-700"
                 aria-label="Remove bookmark"
@@ -177,7 +213,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
       case 'App\\Models\\PostProject':
         return (
           <div className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="font-semibold">{bookmarkable.title}</h3>
+            <h3 className="font-semibold line-clamp-1">{bookmarkable.title}</h3>
             <TruncatedText 
               text={bookmarkable.description}
               className="text-sm text-gray-600 line-clamp-2"
@@ -203,7 +239,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
       case 'App\\Models\\PostEvent':
         return (
           <div className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="font-semibold">{bookmarkable.event_name}</h3>
+            <h3 className="font-semibold line-clamp-1">{bookmarkable.event_name}</h3>
             <TruncatedText 
               text={bookmarkable.description}
               className="text-sm text-gray-600 line-clamp-2"
@@ -229,7 +265,7 @@ const BookmarkCard = ({ bookmark, onRemove }) => {
       case 'App\\Models\\CreatePost':
         return (
           <div className="p-4 bg-white rounded-lg shadow-md">
-            <h3 className="font-semibold">{bookmarkable.title}</h3>
+            <h3 className="font-semibold line-clamp-1">{bookmarkable.title}</h3>
             <TruncatedText 
               text={bookmarkable.content}
               className="text-sm text-gray-600 line-clamp-2"
@@ -280,54 +316,69 @@ export default function Bookmarks({ auth, bookmarks }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
-  const categories = Object.keys(bookmarksList).sort();
+  // Combine grants and scholarships into a single "Funding" category
+  const processCategories = () => {
+    const processed = { ...bookmarksList };
+
+    // If we have both "Funding" and "Grants" categories, merge them
+    if (processed['Funding'] && processed['Grants']) {
+      processed['Funding'] = [...processed['Funding'], ...processed['Grants']];
+      delete processed['Grants'];
+    }
+
+    return Object.keys(processed).sort();
+  };
+
+  const categories = processCategories();
   
   const removeBookmark = async (id) => {
     try {
       await axios.delete(route('bookmarks.destroy', id));
-      
+
       // Update the local state to remove the bookmark
       const updatedBookmarks = { ...bookmarksList };
-      
+
       // Find and remove the bookmark from the appropriate category
       Object.keys(updatedBookmarks).forEach(category => {
         updatedBookmarks[category] = updatedBookmarks[category].filter(
           bookmark => bookmark.id !== id
         );
-        
+
         // If category is empty, remove it
         if (updatedBookmarks[category].length === 0) {
           delete updatedBookmarks[category];
         }
       });
-      
+
       setBookmarksList(updatedBookmarks);
-      toast.success('Bookmark removed successfully', {
-        position: "bottom-right",
-        autoClose: 2000,
-      });
+      toast.success('Bookmark removed successfully');
     } catch (error) {
       console.error('Error removing bookmark:', error);
-      toast.error('Failed to remove bookmark', {
-        position: "bottom-right",
-        autoClose: 3000,
-      });
+      toast.error('Failed to remove bookmark');
     }
   };
   
   const filteredBookmarks = () => {
-    // If no search term and showing all categories, return all bookmarks
+    // If no search term and showing all categories, return processed bookmarks
     if (searchTerm === '' && selectedCategory === 'all') {
-      return bookmarksList;
+      const processed = { ...bookmarksList };
+
+      // Merge grants and scholarships into funding category
+      if (processed['Funding'] && processed['Grants']) {
+        processed['Funding'] = [...processed['Funding'], ...processed['Grants']];
+        delete processed['Grants'];
+      }
+
+      return processed;
     }
-    
+
     const filtered = {};
-    
+
     // Filter by category first
-    const categoriesToInclude = selectedCategory === 'all' 
-      ? Object.keys(bookmarksList) 
+    const categoriesToInclude = selectedCategory === 'all'
+      ? Object.keys(bookmarksList)
       : [selectedCategory];
-    
+
     // Apply search filter if needed
     categoriesToInclude.forEach(category => {
       if (bookmarksList[category]) {
@@ -337,35 +388,36 @@ export default function Bookmarks({ auth, bookmarks }) {
           filtered[category] = bookmarksList[category].filter(bookmark => {
             const bookmarkable = bookmark.bookmarkable;
             if (!bookmarkable) return false;
-            
+
             // Search based on bookmark type
             switch (bookmark.bookmarkable_type) {
               case 'App\\Models\\Academician':
                 return bookmarkable.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        (bookmarkable.current_position && bookmarkable.current_position.toLowerCase().includes(searchTerm.toLowerCase()));
-              
+
               case 'App\\Models\\Undergraduate':
               case 'App\\Models\\Postgraduate':
                 return bookmarkable.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-              
+
               case 'App\\Models\\PostGrant':
+              case 'App\\Models\\PostScholarship':
               case 'App\\Models\\PostProject':
                 return bookmarkable.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        bookmarkable.description.toLowerCase().includes(searchTerm.toLowerCase());
-              
+
               case 'App\\Models\\PostEvent':
                 return bookmarkable.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        bookmarkable.description.toLowerCase().includes(searchTerm.toLowerCase());
-              
+
               case 'App\\Models\\CreatePost':
                 return bookmarkable.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        bookmarkable.content.toLowerCase().includes(searchTerm.toLowerCase());
-              
+
               default:
                 return false;
             }
           });
-          
+
           // Only include category if it has bookmarks after filtering
           if (filtered[category].length === 0) {
             delete filtered[category];
@@ -373,7 +425,13 @@ export default function Bookmarks({ auth, bookmarks }) {
         }
       }
     });
-    
+
+    // After filtering, merge grants and scholarships into funding category if needed
+    if (filtered['Funding'] && filtered['Grants']) {
+      filtered['Funding'] = [...filtered['Funding'], ...filtered['Grants']];
+      delete filtered['Grants'];
+    }
+
     return filtered;
   };
   
@@ -396,10 +454,10 @@ export default function Bookmarks({ auth, bookmarks }) {
     <MainLayout auth={auth} title="My Bookmarks">
       <Head title="My Bookmarks" />
 
-      <div className="py-0">
-        <div className="max-w-8xl mx-auto ">
-          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div className="p-6">
+      <div>
+        <div className="max-w-7xl mx-auto ">
+          <div className="bg-white overflow-hidden shadow-sm">
+            <div className="p-6 md:p-6 lg:p-0 lg:pr-2">
               {/* Filters and search */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
                 <div className="flex items-center">
@@ -411,11 +469,20 @@ export default function Bookmarks({ auth, bookmarks }) {
                     onChange={(e) => setSelectedCategory(e.target.value)}
                   >
                     <option value="all">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category} ({bookmarksList[category].length})
-                      </option>
-                    ))}
+                    {categories.map((category) => {
+                      // Calculate the count for merged categories
+                      let count = 0;
+                      if (category === 'Funding') {
+                        count = (bookmarksList['Funding'] || []).length + (bookmarksList['Grants'] || []).length;
+                      } else {
+                        count = bookmarksList[category]?.length || 0;
+                      }
+                      return (
+                        <option key={category} value={category}>
+                          {category} ({count})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 
@@ -458,20 +525,27 @@ export default function Bookmarks({ auth, bookmarks }) {
                   </p>
                 </div>
               ) : (
-                Object.keys(currentFilteredBookmarks).sort().map((category) => (
-                  <div key={category} className="mb-8">
-                    <h3 className="text-lg font-semibold mb-3 pb-2 border-b">{category} ({currentFilteredBookmarks[category].length})</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {currentFilteredBookmarks[category].map((bookmark) => (
-                        <BookmarkCard
-                          key={bookmark.id}
-                          bookmark={bookmark}
-                          onRemove={removeBookmark}
-                        />
-                      ))}
+                Object.keys(currentFilteredBookmarks).sort().map((category) => {
+                  // Calculate the count for merged categories
+                  let count = currentFilteredBookmarks[category].length;
+                  if (category === 'Funding') {
+                    count = currentFilteredBookmarks[category].length; // Already merged in filteredBookmarks
+                  }
+                  return (
+                    <div key={category} className="mb-8">
+                      <h3 className="text-lg font-semibold mb-3 pb-2 border-b">{category} ({count})</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {currentFilteredBookmarks[category].map((bookmark) => (
+                          <BookmarkCard
+                            key={bookmark.id}
+                            bookmark={bookmark}
+                            onRemove={removeBookmark}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

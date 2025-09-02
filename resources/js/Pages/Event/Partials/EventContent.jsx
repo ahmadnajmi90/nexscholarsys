@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { 
-  FaArrowLeft, 
   FaEye, 
   FaHeart, 
   FaRegHeart, 
@@ -10,9 +9,12 @@ import {
   FaLink, 
   FaFacebook, 
   FaWhatsapp, 
-  FaLinkedin,
-  FaTimes
+  FaLinkedin
 } from 'react-icons/fa';
+import {
+  ArrowLeft, Info, MapPin, Clock, Mail,
+  Calendar
+} from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import { trackEvent, trackPageView } from '@/Utils/analytics';
@@ -155,15 +157,15 @@ export default function EventContent({
         <div className="max-w-8xl mx-auto py-4 lg:pt-4">
         {/* Back Button */}
         <div className="mb-6">
-            <Link
+            <Link 
                 onClick={() => window.history.back()}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 aria-label="Go back to previous page"
             >
-                <FaArrowLeft className="text-sm" />
+                <ArrowLeft className="w-4 h-4" />
                 Back
             </Link>
-        </div>
+            </div>
 
         {/* Title */}
         {event.event_name && (
@@ -299,100 +301,185 @@ export default function EventContent({
         )}
 
         {/* Event Details */}
-        <div className="mb-4 space-y-2">
+        <div className="mt-8 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-2 border-b-2 border-gray-200">
+            Event Details
+          </h2>
+
+          {/* Two-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            {/* Left Column */}
+            <div className="space-y-6">
+
+              {/* About the Event */}
+              {(event.event_type || event.event_mode || event.event_theme || event.field_of_research) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Info className="w-5 h-5 text-blue-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">About the Event</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
           {event.event_type && (
-            <p>
-              <span className="font-semibold">Event Type:</span> {event.event_type}
-            </p>
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-24">Type:</span>
+                        <span className="text-gray-900">{event.event_type}</span>
+                      </div>
           )}
           {event.event_mode && (
-            <p>
-              <span className="font-semibold">Event Mode:</span> {event.event_mode}
-            </p>
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-24">Mode:</span>
+                        <span className="text-gray-900">{event.event_mode}</span>
+                      </div>
           )}
           {event.event_theme && (
-            <p>
-              <span className="font-semibold">Event Theme:</span> {event.event_theme}
-            </p>
-          )}
-          {event.start_date && (
-            <p>
-              <span className="font-semibold">Start Date:</span>{" "}
-              {new Date(event.start_date).toLocaleDateString("en-GB", {
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-24">Theme:</span>
+                        <span className="text-gray-900">{event.event_theme}</span>
+                      </div>
+                    )}
+                    {event.field_of_research && getResearchNames() && (
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 mt-0.5">Research Field:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {getResearchNames().split(', ').map((field, index) => (
+                            <span
+                              key={index}
+                              className="px-4 md:px-2.5 lg:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium border border-gray-200 w-3/4 ml-6 md:ml-6 lg:ml-0"
+                            >
+                              {field.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Location */}
+              {(event.venue || event.city || event.country) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <MapPin className="w-5 h-5 text-green-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Location</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
+                    {event.venue && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-20">Venue:</span>
+                        <span className="text-gray-900">{event.venue}</span>
+                      </div>
+                    )}
+                    {event.city && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-20">City:</span>
+                        <span className="text-gray-900">{event.city}</span>
+                      </div>
+                    )}
+                    {event.country && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-20">Country:</span>
+                        <span className="text-gray-900">{event.country}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+
+              {/* Schedule & Registration */}
+              {(event.start_date || event.end_date || event.start_time || event.end_time || event.registration_deadline || event.registration_url) && (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Clock className="w-5 h-5 text-orange-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Schedule & Registration</h3>
+                  </div>
+                  <div className="space-y-3 ml-7">
+                    {(event.start_date || event.start_time) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-28">Start:</span>
+                        <span className="text-gray-900">
+                          {event.start_date && new Date(event.start_date).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
-            </p>
-          )}
-          {event.end_date && (
-            <p>
-              <span className="font-semibold">End Date:</span>{" "}
-              {new Date(event.end_date).toLocaleDateString("en-GB", {
+                          {event.start_time && ` ${event.start_time}`}
+                        </span>
+                      </div>
+                    )}
+                    {(event.end_date || event.end_time) && (
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-28">End:</span>
+                        <span className="text-gray-900">
+                          {event.end_date && new Date(event.end_date).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
-            </p>
-          )}
-          {event.start_time && (
-            <p>
-              <span className="font-semibold">Start Time:</span> {event.start_time}
-            </p>
-          )}
-          {event.end_time && (
-            <p>
-              <span className="font-semibold">End Time:</span> {event.end_time}
-            </p>
+                          {event.end_time && ` ${event.end_time}`}
+                        </span>
+                      </div>
           )}
           {event.registration_deadline && (
-            <p>
-              <span className="font-semibold">Registration Deadline:</span>{" "}
+                      <div className="flex items-center">
+                        <span className="text-red-600 font-medium w-28">Deadline:</span>
+                        <span className={`font-semibold ${new Date(event.registration_deadline) < new Date() ? 'text-red-600' : 'text-red-600'}`}>
               {new Date(event.registration_deadline).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
-            </p>
+                          {new Date(event.registration_deadline) < new Date() && (
+                            <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-semibold">
+                              Ended
+                            </span>
+                          )}
+                        </span>
+                      </div>
           )}
           {event.registration_url && (
-            <p>
-              <span className="font-semibold">Registration:</span>
+                      <div className="flex items-center">
+                        <span className="text-gray-600 font-medium w-28">Registration:</span>
               <a
                 href={event.registration_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-2 text-blue-500 underline"
+                          className="text-blue-600 hover:text-blue-800 underline"
               >
                 Register
               </a>
-            </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
           )}
+
+              {/* Contact */}
           {event.contact_email && (
-            <p>
-              <span className="font-semibold">Contact Email:</span> {event.contact_email}
-            </p>
-          )}
-          {event.venue && (
-            <p>
-              <span className="font-semibold">Venue:</span> {event.venue}
-            </p>
-          )}
-          {event.city && (
-            <p>
-              <span className="font-semibold">City:</span> {event.city}
-            </p>
-          )}
-          {event.country && (
-            <p>
-              <span className="font-semibold">Country:</span> {event.country}
-            </p>
-          )}
-          {event.field_of_research && getResearchNames() && (
-            <p>
-              <span className="font-semibold">Field of Research:</span> {getResearchNames()}
-            </p>
-          )}
+                <div>
+                  <div className="flex items-center mb-4">
+                    <Mail className="w-5 h-5 text-purple-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-gray-900">Contact</h3>
+                  </div>
+                  <div className="ml-7">
+                    <div className="flex items-center">
+                      <span className="text-gray-600 font-medium w-20">Email:</span>
+                      <a href={`mailto:${event.contact_email}`} className="text-blue-600 hover:text-blue-800 underline">
+                        {event.contact_email}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
         </div>
 
         <hr className="my-6 border-gray-200" />
