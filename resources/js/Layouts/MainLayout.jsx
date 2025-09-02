@@ -6,7 +6,7 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import Dropdown from '../Components/Dropdown';
-import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut } from 'lucide-react'; // Modern icons
+import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
@@ -53,8 +53,8 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         }
         
         // Manage section
-        if (path.includes('/grants') || 
-            path.includes('/funding') || 
+        if (path.includes('/funding') || 
+            path.includes('/funding.admin') || 
             path.includes('/projects') || 
             path.includes('/post-projects') || 
             path.includes('/events') || 
@@ -342,10 +342,10 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                                 </Link>
                             </div>
 
-                            {/* Grant */}
-                            <Link href="/grants" className={`flex flex-col items-center ${isActive('/grant') ? 'text-blue-500' : 'text-gray-500'}`}>
-                                <FileBadge className="w-6 h-6 stroke-current" />
-                                <span className="text-xs font-medium">Grant</span>
+                            {/* fUNDING */}
+                            <Link href="/funding" className={`flex flex-col items-center ${isActive('/funding') ? 'text-blue-500' : 'text-gray-500'}`}>
+                                <DollarSign className="w-6 h-6 stroke-current" />
+                                <span className="text-xs font-medium">Funding</span>
                             </Link>
 
                             {/* Profile */}

@@ -270,7 +270,7 @@ export default function FundingContent({
                         </div>
                         {/* Bookmark Button */}
                         <BookmarkButton
-                            bookmarkableType="funding"
+                            bookmarkableType={fundingItem.type}
                             bookmarkableId={fundingItem.id}
                             category="Funding"
                             iconSize="w-6 h-6"

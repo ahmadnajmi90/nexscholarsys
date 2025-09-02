@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
-import { FaArrowLeft, FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes } from 'react-icons/fa';
+import { FaEye, FaHeart, FaRegHeart, FaShareAlt, FaLink, FaFacebook, FaWhatsapp, FaLinkedin, FaTimes } from 'react-icons/fa';
+import {
+  ArrowLeft, Tag, FileText
+} from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 import axios from 'axios';
 import Carousel from '@/Components/Dashboard/Carousel';
@@ -201,7 +204,7 @@ export default function PostContent({
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
             aria-label="Go back to previous page"
           >
-            <FaArrowLeft className="text-sm" />
+                            <ArrowLeft className="w-4 h-4" />
             Back
           </Link>
         </div>
@@ -330,34 +333,66 @@ export default function PostContent({
           className="mb-4 text-gray-700 prose w-full text-left max-w-none break-words leading-relaxed"
         />
 
-        {/* Category */}
-        {post.category && (
-          <p className="mb-2">
-            <span className="font-semibold">Category:</span> {post.category}
-          </p>
-        )}
+        {/* Details Section */}
+        {(post.category || post.tags) && (
+          <div className="mt-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-2 border-b-2 border-gray-200">
+              Details
+            </h2>
 
-        {/* Tags */}
-        {post.tags && (
-          <p className="mb-2">
-            <span className="font-semibold">Tags:</span>{" "}
-            {Array.isArray(post.tags) ? post.tags.join(', ') : post.tags}
-          </p>
+            {/* Information Group */}
+            <div className="space-y-4">
+              <div className="flex items-center mb-4">
+                <Tag className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="text-lg font-semibold text-gray-900">Information</h3>
+              </div>
+              <div className="ml-7 space-y-3">
+                {post.category && (
+                  <div className="flex items-center">
+                    <span className="text-gray-600 font-medium w-20">Category:</span>
+                    <span className="text-gray-900">{post.category}</span>
+                  </div>
+                )}
+                {post.tags && (
+                  <div className="flex items-start">
+                    <span className="text-gray-600 font-medium w-20 mt-0.5">Tags:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(post.tags) ? post.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                        >
+                          {tag}
+                        </span>
+                      )) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                          {post.tags}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Attachment */}
         {post.attachment && (
-          <p className="mb-2">
-            <span className="font-semibold">Attachment:</span>
-            <a
-              href={`/storage/${post.attachment}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-2 text-blue-500 underline"
-            >
-              View Attachment
-            </a>
-          </p>
+          <div className="mb-2">
+            <div className="flex items-center">
+              <FileText className="w-4 h-4 text-gray-500 mr-1" />
+              <span className="text-gray-600 font-medium mr-2">Attachment:</span>
+              <a
+                href={`/storage/${post.attachment}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                View Attachment
+              </a>
+            </div>
+          </div>
         )}
 
         <hr className="my-6 border-gray-200" />
