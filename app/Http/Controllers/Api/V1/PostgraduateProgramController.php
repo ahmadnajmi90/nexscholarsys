@@ -90,14 +90,30 @@ class PostgraduateProgramController extends Controller
     {
         $query = PostgraduateProgram::with(['university', 'faculty']);
 
+        // Apply search filter
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $sortBy = $request->input('sort_by', 'id');
-        $sortDirection = $request->input('sort_direction', 'asc');
-        $query->orderBy($sortBy, $sortDirection);
+        // Apply university filter
+        if ($request->has('university_id') && !empty($request->university_id)) {
+            $query->where('university_id', $request->university_id);
+        }
+
+        // Apply faculty filter
+        if ($request->has('faculty_id') && !empty($request->faculty_id)) {
+            $query->where('faculty_id', $request->faculty_id);
+        }
+
+        // Apply program type filter
+        if ($request->has('program_type') && !empty($request->program_type)) {
+            $query->where('program_type', $request->program_type);
+        }
+
+        // Apply sorting: first by university_id, then by faculty_id (both ascending)
+        $query->orderBy('university_id', 'asc')
+              ->orderBy('faculty_id', 'asc');
 
         $perPage = $request->input('per_page', 15);
         $programs = $query->paginate($perPage);

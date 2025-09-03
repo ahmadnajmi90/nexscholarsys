@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { FaEdit, FaTrash, FaSearch, FaPlus } from 'react-icons/fa';
 import ConfirmationModal from '../Components/ConfirmationModal';
 import PostgraduateProgramFormModal from '../Components/PostgraduateProgramFormModal';
+import Pagination from '@/Components/Pagination';
 import { router } from '@inertiajs/react';
 
 export default function PostgraduateProgramsTab() {
@@ -12,18 +13,86 @@ export default function PostgraduateProgramsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({ current_page: 1, per_page: 10, total: 0, last_page: 1 });
 
+  // Filter state
+  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [selectedFaculty, setSelectedFaculty] = useState('');
+  const [selectedProgramType, setSelectedProgramType] = useState('');
+
+  // Data for dropdowns
+  const [universities, setUniversities] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [programTypes] = useState([
+    'Masters', 'PhD'
+  ]);
+
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentProgram, setCurrentProgram] = useState(null);
   const [formMode, setFormMode] = useState('create');
 
-  useEffect(() => { fetchPrograms(); }, [pagination.current_page, searchQuery]);
+  // Fetch universities on component mount
+  useEffect(() => {
+    fetchUniversities();
+  }, []);
+
+  // Fetch faculties when university changes
+  useEffect(() => {
+    if (selectedUniversity) {
+      fetchFaculties();
+    } else {
+      setFaculties([]);
+      setSelectedFaculty('');
+    }
+  }, [selectedUniversity]);
+
+  // Fetch programs when filters or pagination change
+  useEffect(() => {
+    fetchPrograms();
+  }, [pagination.current_page, searchQuery, selectedUniversity, selectedFaculty, selectedProgramType]);
+
+  // Fetch universities for the filter dropdown
+  const fetchUniversities = async () => {
+    try {
+      const response = await axios.get('/api/v1/app/universities', {
+        params: { per_page: 1000 } // Get all universities
+      });
+      setUniversities(response.data.data);
+    } catch (error) {
+      console.error('Error fetching universities:', error);
+      toast.error('Failed to load universities');
+    }
+  };
+
+  // Fetch faculties for the selected university
+  const fetchFaculties = async () => {
+    if (!selectedUniversity) return;
+
+    try {
+      const response = await axios.get('/api/v1/app/faculties', {
+        params: {
+          university_id: selectedUniversity,
+          per_page: 1000 // Get all faculties for the university
+        }
+      });
+      setFaculties(response.data.data);
+    } catch (error) {
+      console.error('Error fetching faculties:', error);
+      toast.error('Failed to load faculties');
+    }
+  };
 
   const fetchPrograms = async () => {
     setLoading(true);
     try {
       const response = await axios.get('/api/v1/app/postgraduate-programs', {
-        params: { page: pagination.current_page, per_page: pagination.per_page, search: searchQuery || undefined }
+        params: {
+          page: pagination.current_page,
+          per_page: pagination.per_page,
+          search: searchQuery || undefined,
+          university_id: selectedUniversity || undefined,
+          faculty_id: selectedFaculty || undefined,
+          program_type: selectedProgramType || undefined
+        }
       });
       setPrograms(response.data.data);
       setPagination({
@@ -53,10 +122,99 @@ export default function PostgraduateProgramsTab() {
   };
 
   const handlePageChange = (page) => setPagination(prev => ({ ...prev, current_page: page }));
-  const handleSearch = (e) => { e.preventDefault(); setPagination(prev => ({ ...prev, current_page: 1 })); };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+  };
+
+  const handleUniversityChange = (e) => {
+    setSelectedUniversity(e.target.value);
+    setSelectedFaculty(''); // Reset faculty when university changes
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+  };
+
+  const handleFacultyChange = (e) => {
+    setSelectedFaculty(e.target.value);
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+  };
+
+  const handleProgramTypeChange = (e) => {
+    setSelectedProgramType(e.target.value);
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+  };
 
   return (
     <div className="p-6">
+      {/* Filter Section */}
+      <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Filter Programs</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* University Filter */}
+          <div>
+            <label htmlFor="university-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by University
+            </label>
+            <select
+              id="university-filter"
+              value={selectedUniversity}
+              onChange={handleUniversityChange}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="">All Universities</option>
+              {universities.map((university) => (
+                <option key={university.id} value={university.id}>
+                  {university.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Faculty Filter */}
+          <div>
+            <label htmlFor="faculty-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Faculty
+            </label>
+            <select
+              id="faculty-filter"
+              value={selectedFaculty}
+              onChange={handleFacultyChange}
+              disabled={!selectedUniversity}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              <option value="">
+                {selectedUniversity ? 'All Faculties' : 'Select University First'}
+              </option>
+              {faculties.map((faculty) => (
+                <option key={faculty.id} value={faculty.id}>
+                  {faculty.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Program Type Filter */}
+          <div>
+            <label htmlFor="program-type-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Filter by Program Type
+            </label>
+            <select
+              id="program-type-filter"
+              value={selectedProgramType}
+              onChange={handleProgramTypeChange}
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="">All Program Types</option>
+              {programTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <form onSubmit={handleSearch} className="flex items-center space-x-2">
           <div className="relative">
@@ -122,13 +280,15 @@ export default function PostgraduateProgramsTab() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-4 flex justify-between items-center">
-        <div className="text-sm text-gray-600">Page {pagination.current_page} of {pagination.last_page}</div>
-        <div className="space-x-2">
-          <button disabled={pagination.current_page <= 1} onClick={() => handlePageChange(pagination.current_page - 1)} className="px-3 py-1 border rounded disabled:opacity-50">Prev</button>
-          <button disabled={pagination.current_page >= pagination.last_page} onClick={() => handlePageChange(pagination.current_page + 1)} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
+      {!loading && programs.length > 0 && (
+        <div className="mt-6">
+          <Pagination
+            currentPage={pagination.current_page}
+            totalPages={pagination.last_page}
+            onPageChange={handlePageChange}
+          />
         </div>
-      </div>
+      )}
 
       <PostgraduateProgramFormModal
         isOpen={isFormModalOpen}

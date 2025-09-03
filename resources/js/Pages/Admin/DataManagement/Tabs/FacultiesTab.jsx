@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { router } from '@inertiajs/react';
 import FacultyFormModal from '../Components/FacultyFormModal';
 import ConfirmationModal from '../Components/ConfirmationModal';
+import Pagination from '@/Components/Pagination';
 import { FaEdit, FaTrash, FaSearch, FaPlus } from 'react-icons/fa';
 
 export default function FacultiesTab() {
@@ -161,7 +162,7 @@ export default function FacultiesTab() {
     };
 
     return (
-        <div>
+        <div className="mb-4">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Faculties</h2>
                 <button
@@ -302,108 +303,12 @@ export default function FacultiesTab() {
 
                     {/* Pagination */}
                     {!loading && faculties.data.length > 0 && (
-                        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
-                            <div className="flex flex-1 justify-between sm:hidden">
-                                <button
-                                    onClick={() => handlePageChange(pagination.current_page - 1)}
-                                    disabled={pagination.current_page === 1}
-                                    className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 ${
-                                        pagination.current_page === 1
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : 'hover:bg-gray-50'
-                                    }`}
-                                >
-                                    Previous
-                                </button>
-                                <button
-                                    onClick={() => handlePageChange(pagination.current_page + 1)}
-                                    disabled={pagination.current_page === pagination.last_page}
-                                    className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 ${
-                                        pagination.current_page === pagination.last_page
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : 'hover:bg-gray-50'
-                                    }`}
-                                >
-                                    Next
-                                </button>
-                            </div>
-                            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-700">
-                                        Showing <span className="font-medium">{(pagination.current_page - 1) * pagination.per_page + 1}</span> to{' '}
-                                        <span className="font-medium">
-                                            {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
-                                        </span>{' '}
-                                        of <span className="font-medium">{pagination.total}</span> results
-                                    </p>
-                                </div>
-                                <div>
-                                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                                        <button
-                                            onClick={() => handlePageChange(pagination.current_page - 1)}
-                                            disabled={pagination.current_page === 1}
-                                            className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ${
-                                                pagination.current_page === 1
-                                                    ? 'opacity-50 cursor-not-allowed'
-                                                    : 'hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <span className="sr-only">Previous</span>
-                                            &larr;
-                                        </button>
-                                        {/* Page numbers */}
-                                        {[...Array(pagination.last_page).keys()].map((page) => {
-                                            const pageNumber = page + 1;
-                                            // Only show a few pages around the current page
-                                            if (
-                                                pageNumber === 1 ||
-                                                pageNumber === pagination.last_page ||
-                                                Math.abs(pageNumber - pagination.current_page) <= 1
-                                            ) {
-                                                return (
-                                                    <button
-                                                        key={pageNumber}
-                                                        onClick={() => handlePageChange(pageNumber)}
-                                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                                                            pageNumber === pagination.current_page
-                                                                ? 'bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-                                                                : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
-                                                        }`}
-                                                    >
-                                                        {pageNumber}
-                                                    </button>
-                                                );
-                                            } else if (
-                                                (pageNumber === 2 && pagination.current_page > 3) ||
-                                                (pageNumber === pagination.last_page - 1 && pagination.current_page < pagination.last_page - 2)
-                                            ) {
-                                                // Show ellipsis
-                                                return (
-                                                    <span
-                                                        key={pageNumber}
-                                                        className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700"
-                                                    >
-                                                        ...
-                                                    </span>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                        <button
-                                            onClick={() => handlePageChange(pagination.current_page + 1)}
-                                            disabled={pagination.current_page === pagination.last_page}
-                                            className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ${
-                                                pagination.current_page === pagination.last_page
-                                                    ? 'opacity-50 cursor-not-allowed'
-                                                    : 'hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <span className="sr-only">Next</span>
-                                            &rarr;
-                                        </button>
-                                    </nav>
-                                </div>
-                            </div>
+                        <div className="mt-6">
+                            <Pagination
+                                currentPage={pagination.current_page}
+                                totalPages={pagination.last_page}
+                                onPageChange={handlePageChange}
+                            />
                         </div>
                     )}
                 </>
