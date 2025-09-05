@@ -27,6 +27,10 @@ class UniversityList extends Model
     {
         return $this->hasMany(Postgraduate::class, 'university', 'id');
     }
+    public function undergraduates()
+    {
+        return $this->hasMany(Undergraduate::class, 'university', 'id');
+    }
 
     public function faculties()
     {

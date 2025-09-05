@@ -20,16 +20,16 @@ class FacultyList extends Model
 
     public function academicians()
     {
-        return $this->hasMany(Academician::class, 'faculty');
+        return $this->hasMany(Academician::class, 'faculty', 'id');
     }
 
     public function postgraduates()
     {
-        return $this->hasMany(Postgraduate::class, 'faculty');
+        return $this->hasMany(Postgraduate::class, 'faculty', 'id');
     }
 
     public function undergraduates()
     {
-        return $this->hasMany(Undergraduate::class, 'faculty');
+        return $this->hasMany(Undergraduate::class, 'faculty', 'id');
     }
 }

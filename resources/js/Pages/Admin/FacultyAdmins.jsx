@@ -35,9 +35,9 @@ const FacultyAdminRegistration = ({ universities, faculties }) => {
     };
 
     return (
-        <MainLayout title="">
+        <MainLayout title="Create Faculty Admin">
+            <Head title="Create Faculty Admin" />
             <div className="px-2 bg-white">
-                <h1 className="text-2xl font-bold mb-4">Create Faculty Admin</h1>
                 <form onSubmit={handleSubmit}>
                     <div className='mt-4'>
                         <InputLabel htmlFor="email" value="Email"/>

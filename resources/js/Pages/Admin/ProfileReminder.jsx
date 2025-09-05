@@ -1,44 +1,171 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import AcademicianTable from './Components/AcademicianTable';
 import PostgraduateTable from './Components/PostgraduateTable';
 import UndergraduateTable from './Components/UndergraduateTable';
 
-const ProfileReminder = ({ academicians, postgraduates, undergraduates, universities, faculties, researchOptions }) => {
+const ProfileReminder = ({
+    academicians,
+    postgraduates,
+    undergraduates,
+    activeTab: initialActiveTab,
+    filterOptions,
+    researchOptions,
+    filters: initialFilters
+}) => {
     const { url } = usePage();
     
-    // Use URL query parameter to determine the active tab
+    // Use the active tab from server-side or URL parameter
     const getInitialActiveTab = () => {
-        // Parse the query string
+        // First try to get from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // If there's an academicians_page parameter, set to academicians tab
-        if (urlParams.has('academicians_page')) {
-            return 'academicians';
+        const urlTab = urlParams.get('tab');
+
+        if (urlTab && ['academicians', 'postgraduates', 'undergraduates'].includes(urlTab)) {
+            return urlTab;
         }
-        
-        // If there's a postgraduates_page parameter, set to postgraduates tab
-        if (urlParams.has('postgraduates_page')) {
-            return 'postgraduates';
-        }
-        
-        // If there's an undergraduates_page parameter, set to undergraduates tab
-        if (urlParams.has('undergraduates_page')) {
-            return 'undergraduates';
-        }
-        
-        // Default to academicians if no tab-specific pagination
-        return 'academicians';
+
+        // Fallback to server-provided active tab
+        return initialActiveTab || 'academicians';
+    };
+
+    // Initialize filter states from controller data
+    const getInitialFilters = () => {
+        return {
+            academicians: {
+                search: initialFilters?.academicians_search || '',
+                university: initialFilters?.academicians_university || '',
+                faculty: initialFilters?.academicians_faculty || '',
+                status: initialFilters?.academicians_status || ''
+            },
+            postgraduates: {
+                search: initialFilters?.postgraduates_search || '',
+                university: initialFilters?.postgraduates_university || '',
+                faculty: initialFilters?.postgraduates_faculty || '',
+                status: initialFilters?.postgraduates_status || ''
+            },
+            undergraduates: {
+                search: initialFilters?.undergraduates_search || '',
+                university: initialFilters?.undergraduates_university || '',
+                faculty: initialFilters?.undergraduates_faculty || '',
+                status: initialFilters?.undergraduates_status || ''
+            }
+        };
     };
     
     const [activeTab, setActiveTab] = useState(getInitialActiveTab);
+    const [filters, setFilters] = useState(getInitialFilters);
+    const [loading, setLoading] = useState(false);
+
+    // Local search state for debounced search
+    const [localSearch, setLocalSearch] = useState({
+        academicians: initialFilters?.academicians_search || '',
+        postgraduates: initialFilters?.postgraduates_search || '',
+        undergraduates: initialFilters?.undergraduates_search || ''
+    });
+
+    // Track if user is currently typing (for visual feedback)
+    const [isTyping, setIsTyping] = useState({
+        academicians: false,
+        postgraduates: false,
+        undergraduates: false
+    });
+
+    // Dynamic faculty state for each user type
+    const [dynamicFaculties, setDynamicFaculties] = useState({
+        academicians: [],
+        postgraduates: [],
+        undergraduates: []
+    });
+
+    // Debounced search functionality - centralized in main component
+    const searchTimeoutRef = useRef(null);
+
+    const debouncedSearch = useCallback((userType, value) => {
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Set typing indicator
+        setIsTyping(prev => ({ ...prev, [userType]: true }));
+
+        searchTimeoutRef.current = setTimeout(() => {
+            // Clear typing indicator
+            setIsTyping(prev => ({ ...prev, [userType]: false }));
+
+            // Update URL with the new search value
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramKey = `${userType}_search`;
+
+            if (value && value.trim().length > 0) {
+                urlParams.set(paramKey, value.trim());
+            } else {
+                urlParams.delete(paramKey);
+            }
+
+            // Reset page when search changes
+            const pageParam = `${userType}_page`;
+            urlParams.delete(pageParam);
+
+            // Use router.get with preserveState for smooth UX
+            router.get(`${window.location.pathname}?${urlParams.toString()}`, {
+                preserveState: true,
+                replace: true
+            });
+        }, 800); // Increased delay to 800ms for better UX
+    }, []);
+
+    // Watch for local search changes and trigger debounced search
+    useEffect(() => {
+        Object.keys(localSearch).forEach(userType => {
+            const currentSearch = localSearch[userType];
+            const lastSearch = filters[userType]?.search || '';
+            
+            // Only trigger search if the value has actually changed and is different from the last search
+            if (currentSearch !== lastSearch) {
+                // For clearing search, trigger immediately
+                if (currentSearch === '') {
+                    debouncedSearch(userType, currentSearch);
+                } 
+                // For typing, only search if at least 2 characters or if it's a clear operation
+                else if (currentSearch.length >= 2) {
+                    debouncedSearch(userType, currentSearch);
+                }
+            }
+        });
+    }, [localSearch, debouncedSearch]);
+
+    // Loading state management with Inertia events
+    useEffect(() => {
+        const handleStart = () => setLoading(true);
+        const handleFinish = () => setLoading(false);
+
+        // Listen for Inertia events
+        document.addEventListener('inertia:start', handleStart);
+        document.addEventListener('inertia:finish', handleFinish);
+
+        return () => {
+            document.removeEventListener('inertia:start', handleStart);
+            document.removeEventListener('inertia:finish', handleFinish);
+        };
+    }, []);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, []);
     
     // Update the tab state when URL changes
     useEffect(() => {
         setActiveTab(getInitialActiveTab());
     }, [url]);
+
     
     const sendReminder = async (userId, role) => {
         try {
@@ -68,50 +195,125 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
         }
     };
 
+    // Handle filter changes
+    const handleFilterChange = (userType, filterType, value) => {
+        // Update URL with the new filter value
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramKey = `${userType}_${filterType}`;
+
+        if (value) {
+            urlParams.set(paramKey, value);
+        } else {
+            urlParams.delete(paramKey);
+        }
+
+        // Reset faculty when university changes
+        if (filterType === 'university' && value) {
+            const facultyParam = `${userType}_faculty`;
+            urlParams.delete(facultyParam);
+        }
+
+        // Reset page when filter changes
+        const pageParam = `${userType}_page`;
+        urlParams.delete(pageParam);
+
+        // Use router.get with preserveState for smooth UX (no UI flicker)
+        router.get(`${window.location.pathname}?${urlParams.toString()}`, {
+            preserveState: true,
+            replace: true
+        });
+    };
+
+    // Handle search changes - update local state, debounced search is handled by useEffect
+    const handleSearchChange = (userType, value) => {
+        // Update local search state immediately for UI responsiveness
+        setLocalSearch(prev => ({
+            ...prev,
+            [userType]: value
+        }));
+    };
+
     const tabs = [
-        { id: 'academicians', label: 'Academicians', count: academicians.total },
-        { id: 'postgraduates', label: 'Postgraduates', count: postgraduates.total },
-        { id: 'undergraduates', label: 'Undergraduates', count: undergraduates.total },
+        { id: 'academicians', label: 'Academicians', count: academicians?.total || 0 },
+        { id: 'postgraduates', label: 'Postgraduates', count: postgraduates?.total || 0 },
+        { id: 'undergraduates', label: 'Undergraduates', count: undergraduates?.total || 0 },
     ];
     
-    // Update URL query parameter when tab changes
+    // Update URL query parameter when tab changes - use router.get for on-demand loading
     const handleTabChange = (tabId) => {
-        setActiveTab(tabId);
-        
-        // Update URL to include the active tab
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Remove all pagination parameters first
-        urlParams.delete('academicians_page');
-        urlParams.delete('postgraduates_page');
-        urlParams.delete('undergraduates_page');
-        
-        // Add tab parameter
-        urlParams.set('tab', tabId);
-        
-        // Replace URL without triggering a page reload
-        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-        window.history.replaceState({}, '', newUrl);
+        // Use router.get to load data for the new tab on-demand with smooth UX
+        router.get(route('admin.profiles.index', {
+            tab: tabId,
+            // Reset pagination for the new tab
+            [`${tabId}_page`]: 1
+        }), {
+            preserveState: true,
+            replace: true
+        });
+    };
+
+    // Handle dynamic faculty loading when university changes
+    const handleUniversityChange = async (userType, universityId) => {
+        try {
+            // First update the filter state
+            setFilters(prev => ({
+                ...prev,
+                [userType]: {
+                    ...prev[userType],
+                    university: universityId,
+                    faculty: '' // Reset faculty when university changes
+                }
+            }));
+
+            if (universityId) {
+                // Fetch faculties for the selected university
+                const response = await axios.get(route('admin.profiles.faculties-by-university'), {
+                    params: {
+                        university_id: universityId,
+                        user_type: userType
+                    }
+                });
+
+                if (response.data.faculties) {
+                    // Update the dynamic faculties state - ensure it's always an array
+                    const facultiesArray = Array.isArray(response.data.faculties)
+                        ? response.data.faculties
+                        : [];
+                    setDynamicFaculties(prev => ({
+                        ...prev,
+                        [userType]: facultiesArray
+                    }));
+                }
+            } else {
+                // Reset to empty faculties when no university is selected
+                setDynamicFaculties(prev => ({
+                    ...prev,
+                    [userType]: []
+                }));
+            }
+
+            // Update URL with the new university filter
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set(`${userType}_university`, universityId);
+            urlParams.delete(`${userType}_faculty`); // Reset faculty
+            urlParams.delete(`${userType}_page`); // Reset page
+
+            router.get(`${window.location.pathname}?${urlParams.toString()}`, {
+                preserveState: true,
+                replace: true
+            });
+        } catch (error) {
+            console.error('Error fetching faculties:', error);
+        }
     };
     
     return (
-        <MainLayout title="">
-            <Head title="Profile Management" />
+        <MainLayout title="User Profile Management">
+            <Head title="User Profile Management" />
             
-            <div className='py-2'> 
+            <div className='mb-0 lg:mb-6 px-4 lg:px-0 py-6 md:py-8 lg:py-0'> 
                 <div className="max-w-7xl mx-auto">
-                    <div className="md:flex md:items-center md:justify-between">
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                                User Profile Management
-                            </h1>
-                            <p className="mt-2 text-sm text-gray-600">
-                                Send reminders to users to complete or update their profiles. Review users by role and take action individually or in batches.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200 mr-0">
                         {/* Tab Navigation */}
                         <div className="border-b border-gray-200">
                             <nav className="flex -mb-px">
@@ -126,11 +328,6 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
                                         } whitespace-nowrap flex items-center space-x-2`}
                                     >
                                         <span>{tab.label}</span>
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            activeTab === tab.id ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            {tab.count}
-                                        </span>
                                     </button>
                                 ))}
                             </nav>
@@ -140,40 +337,64 @@ const ProfileReminder = ({ academicians, postgraduates, undergraduates, universi
                         <div className="p-6">
                             {activeTab === 'academicians' && (
                                 <AcademicianTable 
-                                    academics={academicians.data} 
-                                    universities={universities}
-                                    faculties={faculties}
+                                    key={`academicians-${activeTab}`}
+                                    academics={academicians?.data || []}
+                                    universities={filterOptions?.academicians?.universities || {}}
+                                    faculties={dynamicFaculties.academicians.length > 0 ? dynamicFaculties.academicians : (filterOptions?.academicians?.faculties || [])}
                                     researchOptions={researchOptions}
                                     onSendReminder={sendReminder}
                                     onSendBatchReminder={sendBatchReminder}
-                                    pagination={academicians}
+                                    pagination={academicians || {}}
                                     currentTab={activeTab}
+                                    filters={filters.academicians}
+                                                                        onFilterChange={handleFilterChange}
+                                    onSearchChange={handleSearchChange}
+                                    onUniversityChange={handleUniversityChange}
+                                    loading={loading}
+                                    isTyping={isTyping.academicians}
+                                    localSearch={localSearch.academicians}
                                 />
                             )}
-                            
+
                             {activeTab === 'postgraduates' && (
                                 <PostgraduateTable 
-                                    postgraduates={postgraduates.data}
-                                    universities={universities}
-                                    faculties={faculties}
+                                    key={`postgraduates-${activeTab}`}
+                                    postgraduates={postgraduates?.data || []}
+                                    universities={filterOptions?.postgraduates?.universities || {}}
+                                    faculties={dynamicFaculties.postgraduates.length > 0 ? dynamicFaculties.postgraduates : (filterOptions?.postgraduates?.faculties || [])}
                                     researchOptions={researchOptions}
                                     onSendReminder={sendReminder}
                                     onSendBatchReminder={sendBatchReminder}
-                                    pagination={postgraduates}
+                                    pagination={postgraduates || {}}
                                     currentTab={activeTab}
+                                    filters={filters.postgraduates}
+                                                                        onFilterChange={handleFilterChange}
+                                    onSearchChange={handleSearchChange}
+                                    onUniversityChange={handleUniversityChange}
+                                    loading={loading}
+                                    isTyping={isTyping.postgraduates}
+                                    localSearch={localSearch.postgraduates}
                                 />
                             )}
-                            
+
                             {activeTab === 'undergraduates' && (
-                                <UndergraduateTable 
-                                    undergraduates={undergraduates.data}
-                                    universities={universities}
-                                    faculties={faculties}
+                                <UndergraduateTable
+                                    key={`undergraduates-${activeTab}`}
+                                    undergraduates={undergraduates?.data || []}
+                                    universities={filterOptions?.undergraduates?.universities || {}}
+                                    faculties={dynamicFaculties.undergraduates.length > 0 ? dynamicFaculties.undergraduates : (filterOptions?.undergraduates?.faculties || [])}
                                     researchOptions={researchOptions}
                                     onSendReminder={sendReminder}
                                     onSendBatchReminder={sendBatchReminder}
-                                    pagination={undergraduates}
+                                    pagination={undergraduates || {}}
                                     currentTab={activeTab}
+                                    filters={filters.undergraduates}
+                                    onFilterChange={handleFilterChange}
+                                    onSearchChange={handleSearchChange}
+                                    onUniversityChange={handleUniversityChange}
+                                    loading={loading}
+                                    isTyping={isTyping.undergraduates}
+                                    localSearch={localSearch.undergraduates}
                                 />
                             )}
                         </div>
