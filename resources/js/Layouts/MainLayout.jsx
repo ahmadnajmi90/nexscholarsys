@@ -64,19 +64,19 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             return 'content';
         }
         
-        // Settings section
-        if (path.includes('/profile') || 
+        // Admin routes - check these first to avoid conflicts
+        if (path.includes('/admin/roles') ||
+            path.includes('/admin/faculty-admins') ||
+            path.includes('/admin/profiles') ||
+            path.includes('/admin/data-management') ||
+            path.includes('/faculty-admin/')) {
+            return 'dashboard'; // Don't highlight any section for admin routes
+        }
+
+        // Settings section - user profile routes only
+        if (path.includes('/profile') ||
             path.includes('/role')) {
             return 'settings';
-        }
-        
-        // Admin routes
-        if (path.includes('/roles') || 
-            path.includes('/faculty-admins') || 
-            path.includes('/admin/profiles') || 
-            path.includes('/admin/data-management') ||
-            path.includes('/faculty-admin')) {
-            return 'dashboard';
         }
         
         // Default to dashboard

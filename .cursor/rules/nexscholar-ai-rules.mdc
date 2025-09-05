@@ -1,108 +1,39 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+description: A guide to the AI and Semantic Search features, including embedding generation, Qdrant integration, AI matching, and profile generation. Use this to locate the core services, controllers, and commands that power Nexscholar's AI capabilities.
 ---
-# Nexscholar AI Integration Rules
 
-This file provides guidelines for implementing and maintaining AI-related features in the Nexscholar platform.
+# Nexscholar AI & Semantic Search Implementation Guide
 
-## AI Profile Generation
+This document provides direct links to the core components of the AI and semantic search systems.
 
-### GitHub OpenAI Integration
-- Use GPT-4o via GitHub OpenAI API 
-- Configure token and endpoint in config files
-- Structure prompts to generate specific academic profile sections
-- Handle API rate limits and errors gracefully
-- Cache successful responses to minimize API usage
-- Set temperature to 0.1 for more consistent outputs
-- Use Guzzle HTTP client for API communication
+## Key Controllers
 
-### AI Response Processing
-- Parse JSON responses from the AI model
-- Validate and clean generated content before storage
-- Map research expertise to predefined structured options
-- Handle multilingual responses with translation when needed
-- Log AI-generated content for quality analysis
-- Remove markdown code fences from responses if present
+-   `[AIMatchingController.php](mdc:app/Http/Controllers/AIMatchingController.php)`: The main entry point for user-facing semantic search. It handles search queries, gets embeddings, queries Qdrant, and orchestrates insight generation.
+-   `[RoleProfileController.php](mdc:app/Http/Controllers/RoleProfileController.php)`: Triggers the AI Profile Generation jobs from user requests in the frontend.
+-   `[PostgraduateRecommendationController.php](mdc:app/Http/Controllers/PostgraduateRecommendationController.php)`: Manages the AI-powered postgraduate program recommendations.
 
-## Web Scraping Integration
+## Core Services (Business Logic)
 
-### URL Processing
-- Use GuzzleHTTP for making HTTP requests to external URLs
-- Validate and sanitize user-provided URLs
-- Handle timeouts and errors gracefully
-- Use random user agents to minimize blocking
-- Implement rate limiting and throttling
-- Log scraping activities for monitoring
-- Cache successful responses to minimize unnecessary requests
+The bulk of the AI logic resides in the `app/Services` directory.
 
-### Content Extraction
-- Use DOMDocument and DOMXPath for HTML parsing
-- Extract specific elements using XPath queries
-- Implement fallback mechanisms when expected content isn't found
-- Filter out irrelevant content and advertisements
-- Handle CAPTCHA detection for Google Scholar scraping
-- Sanitize extracted content before storage
+-   `[EmbeddingService.php](mdc:app/Services/EmbeddingService.php)`: Responsible for preparing text from user profiles and sending it to the OpenAI API to create vector embeddings.
+-   `[QdrantService.php](mdc:app/Services/QdrantService.php)`: Acts as the client for the Qdrant vector database. All storing and searching of vectors is handled here.
+-   `[AIProfileService.php](mdc:app/Services/AIProfileService.php)`: Contains the logic for the three methods of profile generation (CV, URL, Automatic Search).
+-   `[OpenAICompletionService.php](mdc:app/Services/OpenAICompletionService.php)`: A general-purpose service for making calls to OpenAI's completion models (like GPT-4o).
 
-## Google Services Integration
+## Background Processing (Jobs & Commands)
 
-### Search API Usage
-- Use Google Custom Search API for web-based AI search
-- Configure API key and CX in services config
-- Construct search queries based on user information
-- Log search results for monitoring
-- Handle API errors gracefully
-- Cache search results to minimize API usage
+AI operations are resource-intensive and are handled by background workers.
 
-### Analytics Integration
-- Use Google Analytics Data V1beta client
-- Configure property ID and service account credentials
-- Cache analytics data to reduce API calls
-- Track active users, session duration, and page views
-- Generate insights from analytics data for dashboards
-- Log initialization and errors for monitoring
+-   **Artisan Commands (`app/Console/Commands`)**: Used by admins to generate embeddings for the entire database.
+    -   `[GenerateAcademicianEmbeddingsCommand.php](mdc:app/Console/Commands/GenerateAcademicianEmbeddingsCommand.php)`
+    -   `[GenerateStudentEmbeddingsCommand.php](mdc:app/Console/Commands/GenerateStudentEmbeddingsCommand.php)`
+    -   `[QdrantSetupCommand.php](mdc:app/Console/Commands/QdrantSetupCommand.php)`
+-   **Jobs (`app/Jobs`)**: Queued jobs that perform the actual AI processing.
+    -   `[GenerateProfileFromCV.php](mdc:app/Jobs/GenerateProfileFromCV.php)`: The job that handles CV-based profile generation.
+    -   `[ProcessGoogleScholarScraping.php](mdc:app/Jobs/ProcessGoogleScholarScraping.php)`: The job that executes the Python scraping script.
 
-## Data Mapping & Validation
+## Frontend Components
 
-### Research Expertise Mapping
-- Map extracted or generated terms to Field of Research → Research Area → Niche Domain
-- Implement fuzzy matching for terminology
-- Handle synonyms and related terms
-- Default to broader categories when specific matches aren't found
-- Allow manual correction of mapped values
-
-### Contact Information Validation
-- Validate generated phone numbers for proper format
-- Verify email addresses follow standard patterns
-- Validate website URLs for proper structure and accessibility
-- Format addresses consistently
-- Handle international variants of contact information
-
-## User Experience for AI Features
-
-### Loading Indicators
-- Implement appropriate loading states during AI operations
-- Show progress indicators for multi-step processes
-- Provide estimated completion times when possible
-- Handle interruptions and cancellations gracefully
-
-### User Review & Editing
-- Allow users to review AI-generated content before saving
-- Provide easy-to-use editing interfaces for generated content
-- Highlight potentially inaccurate information
-- Implement version history for generated content
-
-## Security & Privacy Considerations
-
-### Data Protection
-- Limit sensitive information sent to external APIs
-- Store only necessary data from AI responses
-- Implement proper error handling to avoid revealing sensitive information
-- Follow data retention policies for scraped and generated content
-
-### Rate Limiting & Abuse Prevention
-- Implement rate limiting for AI generation features
-- Monitor for abuse patterns
-- Implement CAPTCHA or other verification for public-facing features
-- Log unsuccessful attempts for security analysis
+-   `[resources/js/Pages/AI/AIProfileGeneration.jsx](mdc:resources/js/Pages/AI/AIProfileGeneration.jsx)`: The user interface for the AI Profile Generation feature.
+-   `[resources/js/Pages/AIMatching/Index.jsx](mdc:resources/js/Pages/AIMatching/Index.jsx)`: The main user interface for the Semantic Search / AI Matching feature.

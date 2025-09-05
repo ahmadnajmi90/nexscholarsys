@@ -45,59 +45,39 @@ class ProfileReminderController extends Controller
      */
     public function index(Request $request)
     {
-        // Get universities and faculties for dropdowns
-        $universities = UniversityList::pluck('full_name', 'id')->all();
-        $faculties = FacultyList::pluck('name', 'id')->all();
-        
-        // Academicians with pagination
-        $academiciansPaginated = User::whereIs('academician')
-            ->with('academician.universityDetails', 'academician.faculty')
-            ->paginate(self::ITEMS_PER_PAGE, ['*'], 'academicians_page');
-            
-        $academicians = [
-            'data' => $academiciansPaginated->items(),
-            'links' => $academiciansPaginated->links()->toHtml(),
-            'current_page' => $academiciansPaginated->currentPage(),
-            'last_page' => $academiciansPaginated->lastPage(),
-            'from' => $academiciansPaginated->firstItem(),
-            'to' => $academiciansPaginated->lastItem(),
-            'total' => $academiciansPaginated->total(),
-            'per_page' => $academiciansPaginated->perPage(),
-        ];
-        
-        // Postgraduates with pagination
-        $postgraduatesPaginated = User::whereIs('postgraduate')
-            ->with('postgraduate.universityDetails', 'postgraduate.faculty')
-            ->paginate(self::ITEMS_PER_PAGE, ['*'], 'postgraduates_page');
-            
-        $postgraduates = [
-            'data' => $postgraduatesPaginated->items(),
-            'links' => $postgraduatesPaginated->links()->toHtml(),
-            'current_page' => $postgraduatesPaginated->currentPage(),
-            'last_page' => $postgraduatesPaginated->lastPage(),
-            'from' => $postgraduatesPaginated->firstItem(),
-            'to' => $postgraduatesPaginated->lastItem(),
-            'total' => $postgraduatesPaginated->total(),
-            'per_page' => $postgraduatesPaginated->perPage(),
-        ];
-        
-        // Undergraduates with pagination
-        $undergraduatesPaginated = User::whereIs('undergraduate')
-            ->with('undergraduate.universityDetails', 'undergraduate.faculty')
-            ->paginate(self::ITEMS_PER_PAGE, ['*'], 'undergraduates_page');
-            
-        $undergraduates = [
-            'data' => $undergraduatesPaginated->items(),
-            'links' => $undergraduatesPaginated->links()->toHtml(),
-            'current_page' => $undergraduatesPaginated->currentPage(),
-            'last_page' => $undergraduatesPaginated->lastPage(),
-            'from' => $undergraduatesPaginated->firstItem(),
-            'to' => $undergraduatesPaginated->lastItem(),
-            'total' => $undergraduatesPaginated->total(),
-            'per_page' => $undergraduatesPaginated->perPage(),
-        ];
-        
-        // Prepare research options in the same format as in FacultyAdminController
+        // Determine active tab (default to academicians)
+        $activeTab = $request->input('tab', 'academicians');
+
+        // Initialize data arrays
+        $academicians = null;
+        $postgraduates = null;
+        $undergraduates = null;
+
+        // Initialize filter options
+        $universities = [];
+        $faculties = [];
+        $statuses = ['Complete', 'Needs Update'];
+
+        // Load data only for the active tab
+        switch ($activeTab) {
+            case 'academicians':
+                $academicians = $this->getAcademiciansData($request);
+                $universities = $this->getUniversitiesFromAcademicians($request);
+                $faculties = $this->getFacultiesFromAcademicians($request);
+                break;
+            case 'postgraduates':
+                $postgraduates = $this->getPostgraduatesData($request);
+                $universities = $this->getUniversitiesFromPostgraduates($request);
+                $faculties = $this->getFacultiesFromPostgraduates($request);
+                break;
+            case 'undergraduates':
+                $undergraduates = $this->getUndergraduatesData($request);
+                $universities = $this->getUniversitiesFromUndergraduates($request);
+                $faculties = $this->getFacultiesFromUndergraduates($request);
+                break;
+        }
+
+        // Prepare research options
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
         foreach ($fieldOfResearches as $field) {
@@ -119,10 +99,587 @@ class ProfileReminderController extends Controller
             'academicians' => $academicians,
             'postgraduates' => $postgraduates,
             'undergraduates' => $undergraduates,
+            'activeTab' => $activeTab,
+            'researchOptions' => $researchOptions,
             'universities' => $universities,
             'faculties' => $faculties,
-            'researchOptions' => $researchOptions,
+            'statuses' => $statuses,
         ]);
+    }
+
+    /**
+     * Get academicians data
+     */
+    private function getAcademiciansData(Request $request)
+    {
+        $query = User::whereIs('academician')
+            ->with('academician.universityDetails', 'academician.faculty');
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('academician', function ($academicianQuery) use ($search) {
+                      $academicianQuery->where('full_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply university filter
+        if ($request->filled('university')) {
+            $query->whereHas('academician', function ($academicianQuery) use ($request) {
+                $academicianQuery->where('university', $request->university);
+            });
+        }
+
+        // Apply faculty filter
+        if ($request->filled('faculty')) {
+            $query->whereHas('academician', function ($academicianQuery) use ($request) {
+                $academicianQuery->where('faculty', $request->faculty);
+            });
+        }
+
+        // Apply status filter - Academicians: bio, research_expertise, profile_picture != profile_pictures/default.jpg
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('academician', function ($academicianQuery) {
+                    $academicianQuery->whereNotNull('bio')
+                        ->whereNotNull('research_expertise')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('academician')
+                        ->orWhereHas('academician', function ($academicianQuery) {
+                            $academicianQuery->whereNull('bio')
+                                ->orWhereNull('research_expertise')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        return $query->paginate(self::ITEMS_PER_PAGE, ['*'], 'academicians_page')
+            ->withQueryString();
+    }
+
+    /**
+     * Get postgraduates data
+     */
+    private function getPostgraduatesData(Request $request)
+    {
+        $query = User::whereIs('postgraduate')
+            ->with('postgraduate.universityDetails', 'postgraduate.faculty');
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('postgraduate', function ($postgraduateQuery) use ($search) {
+                      $postgraduateQuery->where('full_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply university filter
+        if ($request->filled('university')) {
+            $query->whereHas('postgraduate', function ($postgraduateQuery) use ($request) {
+                $postgraduateQuery->where('university', $request->university);
+            });
+        }
+
+        // Apply faculty filter
+        if ($request->filled('faculty')) {
+            $query->whereHas('postgraduate', function ($postgraduateQuery) use ($request) {
+                $postgraduateQuery->where('faculty', $request->faculty);
+            });
+        }
+
+        // Apply status filter - Postgraduates: bio, field_of_research, profile_picture != default.jpg
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('postgraduate', function ($postgraduateQuery) {
+                    $postgraduateQuery->whereNotNull('bio')
+                        ->whereNotNull('field_of_research')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('postgraduate')
+                        ->orWhereHas('postgraduate', function ($postgraduateQuery) {
+                            $postgraduateQuery->whereNull('bio')
+                                ->orWhereNull('field_of_research')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        return $query->paginate(self::ITEMS_PER_PAGE, ['*'], 'postgraduates_page')
+            ->withQueryString();
+    }
+
+    /**
+     * Get undergraduates data
+     */
+    private function getUndergraduatesData(Request $request)
+    {
+        $query = User::whereIs('undergraduate')
+            ->with('undergraduate.universityDetails', 'undergraduate.faculty');
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('undergraduate', function ($undergraduateQuery) use ($search) {
+                      $undergraduateQuery->where('full_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply university filter
+        if ($request->filled('university')) {
+            $query->whereHas('undergraduate', function ($undergraduateQuery) use ($request) {
+                $undergraduateQuery->where('university', $request->university);
+            });
+        }
+
+        // Apply faculty filter
+        if ($request->filled('faculty')) {
+            $query->whereHas('undergraduate', function ($undergraduateQuery) use ($request) {
+                $undergraduateQuery->where('faculty', $request->faculty);
+            });
+        }
+
+        // Apply status filter - Undergraduates: bio, profile_picture != default.jpg
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('undergraduate', function ($undergraduateQuery) {
+                    $undergraduateQuery->whereNotNull('bio')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('undergraduate')
+                        ->orWhereHas('undergraduate', function ($undergraduateQuery) {
+                            $undergraduateQuery->whereNull('bio')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        return $query->paginate(self::ITEMS_PER_PAGE, ['*'], 'undergraduates_page')
+            ->withQueryString();
+    }
+
+
+    
+    /**
+     * Get universities from academicians data
+     */
+    private function getUniversitiesFromAcademicians(Request $request)
+    {
+        $query = User::whereIs('academician')
+            ->with('academician.universityDetails')
+            ->join('academicians', 'users.unique_id', '=', 'academicians.academician_id')
+            ->join('university_list', 'academicians.university', '=', 'university_list.id')
+            ->select('university_list.id', 'university_list.full_name as name')
+            ->distinct();
+
+        // Apply the same filters as data query for consistency
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('academicians.full_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('academician', function ($academicianQuery) {
+                    $academicianQuery->whereNotNull('bio')
+                        ->whereNotNull('research_expertise')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('academician')
+                        ->orWhereHas('academician', function ($academicianQuery) {
+                            $academicianQuery->whereNull('bio')
+                                ->orWhereNull('research_expertise')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        $universities = $query->get()->map(function ($item) {
+            return ['id' => $item->id, 'name' => $item->name];
+        })->toArray();
+
+        // Ensure selected university from query params is included if not already present
+        if ($request->filled('university')) {
+            $selectedUniversityId = $request->university;
+            $universityExists = collect($universities)->contains('id', $selectedUniversityId);
+
+            if (!$universityExists) {
+                $selectedUniversity = \App\Models\UniversityList::find($selectedUniversityId);
+                if ($selectedUniversity) {
+                    $universities[] = [
+                        'id' => $selectedUniversity->id,
+                        'name' => $selectedUniversity->full_name
+                    ];
+                }
+            }
+        }
+
+        return $universities;
+    }
+
+    /**
+     * Get faculties from academicians data
+     */
+    private function getFacultiesFromAcademicians(Request $request)
+    {
+        $query = User::whereIs('academician')
+            ->with('academician.faculty')
+            ->join('academicians', 'users.unique_id', '=', 'academicians.academician_id')
+            ->join('faculty_list', 'academicians.faculty', '=', 'faculty_list.id')
+            ->select('faculty_list.id', 'faculty_list.name as name')
+            ->distinct();
+
+        // Apply the same filters as data query for consistency
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('academicians.full_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('university')) {
+            $query->where('academicians.university', $request->university);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('academician', function ($academicianQuery) {
+                    $academicianQuery->whereNotNull('bio')
+                        ->whereNotNull('research_expertise')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('academician')
+                        ->orWhereHas('academician', function ($academicianQuery) {
+                            $academicianQuery->whereNull('bio')
+                                ->orWhereNull('research_expertise')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        $faculties = $query->get()->map(function ($item) {
+            return ['id' => $item->id, 'name' => $item->name];
+        })->toArray();
+
+        // Ensure selected faculty from query params is included if not already present
+        if ($request->filled('faculty')) {
+            $selectedFacultyId = $request->faculty;
+            $facultyExists = collect($faculties)->contains('id', $selectedFacultyId);
+
+            if (!$facultyExists) {
+                $selectedFaculty = \App\Models\FacultyList::find($selectedFacultyId);
+                if ($selectedFaculty) {
+                    $faculties[] = [
+                        'id' => $selectedFaculty->id,
+                        'name' => $selectedFaculty->name
+                    ];
+                }
+            }
+        }
+
+        return $faculties;
+    }
+
+    /**
+     * Get universities from postgraduates data
+     */
+    private function getUniversitiesFromPostgraduates(Request $request)
+    {
+        $query = User::whereIs('postgraduate')
+            ->with('postgraduate.universityDetails')
+            ->join('postgraduates', 'users.unique_id', '=', 'postgraduates.postgraduate_id')
+            ->join('university_list', 'postgraduates.university', '=', 'university_list.id')
+            ->select('university_list.id', 'university_list.full_name as name')
+            ->distinct();
+
+        // Apply the same filters as data query for consistency
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('postgraduates.full_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('postgraduate', function ($postgraduateQuery) {
+                    $postgraduateQuery->whereNotNull('bio')
+                        ->whereNotNull('field_of_research')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('postgraduate')
+                        ->orWhereHas('postgraduate', function ($postgraduateQuery) {
+                            $postgraduateQuery->whereNull('bio')
+                                ->orWhereNull('field_of_research')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        $universities = $query->get()->map(function ($item) {
+            return ['id' => $item->id, 'name' => $item->name];
+        })->toArray();
+
+        // Ensure selected university from query params is included if not already present
+        if ($request->filled('university')) {
+            $selectedUniversityId = $request->university;
+            $universityExists = collect($universities)->contains('id', $selectedUniversityId);
+
+            if (!$universityExists) {
+                $selectedUniversity = \App\Models\UniversityList::find($selectedUniversityId);
+                if ($selectedUniversity) {
+                    $universities[] = [
+                        'id' => $selectedUniversity->id,
+                        'name' => $selectedUniversity->full_name
+                    ];
+                }
+            }
+        }
+
+        return $universities;
+    }
+
+    /**
+     * Get faculties from postgraduates data
+     */
+    private function getFacultiesFromPostgraduates(Request $request)
+    {
+        $query = User::whereIs('postgraduate')
+            ->with('postgraduate.faculty')
+            ->join('postgraduates', 'users.unique_id', '=', 'postgraduates.postgraduate_id')
+            ->join('faculty_list', 'postgraduates.faculty', '=', 'faculty_list.id')
+            ->select('faculty_list.id', 'faculty_list.name as name')
+            ->distinct();
+
+        // Apply the same filters as data query for consistency
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('postgraduates.full_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('university')) {
+            $query->where('postgraduates.university', $request->university);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('postgraduate', function ($postgraduateQuery) {
+                    $postgraduateQuery->whereNotNull('bio')
+                        ->whereNotNull('field_of_research')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('postgraduate')
+                        ->orWhereHas('postgraduate', function ($postgraduateQuery) {
+                            $postgraduateQuery->whereNull('bio')
+                                ->orWhereNull('field_of_research')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        $faculties = $query->get()->map(function ($item) {
+            return ['id' => $item->id, 'name' => $item->name];
+        })->toArray();
+
+        // Ensure selected faculty from query params is included if not already present
+        if ($request->filled('faculty')) {
+            $selectedFacultyId = $request->faculty;
+            $facultyExists = collect($faculties)->contains('id', $selectedFacultyId);
+
+            if (!$facultyExists) {
+                $selectedFaculty = \App\Models\FacultyList::find($selectedFacultyId);
+                if ($selectedFaculty) {
+                    $faculties[] = [
+                        'id' => $selectedFaculty->id,
+                        'name' => $selectedFaculty->name
+                    ];
+                }
+            }
+        }
+
+        return $faculties;
+    }
+
+    /**
+     * Get universities from undergraduates data
+     */
+    private function getUniversitiesFromUndergraduates(Request $request)
+    {
+        $query = User::whereIs('undergraduate')
+            ->with('undergraduate.universityDetails')
+            ->join('undergraduates', 'users.unique_id', '=', 'undergraduates.undergraduate_id')
+            ->join('university_list', 'undergraduates.university', '=', 'university_list.id')
+            ->select('university_list.id', 'university_list.full_name as name')
+            ->distinct();
+
+        // Apply the same filters as data query for consistency
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('undergraduates.full_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('undergraduate', function ($undergraduateQuery) {
+                    $undergraduateQuery->whereNotNull('bio')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('undergraduate')
+                        ->orWhereHas('undergraduate', function ($undergraduateQuery) {
+                            $undergraduateQuery->whereNull('bio')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        $universities = $query->get()->map(function ($item) {
+            return ['id' => $item->id, 'name' => $item->name];
+        })->toArray();
+
+        // Ensure selected university from query params is included if not already present
+        if ($request->filled('university')) {
+            $selectedUniversityId = $request->university;
+            $universityExists = collect($universities)->contains('id', $selectedUniversityId);
+
+            if (!$universityExists) {
+                $selectedUniversity = \App\Models\UniversityList::find($selectedUniversityId);
+                if ($selectedUniversity) {
+                    $universities[] = [
+                        'id' => $selectedUniversity->id,
+                        'name' => $selectedUniversity->full_name
+                    ];
+                }
+            }
+        }
+
+        return $universities;
+    }
+
+    /**
+     * Get faculties from undergraduates data
+     */
+    private function getFacultiesFromUndergraduates(Request $request)
+    {
+        $query = User::whereIs('undergraduate')
+            ->with('undergraduate.faculty')
+            ->join('undergraduates', 'users.unique_id', '=', 'undergraduates.undergraduate_id')
+            ->join('faculty_list', 'undergraduates.faculty', '=', 'faculty_list.id')
+            ->select('faculty_list.id', 'faculty_list.name as name')
+            ->distinct();
+
+        // Apply the same filters as data query for consistency
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('undergraduates.full_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('university')) {
+            $query->where('undergraduates.university', $request->university);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'Complete') {
+                $query->whereHas('undergraduate', function ($undergraduateQuery) {
+                    $undergraduateQuery->whereNotNull('bio')
+                        ->whereNotNull('profile_picture')
+                        ->where('profile_picture', '!=', 'profile_pictures/default.jpg');
+                });
+            } elseif ($request->status === 'Needs Update') {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('undergraduate')
+                        ->orWhereHas('undergraduate', function ($undergraduateQuery) {
+                            $undergraduateQuery->whereNull('bio')
+                                ->orWhereNull('profile_picture')
+                                ->orWhere('profile_picture', '=', 'profile_pictures/default.jpg');
+                        });
+                });
+            }
+        }
+
+        $faculties = $query->get()->map(function ($item) {
+            return ['id' => $item->id, 'name' => $item->name];
+        })->toArray();
+
+        // Ensure selected faculty from query params is included if not already present
+        if ($request->filled('faculty')) {
+            $selectedFacultyId = $request->faculty;
+            $facultyExists = collect($faculties)->contains('id', $selectedFacultyId);
+
+            if (!$facultyExists) {
+                $selectedFaculty = \App\Models\FacultyList::find($selectedFacultyId);
+                if ($selectedFaculty) {
+                    $faculties[] = [
+                        'id' => $selectedFaculty->id,
+                        'name' => $selectedFaculty->name
+                    ];
+                }
+            }
+        }
+
+        return $faculties;
     }
     
     /**

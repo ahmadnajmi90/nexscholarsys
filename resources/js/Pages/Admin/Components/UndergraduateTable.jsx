@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
-import { FaSpinner, FaEnvelope, FaCheckCircle, FaFilter, FaChevronDown, FaChevronUp, FaExclamationCircle } from 'react-icons/fa';
-import { Link } from '@inertiajs/react';
+import { FaSpinner, FaEnvelope, FaCheckCircle, FaChevronDown, FaChevronUp, FaExclamationCircle } from 'react-icons/fa';
+import { Link, router } from '@inertiajs/react';
+import Pagination from '@/Components/Pagination';
 
-const UndergraduateTable = ({ undergraduates, universities, faculties, researchOptions, onSendReminder, onSendBatchReminder, pagination, currentTab }) => {
+const UndergraduateTable = ({
+    undergraduates,
+    researchOptions,
+    onSendReminder,
+    onSendBatchReminder,
+    pagination,
+    currentTab,
+    loading
+}) => {
     const [sentStatus, setSentStatus] = useState({});
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [batchSending, setBatchSending] = useState(false);
     const [batchSent, setBatchSent] = useState(false);
     const [expandedIds, setExpandedIds] = useState({});
+
+
     
     const handleSendReminder = async (userId) => {
         setSentStatus(prev => ({ ...prev, [userId]: 'sending' }));
@@ -86,82 +97,11 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
         }));
     };
     
-    // Function to render pagination controls
-    const renderPagination = () => {
-        // Common options for Inertia links to preserve state and scroll position
-        const linkOptions = {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['academicians', 'postgraduates', 'undergraduates'],
-            replace: true
-        };
+
         
         return (
-            <div className="mt-4 flex items-center justify-between px-4 py-3 bg-white sm:px-6">
-                <div className="flex flex-1 justify-between sm:hidden">
-                    {pagination.current_page > 1 && (
-                        <Link
-                            href={`?undergraduates_page=${pagination.current_page - 1}&tab=${currentTab}`}
-                            className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            {...linkOptions}
-                        >
-                            Previous
-                        </Link>
-                    )}
-                    {pagination.current_page < pagination.last_page && (
-                        <Link
-                            href={`?undergraduates_page=${pagination.current_page + 1}&tab=${currentTab}`}
-                            className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            {...linkOptions}
-                        >
-                            Next
-                        </Link>
-                    )}
-                </div>
-                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-sm text-gray-700">
-                            Showing <span className="font-medium">{pagination.from || 0}</span> to <span className="font-medium">{pagination.to || 0}</span> of{' '}
-                            <span className="font-medium">{pagination.total}</span> results
-                        </p>
-                    </div>
-                    <div>
-                        <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                            {pagination.current_page > 1 && (
-                                <Link
-                                    href={`?undergraduates_page=${pagination.current_page - 1}&tab=${currentTab}`}
-                                    className="relative inline-flex items-center rounded-l-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                                    {...linkOptions}
-                                >
-                                    Previous
-                                </Link>
-                            )}
-                            
-                            {/* Current page indicator */}
-                            <span
-                                className="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                            >
-                                {pagination.current_page}
-                            </span>
-                            
-                            {pagination.current_page < pagination.last_page && (
-                                <Link
-                                    href={`?undergraduates_page=${pagination.current_page + 1}&tab=${currentTab}`}
-                                    className="relative inline-flex items-center rounded-r-md px-3 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                                    {...linkOptions}
-                                >
-                                    Next
-                                </Link>
-                            )}
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        );
-    };
+        <div className="relative">
     
-    return (
-        <div>
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="text-sm font-medium text-gray-500">
                     {selectedUsers.length > 0 ? (
@@ -251,14 +191,10 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
                                         <td className="px-3 py-4">
                                             <div className="flex flex-col">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {profile?.university && universities[profile.university] 
-                                                        ? universities[profile.university]
-                                                        : profile?.universityDetails?.full_name || 'Not specified'}
+                                                    {profile?.university_details?.full_name || 'Not specified'}
                                                 </div>
                                                 <div className="text-sm text-gray-500 mt-1">
-                                                    {profile?.faculty_id && faculties[profile.faculty_id] 
-                                                        ? faculties[profile.faculty_id]
-                                                        : profile?.faculty?.name || 'Faculty not specified'}
+                                                    {profile?.faculty?.name || 'Faculty not specified'}
                                                 </div>
                                             </div>
                                         </td>
@@ -406,8 +342,31 @@ const UndergraduateTable = ({ undergraduates, universities, faculties, researchO
                 </div>
             </div>
             
-            {/* Render the pagination controls only if multiple pages exist */}
-            {pagination.last_page > 1 && renderPagination()}
+            {/* Loading overlay */}
+            {loading && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                        <FaSpinner className="animate-spin text-blue-500" />
+                        <span className="text-gray-600">Loading...</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Pagination controls */}
+            {pagination && pagination.last_page > 1 && (
+                <div className="mt-6">
+                    <Pagination
+                        currentPage={pagination.current_page || 1}
+                        totalPages={pagination.last_page || 1}
+                        onPageChange={(page) => {
+                            router.get(`${window.location.pathname}?undergraduates_page=${page}&tab=${currentTab}`, {
+                                preserveState: true,
+                                replace: true
+                            });
+                        }}
+                    />
+                </div>
+            )}
         </div>
     );
 };

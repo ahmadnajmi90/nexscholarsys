@@ -1,130 +1,29 @@
 ---
-description: 
-globs: 
 alwaysApply: true
 ---
-# Nexscholar - Academic Research Platform Rules
 
-You are assisting with the Nexscholar platform, a modern academic and research platform built with Laravel 11 and React integrated via Inertia.js. Follow these guidelines when generating or modifying code:
+# Nexscholar General Project Structure
 
-## Architecture Overview
+This document outlines the core structure and key files for the Nexscholar platform.
 
-- **Backend**: Laravel 11.9 with PHP 8.2
-- **Frontend**: React integrated with Inertia.js, styled with Tailwind CSS
-- **Authentication**: Laravel Sanctum with Bouncer for role-based permissions
-- **Database**: MySQL with Eloquent ORM
-- **AI Integration**: GPT-4o via GitHub OpenAI API for academic profile generation
-- **Analytics**: Google Analytics Data API for insights and metrics
-- **Search**: Google Custom Search API for external content discovery
-- **Scholar Integration**: Custom scraping for Google Scholar profiles
-- **File Management**: Custom implementation for handling uploads and attachments
+## Core Technologies
 
-## Laravel Backend Guidelines
+-   **Backend**: Laravel 11. The main application logic resides in the `app` directory.
+-   **Frontend**: React with Vite, integrated via Inertia.js. All frontend code is in `resources/js`.
+-   **Routing**: Web routes are in `[routes/web.php](mdc:routes/web.php)`, and API routes are in `[routes/api.php](mdc:routes/api.php)`.
+-   **Dependencies**: Backend dependencies are managed by `[composer.json](mdc:composer.json)`. Frontend dependencies are in `[package.json](mdc:package.json)`.
 
-### Controller Structure
-- Use resource controllers for core CRUD operations
-- Implement specific controllers for show operations (ShowPostController, ShowEventController)
-- Return Inertia responses from controllers: `return Inertia::render('PageName', $data);`
-- Group related routes in `routes/web.php` by middleware or feature
-- Use Form Requests for validation logic
-- Keep controllers focused on request handling, move business logic to services
+## Key Directories
 
-### Model Pattern
-- Store multi-value attributes (tags, skills, research fields) as JSON fields
-- Define clear relationships between models (User, Academician, Post, etc.)
-- Use Bouncer's `HasRolesAndAbilities` trait for permissions
-- Use consistent naming for foreign keys (e.g., `author_id`, `academician_id`)
-- Track content views using dedicated models (PostView, ProjectView, etc.)
-- Implement role-specific models (Academician, Postgraduate, Undergraduate)
+-   `[app/Http/Controllers](mdc:app/Http/Controllers)`: Contains all controllers, organized by feature domains (e.g., `ProjectHub`, `ContentManagement`).
+-   `[app/Services](mdc:app/Services)`: Houses the business logic, especially for complex features and external integrations like AI and Google services.
+-   `[app/Models](mdc:app/Models)`: Defines the Eloquent models for database interaction.
+-   `[resources/js/Pages](mdc:resources/js/Pages)`: Contains the top-level React page components rendered by Inertia. The file structure here mirrors the user-facing URL structure.
+-   `[resources/js/Components](mdc:resources/js/Components)`: Contains reusable React components.
+-   `[docs](mdc:docs)`: The primary source for all detailed technical documentation.
 
-### Service Pattern
-- Use dedicated service classes for external API integration (GoogleScholarService, AIProfileService)
-- Implement scraping logic in services rather than controllers
-- Handle caching and rate limiting in service classes
-- Log API calls and errors for monitoring
-- Use dependency injection for service instantiation
+## Naming Conventions & Roles
 
-### Route Organization
-- Group routes by authentication/authorization status
-- Use route model binding for models like Post, Event, Project, Grant
-- Keep route names consistent with controller names
-- Use middleware for role-based access control
-
-### File Management
-- Store uploaded files in appropriate public directories
-- Handle file deletion when records are updated or deleted
-- Validate file types and sizes
-- Use consistent naming patterns for uploaded files
-
-## Inertia.js Integration
-
-- Return Inertia responses from controllers with appropriate props
-- Use shared data for common values like auth user info
-- Handle form submissions with Inertia forms
-- Use Ziggy for named routes in JavaScript: `route('route.name')`
-- Implement proper page transitions and loading states
-
-## React Frontend Guidelines
-
-### Page Components
-- Store page components in `resources/js/Pages` directory
-- Use appropriate layouts for each page
-- Follow naming pattern matching Laravel route names
-- Pass data from controllers as props
-- Implement responsive design for both desktop and mobile
-
-### Component Organization
-- Store reusable components in `resources/js/Components`
-- Create feature-specific components in subdirectories
-- Implement Sidebar and MobileSidebar for navigation
-- Use consistent component patterns across the application
-- Keep components focused and reusable
-
-### UI Patterns
-- Use Tailwind CSS utility classes directly in components
-- Implement responsive design using Tailwind breakpoints
-- Use button components (PrimaryButton, SecondaryButton, DangerButton)
-- Implement form components (TextInput, Select, InputLabel, InputError)
-- Use Dropdown and FilterDropdown for menu interactions
-
-### State Management
-- Use React Hooks (useState, useEffect) for component state
-- Use custom hooks for shared logic
-- Handle loading states properly for asynchronous operations
-- Implement proper error handling for form submissions
-- Track page views using PageViewTracker component
-
-## Database Guidelines
-
-- Use Laravel migrations for schema definitions
-- Follow consistent naming conventions for tables and columns
-- Use JSON columns for flexible attribute storage (tags, skills)
-- Implement proper indexes for frequently queried columns
-- Track content views and interactions (likes, shares)
-
-## User Roles & Permissions
-
-- Use Bouncer for role-based permissions
-- Define clear abilities for different user roles
-- Implement role-specific controllers and views
-- Check permissions in both frontend and backend code
-- Handle faculty administration and verification workflows
-
-## AI and External Services Integration
-
-- Use AIProfileService for profile generation with GPT-4o
-- Implement AICVService for CV generation
-- Use GoogleScholarService for scraping scholar profiles
-- Integrate GoogleSearchService for external content discovery
-- Implement GoogleAnalyticsService for metrics and insights
-- Handle rate limiting, caching, and error handling in all services
-- Log API calls and responses for debugging and monitoring
-
-## Documentation Requirements
-
-- Update README.md whenever a new feature or modification is made to the codebase
-- Document API endpoints, configurations, and usage instructions
-- Include PHPDoc comments for all classes and methods
-- Add JSDoc comments for React components
-- Keep documentation in sync with code changes
-- Follow the guidelines in nexscholar-documentation-rules.mdc
+-   User roles are critical: **Academician**, **Postgraduate**, **Undergraduate**, **FacultyAdmin**, and **Admin**.
+-   Permissions are managed by Bouncer. Check for Bouncer checks (`Bouncer::can(...)`) in controllers and policies.
+-   Frontend components often receive user role and permissions as props to conditionally render UI elements.
