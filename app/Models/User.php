@@ -89,10 +89,11 @@ class User extends Authenticatable implements MustVerifyEmail
         // This ensures relationships are loaded efficiently if they haven't been already
         $this->loadMissing(['academician', 'postgraduate', 'undergraduate']);
 
-        return $this->academician->full_name 
-               ?? $this->postgraduate->full_name 
-               ?? $this->undergraduate->full_name 
-               ?? $this->name;
+        return $this->academician->full_name
+               ?? $this->postgraduate->full_name
+               ?? $this->undergraduate->full_name
+               ?? $this->name
+               ?? '';
     }
 
     public function academician()

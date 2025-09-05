@@ -1,24 +1,16 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { FaSpinner, FaEnvelope, FaCheckCircle, FaFilter, FaChevronDown, FaChevronUp, FaExclamationCircle, FaSearch } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaSpinner, FaEnvelope, FaCheckCircle, FaChevronDown, FaChevronUp, FaExclamationCircle } from 'react-icons/fa';
 import { Link, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
 
 const PostgraduateTable = ({
     postgraduates,
-    universities,
-    faculties,
     researchOptions,
     onSendReminder,
     onSendBatchReminder,
     pagination,
     currentTab,
-    filters,
-    onFilterChange,
-    onSearchChange,
-    onUniversityChange,
-    loading,
-    isTyping,
-    localSearch
+    loading
 }) => {
     const [sentStatus, setSentStatus] = useState({});
     const [selectedUsers, setSelectedUsers] = useState([]);
@@ -109,101 +101,6 @@ const PostgraduateTable = ({
         
         return (
         <div className="relative">
-            {/* Filter & Search Section */}
-            <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Postgraduates</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    {/* Search by Full Name */}
-                    <div>
-                        <label htmlFor="postgraduates-search" className="block text-sm font-medium text-gray-700 mb-1">
-                            Search by Full Name
-                        </label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FaSearch className="text-gray-400" />
-                            </div>
-                            <input
-                                type="text"
-                                id="postgraduates-search"
-                                value={localSearch || ''}
-                                onChange={(e) => onSearchChange('postgraduates', e.target.value)}
-                                placeholder="Search postgraduates..."
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                            {isTyping && (
-                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <div className="animate-pulse text-blue-500 text-xs">
-                                        Typing...
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* University Filter */}
-                    <div>
-                        <label htmlFor="postgraduates-university" className="block text-sm font-medium text-gray-700 mb-1">
-                            Filter by University
-                        </label>
-                        <select
-                            id="postgraduates-university"
-                            value={filters.university || ''}
-                            onChange={(e) => onUniversityChange ? onUniversityChange('postgraduates', e.target.value) : onFilterChange('postgraduates', 'university', e.target.value)}
-                            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        >
-                            <option value="">All Universities</option>
-                            {Object.entries(universities).map(([id, name]) => (
-                                <option key={id} value={id}>
-                                    {name}
-                                </option>
-                            ))}
-                        </select>
-                </div>
-
-                    {/* Faculty Filter */}
-                    <div>
-                        <label htmlFor="postgraduates-faculty" className="block text-sm font-medium text-gray-700 mb-1">
-                            Filter by Faculty
-                        </label>
-                        <select
-                            id="postgraduates-faculty"
-                            value={filters.faculty || ''}
-                            onChange={(e) => onFilterChange('postgraduates', 'faculty', e.target.value)}
-                            disabled={!filters.university}
-                            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                            <option value="">
-                                {filters.university ? 'All Faculties' : 'Select University First'}
-                            </option>
-                            {(Array.isArray(faculties) ? faculties : [])
-                                .filter(faculty => faculty && (!filters.university || faculty.university_id === parseInt(filters.university)))
-                                .map((faculty) => (
-                                    <option key={faculty.id} value={faculty.id}>
-                                        {faculty.name || 'Unnamed Faculty'}
-                                    </option>
-                                ))
-                            }
-                        </select>
-                    </div>
-
-                    {/* Profile Status Filter */}
-                    <div>
-                        <label htmlFor="postgraduates-status" className="block text-sm font-medium text-gray-700 mb-1">
-                            Profile Status
-                        </label>
-                        <select
-                            id="postgraduates-status"
-                            value={filters.status || ''}
-                            onChange={(e) => onFilterChange('postgraduates', 'status', e.target.value)}
-                            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        >
-                            <option value="">All Statuses</option>
-                            <option value="Complete">Complete</option>
-                            <option value="Needs Update">Needs Update</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
     
             <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="text-sm font-medium text-gray-500">
@@ -294,14 +191,10 @@ const PostgraduateTable = ({
                                         <td className="px-3 py-4">
                                             <div className="flex flex-col">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {profile?.university && universities[profile.university] 
-                                                        ? universities[profile.university]
-                                                        : profile?.universityDetails?.full_name || 'Not specified'}
+                                                    {profile?.university_details?.full_name || 'Not specified'}
                                                 </div>
                                                 <div className="text-sm text-gray-500 mt-1">
-                                                    {profile?.faculty_id && faculties[profile.faculty_id] 
-                                                        ? faculties[profile.faculty_id]
-                                                        : profile?.faculty?.name || 'Faculty not specified'}
+                                                    {profile?.faculty?.name || 'Faculty not specified'}
                                                 </div>
                                             </div>
                                         </td>
@@ -462,17 +355,7 @@ const PostgraduateTable = ({
                         currentPage={pagination.current_page || 1}
                         totalPages={pagination.last_page || 1}
                         onPageChange={(page) => {
-                            // Use Inertia to navigate with preserved filters
-                            const params = new URLSearchParams(window.location.search);
-                            params.set('postgraduates_page', page);
-                            params.set('tab', currentTab);
-                            // Preserve filter parameters
-                            if (filters.search) params.set('postgraduates_search', filters.search);
-                            if (filters.university) params.set('postgraduates_university', filters.university);
-                            if (filters.faculty) params.set('postgraduates_faculty', filters.faculty);
-                            if (filters.status) params.set('postgraduates_status', filters.status);
-
-                            router.get(`${window.location.pathname}?${params.toString()}`, {
+                            router.get(`${window.location.pathname}?postgraduates_page=${page}&tab=${currentTab}`, {
                                 preserveState: true,
                                 replace: true
                             });

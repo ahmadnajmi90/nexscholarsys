@@ -359,7 +359,6 @@ Route::get('/csrf/refresh', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
-    Route::get('/admin/profiles/faculties-by-university', [App\Http\Controllers\Admin\ProfileReminderController::class, 'getFacultiesByUniversity'])->name('admin.profiles.faculties-by-university');
     Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
     Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
 
