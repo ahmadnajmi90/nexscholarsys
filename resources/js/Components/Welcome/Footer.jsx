@@ -19,10 +19,13 @@ const FooterSection = () => {
       { name: "Register", href: route('register') }
     ],
     "Resources": [
-      { name: "Blog & Case Studies", href: "#" },
-      { name: "Community & Ambassadors", href: "#" },
-      { name: "Documentation (RAG, Semantic Search)", href: "#" },
-      { name: "Service Status", href: "#" }
+      { name: "Mastering Your Profile & Onboarding", href: route('resources.category', 'mastering-profile') },
+      { name: "Finding Your Match", href: route('resources.category', 'finding-match') },
+      { name: "Managing Your Research", href: route('resources.category', 'managing-research') },
+      // { name: "Blog & Case Studies", href: "#" },
+      // { name: "Community & Ambassadors", href: "#" },
+      // { name: "Documentation (RAG, Semantic Search)", href: "#" },
+      // { name: "Service Status", href: "#" }
     ],
     "Legal & More": [
       { name: "Terms of Use", href: route('legal.terms') },

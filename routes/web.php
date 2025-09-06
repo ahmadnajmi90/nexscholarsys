@@ -473,4 +473,9 @@ Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(
     Route::patch('/project-join-requests/{projectJoinRequest}/reject', [ProjectJoinRequestController::class, 'reject'])->name('projects.join.reject');
 });
 
+// Resources routes
+use App\Http\Controllers\ResourceController;
+Route::get('/resources/{category}', [ResourceController::class, 'showCategory'])->name('resources.category');
+Route::get('/resources/{category}/{slug}', [ResourceController::class, 'showGuide'])->name('resources.guide');
+
 require __DIR__.'/auth.php';
