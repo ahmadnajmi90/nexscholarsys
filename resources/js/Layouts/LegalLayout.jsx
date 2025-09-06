@@ -36,7 +36,7 @@ export default function LegalLayout({ children, headings = [] }) {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <header className="bg-white shadow-sm border-b">
+            <header className="bg-white shadow-sm border-b sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center">
@@ -71,7 +71,7 @@ export default function LegalLayout({ children, headings = [] }) {
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     {/* Table of Contents Sidebar */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
+                        <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-24">
                             <h2 className="text-base font-semibold text-gray-900 mb-4">Table of Contents</h2>
                             {headings.length > 0 ? (
                                 <nav className="space-y-1">
@@ -100,7 +100,7 @@ export default function LegalLayout({ children, headings = [] }) {
 
                     {/* Document Navigation Sidebar */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
+                        <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-24">
                             <h2 className="text-base font-semibold text-gray-900 mb-4">Legal Documents</h2>
                             <nav className="space-y-2">
                                 {navigationItems.map((item) => {
