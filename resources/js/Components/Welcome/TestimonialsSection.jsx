@@ -1,34 +1,11 @@
 import React from 'react';
-
-const TestimonialCard = ({ quote, name, title, image_url }) => {
-    return (
-        <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-            {/* Quote Text */}
-            <div className="relative mb-6">
-                <p className="text-gray-600 text-sm leading-relaxed">
-                    "{quote}"
-                </p>
-            </div>
-
-            {/* Author Information */}
-            <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center mr-4">
-                    <img src={image_url} alt={name} className="w-full h-full object-cover rounded-full" />
-                </div>
-                <div>
-                    <h4 className="text-gray-900 font-bold text-sm">{name}</h4>
-                    <p className="text-gray-500 text-xs">{title}</p>
-                </div>
-            </div>
-        </div>
-    );
-};
+import { InfiniteMovingCards } from '@/components/ui/infinite-moving-cards';
 
 const TestimonialsSection = () => {
     const testimonials = [
         {
             quote: "NexScholar saves me hours every week by helping students find me based on my research focus. I now receive quality postgraduate inquiries with aligned interests.",
-            name: "Dr. Muhammad Aliif Bin Ahmad ",
+            name: "Dr. Muhammad Aliif Bin Ahmad",
             title: "Senior Lecturer at Universiti Teknologi Malaysia",
             image_url: "/images/people1.png"
         },
@@ -49,6 +26,19 @@ const TestimonialsSection = () => {
             name: "Dr. Kavintheran Thambiratnam",
             title: "Senior Lecturer at Universiti Islam Antarabangsa Malaysia",
             image_url: "/images/people4.jpeg"
+        },
+        // Duplicate testimonials for better infinite scroll effect
+        {
+            quote: "NexScholar saves me hours every week by helping students find me based on my research focus. I now receive quality postgraduate inquiries with aligned interests.",
+            name: "Dr. Muhammad Aliif Bin Ahmad",
+            title: "Senior Lecturer at Universiti Teknologi Malaysia",
+            image_url: "/images/people1.png"
+        },
+        {
+            quote: "Before NexScholar, finding a supervisor and suitable grant was pure guesswork. Now I have access to everything—from proposal templates to funding alerts—in one place.",
+            name: "Loh Yin Xia",
+            title: "PhD Candidate at Universiti Kebangsaan Malaysia",
+            image_url: "/images/people2.jpg"
         }
     ];
 
@@ -98,13 +88,15 @@ const TestimonialsSection = () => {
                         </a>
                     </div>
 
-                    {/* Right Column - Testimonial Cards Grid */}
-                    <div className="lg:col-span-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {testimonials.map((testimonial, index) => (
-                                <TestimonialCard key={index} {...testimonial} />
-                            ))}
-                        </div>
+                    {/* Right Column - Infinite Moving Cards */}
+                    <div className="lg:col-span-3 w-full overflow-hidden">
+                        <InfiniteMovingCards
+                            items={testimonials}
+                            direction="left"
+                            speed="slow"
+                            pauseOnHover={true}
+                            className="py-4 sm:py-8"
+                        />
                     </div>
                 </div>
             </div>

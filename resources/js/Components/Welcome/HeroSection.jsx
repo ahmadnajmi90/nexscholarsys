@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import DarkVeil from '../ReactBits/DarkVeil';
-import GradientText from '../ReactBits/GradientText';
+import AuroraBackground from '../ui/aurora-background';
+import ShimmerText from '../ui/shimmer-text';
 
 const HeroSection = () => {
     return (
@@ -9,15 +9,9 @@ const HeroSection = () => {
             {/* SECTION 1: Main Hero with Animated Background */}
             <section id="home" className="relative min-h-screen flex items-center overflow-visible pt-20">
 
-                {/* START: New DarkVeil Background */}
-                <div className="absolute inset-0 z-0">
-                    <DarkVeil
-                        speed={2}
-                        hueShift={10.0}
-                        warpAmount={5}
-                    />
-                </div>
-                {/* END: New DarkVeil Background */}
+                {/* START: Aurora Background */}
+                <AuroraBackground className="z-0" />
+                {/* END: Aurora Background */}
 
                 {/* The existing background pattern can act as a layer on top */}
                 <div className="absolute inset-0 opacity-10 z-10">
@@ -34,10 +28,10 @@ const HeroSection = () => {
 
                             {/* Main Headline */}
                             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight tracking-tight font-serif">
-                                The Smart 
-                                <GradientText colors={['#a46ede', '#E91E63']} animationSpeed={3} showBorder={false} className="inline-block">
-                                    Ecosystem
-                                </GradientText> 
+                                The Smart
+                                <br />
+                                <ShimmerText text="Ecosystem" className="inline-block text-5xl md:text-6xl lg:text-7xl py-1.5" />
+                                <br />
                                 for Research Excellence
                             </h1>
 

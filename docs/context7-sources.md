@@ -1,0 +1,5 @@
+Inertia.js: '/inertiajs/inertia'
+Vite: '/vitejs/vite'
+Laravel: 'laravel.com/docs/11.x'
+React: 'react.dev'
+Tailwind: 'v3.tailwindcss.com/docs'
