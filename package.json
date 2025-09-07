@@ -19,6 +19,7 @@
         "pusher-js": "^8.4.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
+        "shadcn": "^3.2.1",
         "tailwindcss": "^3.2.1",
         "vite": "^5.0"
     },
@@ -29,11 +30,15 @@
         "@fullcalendar/interaction": "^6.1.17",
         "@fullcalendar/react": "^6.1.17",
         "@heroicons/react": "^2.2.0",
+        "@radix-ui/react-switch": "^1.2.6",
+        "@tabler/icons-react": "^3.34.1",
         "@tailwindcss/line-clamp": "^0.4.4",
         "@tailwindcss/typography": "^0.5.16",
         "@tanstack/react-table": "^8.21.3",
         "body-parser": "latest",
         "chart.js": "^4.4.6",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
         "country-js": "^0.10.0",
         "date-fns": "^4.1.0",
         "dompurify": "^3.2.5",
@@ -41,7 +46,7 @@
         "echarts": "^5.5.1",
         "echarts-for-react": "^3.0.2",
         "express": "latest",
-        "framer-motion": "^12.19.1",
+        "framer-motion": "^12.23.12",
         "gantt-task-react": "^0.3.9",
         "gsap": "^3.13.0",
         "lucide-react": "^0.474.0",
@@ -60,6 +65,8 @@
         "react-select": "^5.10.1",
         "react-to-print": "^2.15.1",
         "react-toastify": "^11.0.5",
-        "tailwind-scrollbar-hide": "^2.0.0"
+        "tailwind-merge": "^3.3.1",
+        "tailwind-scrollbar-hide": "^2.0.0",
+        "tailwindcss-animate": "^1.0.7"
     }
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { HandHeart, Search, BarChart3, Brain, Building2, GraduationCap } from "lucide-react";
+import { PointerHighlight } from '../ui/pointer-highlight';
 
 // Mobile Feature Card Sub-component
 const FeatureCard = ({ icon: Icon, title, description }) => (
@@ -58,7 +59,12 @@ const FinanceSection = () => {
                         A New Era of Intelligent Research
                     </h3>
                     <h2 className="text-5xl font-black text-gray-900 mb-6">
-                        Discover NexScholar AI
+                        Discover{" "}
+                        <PointerHighlight>
+                            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                NexScholar AI
+                            </span>
+                        </PointerHighlight>
                     </h2>
                     <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed text-xl">
                         NexScholar leverages Artificial Intelligence and Retrieval-Augmented Generation (RAG) to revolutionize how students, academicians, and industries explore research, discover opportunities, and build impactful collaborations — all in one intelligent ecosystem.
