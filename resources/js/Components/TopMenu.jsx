@@ -3,10 +3,10 @@ import { Link } from '@inertiajs/react';
 
 const TopMenu = ({ profilePicture }) => {
     return (
-        <nav className="border-b border-gray-200 px-4 py-3 shadow-sm">
+        <nav className="border-b border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mx-auto">
                 {/* Left Side Links */}
-                <div className="flex items-center space-x-6">
+                {/* <div className="flex items-center space-x-6">
                     <Link
                         href={route('profile.edit')}
                         className="text-gray-700 hover:text-blue-600 font-medium"
@@ -19,7 +19,7 @@ const TopMenu = ({ profilePicture }) => {
                     >
                         Profile
                     </Link>
-                </div>
+                </div> */}
 
                 {/* Right Side - Profile Image */}
                 <div className="flex items-center space-x-4">

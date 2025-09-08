@@ -269,6 +269,12 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
+                            <Link href={route('tutorial.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <BookOpenCheck className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Tutorial Guide</span>
+                            </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
                             <Link href={route('logout')} method="post" as="button" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center w-full">
                                 <LogOut className="text-gray-600 mb-2 w-5 h-5" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">Log Out</span>

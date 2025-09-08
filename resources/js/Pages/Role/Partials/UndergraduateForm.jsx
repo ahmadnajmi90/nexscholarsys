@@ -57,19 +57,8 @@ export default function UndergraduateForm({ universities, faculties, className =
     const urlParams = new URLSearchParams(window.location.search);
     const generationInitiated = urlParams.get('generation_initiated') === 'true';
     
-    console.log("Checking if automatic generation should be triggered:", {
-      aiGenerationInProgress,
-      aiGenerationMethod,
-      generationTriggeredRef: generationTriggeredRef.current,
-      isGenerating,
-      generatedProfileData: !!generatedProfileData,
-      generationInitiated,
-      location: window.location.href
-    });
-    
     // If we already have generated data, apply it immediately
     if (generatedProfileData && !generationTriggeredRef.current) {
-      console.log("Applying directly available generated profile data:", generatedProfileData);
       updateFormWithGeneratedData(generatedProfileData);
       generationTriggeredRef.current = true;
       
@@ -81,7 +70,6 @@ export default function UndergraduateForm({ universities, faculties, className =
     }
     // If generation was initiated but we don't have data yet, check status
     else if ((aiGenerationInProgress || generationInitiated) && !generationTriggeredRef.current && !isGenerating) {
-      console.log("Generation in progress or initiated, checking status");
       checkGenerationStatus();
     }
   }, [aiGenerationInProgress, isGenerating, generatedProfileData]);
@@ -94,7 +82,6 @@ export default function UndergraduateForm({ universities, faculties, className =
     
     setIsGenerating(true);
     setGenerationStatus('Checking generation status...');
-    console.log("Checking generation status");
     
     axios.get(route('ai.status'), {
       headers: {
@@ -102,7 +89,6 @@ export default function UndergraduateForm({ universities, faculties, className =
       }
     })
       .then(response => {
-        console.log("Status check response:", response.data);
         
         if (response.data.status === 'in_progress') {
           // Still in progress, check again after delay
@@ -134,7 +120,6 @@ export default function UndergraduateForm({ universities, faculties, className =
         } else {
           setIsGenerating(false);
           setGenerationStatus('');
-          console.log('Unexpected status:', response.data.status);
         }
       })
       .catch(error => {
@@ -146,7 +131,6 @@ export default function UndergraduateForm({ universities, faculties, className =
 
   // Function to update form with generated data
   const updateFormWithGeneratedData = (profileData) => {
-    console.log('Updating form with data:', profileData); // Debug log
     
     setData((prevData) => ({
       ...prevData,
@@ -182,10 +166,6 @@ export default function UndergraduateForm({ universities, faculties, className =
         // Create simple form data with token only
         const formData = new FormData();
         
-        console.log('Attempting CV generation with existing CV file');
-        console.log('CSRF Token:', csrfToken);
-        console.log('Using existing CV:', data.CV_file);
-        
         // Standard headers
         const headers = {
           'X-CSRF-TOKEN': csrfToken,
@@ -196,7 +176,6 @@ export default function UndergraduateForm({ universities, faculties, className =
           headers: headers
         });
         
-        console.log('CV generation successful:', response.data);
         
         if (response.data) {
           updateFormWithGeneratedData(response.data);
@@ -205,13 +184,6 @@ export default function UndergraduateForm({ universities, faculties, className =
         }
       } catch (error) {
         console.error('Error generating profile from CV:', error);
-        console.log('Error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          headers: error.response?.headers
-        });
         setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
         setIsGenerating(false);
       }
@@ -243,14 +215,6 @@ export default function UndergraduateForm({ universities, faculties, className =
       const formData = new FormData();
       formData.append('CV_file', cvFile, cvFile.name);
       
-      // Log CV file details for debugging
-      console.log('CV File details:', {
-        name: cvFile.name,
-        size: cvFile.size,
-        type: cvFile.type,
-        lastModified: new Date(cvFile.lastModified).toISOString()
-      });
-      
       // Ensure the file size isn't too large
       if (cvFile.size > 5 * 1024 * 1024) {
         throw new Error('File size exceeds 5MB. Please upload a smaller file.');
@@ -266,8 +230,6 @@ export default function UndergraduateForm({ universities, faculties, className =
         timeout: 60000, // 60 seconds
       });
       
-      console.log('CV generation successful:', response.data);
-      
       // Update profile data
       if (response.data) {
         setCVModalOpen(false);
@@ -278,13 +240,6 @@ export default function UndergraduateForm({ universities, faculties, className =
       }
     } catch (error) {
       console.error('Error uploading CV:', error);
-      console.log('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        headers: error.response?.headers
-      });
       
       setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
       setIsUploading(false);
@@ -346,9 +301,6 @@ export default function UndergraduateForm({ universities, faculties, className =
         }
       }
     });
-    for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
-    }
     post(route("role.update"), {
       data: formData,
       headers: { "Content-Type": "multipart/form-data" },
@@ -418,7 +370,7 @@ export default function UndergraduateForm({ universities, faculties, className =
 
   return (
     // Responsive container
-    <div className="max-w-8xl mx-auto px-4 pb-8">
+    <div className="max-w-8xl mx-auto px-4 pb-8 border border-gray-200 rounded">
       {/* Header Section with Background and Profile Picture */}
       <div className="w-full bg-white pb-12 shadow-md relative mb-4">
         {/* Background Image */}
@@ -513,7 +465,7 @@ export default function UndergraduateForm({ universities, faculties, className =
       )}
 
       {/* Form Section */}
-      <section className={className}>
+      <section className={`${className} px-4`}>
         <div className="relative mb-6">
         <header>
           <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>

@@ -221,7 +221,7 @@ const AcademicianProfileCard = ({
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+          className="bg-indigo-600 text-white p-2 rounded-lg shadow-lg"
         >
           <FaFilter className="text-xl" />
         </button>
@@ -294,7 +294,7 @@ const AcademicianProfileCard = ({
           </div>
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6 px-0 md:px-6 lg:px-0">
             {isLoading ? (
               // Show skeleton cards while loading
               Array.from({ length: 9 }, (_, index) => (

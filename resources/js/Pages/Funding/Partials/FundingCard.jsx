@@ -142,7 +142,7 @@ const FundingCard = ({ fundingItems, isLoading }) => {
             <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
                 <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+                    className="bg-indigo-600 text-white p-2 rounded-lg shadow-lg"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -167,7 +167,7 @@ const FundingCard = ({ fundingItems, isLoading }) => {
             </div>
 
             {/* Tab Navigation with Info Tooltip */}
-            <div className="mb-0 lg:mb-6 px-4 lg:px-0">
+            <div className="mb-0 lg:mb-6 px-4 md:px-6 lg:px-0">
                 <div className="flex items-center gap-4">
                     <div className="flex space-x-1 bg-gray-200 lg:bg-gray-100 p-1 rounded-lg w-fit mt-4 lg:mt-0">
                         <button
@@ -306,7 +306,7 @@ const FundingCard = ({ fundingItems, isLoading }) => {
                     </div>
 
                     {/* Main Content */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-0 md:px-2 lg:px-0">
                         {isLoading ? (
                             // Show skeleton cards while loading
                             Array.from({ length: 9 }, (_, index) => (

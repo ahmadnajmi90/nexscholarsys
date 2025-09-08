@@ -6,7 +6,7 @@ This document illustrates the primary end-to-end user journeys and workflows wit
 
 - [1. New User Onboarding Workflow](#1-new-user-onboarding-workflow)
 - [2. AI-Powered Supervisor Search Workflow](#2-ai-powered-supervisor-search-workflow)
-- [3. Project Hub: Task Creation and Real-Time Update Workflow](#3-project-hub-task-creation-and-real-time-update-workflow)
+- [3. ScholarLab (ProjectHub): Task Creation and Real-Time Update Workflow](#3-scholarlab-projecthub-task-creation-and-real-time-update-workflow)
 - [4. Faculty Admin: Academician Verification Workflow](#4-faculty-admin-academician-verification-workflow)
 - [5. AI Profile Generation from CV Workflow](#5-ai-profile-generation-from-cv-workflow)
 
@@ -46,8 +46,17 @@ sequenceDiagram
     Backend (Laravel)->>Backend (Laravel): Assign Bouncer roles/abilities
     Backend (Laravel)->>Backend (Laravel): Set user.is_profile_complete = true
     Backend (Laravel)-->>Frontend (React): Redirect to Dashboard
-    
+
     User->>Frontend (React): Views personalized Dashboard
+    Frontend (React)->>Frontend (React): Check user.has_seen_tutorial status
+    Frontend (React)->>User: Display Tutorial Modal (6-step guided tour)
+    User->>Frontend (React): Navigate through tutorial steps
+    User->>Frontend (React): Complete tutorial or skip
+    Frontend (React)->>Backend (Laravel): POST /user/mark-tutorial-seen (if completed)
+    Backend (Laravel)->>Backend (Laravel): Set user.has_seen_tutorial = true
+    Frontend (React)->>User: Display Tutorial Completion Modal
+
+    Note over User,Frontend (React): Users can access Tutorial Page anytime via Settings → Tutorial Guide
 ```
 
 ## 2. AI-Powered Supervisor Search Workflow
@@ -86,9 +95,9 @@ sequenceDiagram
     end
 ```
 
-## 3. Project Hub: Task Creation and Real-Time Update Workflow
+## 3. ScholarLab (ProjectHub): Task Creation and Real-Time Update Workflow
 
-This workflow demonstrates the real-time collaboration feature in the Project Hub, showing how an action by one user is instantly reflected for another.
+This workflow demonstrates the real-time collaboration feature in ScholarLab, showing how an action by one user is instantly reflected for another.
 
 ```mermaid
 sequenceDiagram

@@ -64,7 +64,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
   // Effect to apply generated profile data if available
   useEffect(() => {
     if (generatedProfileData && !generationTriggeredRef.current) {
-      console.log("Applying generated profile data:", generatedProfileData);
       
       // Update the form data with the generated profile
       setData((prevData) => ({
@@ -96,25 +95,13 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
     const urlParams = new URLSearchParams(window.location.search);
     const generationInitiated = urlParams.get('generation_initiated') === 'true';
     
-    console.log("Checking if automatic generation should be triggered:", {
-      aiGenerationInProgress,
-      aiGenerationMethod,
-      generationTriggeredRef: generationTriggeredRef.current,
-      isGenerating,
-      generatedProfileData: !!generatedProfileData,
-      generationInitiated,
-      location: window.location.href
-    });
-    
     // If we already have generated data, no need to trigger generation
     if (generatedProfileData) {
-      console.log("Generated profile data already available, skipping generation");
       return;
     }
     
     // If generation was initiated from CV upload page or is in progress
     if ((generationInitiated || aiGenerationInProgress) && !generationTriggeredRef.current && !isGenerating) {
-      console.log("Generation in progress or initiated, checking status");
       checkGenerationStatus();
       return;
     }
@@ -127,7 +114,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
     }
     
     setIsGenerating(true);
-    console.log("Checking generation status");
     
     // Get CSRF token from the meta tag
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -140,7 +126,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       }
     })
       .then(response => {
-        console.log("Status check response:", response.data);
         
         if (response.data.status === 'in_progress') {
           // Still in progress, check again after delay
@@ -178,17 +163,11 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
           }
         } else {
           // Fallback to checking directly from cache in case status API doesn't return expected format
-          console.log("Unexpected status format, checking cache directly");
           setIsGenerating(false);
         }
       })
       .catch(error => {
         console.error("Error checking generation status:", error);
-        console.log('Error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
-        });
         setIsGenerating(false);
       });
   };
@@ -296,10 +275,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             // Create simple form data with token only
             const formData = new FormData();
             
-            console.log('Attempting CV generation with existing CV file');
-            console.log('CSRF Token:', csrfToken);
-            console.log('Using existing CV:', data.CV_file);
-            
             // Standard headers
             const headers = {
                 'X-CSRF-TOKEN': csrfToken,
@@ -310,12 +285,9 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                 headers: headers
             });
             
-            console.log('CV generation successful:', response.data);
-            
             if (response.data) {
                 // Ensure the CV file path is updated in the form data
                 if (response.data.CV_file) {
-                    console.log('Updating CV file path from response:', response.data.CV_file);
                     setData(prevData => ({
                         ...prevData,
                         CV_file: response.data.CV_file
@@ -329,13 +301,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             }
         } catch (error) {
             console.error('Error generating profile from CV:', error);
-            console.log('Error details:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-                statusText: error.response?.statusText,
-                headers: error.response?.headers
-            });
             setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
             setIsGenerating(false);
         }
@@ -369,14 +334,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         const formData = new FormData();
         formData.append('CV_file', cvFile, cvFile.name);
         
-        // Log CV file details for debugging
-        console.log('CV File details:', {
-            name: cvFile.name,
-            size: cvFile.size,
-            type: cvFile.type,
-            lastModified: new Date(cvFile.lastModified).toISOString()
-        });
-        
         // Ensure the file size isn't too large
         if (cvFile.size > 5 * 1024 * 1024) {
             throw new Error('File size exceeds 5MB. Please upload a smaller file.');
@@ -393,8 +350,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             timeout: 60000, // 60 seconds
         });
         
-        console.log('CV generation successful:', response.data);
-        
         // Update profile data
         if (response.data) {
             setCVModalOpen(false);
@@ -403,7 +358,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
             // Update CV_file path in the form data FIRST
             // This ensures the CV file path is correctly set in the form
             if (response.data.CV_file) {
-                console.log('Updating CV file path:', response.data.CV_file);
                 setData(prevData => ({
                     ...prevData,
                     CV_file: response.data.CV_file // Update with string path from server
@@ -417,13 +371,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         }
     } catch (error) {
         console.error('Error uploading CV:', error);
-        console.log('Error details:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            headers: error.response?.headers
-        });
         
         setGenerationStatus(`Error (${error.response?.status || 'unknown'}): ${error.message}`);
         setIsUploading(false);
@@ -514,11 +461,9 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       data: formData,
       onStart: () => {
         // This ensures the processing state is properly set at the start
-        console.log('Form submission started');
       },
       onSuccess: () => {
         // This will be called when the server responds with a successful response
-        console.log('Form submission successful');
         // Show success alert to the user
         alert('Profile updated successfully!');
         // The recentlySuccessful state will be automatically set to true here
@@ -530,7 +475,6 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       },
       onFinish: () => {
         // This will be called regardless of success or error
-        console.log('Form submission completed');
         // Ensure any custom loading states are reset
       }
     });
@@ -563,7 +507,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         setShowCVModal(false);
       })
       .catch((error) => {
-        console.error("CV generation failed:", error);
+        console.error("CV generation failed");
         alert("Failed to generate CV. Please try again.");
         setIsDownloading(false);
       });
@@ -619,7 +563,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
   };
 
   return (
-    <div className="pb-8">
+    <div className="pb-8 border border-gray-200 rounded">
       <div className="w-full bg-white pb-12 shadow-md relative mb-4">
         {/* Background Image */}
         <div className="relative w-full h-48 overflow-hidden">
@@ -864,7 +808,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       {/* Tab Content Section */}
       <div className="w-full px-4 py-8">
         {activeTab === 'profiles' && (
-          <section className={className}>
+          <section className={`${className} px-4`}>
             <div className="relative mb-6">
               <header>
                 <h2 className="text-lg font-medium text-gray-900">

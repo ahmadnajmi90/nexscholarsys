@@ -12,7 +12,7 @@ This document provides a detailed breakdown of the major features implemented in
   - [Posts, Events, & Projects](#posts-events--projects)
   - [Unified Funding System (Grants & Scholarships)](#unified-funding-system-grants--scholarships)
 - [3. Collaboration & Networking](#3-collaboration--networking)
-  - [Project Hub](#project-hub)
+  - [ScholarLab (ProjectHub)](#scholarlab-projecthub)
   - [My Network (Connections)](#my-network-connections)
 - [4. AI-Powered Services](#4-ai-powered-services)
   - [Semantic Search & AI Matching](#semantic-search--ai-matching)
@@ -25,6 +25,10 @@ This document provides a detailed breakdown of the major features implemented in
 - [6. Platform Analytics](#6-platform-analytics)
   - [Admin Dashboard](#admin-dashboard)
   - [Client-Side Tracking](#client-side-tracking)
+- [7. User Onboarding & Tutorial](#7-user-onboarding--tutorial)
+  - [Multi-Page Tutorial Modal](#multi-page-tutorial-modal)
+  - [Tutorial Page](#tutorial-page)
+  - [Progress Tracking](#progress-tracking)
 
 ---
 
@@ -104,13 +108,13 @@ A cohesive system for managing funding opportunities, combining grants and schol
 
 ## 3. Collaboration & Networking
 
-### Project Hub
+### ScholarLab (ProjectHub)
 
 A comprehensive, real-time task management platform for academic projects, inspired by tools like Trello and Asana.
 
 -   **Purpose**: To provide a collaborative workspace for research teams to manage tasks, track progress, and communicate effectively.
--   **UI**: A highly interactive SPA located in `resources/js/Pages/ProjectHub/`.
--   **Backend Logic**: A group of controllers under `app/Http/Controllers/ProjectHub/` manages workspaces, boards, lists, tasks, and members. Real-time updates are powered by Laravel Reverb, broadcasting events like `TaskMoved`.
+-   **UI**: A highly interactive SPA located in `resources/js/Pages/ProjectHub/` (ScholarLab interface).
+-   **Backend Logic**: A group of controllers under `app/Http/Controllers/ProjectHub/` (ScholarLab backend) manages workspaces, boards, lists, tasks, and members. Real-time updates are powered by Laravel Reverb, broadcasting events like `TaskMoved`.
 -   **Key Features**:
     -   **Hierarchical Structure**: Workspaces > Boards > Lists > Tasks.
     -   **Multiple Views**:
@@ -230,3 +234,52 @@ The admin dashboard provides a high-level overview of platform activity and user
 ### Client-Side Tracking
 
 -   **Implementation**: A `PageViewTracker.jsx` React component is included in the main app layout. It uses `gtag.js` and integrates with Inertia's events to automatically track page views as the user navigates the SPA.
+
+## 7. User Onboarding & Tutorial
+
+### Multi-Page Tutorial Modal
+
+A comprehensive onboarding system that guides new users through the platform's key features.
+
+-   **Purpose**: To provide a smooth first-time user experience and help users understand the platform's core functionality.
+-   **UI**: A multi-page modal (`TutorialModal.jsx`) that appears automatically for new users who haven't seen the tutorial.
+-   **Backend Logic**: The `TutorialController.php` handles the tutorial display, while `ProfileController.php` manages the completion tracking.
+-   **Features**:
+    -   **6-Step Guided Tour**: Covers welcome, profile building, content exploration, collaboration tools, networking, and analytics/support.
+    -   **Interactive Navigation**: Users can navigate forward/backward or skip the tutorial entirely.
+    -   **Responsive Design**: Optimized for mobile and desktop viewing.
+    -   **Smart Triggering**: Only shows for users who haven't completed it and skips on certain routes (e.g., `/role` during profile creation).
+-   **Database Integration**: Uses a `has_seen_tutorial` boolean field in the `users` table to track completion status.
+
+### Tutorial Page
+
+A permanent, comprehensive help resource available to all users.
+
+-   **Purpose**: To serve as a self-contained reference guide that users can access anytime for platform guidance.
+-   **UI**: A dedicated page (`resources/js/Pages/Tutorial/Index.jsx`) with a scrollable layout and rich visual elements.
+-   **Navigation**: Accessible via the Settings menu in the sidebar as "Tutorial Guide".
+-   **Features**:
+    -   **Visual Design**: Beautiful aurora background, animated gradient text, and interactive components.
+    -   **Component Showcase**: Demonstrates various UI components from different registries (@shadcn, @aceternity, @magicui).
+    -   **Structured Content**: Organized into 6 clear sections with detailed explanations and visual aids.
+    -   **Breadcrumb Navigation**: Clear navigation showing Dashboard → Tutorial Guide.
+    -   **Call-to-Action Footer**: Links back to dashboard and profile settings.
+-   **Technical Implementation**:
+    -   **Advanced UI Components**: Uses Timeline, BentoGrid, Spotlight, and IconCloud components.
+    -   **Responsive Layout**: Mobile-first design with adaptive breakpoints.
+    -   **Performance Optimized**: Efficient component rendering and smooth scrolling.
+
+### Progress Tracking
+
+A system to monitor user engagement with the onboarding process.
+
+-   **Database Field**: `has_seen_tutorial` boolean in the `users` table tracks completion status.
+-   **Migration**: `2025_09_08_155511_add_has_seen_tutorial_to_users_table.php` adds the tracking field.
+-   **Backend Methods**:
+    -   `markTutorialSeen()` in `ProfileController.php` updates the user status.
+    -   `TutorialController.php` handles the tutorial page display.
+-   **Frontend Integration**:
+    -   **Modal Logic**: Checks user status and current route before displaying.
+    -   **Confirmation Modals**: Provides feedback and links to tutorial page.
+    -   **Skip Functionality**: Allows users to bypass with option to return later.
+-   **Analytics Integration**: Tutorial completion status can be tracked for user engagement metrics.

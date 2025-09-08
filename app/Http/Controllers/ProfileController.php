@@ -73,4 +73,16 @@ class ProfileController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Mark the user as having seen the tutorial.
+     */
+    public function markTutorialSeen(Request $request)
+    {
+        $user = $request->user();
+        $user->has_seen_tutorial = true;
+        $user->save();
+
+        return response()->json(['success' => true]);
+    }
 }

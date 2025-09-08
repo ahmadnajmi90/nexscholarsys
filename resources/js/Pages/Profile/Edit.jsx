@@ -11,21 +11,17 @@ export default function Edit({ mustVerifyEmail, status }) {
 
     return (
         <MainLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Profile
-                </h2>
-            }
+            title="General Account Settings"
             TopMenuOpen={true}
         >
-            <Head title="Profile" />
+            <Head title="General Account Settings" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="py-4 md:py-4 lg:py-2">
+                <div className="mx-auto max-w-7xl px-6 md:px-4 lg:px-0">
                     {/* Flex container to position Account Info and Update Password side by side */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Account Information Section */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg">
+                        <div className="bg-white p-6 shadow rounded-lg">
                             <UpdateProfileInformationForm
                                 mustVerifyEmail={mustVerifyEmail}
                                 status={status}
@@ -34,13 +30,13 @@ export default function Edit({ mustVerifyEmail, status }) {
                         </div>
 
                         {/* Update Password Section */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg">
+                        <div className="bg-white p-6 shadow rounded-lg">
                             <UpdatePasswordForm className="w-full" />
                         </div>
                     </div>
 
                     {/* Delete Account Section */}
-                    <div className="mt-6 bg-white p-6 shadow sm:rounded-lg">
+                    <div className="mt-6 bg-white p-6 shadow rounded-lg">
                         <DeleteUserForm className="w-full" />
                     </div>
                 </div>
