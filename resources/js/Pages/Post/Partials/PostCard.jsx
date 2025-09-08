@@ -46,7 +46,7 @@ const PostCard = ({ posts, isLoading }) => {
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="bg-blue-600 text-white p-2 rounded-lg shadow-lg"
+          className="bg-indigo-600 text-white p-2 rounded-lg shadow-lg"
         >
           {/* Simple filter icon SVG */}
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" 
@@ -99,7 +99,7 @@ const PostCard = ({ posts, isLoading }) => {
           </div>
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-0 md:px-2 lg:px-0">
             {isLoading ? (
               // Show skeleton cards while loading
               Array.from({ length: 9 }, (_, index) => (

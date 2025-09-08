@@ -7,6 +7,7 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function AIProfileGeneration({ userRole, showAllOptions }) {
     const [activeOption, setActiveOption] = useState(null);
@@ -206,237 +207,240 @@ export default function AIProfileGeneration({ userRole, showAllOptions }) {
         <GuestLayout>
             <Head title="AI Profile Generation" />
             
-            <div className="w-full sm:max-w-md px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                    Generate Your {userRole === 'academician' ? 'Academic' : (userRole === 'postgraduate' ? 'Postgraduate' : 'Undergraduate')} Profile
-                </h2>
-                
-                {errorMessage && (
-                    <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        {errorMessage}
-                    </div>
-                )}
-                
-                {!activeOption ? (
-                    <>
-                        <p className="text-gray-600 mb-6">
-                            Nexscholar can use AI to help you create your profile. How would you like to proceed?
-                        </p>
-                        
-                        <div className="space-y-4">
-                            {showAutomaticOption && (
-                            <button
-                                onClick={() => handleOptionSelect('automatic')}
-                                className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
-                            >
-                                <span className="font-medium text-gray-800">Generate with Automatic Search</span>
-                                <span className="text-sm text-gray-600 mt-1">
-                                    We'll search the web for your academic information based on your name and institution.
-                                </span>
-                            </button>
-                            )}
+            <div className="w-full max-w-2xl mx-auto mt-2 p-4 sm:p-6 lg:p-8">
+            <ApplicationLogo></ApplicationLogo>
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden mx-2 sm:mx-0 p-6 md:p-8 lg:p-8 mt-6">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-4 md:mb-2 text-left md:text-center lg:text-center">
+                        Generate Your {userRole === 'academician' ? 'Academic' : (userRole === 'postgraduate' ? 'Postgraduate' : 'Undergraduate')} Profile
+                    </h2>
+                    
+                    {errorMessage && (
+                        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
+                            {errorMessage}
+                        </div>
+                    )}
+                    
+                    {!activeOption ? (
+                        <>
+                            <p className="text-gray-600 mb-6 text-left md:text-center lg:text-center">
+                                Nexscholar can use AI to help you create your profile. How would you like to proceed?
+                            </p>
                             
-                            {showUrlOption && (
-                            <button
-                                onClick={() => handleOptionSelect('url')}
-                                className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
-                            >
-                                <span className="font-medium text-gray-800">Generate Using My Profile URLs</span>
-                                <span className="text-sm text-gray-600 mt-1">
-                                    Provide your academic profile URLs for more accurate results.
-                                </span>
-                            </button>
-                            )}
-                            
-                            {showCvOption && (
+                            <div className="space-y-4">
+                                {showAutomaticOption && (
                                 <button
-                                    onClick={() => handleOptionSelect('cv')}
+                                    onClick={() => handleOptionSelect('automatic')}
                                     className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
                                 >
-                                    <span className="font-medium text-gray-800">Generate From My CV</span>
-                                    <span className="text-sm text-gray-600 mt-1">
-                                        Upload your CV for us to extract information and generate your profile.
+                                    <span className="font-medium text-gray-800">Generate with Automatic Search</span>
+                                    <span className="text-sm text-gray-600 mt-1 text-left">
+                                        We'll search the web for your academic information based on your name and institution.
                                     </span>
                                 </button>
-                            )}
-                            
-                            <button
-                                onClick={handleSkip}
-                                className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
-                            >
-                                <span className="font-medium text-gray-800">Skip AI Generation for Now</span>
-                                <span className="text-sm text-gray-600 mt-1">
-                                    You can always generate your profile later from your profile settings.
-                                </span>
-                            </button>
-                        </div>
-                    </>
-                ) : activeOption === 'automatic' ? (
-                    <>
-                        <p className="text-gray-600 mb-6">
-                            We'll search the web for your academic information and generate a profile for you. This may take a moment.
-                        </p>
-                        
-                        <div className="flex items-center justify-between mt-6">
-                            <button
-                                onClick={() => setActiveOption(null)}
-                                className="text-sm text-gray-600 hover:text-gray-900 underline"
-                                disabled={isLoading}
-                            >
-                                Back
-                            </button>
-                            <PrimaryButton 
-                                onClick={handleAutomaticGeneration} 
-                                disabled={isLoading}
-                                className="ml-4"
-                            >
-                                {isLoading ? 'Processing...' : 'Generate Profile'}
-                            </PrimaryButton>
-                        </div>
-                    </>
-                ) : activeOption === 'url' ? (
-                    <>
-                        <p className="text-gray-600 mb-6">
-                            <strong>URL Search is generally more reliable as it uses the website links you provide.</strong> Please enter at least one URL to continue.
-                        </p>
-                        
-                        <form onSubmit={handleUrlsSubmit}>
-                            <div className="space-y-4">
-                                <div>
-                                    <InputLabel htmlFor="personalWebsite" value="Personal Website" />
-                                    <TextInput
-                                        id="personalWebsite"
-                                        type="url"
-                                        className="mt-1 block w-full"
-                                        value={data.personalWebsite}
-                                        onChange={(e) => setData('personalWebsite', e.target.value)}
-                                        placeholder="https://yourwebsite.com"
-                                    />
-                                    <InputError message={errors.personalWebsite} className="mt-2" />
-                                </div>
+                                )}
                                 
-                                <div>
-                                    <InputLabel htmlFor="institutionalWebsite" value="Institutional Website" />
-                                    <TextInput
-                                        id="institutionalWebsite"
-                                        type="url"
-                                        className="mt-1 block w-full"
-                                        value={data.institutionalWebsite}
-                                        onChange={(e) => setData('institutionalWebsite', e.target.value)}
-                                        placeholder="https://university.edu/faculty/you"
-                                    />
-                                    <InputError message={errors.institutionalWebsite} className="mt-2" />
-                                </div>
+                                {showUrlOption && (
+                                <button
+                                    onClick={() => handleOptionSelect('url')}
+                                    className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
+                                >
+                                    <span className="font-medium text-gray-800">Generate Using My Profile URLs</span>
+                                    <span className="text-sm text-gray-600 mt-1 text-left">
+                                        Provide your academic profile URLs for more accurate results.
+                                    </span>
+                                </button>
+                                )}
                                 
-                                <div>
-                                    <InputLabel htmlFor="linkedinProfile" value="LinkedIn Profile" />
-                                    <TextInput
-                                        id="linkedinProfile"
-                                        type="url"
-                                        className="mt-1 block w-full"
-                                        value={data.linkedinProfile}
-                                        onChange={(e) => setData('linkedinProfile', e.target.value)}
-                                        placeholder="https://linkedin.com/in/yourprofile"
-                                    />
-                                    <InputError message={errors.linkedinProfile} className="mt-2" />
-                                </div>
+                                {showCvOption && (
+                                    <button
+                                        onClick={() => handleOptionSelect('cv')}
+                                        className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
+                                    >
+                                        <span className="font-medium text-gray-800">Generate From My CV</span>
+                                        <span className="text-sm text-gray-600 mt-1 text-left">
+                                            Upload your CV for us to extract information and generate your profile.
+                                        </span>
+                                    </button>
+                                )}
                                 
-                                <div>
-                                    <InputLabel htmlFor="googleScholarProfile" value="Google Scholar Profile" />
-                                    <TextInput
-                                        id="googleScholarProfile"
-                                        type="url"
-                                        className="mt-1 block w-full"
-                                        value={data.googleScholarProfile}
-                                        onChange={(e) => setData('googleScholarProfile', e.target.value)}
-                                        placeholder="https://scholar.google.com/citations?user=..."
-                                    />
-                                    <InputError message={errors.googleScholarProfile} className="mt-2" />
-                                </div>
-                                
-                                <div>
-                                    <InputLabel htmlFor="researchgateProfile" value="ResearchGate Profile" />
-                                    <TextInput
-                                        id="researchgateProfile"
-                                        type="url"
-                                        className="mt-1 block w-full"
-                                        value={data.researchgateProfile}
-                                        onChange={(e) => setData('researchgateProfile', e.target.value)}
-                                        placeholder="https://www.researchgate.net/profile/..."
-                                    />
-                                    <InputError message={errors.researchgateProfile} className="mt-2" />
+                                <button
+                                    onClick={handleSkip}
+                                    className="w-full p-4 border rounded-lg hover:bg-gray-50 flex flex-col items-start"
+                                >
+                                    <span className="font-medium text-gray-800">Skip AI Generation for Now</span>
+                                    <span className="text-sm text-gray-600 mt-1 text-left">
+                                        You can always generate your profile later from your profile settings.
+                                    </span>
+                                </button>
                             </div>
+                        </>
+                    ) : activeOption === 'automatic' ? (
+                        <>
+                            <p className="text-gray-600 mb-6">
+                                We'll search the web for your academic information and generate a profile for you. This may take a moment.
+                            </p>
                             
                             <div className="flex items-center justify-between mt-6">
                                 <button
-                                    type="button"
                                     onClick={() => setActiveOption(null)}
                                     className="text-sm text-gray-600 hover:text-gray-900 underline"
                                     disabled={isLoading}
                                 >
                                     Back
                                 </button>
-                                <PrimaryButton
-                                    type="submit"
-                                        disabled={isLoading || !hasValidUrl()}
-                                        className="ml-4"
-                                    >
-                                        {isLoading ? 'Processing...' : 'Generate Profile'}
-                                    </PrimaryButton>
-                                </div>
+                                <PrimaryButton 
+                                    onClick={handleAutomaticGeneration} 
+                                    disabled={isLoading}
+                                    className="ml-4"
+                                >
+                                    {isLoading ? 'Processing...' : 'Generate Profile'}
+                                </PrimaryButton>
                             </div>
-                        </form>
-                    </>
-                ) : activeOption === 'cv' ? (
-                    <>
-                        <p className="text-gray-600 mb-6">
-                            <strong>CV-based profile generation can extract information directly from your resume.</strong> Please upload your CV to continue.
-                        </p>
-                        
-                        <form onSubmit={handleCVSubmit}>
-                            <div className="space-y-4">
-                                <div>
-                                    <InputLabel htmlFor="cv_file" value="Upload Your CV" />
-                                    <input
-                                        id="cv_file"
-                                        type="file"
-                                        className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
-                                        onChange={handleFileChange}
-                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff"
-                                        ref={fileInputRef}
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Supported formats: PDF, DOCX, DOC, JPEG, PNG, TIFF
-                                    </p>
+                        </>
+                    ) : activeOption === 'url' ? (
+                        <>
+                            <p className="text-gray-600 mb-6">
+                                <strong>URL Search is generally more reliable as it uses the website links you provide.</strong> Please enter at least one URL to continue.
+                            </p>
+                            
+                            <form onSubmit={handleUrlsSubmit}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <InputLabel htmlFor="personalWebsite" value="Personal Website" />
+                                        <TextInput
+                                            id="personalWebsite"
+                                            type="url"
+                                            className="mt-1 block w-full"
+                                            value={data.personalWebsite}
+                                            onChange={(e) => setData('personalWebsite', e.target.value)}
+                                            placeholder="https://yourwebsite.com"
+                                        />
+                                        <InputError message={errors.personalWebsite} className="mt-2" />
+                                    </div>
+                                    
+                                    <div>
+                                        <InputLabel htmlFor="institutionalWebsite" value="Institutional Website" />
+                                        <TextInput
+                                            id="institutionalWebsite"
+                                            type="url"
+                                            className="mt-1 block w-full"
+                                            value={data.institutionalWebsite}
+                                            onChange={(e) => setData('institutionalWebsite', e.target.value)}
+                                            placeholder="https://university.edu/faculty/you"
+                                        />
+                                        <InputError message={errors.institutionalWebsite} className="mt-2" />
+                                    </div>
+                                    
+                                    <div>
+                                        <InputLabel htmlFor="linkedinProfile" value="LinkedIn Profile" />
+                                        <TextInput
+                                            id="linkedinProfile"
+                                            type="url"
+                                            className="mt-1 block w-full"
+                                            value={data.linkedinProfile}
+                                            onChange={(e) => setData('linkedinProfile', e.target.value)}
+                                            placeholder="https://linkedin.com/in/yourprofile"
+                                        />
+                                        <InputError message={errors.linkedinProfile} className="mt-2" />
+                                    </div>
+                                    
+                                    <div>
+                                        <InputLabel htmlFor="googleScholarProfile" value="Google Scholar Profile" />
+                                        <TextInput
+                                            id="googleScholarProfile"
+                                            type="url"
+                                            className="mt-1 block w-full"
+                                            value={data.googleScholarProfile}
+                                            onChange={(e) => setData('googleScholarProfile', e.target.value)}
+                                            placeholder="https://scholar.google.com/citations?user=..."
+                                        />
+                                        <InputError message={errors.googleScholarProfile} className="mt-2" />
+                                    </div>
+                                    
+                                    <div>
+                                        <InputLabel htmlFor="researchgateProfile" value="ResearchGate Profile" />
+                                        <TextInput
+                                            id="researchgateProfile"
+                                            type="url"
+                                            className="mt-1 block w-full"
+                                            value={data.researchgateProfile}
+                                            onChange={(e) => setData('researchgateProfile', e.target.value)}
+                                            placeholder="https://www.researchgate.net/profile/..."
+                                        />
+                                        <InputError message={errors.researchgateProfile} className="mt-2" />
                                 </div>
                                 
                                 <div className="flex items-center justify-between mt-6">
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setActiveOption(null);
-                                            setCvFile(null);
-                                            if (fileInputRef.current) {
-                                                fileInputRef.current.value = '';
-                                            }
-                                        }}
+                                        onClick={() => setActiveOption(null)}
                                         className="text-sm text-gray-600 hover:text-gray-900 underline"
                                         disabled={isLoading}
                                     >
                                         Back
                                     </button>
-                                    <PrimaryButton 
+                                    <PrimaryButton
                                         type="submit"
-                                        disabled={isLoading || !cvFile}
-                                    className="ml-4"
-                                >
-                                        {isLoading ? 'Processing...' : 'Generate Profile'}
-                                </PrimaryButton>
+                                            disabled={isLoading || !hasValidUrl()}
+                                            className="ml-4"
+                                        >
+                                            {isLoading ? 'Processing...' : 'Generate Profile'}
+                                        </PrimaryButton>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
-                    </>
-                ) : null}
+                            </form>
+                        </>
+                    ) : activeOption === 'cv' ? (
+                        <>
+                            <p className="text-gray-600 mb-6">
+                                <strong>CV-based profile generation can extract information directly from your resume.</strong> Please upload your CV to continue.
+                            </p>
+                            
+                            <form onSubmit={handleCVSubmit}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <InputLabel htmlFor="cv_file" value="Upload Your CV" />
+                                        <input
+                                            id="cv_file"
+                                            type="file"
+                                            className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
+                                            onChange={handleFileChange}
+                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff"
+                                            ref={fileInputRef}
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Supported formats: PDF, DOCX, DOC, JPEG, PNG, TIFF
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between mt-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setActiveOption(null);
+                                                setCvFile(null);
+                                                if (fileInputRef.current) {
+                                                    fileInputRef.current.value = '';
+                                                }
+                                            }}
+                                            className="text-sm text-gray-600 hover:text-gray-900 underline"
+                                            disabled={isLoading}
+                                        >
+                                            Back
+                                        </button>
+                                        <PrimaryButton 
+                                            type="submit"
+                                            disabled={isLoading || !cvFile}
+                                        className="ml-4"
+                                    >
+                                            {isLoading ? 'Processing...' : 'Generate Profile'}
+                                    </PrimaryButton>
+                                    </div>
+                                </div>
+                            </form>
+                        </>
+                    ) : null}
+                </div>
             </div>
         </GuestLayout>
     );

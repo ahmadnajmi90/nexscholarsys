@@ -463,7 +463,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
 
     return (
         // Responsive outer container
-        <div className="max-w-8xl mx-auto px-4 pb-8">
+        <div className="max-w-8xl mx-auto px-4 pb-8 border border-gray-200 rounded">
             {/* Header Section */}
             <div className="w-full bg-white pb-12 shadow-md relative mb-4">
                 {/* Background Image */}
@@ -564,7 +564,7 @@ export default function PostgraduateForm({ universities, faculties, className = 
             )}
 
             {/* Form Section */}
-            <section className={className}>
+            <section className={`${className} px-4`}>
                 <div className="relative mb-6">
                 <header>
                     <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>

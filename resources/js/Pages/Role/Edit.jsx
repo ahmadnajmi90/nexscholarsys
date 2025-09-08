@@ -24,40 +24,31 @@ export default function Edit() {
 
     return (
         <MainLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Role Profile
-                </h2>
-            }
             TopMenuOpen={true}
         >
-            <Head title="Profile" />
+            <Head title="Personal Information" />
 
-            <div className="py-2">
-                <div className="mx-auto max-w-8xl space-y-6 sm:px-6 lg:px-8">
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        {isDesktop ? (
-                            <UpdateRoleInformationForm
-                                universities={universities}
-                                postgraduate={postgraduate}
-                                academician={academician}
-                                faculties={faculties}
-                                researchOptions={researchOptions}
-                                skills={skills}
-                                className="max-w-xl"
-                            />
-                        ) : (
-                            <UpdateRoleInformationForm_M
-                                universities={universities}
-                                postgraduate={postgraduate}
-                                academician={academician}
-                                faculties={faculties}
-                                researchOptions={researchOptions}
-                                skills={skills}
-                                className="max-w-xl"
-                            />
-                        )}
-                    </div>
+            <div className="py-0 md:py-2 lg:py-2">
+                <div className="mx-auto max-w-8xl sm:px-6 md:px-0 lg:px-0">
+                    {isDesktop ? (
+                        <UpdateRoleInformationForm
+                            universities={universities}
+                            postgraduate={postgraduate}
+                            academician={academician}
+                            faculties={faculties}
+                            researchOptions={researchOptions}
+                            skills={skills}
+                        />
+                    ) : (
+                        <UpdateRoleInformationForm_M
+                            universities={universities}
+                            postgraduate={postgraduate}
+                            academician={academician}
+                            faculties={faculties}
+                            researchOptions={researchOptions}
+                            skills={skills}
+                        />
+                    )}
                 </div>
             </div>
         </MainLayout>

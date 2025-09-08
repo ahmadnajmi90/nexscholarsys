@@ -311,7 +311,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     <div className="pb-20">
                         {/* Fixed sidebar toggle button for mobile */}
                         <button
-                            className="fixed top-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-md shadow-md lg:hidden"
+                            className="fixed top-4 right-4 z-50 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
                             onClick={toggleSidebar}
                         >
                             {isSidebarOpen ? '✕' : '☰'}
@@ -324,32 +324,32 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     <div className="fixed bottom-0 w-full bg-white border-t border-gray-200 rounded-t-3xl shadow-lg">
                         <div className="flex justify-around items-center relative py-3">
                             {/* Event */}
-                            <Link href="/events" className={`flex flex-col items-center ${isActive('/event') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/events" className={`flex flex-col items-center ${isActive('/event') ? 'text-indigo-500' : 'text-gray-500'}`}>
                                 <Calendar1 className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Event</span>
                             </Link>
 
                             {/* Project */}
-                            <Link href="/projects" className={`flex flex-col items-center ${isActive('/project') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/projects" className={`flex flex-col items-center ${isActive('/project') ? 'text-indigo-500' : 'text-gray-500'}`}>
                                 <Briefcase className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Project</span>
                             </Link>
 
                             {/* Home (Floating Center Button) */}
-                            <div className="absolute -top-6 w-14 h-14 flex items-center justify-center bg-blue-500 rounded-full shadow-lg border-4 border-white">
+                            <div className="absolute -top-6 w-14 h-14 flex items-center justify-center bg-indigo-500 rounded-full shadow-lg border-4 border-white">
                                 <Link href="/dashboard">
                                     <Home className="w-7 h-7 stroke-white stroke-[1.5]" />
                                 </Link>
                             </div>
 
                             {/* fUNDING */}
-                            <Link href="/funding" className={`flex flex-col items-center ${isActive('/funding') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/funding" className={`flex flex-col items-center ${isActive('/funding') ? 'text-indigo-500' : 'text-gray-500'}`}>
                                 <DollarSign className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Funding</span>
                             </Link>
 
                             {/* Profile */}
-                            <Link href="/role" className={`flex flex-col items-center ${isActive('/role') ? 'text-blue-500' : 'text-gray-500'}`}>
+                            <Link href="/role" className={`flex flex-col items-center ${isActive('/role') ? 'text-indigo-500' : 'text-gray-500'}`}>
                                 <User className="w-6 h-6 stroke-current" />
                                 <span className="text-xs font-medium">Profile</span>
                             </Link>

@@ -619,7 +619,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
   };
 
   return (
-    <div className="pb-8">
+    <div className="pb-8 border border-gray-200 rounded">
       <div className="w-full bg-white pb-12 shadow-md relative mb-4">
         {/* Background Image */}
         <div className="relative w-full h-48 overflow-hidden">
@@ -864,7 +864,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       {/* Tab Content Section */}
       <div className="w-full px-4 py-8">
         {activeTab === 'profiles' && (
-          <section className={className}>
+          <section className={`${className} px-4`}>
             <div className="relative mb-6">
               <header>
                 <h2 className="text-lg font-medium text-gray-900">
