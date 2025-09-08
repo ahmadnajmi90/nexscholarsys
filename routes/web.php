@@ -18,7 +18,9 @@ use App\Http\Controllers\ContentManagement\PostProjectController;
 use App\Http\Controllers\ContentManagement\PostEventController;
 use App\Http\Controllers\ShowProjectController;
 use App\Http\Controllers\ShowEventController;
+use App\Http\Controllers\TutorialController;
 use App\Http\Controllers\ShowFundingController;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\FacultyAdminController;
@@ -182,6 +184,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/user/agree-to-terms', [ProfileController::class, 'agreeToTerms'])->name('user.agree-to-terms');
+    Route::post('/user/mark-tutorial-seen', [ProfileController::class, 'markTutorialSeen'])->name('user.mark-tutorial-seen');
+    Route::get('/tutorial', [TutorialController::class, 'index'])->name('tutorial.index');
 });
 
 Route::middleware('auth')->group(function () {
@@ -345,16 +349,26 @@ Route::middleware(['auth'])->group(function () {
 
 // CSRF Token Refresh Route
 Route::get('/csrf/refresh', function () {
-    // Clear any old session data that might be causing issues
-    session()->regenerate(true);
-    
-    // Generate and return a fresh CSRF token
-    $token = csrf_token();
-    
-    return response()->json([
-        'csrfToken' => $token,
-        'timestamp' => now()->timestamp
-    ]);
+    try {
+        // Regenerate session token to prevent session fixation
+        session()->regenerateToken();
+
+        // Generate and return a fresh CSRF token
+        $token = csrf_token();
+
+        return response()->json([
+            'csrfToken' => $token,
+            'timestamp' => now()->timestamp,
+            'success' => true
+        ]);
+    } catch (\Exception $e) {
+        Log::error('CSRF refresh failed: ' . $e->getMessage());
+
+        return response()->json([
+            'error' => 'Failed to refresh CSRF token',
+            'message' => 'Please refresh the page and try again.'
+        ], 500);
+    }
 })->name('csrf.refresh')->middleware('web');
 
 Route::middleware(['auth', 'verified'])->group(function () {

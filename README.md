@@ -46,7 +46,7 @@
 
 ### Collaboration
 
--   **Project Hub**: A comprehensive task management and collaboration platform for research projects, featuring:
+-   **ScholarLab** (ProjectHub in coding perspective): A comprehensive task management and collaboration platform for research projects, featuring:
     -   Multiple views: Kanban board, list, table, calendar, and timeline (Gantt chart).
     -   Hierarchical organization: Workspaces → Boards → Lists → Tasks.
     -   Real-time collaboration with WebSocket updates.
@@ -58,6 +58,7 @@
 -   **RESTful API**: A secure, Sanctum-authenticated API for data management, suitable for external tools like Postman or n8n.
 -   **Google Scholar Integration**: Scrapes and integrates publication data from Google Scholar profiles.
 -   **Advanced UI/UX**: Features a responsive design, Framer Motion animations, and a rich user interface built with React and Tailwind CSS.
+-   **Interactive Tutorial System**: Comprehensive onboarding with multi-page tutorial modal and dedicated tutorial page for user guidance.
 
 ## Architecture Overview
 

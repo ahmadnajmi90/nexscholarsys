@@ -168,13 +168,6 @@ const ProductGrid = ({ posts = [], events = [], grants = [], scholarships = [], 
     'Projects': mappedProjects
   };
 
-  // Debug logging
-  console.log('allMappedActivities:', allMappedActivities);
-  console.log('mappedPosts length:', mappedPosts.length);
-  console.log('mappedEvents length:', mappedEvents.length);
-  console.log('mappedFunding length:', mappedFunding.length);
-  console.log('mappedProjects length:', mappedProjects.length);
-
   // --- Dynamic Category Tabs ---
   const availableCategories = ['All'];
   
@@ -293,8 +286,6 @@ const ProductGrid = ({ posts = [], events = [], grants = [], scholarships = [], 
             <div className="col-span-1 md:col-span-9">
               {(() => {
                 const selectedItems = allMappedActivities[activeCategory];
-                console.log('Selected category:', activeCategory);
-                console.log('Available items:', selectedItems);
                 
                 if (!selectedItems || selectedItems.length === 0) {
                   return (
@@ -306,9 +297,6 @@ const ProductGrid = ({ posts = [], events = [], grants = [], scholarships = [], 
                     </div>
                   );
                 }
-                
-                                 console.log('Rendering Carousel for category:', activeCategory, 'with items:', selectedItems.length);
-                 console.log('Selected items:', selectedItems);
                  return (
                    <div className="h-96">
                      <Carousel

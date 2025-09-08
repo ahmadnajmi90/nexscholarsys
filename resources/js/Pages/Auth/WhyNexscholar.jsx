@@ -372,8 +372,8 @@ export default function WhyNexscholar() {
                                                         )}>
                                                             {option.label}
                                                         </span>
-                                                    </div>
-                                                </div>
+                        </div>
+                    </div>
                                             </motion.button>
                                         );
                                     })}
@@ -394,7 +394,7 @@ export default function WhyNexscholar() {
                                     <motion.textarea
                                         rows={5}
                                         className="w-full p-4 sm:p-5 lg:p-6 text-sm sm:text-base lg:text-lg rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:ring-0 resize-none transition-colors"
-                                        value={data.additional_info}
+                            value={data.additional_info}
                                         onChange={(e) => handleTextChange(e.target.value)}
                                         placeholder={currentQuestion.placeholder}
                                         whileFocus={{

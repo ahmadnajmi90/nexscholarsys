@@ -145,7 +145,7 @@ The application exposes a RESTful API, primarily for administrative data managem
 
 ### Real-Time Communication (Laravel Reverb)
 
-Real-time features, particularly in the **Project Hub**, are powered by WebSockets via Laravel Reverb.
+Real-time features, particularly in **ScholarLab** (ProjectHub in coding perspective), are powered by WebSockets via Laravel Reverb.
 
 -   **Server**: Reverb runs as a separate process, handling WebSocket connections.
 -   **Backend**: Laravel Events (e.g., `TaskMoved`) are broadcasted from the backend to specific channels.
@@ -199,6 +199,7 @@ The project follows the standard Laravel directory structure, with key customiza
 -   `app/Console/Commands`: Defines all custom `artisan` commands, including those for generating embeddings and managing Qdrant.
 -   `app/Jobs`: Contains all background jobs that are dispatched to the queue.
 -   `resources/js/Pages`: Contains all top-level React page components that are rendered by Inertia.
+    -   **Tutorial/Index.jsx**: Comprehensive tutorial page with multi-section guide and advanced UI components.
 -   `resources/js/Components`: Contains reusable React components (e.g., buttons, modals, forms).
 -   `routes/`:
     -   `web.php`: Defines routes for the main web application.

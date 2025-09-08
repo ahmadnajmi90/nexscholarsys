@@ -11,12 +11,14 @@ import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
 import ForceTermsModal from '../Components/ForceTermsModal';
+import TutorialModal from '../Components/Tutorial/TutorialModal';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
     const [isDesktop, setIsDesktop] = useState(false); // Detect if it's desktop view
     const [activeSection, setActiveSection] = useState('dashboard'); // Active section for new sidebar
     const [showTermsModal, setShowTermsModal] = useState(false); // Terms agreement modal
+    const [showTutorialModal, setShowTutorialModal] = useState(false); // Tutorial modal
     const { url } = usePage(); // Get current URL from Inertia
     const { auth } = usePage().props; // Get current URL and auth from Inertia
 
@@ -191,6 +193,24 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         }
     }, [auth]);
 
+    // Check if user needs to see tutorial (after terms are agreed)
+    useEffect(() => {
+        const shouldShowTutorial =
+            auth?.user &&
+            auth.user.agreed_to_terms === true &&
+            !auth.user.has_seen_tutorial && // Check if falsy (0, false, null)
+            !url.includes('/role'); // Skip on profile generation routes
+
+        if (shouldShowTutorial) {
+            // Small delay to ensure terms modal is closed first
+            const timer = setTimeout(() => {
+                setShowTutorialModal(true);
+            }, 500);
+
+            return () => clearTimeout(timer);
+        }
+    }, [auth, url]);
+
     const isActive = (route) => url.startsWith(route); // Check if the current route matches
 
     return (
@@ -362,6 +382,12 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
             {/* Force Terms Agreement Modal */}
             <ForceTermsModal show={showTermsModal} />
+
+            {/* Tutorial Modal */}
+            <TutorialModal
+                show={showTutorialModal}
+                onClose={() => setShowTutorialModal(false)}
+            />
         </div>
     );
 };
