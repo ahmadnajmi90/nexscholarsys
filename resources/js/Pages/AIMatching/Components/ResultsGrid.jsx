@@ -21,6 +21,7 @@ export default function ResultsGrid({
   selectedArea,
   selectedUniversity,
   selectedAvailability,
+  selectedSkills, // Add selectedSkills prop
   onLoadMore,
   isLoadingMore,
   onShowInsight
@@ -119,6 +120,14 @@ export default function ResultsGrid({
     // Filter by university if selected
     if (selectedUniversity && selectedUniversity.length > 0) {
       if (!profile.university || !selectedUniversity.includes(profile.university.toString())) {
+        return false;
+      }
+    }
+    
+    // Filter by skills if selected
+    if (selectedSkills && selectedSkills.length > 0) {
+      if (!profile.skills || !Array.isArray(profile.skills) || 
+          !profile.skills.some(skill => selectedSkills.includes(skill.id))) {
         return false;
       }
     }
@@ -850,53 +859,36 @@ export default function ResultsGrid({
                         </>
                       )}
                       
-                      {/* Student-specific sections */}
-                      {(selectedProfile.postgraduate_id || selectedProfile.undergraduate_id) && (
-                        <>
-                          {/* Skills */}
-                          <div className="mb-6">
-                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
-                            {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {selectedProfile.skills.map((skill, index) => {
-                                  // Check different skill formats
-                                  let skillName = '';
-                                  
-                                  // If skill is already a string (name), use it directly
-                                  if (typeof skill === 'string') {
-                                    skillName = skill;
-                                  } 
-                                  // If skill is an object with name property, use that
-                                  else if (typeof skill === 'object' && skill !== null && skill.name) {
-                                    skillName = skill.name;
-                                  } 
-                                  // If skill is an ID, look it up in the skills list
-                                  else if (skills && (typeof skill === 'number' || !isNaN(parseInt(skill)))) {
-                                    const skillId = typeof skill === 'number' ? skill : parseInt(skill);
-                                    const foundSkill = skills.find(s => s.id === skillId);
-                                    skillName = foundSkill ? (foundSkill.full_name || foundSkill.name) : `Skill #${skill}`;
-                                  }
-                                  // Fallback
-                                  else {
-                                    skillName = `Skill #${index+1}`;
-                                  }
-                                  
-                                  return (
-                                    <span 
-                                      key={index} 
-                                      className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                                    >
-                                      {skillName}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <p className="text-gray-600">No skills listed</p>
-                            )}
+                      {/* Skills */}
+                      <div className="mb-6">
+                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
+                        {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProfile.skills.map((skill, index) => {
+                              // Construct hierarchical name
+                              let displayName = skill.name;
+                              if (skill.subdomain && skill.subdomain.domain) {
+                                displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+                              } else if (skill.full_name) {
+                                displayName = skill.full_name;
+                              } else {
+                                displayName = skill.name || `Skill #${index+1}`;
+                              }
+                              
+                              return (
+                                <span 
+                                  key={skill.id || index} 
+                                  className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
+                                >
+                                  {displayName}
+                                </span>
+                              );
+                            })}
                           </div>
-                        </>
-                      )}
+                        ) : (
+                          <p className="text-gray-600">No skills listed</p>
+                        )}
+                      </div>
                       
                       {/* Connect via - For all profiles */}
                       <div>
