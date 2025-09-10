@@ -42,13 +42,11 @@ class Postgraduate extends Model
         'funding_requirement',
         'current_postgraduate_status',
         'background_image',
-        'skills',
         'url'
     ];
 
     protected $casts = [
         'field_of_research' => 'array', // Cast field_of_study as an array
-        'skills' => 'array',
         'supervisorAvailability' => 'boolean', // Cast to boolean
         'grantAvailability' => 'boolean', // Cast to boolean
         'qdrant_migrated_at' => 'datetime',
@@ -125,9 +123,12 @@ class Postgraduate extends Model
      */
     protected $appends = ['profile_status'];
 
+    /**
+     * Get the skills associated with this postgraduate through the user.
+     */
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'skills' );
+        return $this->user ? $this->user->skills() : collect();
     }
 
     /**

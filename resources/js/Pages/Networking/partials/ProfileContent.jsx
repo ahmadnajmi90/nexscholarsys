@@ -38,6 +38,8 @@ const ProfileContent = ({
         return null;
     };
 
+    console.log(profile)
+
     const renderAcademicianInfo = () => (
         <>
             {profile.department && (
@@ -78,6 +80,33 @@ const ProfileContent = ({
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+            
+            {/* Skills */}
+            {profile.skills && Array.isArray(profile.skills) && profile.skills.length > 0 && (
+                <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4">
+                    <h2 className="text-lg sm:text-xl font-semibold mb-4">Skills</h2>
+                    <div className="flex flex-wrap gap-2">
+                        {profile.skills.map((skill, index) => {
+                            // Construct hierarchical name
+                            let displayName = skill.name;
+                            if (skill.subdomain && skill.subdomain.domain) {
+                                displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+                            } else if (skill.full_name) {
+                                displayName = skill.full_name;
+                            }
+                            
+                            return (
+                                <span 
+                                    key={skill.id || index} 
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+                                >
+                                    {displayName}
+                                </span>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -177,18 +206,23 @@ const ProfileContent = ({
                         <div className="border rounded-lg p-4 mt-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-3">Skills</h3>
                             <div className="flex flex-wrap gap-2">
-                                {profile.skills.map((skillId, index) => {
-                                    const matchedSkill = skillsOptions.find(
-                                        (option) => option.id === skillId
-                                    );
-                                    return matchedSkill ? (
+                                {profile.skills.map((skill, index) => {
+                                    // Construct hierarchical name
+                                    let displayName = skill.name;
+                                    if (skill.subdomain && skill.subdomain.domain) {
+                                        displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+                                    } else if (skill.full_name) {
+                                        displayName = skill.full_name;
+                                    }
+                                    
+                                    return (
                                         <span 
-                                            key={index} 
+                                            key={skill.id || index} 
                                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
                                         >
-                                            {matchedSkill.name}
+                                            {displayName}
                                         </span>
-                                    ) : null;
+                                    );
                                 })}
                             </div>
                         </div>
@@ -320,18 +354,23 @@ const ProfileContent = ({
                         <div className="border rounded-lg p-4 mb-6">
                             <h3 className="text-lg font-medium text-gray-900 mb-3">Skills</h3>
                             <div className="flex flex-wrap gap-2">
-                                {profile.skills.map((skillId, index) => {
-                                    const matchedSkill = skillsOptions.find(
-                                        (option) => option.id === skillId
-                                    );
-                                    return matchedSkill ? (
+                                {profile.skills.map((skill, index) => {
+                                    // Construct hierarchical name
+                                    let displayName = skill.name;
+                                    if (skill.subdomain && skill.subdomain.domain) {
+                                        displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+                                    } else if (skill.full_name) {
+                                        displayName = skill.full_name;
+                                    }
+                                    
+                                    return (
                                         <span 
-                                            key={index} 
+                                            key={skill.id || index} 
                                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
                                         >
-                                            {matchedSkill.name}
+                                            {displayName}
                                         </span>
-                                    ) : null;
+                                    );
                                 })}
                             </div>
                         </div>

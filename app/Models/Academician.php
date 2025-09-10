@@ -250,4 +250,12 @@ class Academician extends Model
     {
         return 'url';
     }
+    
+    /**
+     * Get the skills associated with this academician through the user.
+     */
+    public function skills()
+    {
+        return $this->user ? $this->user->skills() : collect();
+    }
 }

@@ -36,18 +36,34 @@ const ProfileGridWithDualFilter = ({
 
   // Determine which skills are actually used in profilesData
   const uniqueProfileSkillIds = new Set(
-    profilesData.flatMap((profile) =>
-      Array.isArray(profile.skills) ? profile.skills : []
-    )
+    profilesData.flatMap((profile) => {
+      if (Array.isArray(profile.skills)) {
+        // New format: skills is array of skill objects
+        return profile.skills.map(skill => skill.id);
+      }
+      return [];
+    })
   );
 
   // Filter the global skills list so that only skills used in profilesData are shown
   const filteredSkillsOptions = (Array.isArray(skills) ? skills : [])
   .filter((skill) => uniqueProfileSkillIds.has(skill.id))
-  .map((skill) => ({
-    value: skill.id,
-    label: capitalize(skill.name),
-  }));
+  .map((skill) => {
+    // Construct hierarchical label
+    let label = skill.name;
+    if (skill.subdomain && skill.subdomain.domain) {
+      label = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+    } else if (skill.full_name) {
+      label = skill.full_name;
+    } else {
+      label = capitalize(skill.name);
+    }
+    
+    return {
+      value: skill.id,
+      label: label,
+    };
+  });
 
 
   const [selectedArea, setSelectedArea] = useState([]);
@@ -159,7 +175,7 @@ const ProfileGridWithDualFilter = ({
       normalizedAvailability === selectedSupervisorAvailability;
     const hasSelectedSkills =
       selectedSkills.length === 0 ||
-      (profile.skills && profile.skills.some((skill) => selectedSkills.includes(skill)));
+      (profile.skills && profile.skills.some((skill) => selectedSkills.includes(skill.id)));
     return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability && hasSelectedSkills;
   });
 
@@ -542,16 +558,25 @@ const ProfileGridWithDualFilter = ({
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
                     <div className="flex flex-wrap gap-1">
                       {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
-                        selectedProfile.skills.map((skillId) => {
-                          const skillObj = (Array.isArray(skills) ? skills : []).find(s => s.id === skillId);
-                          return skillObj ? (
+                        selectedProfile.skills.map((skill) => {
+                          // Construct hierarchical name
+                          let displayName = skill.name;
+                          if (skill.subdomain && skill.subdomain.domain) {
+                            displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+                          } else if (skill.full_name) {
+                            displayName = skill.full_name;
+                          } else {
+                            displayName = capitalize(skill.name);
+                          }
+                          
+                          return (
                             <span 
-                              key={skillId} 
+                              key={skill.id} 
                               className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
                             >
-                              {capitalize(skillObj.name)}
+                              {displayName}
                             </span>
-                          ) : null;
+                          );
                         })
                       ) : (
                         <p className="text-gray-600">No skills listed</p>

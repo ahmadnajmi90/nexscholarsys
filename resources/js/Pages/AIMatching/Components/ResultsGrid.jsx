@@ -874,7 +874,7 @@ export default function ResultsGrid({
                                   else if (skills && (typeof skill === 'number' || !isNaN(parseInt(skill)))) {
                                     const skillId = typeof skill === 'number' ? skill : parseInt(skill);
                                     const foundSkill = skills.find(s => s.id === skillId);
-                                    skillName = foundSkill ? foundSkill.name : `Skill #${skill}`;
+                                    skillName = foundSkill ? (foundSkill.full_name || foundSkill.name) : `Skill #${skill}`;
                                   }
                                   // Fallback
                                   else {

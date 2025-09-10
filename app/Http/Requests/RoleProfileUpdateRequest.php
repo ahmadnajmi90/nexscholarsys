@@ -34,6 +34,8 @@ class RoleProfileUpdateRequest extends FormRequest
                 'availability_for_collaboration' => [],
                 'availability_as_supervisor' => [],
                 'style_of_supervision' => ['required', 'array'],
+                'skills' => ['nullable', 'array'],
+                'skills.*' => ['integer', 'exists:skills,id'],
             ];
         } elseif (BouncerFacade::is(Auth::user())->an('postgraduate')) {
             $rules = [
@@ -61,7 +63,8 @@ class RoleProfileUpdateRequest extends FormRequest
                 'nationality' => ['required', 'string', 'max:255'], // Handle selected nationality
                 'english_proficiency_level' => ['required', 'string', 'in:Beginner,Elementary,Intermediate,Upper Intermediate,Advanced'], // Validate options
                 'previous_degree' => ['nullable'], // Should be an array
-                'skills' => ['required'], // User's skills
+                'skills' => ['nullable', 'array'], // User's skills as array
+                'skills.*' => ['integer', 'exists:skills,id'], // Each skill must exist in skills table
                 'supervisorAvailability' => ['required'], // Allow any value, we'll convert in the controller
                 'grantAvailability' => ['nullable'], // Allow any value, we'll convert in the controller
             ];
@@ -79,7 +82,8 @@ class RoleProfileUpdateRequest extends FormRequest
                 'university' => ['nullable', 'exists:university_list,id'],
                 'faculty' => ['nullable', 'exists:faculty_list,id'],
                 'matric_no' => ['nullable', 'string', 'max:50'],
-                'skills' => ['required'],
+                'skills' => ['nullable', 'array'], // User's skills as array
+                'skills.*' => ['integer', 'exists:skills,id'], // Each skill must exist in skills table
                 'interested_do_research' => ['required'],
                 'expected_graduate' => ['nullable', 'string', 'max:255'],
                 'research_preference' => ['nullable'],

@@ -11,6 +11,12 @@ import SearchBar from "@/Components/SearchBar";
 import Pagination from "@/Components/Pagination";
 import LoadingSkeletonCard from "./LoadingSkeletonCard";
 
+// Helper function to capitalize each skill
+const capitalize = (s) => {
+  if (typeof s !== "string") return "";
+  return s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+};
+
 const AcademicianProfileCard = ({
   profilesData,
   universitiesList,
@@ -29,10 +35,15 @@ const AcademicianProfileCard = ({
   
   // Search state - removed as it's now handled by SearchBar component
   
+  // Get skills data from props
+  const { skills } = usePage().props;
+  console.log(profilesData)
+  
   // Filtering state variables
   const [selectedArea, setSelectedArea] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState([]);
   const [selectedSupervisorAvailability, setSelectedSupervisorAvailability] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState([]); // Skills filter
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const profilesPerPage = 9;
@@ -123,6 +134,39 @@ const AcademicianProfileCard = ({
     // You could show a success message here if desired
   };
 
+  // Determine which skills are actually used in profilesData
+  const uniqueProfileSkillIds = new Set(
+    profilesData.flatMap((profile) => {
+      if (Array.isArray(profile.skills)) {
+        // New format: skills is array of skill objects
+        return profile.skills.map(skill => skill.id);
+      }
+      return [];
+    })
+  );
+
+  // Filter the global skills list so that only skills used in profilesData are shown
+  const filteredSkillsOptions = (Array.isArray(skills) ? skills : [])
+  .filter((skill) => uniqueProfileSkillIds.has(skill.id))
+  .map((skill) => {
+    // Construct hierarchical label
+    let label = skill.name;
+    if (skill.subdomain && skill.subdomain.domain) {
+      label = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+    } else if (skill.full_name) {
+      label = skill.full_name;
+    } else {
+      label = capitalize(skill.name);
+    }
+    
+    return {
+      value: skill.id,
+      label: label,
+    };
+  });
+
+  console.log(filteredSkillsOptions.label)
+
   // Extract unique research areas from profilesData
   const uniqueResearchAreas = (() => {
     // First collect all unique research expertise IDs from profiles
@@ -201,8 +245,13 @@ const AcademicianProfileCard = ({
       selectedSupervisorAvailability === "" ||
       normalizedAvailability === selectedSupervisorAvailability;
     
+    // Check skills
+    const hasSelectedSkills =
+      selectedSkills.length === 0 ||
+      (profile.skills && profile.skills.some((skill) => selectedSkills.includes(skill.id)));
+    
     // Return true if all filters match
-    return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability;
+    return hasSelectedArea && hasSelectedUniversity && hasSelectedSupervisorAvailability && hasSelectedSkills;
   });
 
   const totalPages = Math.ceil(filteredProfiles.length / profilesPerPage);
@@ -254,6 +303,12 @@ const AcademicianProfileCard = ({
                 options={uniqueResearchAreas}
                 selectedValues={selectedArea}
                 setSelectedValues={setSelectedArea}
+              />
+              <FilterDropdown
+                label="Skills"
+                options={filteredSkillsOptions}
+                selectedValues={selectedSkills}
+                setSelectedValues={setSelectedSkills}
               />
               <FilterDropdown
                 label="University"
@@ -520,6 +575,37 @@ const AcademicianProfileCard = ({
                         }
                         return <p className="text-gray-600">Not Provided</p>;
                       })()}
+                    </div>
+                  </div>
+                  
+                  {/* Skills */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
+                        selectedProfile.skills.map((skill) => {
+                          // Construct hierarchical name
+                          let displayName = skill.name;
+                          if (skill.subdomain && skill.subdomain.domain) {
+                            displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+                          } else if (skill.full_name) {
+                            displayName = skill.full_name;
+                          } else {
+                            displayName = capitalize(skill.name);
+                          }
+                          
+                          return (
+                            <span 
+                              key={skill.id} 
+                              className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                            >
+                              {displayName}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <p className="text-gray-600">No skills listed</p>
+                      )}
                     </div>
                   </div>
                   

@@ -11,6 +11,7 @@ use App\Models\FieldOfResearch;
 use App\Models\FacultyList;
 use App\Models\PostProject;
 use App\Models\Publication;
+use App\Models\Skill;
 
 use Illuminate\Http\Request;
 
@@ -55,6 +56,15 @@ class AcademicianController extends Controller
             })
             ->get();
         
+        // Load skills for each academician
+        $academicians->each(function ($academician) {
+            if ($academician->user) {
+                $academician->skills = $academician->user->skills()->with('subdomain.domain')->get();
+            } else {
+                $academician->skills = collect([]);
+            }
+        });
+        
         return Inertia::render('Networking/Academician', [
             // Pass any data you want to the component here
             'academicians' => $academicians,
@@ -62,6 +72,7 @@ class AcademicianController extends Controller
             'faculties' => FacultyList::all(),
             'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
+            'skills' => Skill::with('subdomain.domain')->get(),
             'searchQuery' => $searchQuery,
         ]);
     }
@@ -114,12 +125,20 @@ class AcademicianController extends Controller
             'url' => route('academicians.show', $academician),
         ];
 
+        // Load skills for the academician
+        if ($user) {
+            $academician->skills = $user->skills()->with('subdomain.domain')->get();
+        } else {
+            $academician->skills = collect([]);
+        }
+        
         return Inertia::render('Networking/AcademicianProfile', [
             'academician' => $academician,
             'university' => UniversityList::find($academician->university),
             'faculty' => FacultyList::find($academician->faculty),
             'user' => $user,
             'researchOptions' => $researchOptions,
+            'skillsOptions' => Skill::with('subdomain.domain')->get(),
             'metaTags' => $metaTags,
         ]);
     }

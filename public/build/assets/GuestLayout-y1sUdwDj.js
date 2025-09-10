@@ -1,0 +1,1 @@
+import{j as e}from"./app-Dr9IfFf8.js";function t({children:s}){return e.jsx("div",{className:"flex flex-col items-center bg-gray-100 min-h-screen py-4 px-4 sm:px-6 lg:px-8",children:e.jsx("div",{className:"w-full max-w-7xl mx-auto",children:s})})}export{t as G};

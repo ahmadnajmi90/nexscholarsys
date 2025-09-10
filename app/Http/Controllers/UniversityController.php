@@ -130,7 +130,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
-            'skills' => Skill::all(),
+            'skills' => Skill::with('subdomain.domain')->get(),
             'searchQuery'    => $searchQuery,
         ]);
     }
@@ -175,7 +175,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
-            'skills'        => Skill::all(),
+            'skills'        => Skill::with('subdomain.domain')->get(),
             'searchQuery'    => $searchQuery,
         ]);
     }

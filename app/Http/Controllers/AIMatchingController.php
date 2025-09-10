@@ -68,7 +68,7 @@ class AIMatchingController extends Controller
         $users = User::with(['sentRequests', 'receivedRequests'])->get();
         
         // Get skills for profile display
-        $skills = Skill::all();
+        $skills = Skill::with('subdomain.domain')->get();
         
         return Inertia::render('AIMatching/Index', [
             'universities' => $universities,
