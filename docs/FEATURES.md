@@ -56,6 +56,11 @@ Users have comprehensive profiles that serve as their digital academic identity.
 
 -   **UI**: The profile is managed through a multi-tabbed interface built with React components, found in `resources/js/Pages/Profile/`.
 -   **Backend Logic**: `RoleProfileController.php` handles all profile update logic, including updating personal details, profile pictures, background images, and CVs.
+-   **Hierarchical Skills System**: 
+    -   **3-Level Taxonomy**: Skills are organized in a Domain → Subdomain → Skill hierarchy (e.g., "Technology & IT → Software Development → React.js")
+    -   **SkillsSelector Component**: Interactive hierarchical selection with mobile-friendly step-by-step flow
+    -   **Pivot Table Structure**: Uses `profile_skills` pivot table linking all user roles to skills via `unique_id`
+    -   **Display Format**: Skills are shown with full hierarchy path for clarity and context
 -   **Key Features**:
     -   **Profile & Background Pictures**: Upload and crop functionality.
     -   **Structured Data**: Research interests are mapped to a hierarchical structure of `FieldOfResearch` -> `ResearchArea` -> `NicheDomain`.
@@ -147,20 +152,21 @@ A system for users to manage their professional connections within the platform.
 This feature allows users to find relevant people on the platform using natural language queries.
 
 -   **Purpose**: To intelligently connect students with supervisors, or academicians with potential collaborators, based on research interests.
+-   **Enhanced by Hierarchical Skills**: The new 3-level skills taxonomy (Domain → Subdomain → Skill) provides more precise matching capabilities by allowing the AI to understand exact expertise areas and create better semantic embeddings.
 -   **User Roles**:
     -   Students can search for Supervisors.
     -   Academicians can search for Students or Collaborators (other academicians).
--   **UI**: `resources/js/Pages/AIMatching/Index.jsx`.
+-   **UI**: `resources/js/Pages/AIMatching/Index.jsx` with integrated skills filtering using the hierarchical structure.
 -   **Backend Logic**:
     -   `AIMatchingController.php`: Handles the search requests.
-    -   `EmbeddingService.php`: Generates vector embeddings from user profile text (bio, research interests) using OpenAI's `text-embedding-3-small` model.
+    -   `EmbeddingService.php`: Generates vector embeddings from user profile text (bio, research interests, hierarchical skills) using OpenAI's `text-embedding-3-small` model.
     -   `QdrantService.php`: Stores the embeddings in a Qdrant vector database and performs similarity searches.
 -   **Workflow**:
     1.  A user submits a search query (e.g., "machine learning for medical imaging").
     2.  The query is converted into a vector embedding.
     3.  Qdrant finds the user profiles with the most similar embeddings.
-    4.  The matched profiles are returned and displayed to the user.
-    5.  For each match, a request is sent to `GPT-4o` to generate a personalized "insight" explaining why the match is relevant, often referencing specific research interests or publications.
+    4.  The matched profiles are returned and displayed to the user with hierarchical skills prominently featured.
+    5.  For each match, a request is sent to `GPT-4o` to generate a personalized "insight" explaining why the match is relevant, often referencing specific research interests, publications, or skill alignments.
 -   **Key Models**: `Academician`, `Postgraduate`, `Undergraduate`. The embeddings themselves are stored in Qdrant, not the primary database.
 
 ### Postgraduate Program Recommendations

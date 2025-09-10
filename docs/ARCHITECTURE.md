@@ -109,6 +109,8 @@ end
 ### Database & Storage
 
 -   **Relational Database**: MySQL 8.0+ or PostgreSQL 14+
+    -   **Skills Taxonomy Tables**: `skills_domain`, `skills_subdomain`, `skills`, `profile_skills` (pivot table)
+    -   **Hierarchical Structure**: 3-level taxonomy (Domain → Subdomain → Skill) with proper foreign key relationships
 -   **Vector Database**: Qdrant (for storing and searching OpenAI embeddings)
 -   **Queue Driver**: Redis (recommended) or Database
 -   **File Storage**: Local filesystem or Amazon S3
@@ -196,11 +198,15 @@ The project follows the standard Laravel directory structure, with key customiza
 
 -   `app/Http/Controllers`: Contains all backend controllers, organized by feature (e.g., `ContentManagement`, `ProjectHub`).
 -   `app/Services`: Houses business logic and integrations with external services (e.g., `AIProfileService`, `GoogleScholarService`).
+    -   **Skills-related services**: Enhanced to work with hierarchical skills structure
+    -   **EmbeddingService**: Updated to incorporate hierarchical skills into vector generation
 -   `app/Console/Commands`: Defines all custom `artisan` commands, including those for generating embeddings and managing Qdrant.
 -   `app/Jobs`: Contains all background jobs that are dispatched to the queue.
 -   `resources/js/Pages`: Contains all top-level React page components that are rendered by Inertia.
     -   **Tutorial/Index.jsx**: Comprehensive tutorial page with multi-section guide and advanced UI components.
 -   `resources/js/Components`: Contains reusable React components (e.g., buttons, modals, forms).
+    -   **SkillsSelector.jsx**: Hierarchical skills selection component with mobile-friendly multi-step flow
+    -   **StickyBanner.jsx**: Reusable banner component for announcements
 -   `routes/`:
     -   `web.php`: Defines routes for the main web application.
     -   `api.php`: Defines routes for the stateless and stateful APIs.

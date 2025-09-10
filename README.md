@@ -29,7 +29,7 @@
 ### Core Platform Features
 
 -   **Content Management**: Create and manage academic posts, research projects, events, and a unified funding system for grants and scholarships.
--   **Role-Specific User Profiles**: Dedicated profiles for Academicians, Postgraduates, Undergraduates, and Industry professionals.
+-   **Role-Specific User Profiles**: Dedicated profiles for Academicians, Postgraduates, Undergraduates, and Industry professionals with hierarchical skills taxonomy (Domain → Subdomain → Skill) for precise expertise mapping.
 -   **University & Faculty Directory**: Browse universities, faculties, and their members.
 -   **My Network**: A social networking system to manage academic and professional connections with a custom tagging system.
 -   **Dashboard & Analytics**: Integrates with Google Analytics 4 (GA4) to provide insights on user behavior and platform performance.
@@ -40,6 +40,7 @@
 -   **Semantic Search & Matching**: Utilizes OpenAI embeddings and a Qdrant vector database to help:
     -   Students find research supervisors.
     -   Academicians find students or research collaborators.
+    Enhanced by the hierarchical skills structure for more precise matching and filtering.
 -   **AI-Generated Insights**: Uses GPT-4o to provide personalized explanations for why a supervisor and student are a good match.
 -   **Postgraduate Program Recommendations**: AI-powered recommendations to help students find suitable postgraduate programs.
 -   **CV Generation**: Generate a professional academic CV from profile data.
