@@ -8,6 +8,7 @@ import { Link, useForm, usePage } from '@inertiajs/react';
 import NationalityForm from "./NationalityForm";
 import Select from 'react-select';
 import axios from 'axios';
+import SkillsSelector from '@/Components/SkillsSelector';
 
 export default function PostgraduateForm({ universities, faculties, className = '', researchOptions, skills, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
     // Add useRef for tracking generation
@@ -319,12 +320,6 @@ export default function PostgraduateForm({ universities, faculties, className = 
             }));
         }
     };
-
-    // Define skills options (using backend-provided skills)
-    const skillsOptions = skills.map(skill => ({
-        value: skill.id,
-        label: skill.name,
-    }));
 
     const submit = (e) => {
         e.preventDefault();
@@ -770,26 +765,17 @@ export default function PostgraduateForm({ universities, faculties, className = 
                                 <option value="Registered">Registered</option>
                             </select>
                         </div>
-                        <div className="w-full">
-                            <InputLabel htmlFor="skills" value={<>Skills <span className="text-red-600">*</span></>} required/>
-                            <Select
-                                id="skills"
-                                isMulti
-                                options={skillsOptions}
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                classNamePrefix="select"
-                                value={data.skills?.map(selectedId => {
-                                    const found = skillsOptions.find(option => option.value === selectedId);
-                                    return found || { value: selectedId, label: selectedId };
-                                })}
-                                onChange={selectedOptions => {
-                                    const values = selectedOptions.map(opt => opt.value);
-                                    setData('skills', values);
-                                }}
-                                placeholder="Select your skills..."
-                            />
-                            <InputError className="mt-2" message={errors.skills} />
-                        </div>
+                    </div>
+                    
+                    <div className="w-full">
+                        <SkillsSelector
+                            value={data.skills}
+                            onChange={(skillIds) => setData('skills', skillIds)}
+                            error={errors.skills}
+                            required={true}
+                            label="Skills"
+                            placeholder="Select your skills..."
+                        />
                     </div>
 
                     {data.current_postgraduate_status === "Registered" && (

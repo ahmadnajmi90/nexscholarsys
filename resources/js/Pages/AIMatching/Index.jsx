@@ -46,6 +46,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [selectedArea, setSelectedArea] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState([]);
   const [selectedAvailability, setSelectedAvailability] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState([]); // Add skills filter state
   const [showFilters, setShowFilters] = useState(false);
   
   // Save state to sessionStorage when navigating away
@@ -407,12 +408,15 @@ export default function Index({ auth, universities, faculties, users, researchOp
                   universities={universities}
                   faculties={faculties}
                   researchOptions={researchOptions}
+                  skills={skills}
                   selectedArea={selectedArea}
                   setSelectedArea={setSelectedArea}
                   selectedUniversity={selectedUniversity}
                   setSelectedUniversity={setSelectedUniversity}
                   selectedAvailability={selectedAvailability}
                   setSelectedAvailability={setSelectedAvailability}
+                  selectedSkills={selectedSkills}
+                  setSelectedSkills={setSelectedSkills}
                 />
               </div>
               
@@ -424,12 +428,15 @@ export default function Index({ auth, universities, faculties, users, researchOp
                   universities={universities}
                   faculties={faculties}
                   researchOptions={researchOptions}
+                  skills={skills}
                   selectedArea={selectedArea}
                   setSelectedArea={setSelectedArea}
                   selectedUniversity={selectedUniversity}
                   setSelectedUniversity={setSelectedUniversity}
                   selectedAvailability={selectedAvailability}
                   setSelectedAvailability={setSelectedAvailability}
+                  selectedSkills={selectedSkills}
+                  setSelectedSkills={setSelectedSkills}
                   isOpen={showFilters}
                   toggleOpen={setShowFilters}
                 />
@@ -443,6 +450,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
                     selectedArea={selectedArea}
                     selectedUniversity={selectedUniversity}
                     selectedAvailability={selectedAvailability}
+                    selectedSkills={selectedSkills}
                     onLoadMore={handleLoadMore}
                     isLoadingMore={isLoadingMore}
                     universitiesList={universities}

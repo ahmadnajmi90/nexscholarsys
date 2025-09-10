@@ -358,4 +358,13 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot('connection_tag_id')
             ->withTimestamps();
     }
+    
+    /**
+     * Get the skills associated with this user.
+     */
+    public function skills(): BelongsToMany
+    {
+        return $this->belongsToMany(Skill::class, 'profile_skills', 'unique_id', 'skill_id', 'unique_id', 'id')
+            ->withTimestamps();
+    }
 }

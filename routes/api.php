@@ -98,11 +98,43 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
             ->name('api.niche-domains.update'); // Changed from PUT to POST
         Route::delete('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'destroy'])
             ->name('api.niche-domains.destroy');
+            
+        // Skills Taxonomy - Admin management
+        Route::get('skills/taxonomy', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getTaxonomy'])
+            ->name('api.skills.taxonomy');
+        Route::get('skills/search', [\App\Http\Controllers\Api\V1\SkillsController::class, 'search'])
+            ->name('api.skills.search');
+        Route::get('skills/domains', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getDomains'])
+            ->name('api.skills.domains');
+        Route::get('skills/domains/{domain}/subdomains', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getSubdomains'])
+            ->name('api.skills.subdomains');
+        Route::get('skills/subdomains/{subdomain}/skills', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getSkills'])
+            ->name('api.skills.subdomain.skills');
+        Route::post('skills/details', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getSkillDetails'])
+            ->name('api.skills.details');
+        Route::get('skills', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getAllSkills'])
+            ->name('api.skills.all');
     });
 });
 
 // Group B: Stateful "App" API for the Inertia Frontend (Session-based Authentication)
 Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () {
+
+    // Skills Taxonomy - Available to all authenticated users
+    Route::get('skills/taxonomy', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getTaxonomy'])
+        ->name('api.app.skills.taxonomy');
+    Route::get('skills/search', [\App\Http\Controllers\Api\V1\SkillsController::class, 'search'])
+        ->name('api.app.skills.search');
+    Route::get('skills/domains', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getDomains'])
+        ->name('api.app.skills.domains');
+    Route::get('skills/domains/{domain}/subdomains', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getSubdomains'])
+        ->name('api.app.skills.subdomains');
+    Route::get('skills/subdomains/{subdomain}/skills', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getSkills'])
+        ->name('api.app.skills.subdomain.skills');
+    Route::post('skills/details', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getSkillDetails'])
+        ->name('api.app.skills.details');
+    Route::get('skills', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getAllSkills'])
+        ->name('api.app.skills.all');
 
     // Data Management API Routes (Admin Only) - Stateful for frontend
     Route::middleware(['admin'])->group(function () {
@@ -135,6 +167,9 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('api.app.niche-domains.index');
         Route::get('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'show'])
             ->name('api.app.niche-domains.show');
+            
+        // Skills Taxonomy - Admin management (Create/Update/Delete)
+        // Note: Read-only skills endpoints are available to all users above
 
         // Postgraduate Programs - Read-only for frontend data fetching
         Route::get('postgraduate-programs', [PostgraduateProgramController::class, 'index'])

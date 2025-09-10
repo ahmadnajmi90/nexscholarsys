@@ -8,12 +8,15 @@ export default function FilterPanel({
   universities,
   faculties,
   researchOptions,
+  skills, // Add skills prop
   selectedArea,
   setSelectedArea,
   selectedUniversity,
   setSelectedUniversity,
   selectedAvailability,
   setSelectedAvailability,
+  selectedSkills, // Add selectedSkills prop
+  setSelectedSkills, // Add setSelectedSkills prop
   onClose = null, // For mobile close button
   isOpen = true,  // Control visibility on mobile
   toggleOpen = null // Function to toggle sidebar visibility
@@ -48,12 +51,16 @@ export default function FilterPanel({
     if (!searchResults || !searchResults.matches) {
       return {
         researchAreas: [],
-        universities: []
+        universities: [],
+        skills: []
       };
     }
     
     // Extract unique research expertise/field IDs
     const uniqueResearchIds = new Set();
+    // Extract unique skill IDs from profiles
+    const uniqueProfileSkillIds = new Set();
+    
     searchResults.matches.forEach(match => {
       const profile = match.academician || match.student || {};
       const researchField = (searchType === 'supervisor' || searchType === 'collaborators' && match.result_type === 'academician')
@@ -65,7 +72,36 @@ export default function FilterPanel({
           uniqueResearchIds.add(expertise);
         });
       }
+      
+      // Extract skills from profile
+      if (Array.isArray(profile.skills)) {
+        profile.skills.forEach(skill => {
+          if (skill && skill.id) {
+            uniqueProfileSkillIds.add(skill.id);
+          }
+        });
+      }
     });
+    
+    // Filter the global skills list so that only skills used in search results are shown
+    const filteredSkillsOptions = (Array.isArray(skills) ? skills : [])
+      .filter((skill) => uniqueProfileSkillIds.has(skill.id))
+      .map((skill) => {
+        // Construct hierarchical label
+        let label = skill.name;
+        if (skill.subdomain && skill.subdomain.domain) {
+          label = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
+        } else if (skill.full_name) {
+          label = skill.full_name;
+        } else {
+          label = skill.name;
+        }
+        
+        return {
+          value: skill.id,
+          label: label,
+        };
+      });
     
     // Create research options with labels
     const researchAreas = Array.from(uniqueResearchIds).map(areaId => {
@@ -106,7 +142,8 @@ export default function FilterPanel({
     
     return {
       researchAreas,
-      universities: universityOptions
+      universities: universityOptions,
+      skills: filteredSkillsOptions
     };
   };
 
@@ -232,6 +269,28 @@ export default function FilterPanel({
             />
           </div>
           
+          {/* Skills Filter - Only show for student/collaborator searches */}
+          {(searchType === 'students' || searchType === 'collaborators') && (
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Skills
+              </label>
+              <Select
+                isMulti
+                name="skills"
+                options={filterOptions.skills}
+                value={filterOptions.skills.filter(option => selectedSkills?.includes(option.value))}
+                onChange={(selected) => 
+                  setSelectedSkills(selected ? selected.map(option => option.value) : [])
+                }
+                placeholder="Filter by skills..."
+                className="basic-multi-select"
+                classNamePrefix="select"
+                isSearchable={true}
+              />
+            </div>
+          )}
+          
           {/* Availability Filter - Hide for collaborators */}
           {searchType !== 'collaborators' && (
             <div className="mb-5">
@@ -261,6 +320,7 @@ export default function FilterPanel({
               setSelectedArea([]);
               setSelectedUniversity([]);
               setSelectedAvailability("");
+              setSelectedSkills([]);
             }}
           >
             Reset All Filters

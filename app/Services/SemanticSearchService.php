@@ -312,13 +312,15 @@ class SemanticSearchService
         }
         
         // Get academicians from MySQL
-        $academicians = Academician::whereIn('id', $mysqlIds)->get();
+        $academicians = Academician::with(['user.skills.subdomain.domain'])->whereIn('id', $mysqlIds)->get();
         
         // Convert to array and add scores
         $results = [];
         foreach ($academicians as $academician) {
             $academicianArray = $academician->toArray();
             $academicianArray['match_score'] = $scoreMap[$academician->id] ?? 0;
+            // Load skills from user relationship
+            $academicianArray['skills'] = $academician->user ? $academician->user->skills->toArray() : [];
             $results[] = $academicianArray;
         }
         
@@ -354,7 +356,7 @@ class SemanticSearchService
         }
         
         // Fetch academicians that have embeddings
-        $academicians = Academician::where('has_embedding', true)
+        $academicians = Academician::with(['user.skills.subdomain.domain'])->where('has_embedding', true)
             ->get();
         
         Log::info("Found " . $academicians->count() . " academicians with embeddings");
@@ -417,6 +419,8 @@ class SemanticSearchService
             
             $academicianArray = $academician->toArray();
             $academicianArray['match_score'] = $similarity;
+            // Load skills from user relationship
+            $academicianArray['skills'] = $academician->user ? $academician->user->skills->toArray() : [];
             $results[] = $academicianArray;
         }
         
@@ -954,7 +958,7 @@ class SemanticSearchService
         
         // Process postgraduates if included
         if ($includePostgraduates) {
-            $postgraduates = Postgraduate::where('has_embedding', true)->get();
+            $postgraduates = Postgraduate::with(['user.skills.subdomain.domain'])->where('has_embedding', true)->get();
             
             foreach ($postgraduates as $postgraduate) {
                 $embedding = $postgraduate->research_embedding;
@@ -987,13 +991,15 @@ class SemanticSearchService
                 $studentArray = $postgraduate->toArray();
                 $studentArray['match_score'] = $similarity;
                 $studentArray['student_type'] = 'postgraduate';
+                // Load skills from user relationship
+                $studentArray['skills'] = $postgraduate->user ? $postgraduate->user->skills->toArray() : [];
                 $results[] = $studentArray;
             }
         }
         
         // Process undergraduates if included
         if ($includeUndergraduates) {
-            $undergraduates = Undergraduate::where('has_embedding', true)->get();
+            $undergraduates = Undergraduate::with(['user.skills.subdomain.domain'])->where('has_embedding', true)->get();
             
             foreach ($undergraduates as $undergraduate) {
                 $embedding = $undergraduate->research_embedding;
@@ -1026,6 +1032,8 @@ class SemanticSearchService
                 $studentArray = $undergraduate->toArray();
                 $studentArray['match_score'] = $similarity;
                 $studentArray['student_type'] = 'undergraduate';
+                // Load skills from user relationship
+                $studentArray['skills'] = $undergraduate->user ? $undergraduate->user->skills->toArray() : [];
                 $results[] = $studentArray;
             }
         }
@@ -1163,24 +1171,28 @@ class SemanticSearchService
         
         // Load postgraduates if needed
         if (($includeBothTypes || $specificType === 'postgraduate') && !empty($postgraduateIds)) {
-            $postgraduates = Postgraduate::whereIn('id', array_keys($postgraduateIds))->get();
+            $postgraduates = Postgraduate::with(['user.skills.subdomain.domain'])->whereIn('id', array_keys($postgraduateIds))->get();
             
             foreach ($postgraduates as $postgraduate) {
                 $postgraduateArray = $postgraduate->toArray();
                 $postgraduateArray['match_score'] = $postgraduateIds[$postgraduate->id] ?? 0;
                 $postgraduateArray['student_type'] = 'postgraduate';
+                // Load skills from user relationship
+                $postgraduateArray['skills'] = $postgraduate->user ? $postgraduate->user->skills->toArray() : [];
                 $results[] = $postgraduateArray;
             }
         }
         
         // Load undergraduates if needed
         if (($includeBothTypes || $specificType === 'undergraduate') && !empty($undergraduateIds)) {
-            $undergraduates = Undergraduate::whereIn('id', array_keys($undergraduateIds))->get();
+            $undergraduates = Undergraduate::with(['user.skills.subdomain.domain'])->whereIn('id', array_keys($undergraduateIds))->get();
             
             foreach ($undergraduates as $undergraduate) {
                 $undergraduateArray = $undergraduate->toArray();
                 $undergraduateArray['match_score'] = $undergraduateIds[$undergraduate->id] ?? 0;
                 $undergraduateArray['student_type'] = 'undergraduate';
+                // Load skills from user relationship
+                $undergraduateArray['skills'] = $undergraduate->user ? $undergraduate->user->skills->toArray() : [];
                 $results[] = $undergraduateArray;
             }
         }

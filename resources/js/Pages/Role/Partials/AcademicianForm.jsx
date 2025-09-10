@@ -9,6 +9,7 @@ import Select from 'react-select';
 import axios from 'axios';
 import CVPreviewModal from './CVPreviewModal';
 import React from 'react';
+import SkillsSelector from '@/Components/SkillsSelector';
 
 export default function AcademicianForm({ className = '', researchOptions, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   const academician = usePage().props.academician; // Related academician data
@@ -41,6 +42,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       background_image: academician?.background_image || '',
       CV_file: academician?.CV_file || '',
       postgraduate_program_ids: currentProgramIds,
+      skills: academician?.skills || [],
     });
 
   // State for modals and generation
@@ -1137,6 +1139,18 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   styles={{
                     menuPortal: (provided) => ({ ...provided, zIndex: 9999 })
                   }}
+                />
+              </div>
+
+              {/* Skills Selector */}
+              <div className="w-full">
+                <SkillsSelector
+                  value={data.skills}
+                  onChange={(skillIds) => setData('skills', skillIds)}
+                  error={errors.skills}
+                  required={false}
+                  label="Skills"
+                  placeholder="Select your skills..."
                 />
               </div>
 

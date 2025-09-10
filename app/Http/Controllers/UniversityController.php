@@ -71,7 +71,7 @@ class UniversityController extends Controller
 
         // Get only academicians with complete profiles
         $academicians = $faculty->academicians()
-            ->with('user')
+            ->with(['user.skills.subdomain.domain'])
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->whereNotNull('research_expertise')
             ->where('research_expertise', '!=', '[]')
@@ -79,6 +79,24 @@ class UniversityController extends Controller
                 $query->where('full_name', 'like', "%{$search}%");
             })
             ->get();
+        
+        // Transform academicians for JSON-safe output
+        $academicians = $academicians->map(function ($academician) {
+            // Convert to array to avoid circular references
+            $academicianArray = $academician->toArray();
+            
+            // Ensure research_expertise is properly decoded
+            if (is_string($academicianArray['research_expertise'])) {
+                $academicianArray['research_expertise'] = json_decode($academicianArray['research_expertise'], true) ?? [];
+            }
+            
+            // Add skills from user relationship
+            $academicianArray['skills'] = $academician->user && $academician->user->skills 
+                ? $academician->user->skills->toArray() 
+                : [];
+            
+            return $academicianArray;
+        });
             
         return inertia('Universities/AcademicianList', [
             'academicians'   => $academicians,
@@ -88,6 +106,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
+            'skills'         => Skill::with('subdomain.domain')->get(),
             'searchQuery'    => $searchQuery,
         ]);
     }
@@ -115,12 +134,30 @@ class UniversityController extends Controller
 
         // Get only undergraduates with complete profiles
         $undergraduates = $faculty->undergraduates()
-            ->with('user')
+            ->with(['user.skills.subdomain.domain'])
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->when($searchQuery, function ($query, $search) {
                 $query->where('full_name', 'like', "%{$search}%");
             })
             ->get();
+        
+        // Transform undergraduates for JSON-safe output
+        $undergraduates = $undergraduates->map(function ($undergraduate) {
+            // Convert to array to avoid circular references
+            $undergraduateArray = $undergraduate->toArray();
+            
+            // Ensure research_preference is properly decoded if it exists
+            if (isset($undergraduateArray['research_preference']) && is_string($undergraduateArray['research_preference'])) {
+                $undergraduateArray['research_preference'] = json_decode($undergraduateArray['research_preference'], true) ?? [];
+            }
+            
+            // Add skills from user relationship
+            $undergraduateArray['skills'] = $undergraduate->user && $undergraduate->user->skills 
+                ? $undergraduate->user->skills->toArray() 
+                : [];
+            
+            return $undergraduateArray;
+        });
             
         return inertia('Universities/UndergraduateList', [
             'undergraduates' => $undergraduates,
@@ -130,7 +167,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
-            'skills' => Skill::all(),
+            'skills' => Skill::with('subdomain.domain')->get(),
             'searchQuery'    => $searchQuery,
         ]);
     }
@@ -158,7 +195,7 @@ class UniversityController extends Controller
 
         // Get only postgraduates with complete profiles
         $postgraduates = $faculty->postgraduates()
-            ->with('user')
+            ->with(['user.skills.subdomain.domain'])
             ->where('profile_picture', '!=', 'profile_pictures/default.jpg')
             ->whereNotNull('field_of_research')
             ->where('field_of_research', '!=', '[]')
@@ -166,6 +203,24 @@ class UniversityController extends Controller
                 $query->where('full_name', 'like', "%{$search}%");
             })
             ->get();
+        
+        // Transform postgraduates for JSON-safe output
+        $postgraduates = $postgraduates->map(function ($postgraduate) {
+            // Convert to array to avoid circular references
+            $postgraduateArray = $postgraduate->toArray();
+            
+            // Ensure field_of_research is properly decoded
+            if (is_string($postgraduateArray['field_of_research'])) {
+                $postgraduateArray['field_of_research'] = json_decode($postgraduateArray['field_of_research'], true) ?? [];
+            }
+            
+            // Add skills from user relationship
+            $postgraduateArray['skills'] = $postgraduate->user && $postgraduate->user->skills 
+                ? $postgraduate->user->skills->toArray() 
+                : [];
+            
+            return $postgraduateArray;
+        });
             
         return inertia('Universities/PostgraduateList', [
             'postgraduates'  => $postgraduates,
@@ -175,7 +230,7 @@ class UniversityController extends Controller
             'university'     => $faculty->university,
             'researchOptions'=> $researchOptions,
             'users'          => User::with(['sentRequests', 'receivedRequests'])->get(),
-            'skills'        => Skill::all(),
+            'skills'        => Skill::with('subdomain.domain')->get(),
             'searchQuery'    => $searchQuery,
         ]);
     }

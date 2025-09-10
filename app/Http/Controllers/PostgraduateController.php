@@ -50,6 +50,15 @@ class PostgraduateController extends Controller
             })
             ->get();
         
+        // Load skills for each postgraduate
+        $postgraduates->each(function ($postgraduate) {
+            if ($postgraduate->user) {
+                $postgraduate->skills = $postgraduate->user->skills()->with('subdomain.domain')->get();
+            } else {
+                $postgraduate->skills = collect([]);
+            }
+        });
+        
         return Inertia::render('Networking/Postgraduate', [
             // Pass any data you want to the component here
             'postgraduates' => $postgraduates,
@@ -57,7 +66,7 @@ class PostgraduateController extends Controller
             'faculties' => FacultyList::all(),
             'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
-            'skills' => Skill::all(),
+            'skills' => Skill::with('subdomain.domain')->get(),
             'searchQuery' => $searchQuery,
         ]);
     }
@@ -101,13 +110,20 @@ class PostgraduateController extends Controller
             'url' => route('postgraduates.show', $postgraduate),
         ];
 
+        // Load skills for the postgraduate
+        if ($user) {
+            $postgraduate->skills = $user->skills()->with('subdomain.domain')->get();
+        } else {
+            $postgraduate->skills = collect([]);
+        }
+        
         return Inertia::render('Networking/PostgraduateProfile', [
             'postgraduate' => $postgraduate,
             'university' => UniversityList::find($postgraduate->university),
             'faculty' => FacultyList::find($postgraduate->faculty),
             'user' => $user,
             'researchOptions' => $researchOptions,
-            'skillsOptions' => Skill::all(),
+            'skillsOptions' => Skill::with('subdomain.domain')->get(),
             'metaTags' => $metaTags,
         ]);
     }

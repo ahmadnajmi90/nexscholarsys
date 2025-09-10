@@ -54,11 +54,16 @@ Before any semantic search can occur, the profiles of users and other entities (
 
 The quality of the semantic search is highly dependent on the quality of the text used to generate the embeddings. Instead of simply using a raw bio, Nexscholar employs a structured approach to create a rich text document for each user.
 
+-   **Hierarchical Skills Integration**: The system now incorporates the 3-level skills taxonomy (Domain → Subdomain → Skill) into the embedding generation process. Skills are loaded with full relationships using `$user->skills()->with('subdomain.domain')->get()` to access the complete hierarchy.
+-   **Skills Text Construction**: Each skill contributes to the embedding text in multiple formats:
+    -   Full hierarchy: "Technology & Information Technology → Software Development → React.js"
+    -   Individual components: "Technology", "Software Development", "React.js"
+    -   Skill categories: "Programming Languages", "Web Frameworks", etc.
 -   **Hierarchical Research Fields**: The system resolves the stored research field IDs (e.g., `"1-5-12"`) into their full text names ("Computer Science - Artificial Intelligence - Natural Language Processing").
 -   **Multiple Representations**: It creates several variations of this text to improve matching flexibility (e.g., "Fields: Computer Science", "Areas: Artificial Intelligence", "Computer Science Artificial Intelligence").
--   **Concatenation**: This structured research text is combined with other key profile information, such as the user's position, department, and biography. This complete document is what gets converted into an embedding.
+-   **Comprehensive Concatenation**: The structured research text is combined with hierarchical skills, position, department, and biography. This complete document provides rich semantic context for more accurate matching.
 
-This strategy produces more consistent and meaningful embeddings than relying on unstructured user input alone.
+This enhanced strategy produces more consistent and meaningful embeddings by leveraging both the traditional research field structure and the new hierarchical skills taxonomy.
 
 ### Artisan Commands for Generation
 
@@ -78,6 +83,7 @@ This strategy produces more consistent and meaningful embeddings than relying on
     -   `user_id`: The primary `users.id`.
     -   `mysql_id`: The ID from the source table (e.g., `academicians.id`).
     -   `record_type`: The entity type ("academician", "student", etc.).
+    -   `skills_metadata`: Additional metadata about the hierarchical skills for enhanced filtering and relevance scoring.
 -   **Setup**: The collections can be created and configured using the `php artisan qdrant:setup` command.
 
 ## Part 2: Semantic Search & AI Matching
@@ -108,9 +114,10 @@ To add a layer of explainability, the system uses GPT-4o to justify *why* a matc
 1.  **Trigger**: After the top matches are retrieved from Qdrant, the frontend makes a separate request for "insights" for each match.
 2.  **Context Assembly**: The `AIMatchingController` assembles a detailed prompt for the GPT-4o model. This prompt includes:
     -   The student's original search query.
-    -   The student's own profile data (research interests, bio).
-    -   The matched supervisor's profile data.
+    -   The student's own profile data (research interests, bio, hierarchical skills).
+    -   The matched supervisor's profile data including their hierarchical skills structure.
     -   Crucially, a list of the supervisor's most relevant **publications** from their integrated Google Scholar data.
+    -   Skills alignment analysis showing matching domains, subdomains, and specific skills.
 3.  **API Call**: The prompt is sent to GPT-4o.
 4.  **Response**: The model returns a concise, personalized paragraph explaining the synergy between the student and the supervisor, often referencing specific shared research interests or relevant publications.
 5.  **Caching**: To reduce API costs and improve performance, these generated insights are cached for 30 minutes.

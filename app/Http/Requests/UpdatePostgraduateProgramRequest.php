@@ -15,7 +15,7 @@ class UpdatePostgraduateProgramRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'program_type' => 'required|in:Master,PhD',
+            'program_type' => 'required',
             'university_id' => 'required|exists:university_list,id',
             'faculty_id' => 'required|exists:faculty_list,id',
             'description' => 'nullable|string',

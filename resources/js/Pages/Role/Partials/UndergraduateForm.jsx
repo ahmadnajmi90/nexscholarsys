@@ -9,6 +9,7 @@ import NationalityForm from "./NationalityForm";
 import Select from 'react-select';
 import axios from 'axios';
 import React from 'react';
+import SkillsSelector from '@/Components/SkillsSelector';
 
 export default function UndergraduateForm({ universities, faculties, className = '', researchOptions, skills, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   // Add useRef for tracking generation
@@ -272,12 +273,6 @@ export default function UndergraduateForm({ universities, faculties, className =
   const filteredFaculties = faculties.filter(
     faculty => faculty.university_id === parseInt(selectedUniversity)
   );
-
-  // Create options for skills from the skills prop (each skill has id and name)
-  const skillsOptions = skills.map(skill => ({
-    value: skill.id,
-    label: skill.name,
-  }));
 
   // Handler for research preference change (if interested in research)
   const handleResearchPreferenceChange = (selectedOptions) => {
@@ -663,26 +658,17 @@ export default function UndergraduateForm({ universities, faculties, className =
                 <InputError className="mt-2" message={errors.matric_no} />
               </div>
             )}
-            <div className="w-full">
-              <InputLabel htmlFor="skills" value={<>Skills <span className="text-red-600">*</span></>} required/>
-              <Select
-                id="skills"
-                isMulti
-                options={skillsOptions}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                classNamePrefix="select"
-                value={data.skills?.map(selectedId => {
-                  const found = skillsOptions.find(option => option.value === selectedId);
-                  return found || { value: selectedId, label: selectedId };
-                })}
-                onChange={selectedOptions => {
-                  const values = selectedOptions.map(opt => opt.value);
-                  setData('skills', values);
-                }}
-                placeholder="Select your skills..."
-              />
-              <InputError className="mt-2" message={errors.skills} />
-            </div>
+          </div>
+          
+          <div className="w-full">
+            <SkillsSelector
+              value={data.skills}
+              onChange={(skillIds) => setData('skills', skillIds)}
+              error={errors.skills}
+              required={true}
+              label="Skills"
+              placeholder="Select your skills..."
+            />
           </div>
 
           {/* Interested to do research and Expected Graduate */}

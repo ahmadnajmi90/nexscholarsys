@@ -6,6 +6,7 @@ import SearchBar from "@/Components/SearchBar";
 import Pagination from "@/Components/Pagination";
 import FacultySkeletonCard from "./partials/FacultySkeletonCard";
 import useRoles from "@/Hooks/useRoles";
+import { Head } from "@inertiajs/react";
 
 const FacultyList = ({ faculties, university }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();

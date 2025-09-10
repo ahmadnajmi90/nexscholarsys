@@ -136,14 +136,61 @@ class RoleProfileController extends Controller
             $currentProgramIds = $academician->postgraduatePrograms()->pluck('postgraduate_program_id');
         }
 
+        // Load role models with their skills
+        $postgraduate = null;
+        $academician = null;
+        $undergraduate = null;
+        
+        if ($isPostgraduate) {
+            $postgraduate = Auth::user()->postgraduate;
+            if ($postgraduate) {
+                $postgraduate->skills = Auth::user()->skills()->pluck('skills.id')->toArray();
+                // Debug: Log the skills for verification
+                logger()->info('Postgraduate skills loaded', ['skills' => $postgraduate->skills]);
+            }
+        }
+        
+        if ($isAcademician) {
+            $academician = Auth::user()->academician;
+            if ($academician) {
+                $academician->skills = Auth::user()->skills()->pluck('skills.id')->toArray();
+                // Debug: Log the skills for verification
+                logger()->info('Academician skills loaded', ['skills' => $academician->skills]);
+            }
+        }
+        
+        if ($isUndergraduate) {
+            $undergraduate = Auth::user()->undergraduate;
+            if ($undergraduate) {
+                $undergraduate->skills = Auth::user()->skills()->pluck('skills.id')->toArray();
+                // Debug: Log the skills for verification
+                logger()->info('Undergraduate skills loaded', ['skills' => $undergraduate->skills]);
+            }
+        }
+
         return Inertia::render('Role/Edit', [
-            'postgraduate' => $isPostgraduate ? Auth::user()->postgraduate : null,
-            'academician' => $isAcademician ? Auth::user()->academician : null,
-            'undergraduate' => $isUndergraduate ? Auth::user()->undergraduate : null,
+            'postgraduate' => $postgraduate,
+            'academician' => $academician,
+            'undergraduate' => $undergraduate,
             'universities' => UniversityList::all(),
             'faculties' => FacultyList::all(),
             'researchOptions' => $researchOptions,
-            'skills' => \App\Models\Skill::all(),
+            'skills' => \App\Models\Skill::whereNotNull('skills_subdomain_id')
+                ->with(['subdomain.domain'])
+                ->orderBy('name')
+                ->get()
+                ->map(function ($skill) {
+                    return [
+                        'id' => $skill->id,
+                        'name' => $skill->name,
+                        'full_name' => $skill->full_name,
+                        'description' => $skill->description,
+                        'subdomain_id' => $skill->skills_subdomain_id,
+                        'subdomain_name' => $skill->subdomain->name ?? null,
+                        'domain_id' => $skill->subdomain->domain->id ?? null,
+                        'domain_name' => $skill->subdomain->domain->name ?? null,
+                    ];
+                }),
             'allPrograms' => $allPrograms,
             'currentProgramIds' => $currentProgramIds,
             'aiGenerationInProgress' => $aiGenerationInProgress,
@@ -411,27 +458,33 @@ class RoleProfileController extends Controller
                 }
             }
 
-            // *** NEW: Handle skills update for students ***
-            if ($isPostgraduate || $isUndergraduate) {
-                // Handle skills for students.
-                if (!array_key_exists('skills', $validatedData)) {
-                    $validatedData['skills'] = null;
-                    logger()->info('No skills provided; setting to null.');
-                } elseif (is_string($validatedData['skills'])) {
+            // *** NEW: Handle skills update for all user roles ***
+            $skillIds = [];
+            if (array_key_exists('skills', $validatedData)) {
+                if (is_string($validatedData['skills'])) {
                     $decoded = json_decode($validatedData['skills'], true);
-                    if (empty($decoded)) {
-                        $validatedData['skills'] = null;
-                        logger()->info('Skills are empty; deleting field.');
-                    } else {
-                        // Ensure skills are stored as an array of integer IDs.
-                        $validatedData['skills'] = array_map('intval', $decoded);
-                        logger()->info('Skills stored as IDs:', $validatedData['skills']);
-                    }
+                    $skillIds = is_array($decoded) ? array_map('intval', $decoded) : [];
                 } elseif (is_array($validatedData['skills'])) {
-                    // If already an array, convert each element to an integer.
-                    $validatedData['skills'] = array_map('intval', $validatedData['skills']);
-                    logger()->info('Skills stored as IDs:', $validatedData['skills']);
+                    $skillIds = array_map('intval', $validatedData['skills']);
                 }
+                
+                // Validate that all skill IDs exist in the skills table
+                if (!empty($skillIds)) {
+                    $validSkillIds = \App\Models\Skill::whereIn('id', $skillIds)->pluck('id')->toArray();
+                    $skillIds = array_intersect($skillIds, $validSkillIds);
+                    
+                    if (count($skillIds) !== count($validatedData['skills'])) {
+                        logger()->warning('Some skill IDs were invalid and filtered out', [
+                            'original' => $validatedData['skills'],
+                            'valid' => $skillIds
+                        ]);
+                    }
+                }
+                
+                logger()->info('Processed skills:', ['skill_ids' => $skillIds]);
+                
+                // Remove skills from validatedData as we'll handle it separately
+                unset($validatedData['skills']);
             }
 
             // Handle supervisorAvailability for postgraduates
@@ -462,6 +515,13 @@ class RoleProfileController extends Controller
                     ['postgraduate_id' => $user->unique_id],
                     $validatedData
                 );
+                
+                // Sync skills through the User model
+                if (!empty($skillIds)) {
+                    $user->skills()->sync($skillIds);
+                } else {
+                    $user->skills()->detach();
+                }
             } else if ($isUndergraduate) {
                 if ($validatedData['interested_do_research'] == "true") {
                     $validatedData['interested_do_research'] = 1;
@@ -475,6 +535,13 @@ class RoleProfileController extends Controller
                     ['undergraduate_id' => $user->unique_id],
                     $validatedData
                 );
+                
+                // Sync skills through the User model
+                if (!empty($skillIds)) {
+                    $user->skills()->sync($skillIds);
+                } else {
+                    $user->skills()->detach();
+                }
             } elseif ($isAcademician) {
                 // Fix issue with academician->university/faculty access by getting it first
                 $academician = Academician::where('academician_id', $user->unique_id)->first();
@@ -495,6 +562,13 @@ class RoleProfileController extends Controller
                     ['academician_id' => $user->unique_id],
                     $validatedData
                 );
+
+                // Sync skills through the User model
+                if (!empty($skillIds)) {
+                    $user->skills()->sync($skillIds);
+                } else {
+                    $user->skills()->detach();
+                }
 
                 // Sync associated Postgraduate programs if provided
                 if ($request->has('postgraduate_program_ids') && is_array($request->input('postgraduate_program_ids'))) {

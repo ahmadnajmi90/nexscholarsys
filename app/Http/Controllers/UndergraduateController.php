@@ -49,6 +49,15 @@ class UndergraduateController extends Controller
             })
             ->get();
         
+        // Load skills for each undergraduate
+        $undergraduates->each(function ($undergraduate) {
+            if ($undergraduate->user) {
+                $undergraduate->skills = $undergraduate->user->skills()->with('subdomain.domain')->get();
+            } else {
+                $undergraduate->skills = collect([]);
+            }
+        });
+        
         return Inertia::render('Networking/Undergraduate', [
             // Pass any data you want to the component here
             'undergraduates' => $undergraduates,
@@ -56,7 +65,7 @@ class UndergraduateController extends Controller
             'faculties' => FacultyList::all(),
             'users' => User::with(['sentRequests', 'receivedRequests'])->get(),
             'researchOptions' => $researchOptions,
-            'skills' => Skill::all(),
+            'skills' => Skill::with('subdomain.domain')->get(),
             'searchQuery' => $searchQuery,
         ]);
     }
@@ -100,13 +109,20 @@ class UndergraduateController extends Controller
             'url' => route('undergraduates.show', $undergraduate),
         ];
 
+        // Load skills for the undergraduate
+        if ($user) {
+            $undergraduate->skills = $user->skills()->with('subdomain.domain')->get();
+        } else {
+            $undergraduate->skills = collect([]);
+        }
+        
         return Inertia::render('Networking/UndergraduateProfile', [
             'undergraduate' => $undergraduate,
             'university' => UniversityList::find($undergraduate->university),
             'faculty' => FacultyList::find($undergraduate->faculty),
             'user' => $user,
             'researchOptions' => $researchOptions,
-            'skillsOptions' => Skill::all(),
+            'skillsOptions' => Skill::with('subdomain.domain')->get(),
             'metaTags' => $metaTags,
         ]);
     }

@@ -26,7 +26,6 @@ class Undergraduate extends Model
         'university',
         'faculty',
         'matric_no',
-        'skills',
         'interested_do_research',
         'expected_graduate',
         'research_preference',
@@ -42,7 +41,6 @@ class Undergraduate extends Model
 
     protected $casts = [
         'research_preference' => 'array', // Cast field_of_study as an array
-        'skills' => 'array',
         'interested_do_research' => 'boolean',
         'qdrant_migrated_at' => 'datetime',
     ];
@@ -115,9 +113,12 @@ class Undergraduate extends Model
      */
     protected $appends = ['profile_status'];
 
+    /**
+     * Get the skills associated with this undergraduate through the user.
+     */
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'skills' );
+        return $this->user ? $this->user->skills() : collect();
     }
 
     /**

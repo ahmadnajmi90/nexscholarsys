@@ -10,9 +10,11 @@ This document provides a comprehensive guide to the RESTful API for the Nexschol
   - [Universities](#universities)
   - [Faculties](#faculties)
   - [Research Fields](#research-fields)
+  - [Skills Taxonomy](#skills-taxonomy)
   - [Postgraduate Programs](#postgraduate-programs)
 - [Content Management API (Stateless)](#content-management-api-stateless)
 - [Application API (Stateful)](#application-api-stateful)
+  - [User Profiles](#user-profiles)
   - [Connections](#connections)
   - [Notifications](#notifications)
 
@@ -217,6 +219,161 @@ The platform uses a three-tier hierarchy for research fields. Each tier has its 
 
 ---
 
+### Skills Taxonomy
+
+The platform uses a hierarchical skills taxonomy with three levels: Domain → Subdomain → Skill. This system replaces the old JSON-based skills structure and provides better organization and search capabilities.
+
+#### Skills Domains (Top Level)
+
+-   **Endpoint**: `/api/v1/skills/domains`
+-   **Controller**: `App\Http\Controllers\Api\V1\SkillsController`
+-   **Operations**: `GET`, `POST`, `PUT`, `DELETE` (standard CRUD)
+
+##### List Skills Domains
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/skills/domains`
+-   **Description**: Retrieves all skills domains
+-   **Example Response** (`200 OK`):
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "Technology & Information Technology",
+          "created_at": "2025-01-01T00:00:00.000000Z",
+          "updated_at": "2025-01-01T00:00:00.000000Z"
+        }
+      ]
+    }
+    ```
+
+##### Create Skills Domain
+
+-   **Method**: `POST`
+-   **Path**: `/api/v1/skills/domains`
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "name": "Healthcare & Medicine"
+    }
+    ```
+
+#### Skills Subdomains (Middle Level)
+
+-   **Endpoint**: `/api/v1/skills/subdomains`
+-   **Controller**: `App\Http\Controllers\Api\V1\SkillsController`
+-   **Operations**: `GET`, `POST`, `PUT`, `DELETE`
+
+##### List Skills Subdomains
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/skills/subdomains`
+-   **Query Parameters**:
+    -   `domain_id` (integer, optional): Filter by domain
+-   **Example Response** (`200 OK`):
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "Software Development",
+          "skills_domain_id": 1,
+          "domain": {
+            "id": 1,
+            "name": "Technology & Information Technology"
+          }
+        }
+      ]
+    }
+    ```
+
+##### Create Skills Subdomain
+
+-   **Method**: `POST`
+-   **Path**: `/api/v1/skills/subdomains`
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "name": "Web Development",
+      "skills_domain_id": 1
+    }
+    ```
+
+#### Skills (Bottom Level)
+
+-   **Endpoint**: `/api/v1/skills`
+-   **Controller**: `App\Http\Controllers\Api\V1\SkillsController`
+-   **Operations**: `GET`, `POST`, `PUT`, `DELETE`
+
+##### List Skills
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/skills`
+-   **Query Parameters**:
+    -   `subdomain_id` (integer, optional): Filter by subdomain
+    -   `domain_id` (integer, optional): Filter by domain
+    -   `search` (string, optional): Search skills by name
+-   **Example Response** (`200 OK`):
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "React.js",
+          "skills_subdomain_id": 1,
+          "description": null,
+          "full_name": "Technology & Information Technology → Software Development → React.js",
+          "subdomain": {
+            "id": 1,
+            "name": "Software Development",
+            "domain": {
+              "id": 1,
+              "name": "Technology & Information Technology"
+            }
+          }
+        }
+      ]
+    }
+    ```
+
+##### Create Skill
+
+-   **Method**: `POST`
+-   **Path**: `/api/v1/skills`
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "name": "Vue.js",
+      "skills_subdomain_id": 1,
+      "description": "Progressive JavaScript framework for building user interfaces"
+    }
+    ```
+
+##### Skills Search
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/skills/search`
+-   **Query Parameters**:
+    -   `q` (string, required): Search query
+    -   `limit` (integer, optional): Number of results (default: 50)
+-   **Description**: Performs fuzzy search across all skills with hierarchical context
+-   **Example Response** (`200 OK`):
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "React.js",
+          "full_name": "Technology & Information Technology → Software Development → React.js",
+          "relevance_score": 0.95
+        }
+      ]
+    }
+    ```
+
+---
+
 ### Postgraduate Programs
 
 -   **Endpoint**: `/api/v1/postgraduate-programs`
@@ -264,6 +421,56 @@ These endpoints allow for programmatic management of platform content.
 ## Application API (Stateful)
 
 These endpoints are designed for the frontend, use session-based authentication, and are not intended for general external use.
+
+### User Profiles
+
+-   **Endpoint**: `/api/v1/app/profile`
+-   **Controller**: `App\Http\Controllers\RoleProfileController`
+-   **Authentication**: Session (must be logged in)
+
+#### Get User Profile
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/app/profile`
+-   **Description**: Retrieves the authenticated user's profile with hierarchical skills
+-   **Response** (`200 OK`):
+    ```json
+    {
+      "user": {
+        "id": 1,
+        "full_name": "Dr. Jane Smith",
+        "email": "jane.smith@university.edu",
+        "skills": [
+          {
+            "id": 1,
+            "name": "React.js",
+            "full_name": "Technology & Information Technology → Software Development → React.js",
+            "subdomain": {
+              "id": 1,
+              "name": "Software Development",
+              "domain": {
+                "id": 1,
+                "name": "Technology & Information Technology"
+              }
+            }
+          }
+        ]
+      }
+    }
+    ```
+
+#### Update User Skills
+
+-   **Method**: `PUT`
+-   **Path**: `/api/v1/app/profile/skills`
+-   **Description**: Updates the user's skills using the hierarchical structure
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "skills": [1, 5, 12, 25]
+    }
+    ```
+-   **Response** (`200 OK`): Updated user profile with skills
 
 ### Connections
 
