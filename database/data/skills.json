@@ -1,0 +1,1999 @@
+[
+  {
+    "domain": "Technology & Information Technology",
+    "subdomains": [
+      {
+        "name": "Software Development",
+        "skills": [
+          "Python",
+          "Java",
+          "C++",
+          "C#",
+          "Go (Golang)",
+          "Rust",
+          "Kotlin",
+          "Swift",
+          "Scala",
+          "Ruby",
+          "PHP",
+          "Perl",
+          "Object-Oriented Programming (OOP)",
+          "Functional Programming",
+          "Design Patterns",
+          "Algorithms & Data Structures",
+          "Version Control (Git)",
+          "Agile Methodologies",
+          "Scrum",
+          "Kanban",
+          "Test-Driven Development (TDD)",
+          "Behavior-Driven Development (BDD)",
+          "Continuous Integration/Continuous Deployment (CI/CD)",
+          "Microservices Architecture",
+          "Domain-Driven Design (DDD)",
+          "API Development",
+          "Software Development Life Cycle (SDLC)",
+          "Unit Testing",
+          "Integration Testing",
+          "System Design"
+        ]
+      },
+      {
+        "name": "Frontend Web Development",
+        "skills": [
+          "HTML5",
+          "CSS3",
+          "JavaScript (ES6+)",
+          "TypeScript",
+          "React.js",
+          "Angular",
+          "Vue.js",
+          "Svelte",
+          "Next.js",
+          "Nuxt.js",
+          "Gatsby",
+          "Redux",
+          "Vuex",
+          "Webpack",
+          "Vite",
+          "Babel",
+          "SASS/SCSS",
+          "LESS",
+          "Tailwind CSS",
+          "Bootstrap",
+          "Material-UI",
+          "Responsive Web Design",
+          "Web Accessibility (WCAG)",
+          "Progressive Web Apps (PWA)",
+          "WebSockets",
+          "GraphQL",
+          "REST APIs",
+          "Web Performance Optimization",
+          "Cross-Browser Compatibility"
+        ]
+      },
+      {
+        "name": "Backend Web Development",
+        "skills": [
+          "Node.js",
+          "Express.js",
+          "Koa.js",
+          "NestJS",
+          "Python",
+          "Django",
+          "Flask",
+          "FastAPI",
+          "Java",
+          "Spring Boot",
+          "Jakarta EE",
+          "PHP",
+          "Laravel",
+          "Symfony",
+          "Ruby",
+          "Ruby on Rails",
+          "C#",
+          "ASP.NET Core",
+          "Go (Golang)",
+          "RESTful API Design",
+          "GraphQL Implementation",
+          "Server-Side Rendering (SSR)",
+          "Containerization (Docker)",
+          "Orchestration (Kubernetes)",
+          "Authentication & Authorization (OAuth, JWT)",
+          "Message Queues (RabbitMQ, Kafka)",
+          "Caching Strategies (Redis, Memcached)"
+        ]
+      },
+      {
+        "name": "Mobile App Development",
+        "skills": [
+          "Swift (iOS)",
+          "Kotlin (Android)",
+          "Java (Android)",
+          "Objective-C (iOS)",
+          "React Native",
+          "Flutter",
+          "Xamarin",
+          "Ionic",
+          "NativeScript",
+          "Xcode",
+          "Android Studio",
+          "Mobile UI/UX Design",
+          "Core Data (iOS)",
+          "Room (Android)",
+          "Firebase",
+          "Push Notifications",
+          "App Store Publishing",
+          "Google Play Store Publishing",
+          "Mobile Performance Optimization",
+          "Mobile Security"
+        ]
+      },
+      {
+        "name": "Data Science & Analytics",
+        "skills": [
+          "Python",
+          "R",
+          "SQL",
+          "Pandas",
+          "NumPy",
+          "SciPy",
+          "Scikit-learn",
+          "Statistics",
+          "Probability",
+          "Data Mining",
+          "Data Wrangling & Cleaning",
+          "Exploratory Data Analysis (EDA)",
+          "Data Visualization",
+          "Matplotlib",
+          "Seaborn",
+          "Plotly",
+          "Tableau",
+          "Power BI",
+          "Jupyter Notebooks",
+          "A/B Testing",
+          "Hypothesis Testing",
+          "Regression Analysis",
+          "Classification",
+          "Clustering",
+          "Big Data Technologies (Hadoop, Spark)"
+        ]
+      },
+      {
+        "name": "Artificial Intelligence & Machine Learning",
+        "skills": [
+          "Machine Learning Algorithms",
+          "Deep Learning",
+          "Neural Networks",
+          "TensorFlow",
+          "PyTorch",
+          "Keras",
+          "Natural Language Processing (NLP)",
+          "Computer Vision (CV)",
+          "Reinforcement Learning",
+          "Generative AI",
+          "Large Language Models (LLMs)",
+          "Prompt Engineering",
+          "Feature Engineering",
+          "Model Training & Evaluation",
+          "Hyperparameter Tuning",
+          "MLOps",
+          "OpenCV",
+          "NLTK",
+          "SpaCy",
+          "Hugging Face Transformers",
+          "Predictive Modeling",
+          "Recommender Systems"
+        ]
+      },
+      {
+        "name": "Cloud Computing & DevOps",
+        "skills": [
+          "Amazon Web Services (AWS)",
+          "Microsoft Azure",
+          "Google Cloud Platform (GCP)",
+          "Docker",
+          "Kubernetes",
+          "Terraform",
+          "Ansible",
+          "Puppet",
+          "Chef",
+          "Jenkins",
+          "GitLab CI/CD",
+          "GitHub Actions",
+          "CI/CD Pipelines",
+          "Infrastructure as Code (IaC)",
+          "Site Reliability Engineering (SRE)",
+          "Monitoring & Observability (Prometheus, Grafana)",
+          "Logging (ELK Stack)",
+          "Serverless Architecture (AWS Lambda, Azure Functions)",
+          "Virtualization",
+          "Linux/Unix Administration",
+          "Bash Scripting",
+          "Networking Fundamentals"
+        ]
+      },
+      {
+        "name": "Cybersecurity",
+        "skills": [
+          "Network Security",
+          "Ethical hacking",
+          "Penetration Testing",
+          "Vulnerability Assessment",
+          "Cryptography",
+          "Security Information and Event Management (SIEM)",
+          "Intrusion Detection/Prevention Systems (IDS/IPS)",
+          "Firewall Management",
+          "Malware Analysis",
+          "Digital Forensics",
+          "Incident Response",
+          "Application Security (SAST, DAST)",
+          "Identity and Access Management (IAM)",
+          "Cloud Security",
+          "Compliance (GDPR, HIPAA, ISO 27001)",
+          "Python (for scripting)",
+          "Metasploit",
+          "Wireshark",
+          "Nmap"
+        ]
+      },
+      {
+        "name": "Database Management",
+        "skills": [
+          "SQL",
+          "MySQL",
+          "PostgreSQL",
+          "Microsoft SQL Server",
+          "Oracle Database",
+          "SQLite",
+          "NoSQL",
+          "MongoDB",
+          "Redis",
+          "Cassandra",
+          "Elasticsearch",
+          "Database Design & Modeling",
+          "Data Warehousing",
+          "ETL (Extract, Transform, Load)",
+          "Database Administration (DBA)",
+          "Performance Tuning & Optimization",
+          "Indexing",
+          "Transactions & Concurrency",
+          "Backup & Recovery"
+        ]
+      },
+      {
+        "name": "Blockchain & Web3",
+        "skills": [
+          "Blockchain Fundamentals",
+          "Cryptography",
+          "Smart Contracts",
+          "Solidity",
+          "Vyper",
+          "Ethereum",
+          "Web3.js",
+          "Ethers.js",
+          "Decentralized Applications (DApps)",
+          "Truffle Suite",
+          "Hardhat",
+          "DeFi (Decentralized Finance)",
+          "NFTs (Non-Fungible Tokens)",
+          "Consensus Algorithms",
+          "Hyperledger Fabric",
+          "Chainlink"
+        ]
+      },
+      {
+        "name": "Game Development",
+        "skills": [
+          "Unity",
+          "Unreal Engine",
+          "C# (for Unity)",
+          "C++ (for Unreal)",
+          "Game Physics",
+          "3D Modeling (Blender, Maya)",
+          "Game Design",
+          "Level Design",
+          "Gameplay Programming",
+          "AI for Games",
+          "Shaders & Graphics Programming",
+          "Mobile Game Development",
+          "VR/AR Development"
+        ]
+      },
+      {
+        "name": "Quality Assurance & Testing",
+        "skills": [
+          "Manual Testing",
+          "Automated Testing",
+          "Selenium",
+          "Cypress",
+          "Playwright",
+          "Appium",
+          "JMeter",
+          "Postman",
+          "Test Planning & Strategy",
+          "Test Case Design",
+          "Bug Tracking (Jira)",
+          "Performance Testing",
+          "Load Testing",
+          "Security Testing",
+          "Regression Testing",
+          "API Testing"
+        ]
+      },
+      {
+        "name": "IT Support & Networking",
+        "skills": [
+          "Technical Support",
+          "Help Desk Operations",
+          "Troubleshooting",
+          "Network Administration",
+          "TCP/IP",
+          "DNS",
+          "DHCP",
+          "Routing & Switching (Cisco)",
+          "Network Protocols",
+          "Firewall Configuration",
+          "VPN Management",
+          "Windows Server",
+          "Linux Administration",
+          "Active Directory",
+          "System Administration"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Business & Management",
+    "subdomains": [
+      {
+        "name": "Project Management",
+        "skills": [
+          "Agile Project Management",
+          "Scrum",
+          "Kanban",
+          "Waterfall Methodology",
+          "Project Planning & Scheduling",
+          "Risk Management",
+          "Budget Management",
+          "Stakeholder Management",
+          "Resource Allocation",
+          "Scope Management",
+          "Gantt Charts",
+          "Jira",
+          "Trello",
+          "Asana",
+          "PMP Certification",
+          "PRINCE2",
+          "Change Management"
+        ]
+      },
+      {
+        "name": "Business Analysis",
+        "skills": [
+          "Requirement Gathering",
+          "Business Process Modeling (BPMN)",
+          "SWOT Analysis",
+          "Stakeholder Analysis",
+          "Use Case Diagrams",
+          "User Stories",
+          "Data Analysis",
+          "SQL",
+          "Gap Analysis",
+          "Feasibility Studies",
+          "Financial Modeling",
+          "Microsoft Visio"
+        ]
+      },
+      {
+        "name": "Finance & Accounting",
+        "skills": [
+          "Financial Analysis",
+          "Financial Reporting (IFRS, GAAP)",
+          "Bookkeeping",
+          "Accounting Software (QuickBooks, Xero)",
+          "Auditing",
+
+          "Taxation",
+          "Corporate Finance",
+          "Investment Analysis",
+          "Valuation",
+          "Forecasting",
+          "Budgeting",
+          "Risk Assessment",
+          "Excel for Finance",
+          "Payroll Management"
+        ]
+      },
+      {
+        "name": "Marketing & Sales",
+        "skills": [
+          "Digital Marketing",
+          "Search Engine Optimization (SEO)",
+          "Search Engine Marketing (SEM)",
+          "Content Marketing",
+          "Social Media Marketing (SMM)",
+          "Email Marketing",
+          "Marketing Automation (HubSpot, Marketo)",
+          "Google Analytics",
+          "Pay-Per-Click (PPC) Advertising",
+          "Brand Management",
+          "Market Research",
+          "Sales Strategy",
+          "Lead Generation",
+          "Customer Relationship Management (CRM)",
+          "Salesforce",
+          "Copywriting",
+          "Public Relations (PR)"
+        ]
+      },
+      {
+        "name": "Human Resources",
+        "skills": [
+          "Recruitment & Talent Acquisition",
+          "Onboarding",
+          "Employee Relations",
+          "Performance Management",
+          "Compensation & Benefits",
+          "HR Information Systems (HRIS)",
+          "Labor Law & Compliance",
+          "Training & Development",
+          "Organizational Development",
+          "Conflict Resolution",
+          "Diversity & Inclusion"
+        ]
+      },
+      {
+        "name": "Operations & Supply Chain",
+        "skills": [
+          "Supply Chain Management",
+          "Logistics",
+          "Inventory Management",
+          "Procurement",
+          "Operations Management",
+          "Lean Manufacturing",
+          "Six Sigma",
+          "Quality Control",
+          "Enterprise Resource Planning (ERP)",
+          "SAP",
+          "Oracle SCM",
+          "Demand Forecasting"
+        ]
+      },
+      {
+        "name": "Strategy & Management",
+        "skills": [
+          "Business Strategy",
+          "Corporate Development",
+          "Management Consulting",
+          "Competitive Analysis",
+          "Market Entry Strategy",
+          "Business Development",
+          "Leadership",
+          "Change Management",
+          "Mergers & Acquisitions (M&A)",
+          "Organizational Leadership"
+        ]
+      },
+      {
+        "name": "Entrepreneurship",
+        "skills": [
+          "Business Planning",
+          "Venture Capital",
+          "Pitching",
+          "Product/Market Fit",
+          "Lean Startup",
+          "Growth Hacking",
+          "Fundraising",
+          "Networking"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Creative & Design",
+    "subdomains": [
+      {
+        "name": "Graphic Design",
+        "skills": [
+          "Adobe Photoshop",
+          "Adobe Illustrator",
+          "Adobe InDesign",
+          "Figma",
+          "Sketch",
+          "Canva",
+          "Typography",
+          "Color Theory",
+          "Branding & Identity Design",
+          "Logo Design",
+          "Print Design",
+          "Illustration",
+          "Layout Design"
+        ]
+      },
+      {
+        "name": "UI/UX Design",
+        "skills": [
+          "User Interface (UI) Design",
+          "User Experience (UX) Design",
+          "User Research",
+          "Wireframing",
+          "Prototyping",
+          "Information Architecture",
+          "Usability Testing",
+          "Figma",
+          "Sketch",
+          "Adobe XD",
+          "InVision",
+          "Design Systems",
+          "User Journey Mapping",
+          "Interaction Design"
+        ]
+      },
+      {
+        "name": "Video & Audio Production",
+        "skills": [
+          "Video Editing",
+          "Adobe Premiere Pro",
+          "Final Cut Pro",
+          "DaVinci Resolve",
+          "Motion Graphics",
+          "Adobe After Effects",
+          "Audio Editing",
+          "Adobe Audition",
+          "Audacity",
+          "Storyboarding",
+          "Cinematography",
+          "Sound Design",
+          "Podcasting"
+        ]
+      },
+      {
+        "name": "3D & Animation",
+        "skills": [
+          "3D Modeling",
+          "Blender",
+          "Autodesk Maya",
+          "3ds Max",
+          "ZBrush",
+          "Texturing",
+          "Rigging",
+          "3D Animation",
+          "Visual Effects (VFX)",
+          "Rendering"
+        ]
+      },
+      {
+        "name": "Writing & Content Creation",
+        "skills": [
+          "Copywriting",
+          "Content Writing",
+          "Technical Writing",
+          "Creative Writing",
+          "Editing & Proofreading",
+          "Blogging",
+          "Content Strategy",
+          "Search Engine Optimization (SEO)",
+          "Storytelling",
+          "Grant Writing",
+          "Scriptwriting"
+        ]
+      },
+      {
+        "name": "Photography",
+        "skills": [
+          "Digital Photography",
+          "Lighting",
+          "Composition",
+          "Photo Editing",
+          "Adobe Lightroom",
+          "Adobe Photoshop",
+          "Portrait Photography",
+          "Landscape Photography",
+          "Product Photography"
+        ]
+      },
+      {
+        "name": "Fashion Design",
+        "skills": [
+          "Sketching",
+          "Pattern Making",
+          "Sewing",
+          "Textile Knowledge",
+          "Fashion Illustration",
+          "CAD for Fashion (Adobe Illustrator)",
+          "Trend Forecasting"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Personal & Soft Skills",
+    "subdomains": [
+      {
+        "name": "Communication",
+        "skills": [
+          "Verbal Communication",
+          "Written Communication",
+          "Public Speaking",
+          "Presentation Skills",
+          "Active Listening",
+          "Storytelling",
+          "Negotiation",
+          "Interpersonal Skills",
+          "Clarity & Conciseness",
+          "Non-Verbal Communication"
+        ]
+      },
+      {
+        "name": "Leadership & Management",
+        "skills": [
+          "Team Leadership",
+          "Mentoring & Coaching",
+          "Decision Making",
+          "Strategic Thinking",
+          "Delegation",
+          "Motivation",
+          "Conflict Resolution",
+          "Talent Management",
+          "Giving Feedback"
+        ]
+      },
+      {
+        "name": "Productivity & Organization",
+        "skills": [
+          "Time Management",
+          "Task Prioritization",
+          "Organization Skills",
+          "Goal Setting",
+          "Project Management",
+          "Attention to Detail",
+          "Resourcefulness"
+        ]
+      },
+      {
+        "name": "Cognitive Skills",
+        "skills": [
+          "Problem Solving",
+          "Critical Thinking",
+          "Analytical Reasoning",
+          "Creativity",
+          "Innovation",
+          "Adaptability",
+          "Learning Agility",
+          "Curiosity"
+        ]
+      },
+      {
+        "name": "Teamwork & Collaboration",
+        "skills": [
+          "Collaboration",
+          "Teamwork",
+          "Conflict Management",
+          "Relationship Building",
+          "Empathy",
+          "Receiving Feedback",
+          "Diplomacy"
+        ]
+      },
+      {
+        "name": "Emotional Intelligence",
+        "skills": [
+          "Self-Awareness",
+          "Self-Regulation",
+          "Empathy",
+          "Social Skills",
+          "Resilience",
+          "Stress Management",
+          "Positive Attitude"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Science & Engineering",
+    "subdomains": [
+      {
+        "name": "Mechanical Engineering",
+        "skills": [
+          "CAD (SolidWorks, AutoCAD)",
+          "Finite Element Analysis (FEA)",
+          "Computational Fluid Dynamics (CFD)",
+          "Thermodynamics",
+          "Fluid Mechanics",
+          "Manufacturing Processes",
+          "Robotics",
+          "Mechatronics",
+          "HVAC Systems"
+        ]
+      },
+      {
+        "name": "Electrical & Electronics Engineering",
+        "skills": [
+          "Circuit Design",
+          "PCB Design (Altium, Eagle)",
+          "Microcontrollers (Arduino, Raspberry Pi)",
+          "Embedded Systems",
+          "VHDL/Verilog",
+          "Signal Processing",
+          "Power Systems",
+          "Control Systems",
+          "Semiconductors"
+        ]
+      },
+      {
+        "name": "Civil & Structural Engineering",
+        "skills": [
+          "Structural Analysis",
+          "AutoCAD Civil 3D",
+          "Geotechnical Engineering",
+          "Construction Management",
+          "Surveying",
+          "Hydraulics",
+          "Transportation Engineering",
+          "Building Information Modeling (BIM)"
+        ]
+      },
+      {
+        "name": "Chemical Engineering",
+        "skills": [
+          "Process Simulation (Aspen HYSYS)",
+          "Chemical Reactor Design",
+          "Separation Processes",
+          "Process Control",
+          "Safety Engineering (HAZOP)",
+          "Material Science"
+        ]
+      },
+      {
+        "name": "Biology & Life Sciences",
+        "skills": [
+          "Molecular Biology",
+          "Genetics",
+          "Microbiology",
+          "Biochemistry",
+          "Cell Biology",
+          "Bioinformatics",
+          "Laboratory Techniques (PCR, Electrophoresis)",
+          "Scientific Research",
+          "Data Analysis (R, Python)"
+        ]
+      },
+      {
+        "name": "Chemistry",
+        "skills": [
+          "Organic Chemistry",
+          "Inorganic Chemistry",
+          "Analytical Chemistry",
+          "Physical Chemistry",
+          "Spectroscopy (NMR, IR, UV-Vis)",
+          "Chromatography (GC, HPLC)",
+          "Lab Safety",
+          "Chemical Synthesis"
+        ]
+      },
+      {
+        "name": "Physics & Astronomy",
+        "skills": [
+          "Quantum Mechanics",
+          "Thermodynamics",
+          "Electromagnetism",
+          "Astrophysics",
+          "Data Analysis",
+          "Mathematical Modeling",
+          "MATLAB",
+          "LabVIEW"
+        ]
+      },
+      {
+        "name": "Environmental & Sustainability",
+        "skills": [
+          "Environmental Science",
+          "Sustainability Reporting",
+          "Renewable Energy Systems",
+          "Life Cycle Assessment (LCA)",
+          "Environmental Impact Assessment (EIA)",
+          "GIS (Geographic Information Systems)",
+          "Waste Management",
+          "Climate Science"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Healthcare & Medicine",
+    "subdomains": [
+      {
+        "name": "Clinical & Patient Care",
+        "skills": [
+          "Patient Assessment",
+          "Diagnosis",
+          "Treatment Planning",
+          "Nursing Care",
+          "Pharmacology",
+          "Emergency Medicine",
+          "Phlebotomy",
+          "Wound Care",
+          "Medical Terminology",
+          "Patient Education"
+        ]
+      },
+      {
+        "name": "Medical Administration",
+        "skills": [
+          "Electronic Health Records (EHR)",
+          "Medical Billing & Coding (ICD-10, CPT)",
+          "Healthcare Management",
+          "HIPAA Compliance",
+          "Patient Scheduling",
+          "Medical Office Management"
+        ]
+      },
+      {
+        "name": "Diagnostics & Imaging",
+        "skills": [
+          "Radiology (X-ray, CT, MRI)",
+          "Ultrasound",
+          "Medical Laboratory Technology",
+          "Pathology",
+          "Microscopy",
+          "Histology"
+        ]
+      },
+      {
+        "name": "Therapy & Rehabilitation",
+        "skills": [
+          "Physical Therapy",
+          "Occupational Therapy",
+          "Speech Therapy",
+          "Psychotherapy",
+          "Cognitive Behavioral Therapy (CBT)",
+          "Mental Health Counseling"
+        ]
+      },
+      {
+        "name": "Dental",
+        "skills": [
+          "Dental Examinations",
+          "Prophylaxis (Cleaning)",
+          "Radiography",
+          "Restorative Dentistry",
+          "Dental Assisting",
+          "Orthodontics"
+        ]
+      },
+      {
+        "name": "Pharmacy",
+        "skills": [
+          "Dispensing Medication",
+          "Pharmacology",
+          "Medication Therapy Management",
+          "Compounding",
+          "Patient Counseling"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Education & Academia",
+    "subdomains": [
+      {
+        "name": "Teaching & Instruction",
+        "skills": [
+          "Curriculum Development",
+          "Lesson Planning",
+          "Classroom Management",
+          "Differentiated Instruction",
+          "E-Learning",
+          "Learning Management Systems (LMS)",
+          "Pedagogy",
+          "Student Assessment"
+        ]
+      },
+      {
+        "name": "Academic Research",
+        "skills": [
+          "Research Methodology",
+          "Qualitative Research",
+          "Quantitative Research",
+          "Statistical Analysis (SPSS, R)",
+          "Literature Review",
+          "Academic Writing",
+          "Grant Writing",
+          "Data Collection"
+        ]
+      },
+      {
+        "name": "Library & Information Science",
+        "skills": [
+          "Cataloging",
+          "Archiving",
+          "Information Retrieval",
+          "Database Management",
+          "Digital Asset Management"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Languages",
+    "subdomains": [
+      {
+        "name": "Modern Languages",
+        "skills": [
+          "English",
+          "Mandarin Chinese",
+          "Spanish",
+          "Hindi",
+          "Arabic",
+          "French",
+          "German",
+          "Russian",
+          "Portuguese",
+          "Japanese",
+          "Korean"
+        ]
+      },
+      {
+        "name": "Translation & Interpretation",
+        "skills": [
+          "Translation",
+          "Interpretation",
+          "Localization",
+          "CAT Tools (SDL Trados, MemoQ)",
+          "Subtitling"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Trades & Manual Skills",
+    "subdomains": [
+      {
+        "name": "Construction & Carpentry",
+        "skills": [
+          "Carpentry",
+          "Framing",
+          "Drywall Installation",
+          "Masonry",
+          "Concrete Work",
+          "Blueprint Reading"
+        ]
+      },
+      {
+        "name": "Electrical & Mechanical",
+        "skills": [
+          "Electrical Wiring",
+          "Plumbing",
+          "HVAC Installation & Repair",
+          "Welding",
+          "Machining",
+          "Automotive Repair"
+        ]
+      },
+      {
+        "name": "Culinary Arts",
+        "skills": [
+          "Cooking Techniques",
+          "Baking",
+          "Pastry",
+          "Food Safety & Sanitation",
+          "Menu Planning",
+          "Kitchen Management"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Legal",
+    "subdomains": [
+      {
+        "name": "Corporate Law",
+        "skills": [
+          "Corporate Governance",
+          "Securities Law",
+          "Venture Capital Financing",
+          "Private Equity",
+          "Corporate Restructuring",
+          "Compliance Audits"
+        ]
+      },
+      {
+        "name": "Intellectual Property Law",
+        "skills": [
+          "Patent Prosecution",
+          "Trademark Law",
+          "Copyright Law",
+          "IP Litigation",
+          "Trade Secret Law",
+          "Licensing Agreements"
+        ]
+      },
+      {
+        "name": "Litigation & Dispute Resolution",
+        "skills": [
+          "Civil Litigation",
+          "Commercial Litigation",
+          "Arbitration",
+          "Mediation",
+          "E-Discovery",
+          "Legal Research (Westlaw, LexisNexis)",
+          "Deposition Skills"
+        ]
+      },
+      {
+        "name": "Other Legal Fields",
+        "skills": [
+          "Real Estate Law",
+          "Environmental Law",
+          "Tax Law",
+          "Family Law",
+          "Criminal Law",
+          "Immigration Law",
+          "Healthcare Law",
+          "Labor & Employment Law",
+          "Bankruptcy Law"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Arts & Humanities",
+    "subdomains": [
+      {
+        "name": "History",
+        "skills": [
+          "Archival Research",
+          "Historiography",
+          "Oral History",
+          "Paleography",
+          "Cultural History"
+        ]
+      },
+      {
+        "name": "Philosophy",
+        "skills": [
+          "Ethical Analysis",
+          "Logic & Critical Reasoning",
+          "Metaphysics",
+          "Epistemology",
+          "Political Philosophy"
+        ]
+      },
+      {
+        "name": "Performing Arts",
+        "skills": [
+          "Acting",
+          "Directing",
+          "Playwriting",
+          "Stage Management",
+          "Musical Theatre Performance",
+          "Dance (Ballet, Modern, Jazz)",
+          "Choreography"
+        ]
+      },
+      {
+        "name": "Museum & Curatorial Studies",
+        "skills": [
+          "Curation",
+          "Exhibition Design",
+          "Museum Collections Management",
+          "Art Conservation & Restoration",
+          "Art History"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Supply Chain & Logistics",
+    "subdomains": [
+      {
+        "name": "Logistics Management",
+        "skills": [
+          "Freight Management",
+          "Warehouse Management Systems (WMS)",
+          "Transportation Management Systems (TMS)",
+          "Last-Mile Delivery Optimization",
+          "Cold Chain Logistics"
+        ]
+      },
+      {
+        "name": "Procurement & Sourcing",
+        "skills": [
+          "Strategic Sourcing",
+          "Supplier Relationship Management (SRM)",
+          "Contract Negotiation",
+          "Global Sourcing",
+          "E-Procurement"
+        ]
+      },
+      {
+        "name": "Inventory & Operations",
+        "skills": [
+          "Inventory Optimization",
+          "Demand Planning",
+          "Sales and Operations Planning (S&OP)",
+          "Materials Requirement Planning (MRP)",
+          "Supply Chain Analytics"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Manufacturing & Industrial",
+    "subdomains": [
+      {
+        "name": "Manufacturing Processes",
+        "skills": [
+          "Computer-Aided Manufacturing (CAM)",
+          "CNC Machining",
+          "Additive Manufacturing (3D Printing)",
+          "Injection Molding"
+        ]
+      },
+      {
+        "name": "Quality & Process Improvement",
+        "skills": [
+          "Lean Six Sigma",
+          "Kaizen",
+          "Total Quality Management (TQM)",
+          "Statistical Process Control (SPC)",
+          "Root Cause Analysis"
+        ]
+      },
+      {
+        "name": "Industrial Automation",
+        "skills": [
+          "Programmable Logic Controllers (PLC)",
+          "Human-Machine Interface (HMI)",
+          "SCADA Systems",
+          "Industrial Robotics",
+          "Process Automation"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Aerospace & Aviation",
+    "subdomains": [
+      {
+        "name": "Aerospace Engineering",
+        "skills": [
+          "Aerodynamics",
+          "Astrodynamics",
+          "Propulsion Systems",
+          "Structural Dynamics & Aeroelasticity",
+          "Flight Control Systems (GNC)",
+          "Spacecraft Design"
+        ]
+      },
+      {
+        "name": "Aviation Operations",
+        "skills": [
+          "Flight Planning & Dispatch",
+          "Air Traffic Control",
+          "Aviation Safety Management Systems (SMS)",
+          "Aircraft Maintenance (A&P)",
+          "Airline Operations Management"
+        ]
+      },
+      {
+        "name": "Space Systems",
+        "skills": [
+          "Satellite Communications",
+          "Remote Sensing",
+          "Launch Vehicle Integration",
+          "Mission Operations",
+          "Planetary Science"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Advanced Sciences",
+    "subdomains": [
+      {
+        "name": "Quantum Computing",
+        "skills": [
+          "Quantum Algorithms (Shor's, Grover's)",
+          "Quantum Information Theory",
+          "Qiskit",
+          "Cirq",
+          "Quantum Machine Learning",
+          "Quantum Cryptography"
+        ]
+      },
+      {
+        "name": "Materials Science",
+        "skills": [
+          "Nanomaterials",
+          "Polymer Science",
+          "Ceramics",
+          "Metallurgy",
+          "Semiconductor Fabrication",
+          "Characterization (SEM, TEM, XRD)"
+        ]
+      },
+      {
+        "name": "Neuroscience",
+        "skills": [
+          "Computational Neuroscience",
+          "Cognitive Neuroscience",
+          "Neuroimaging (fMRI, EEG)",
+          "Electrophysiology",
+          "Optogenetics"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Biotechnology & Pharmaceuticals",
+    "subdomains": [
+      {
+        "name": "Biopharmaceutical Development",
+        "skills": [
+          "Genomic Sequencing (NGS)",
+          "CRISPR-Cas9 Gene Editing",
+          "Cell Culture & Fermentation",
+          "Protein Purification & Chromatography",
+          "Drug Discovery & Development",
+          "Formulation Science"
+        ]
+      },
+      {
+        "name": "Clinical & Regulatory Affairs",
+        "skills": [
+          "Clinical Trial Management",
+          "Good Clinical Practice (GCP)",
+          "Regulatory Submissions (FDA, EMA)",
+          "Pharmacovigilance",
+          "Biostatistics"
+        ]
+      },
+      {
+        "name": "Computational Biology",
+        "skills": [
+          "Bioinformatics Tools (BLAST, ClustalW)",
+          "Genomic Data Analysis",
+          "Proteomics",
+          "Metabolomics",
+          "Systems Biology"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Energy & Environment",
+    "subdomains": [
+      {
+        "name": "Renewable Energy",
+        "skills": [
+          "Solar Power Systems (PV)",
+          "Wind Turbine Technology",
+          "Energy Storage & Battery Systems",
+          "Geothermal Energy",
+          "Hydropower Engineering",
+          "Bioenergy"
+        ]
+      },
+      {
+        "name": "Environmental Management",
+        "skills": [
+          "Environmental Policy",
+          "Conservation Science",
+          "Hydrology",
+          "Air Quality Management",
+          "Carbon Footprint Analysis"
+        ]
+      },
+      {
+        "name": "Energy Grid & Utilities",
+        "skills": [
+          "Smart Grid Technology",
+          "Power Distribution",
+          "Energy Trading",
+          "Utility Regulation",
+          "Energy Efficiency Auditing"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Cross-Disciplinary Fields",
+    "subdomains": [
+      {
+        "name": "Human-Computer Interaction (HCI)",
+        "skills": [
+          "User-Centered Design",
+          "Experience Design (XD)",
+          "Cognitive Ergonomics",
+          "Voice User Interface (VUI) Design",
+          "Haptic Technology"
+        ]
+      },
+      {
+        "name": "Ethics & Governance",
+        "skills": [
+          "AI Ethics & Safety",
+          "Data Privacy",
+          "Algorithmic Fairness",
+          "Corporate Social Responsibility (CSR)",
+          "Sustainability Leadership",
+          "Digital Governance"
+        ]
+      },
+      {
+        "name": "Data & Society",
+        "skills": [
+          "Computational Social Science",
+          "Digital Humanities",
+          "Network Analysis",
+          "Survey Design & Analysis"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Agriculture & Food Science",
+    "subdomains": [
+      {
+        "name": "Agronomy & Crop Science",
+        "skills": [
+          "Precision Agriculture",
+          "Soil Science",
+          "Crop Rotation Planning",
+          "Integrated Pest Management (IPM)",
+          "Hydroponics & Aquaponics",
+          "Vertical Farming"
+        ]
+      },
+      {
+        "name": "Food Science & Technology",
+        "skills": [
+          "Food Chemistry",
+          "Food Microbiology",
+          "Sensory Evaluation",
+          "Food Processing & Preservation",
+          "HACCP (Hazard Analysis and Critical Control Points)",
+          "Product Development (Food)"
+        ]
+      },
+      {
+        "name": "Animal Science",
+        "skills": [
+          "Animal Husbandry",
+          "Veterinary Medicine",
+          "Animal Nutrition",
+          "Genetics & Breeding",
+          "Aquaculture"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Hospitality & Tourism",
+    "subdomains": [
+      {
+        "name": "Hotel & Resort Management",
+        "skills": [
+          "Front Office Operations",
+          "Housekeeping Management",
+          "Revenue Management",
+          "Property Management Systems (PMS)",
+          "Guest Relations Management"
+        ]
+      },
+      {
+        "name": "Event Management",
+        "skills": [
+          "Event Planning & Coordination",
+          "Venue Management",
+          "Catering Management",
+          "Live Event Production",
+          "Virtual & Hybrid Event Planning"
+        ]
+      },
+      {
+        "name": "Travel & Tourism",
+        "skills": [
+          "Tour Operations",
+          "Travel Agency Management",
+          "Sustainable Tourism",
+          "Destination Marketing",
+          "Global Distribution Systems (GDS)"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Media & Communications",
+    "subdomains": [
+      {
+        "name": "Journalism",
+        "skills": [
+          "Investigative Reporting",
+          "Broadcast Journalism",
+          "Photojournalism",
+          "Data Journalism",
+          "Media Ethics & Law"
+        ]
+      },
+      {
+        "name": "Public Relations",
+        "skills": [
+          "Media Relations",
+          "Crisis Communications",
+          "Corporate Communications",
+          "Press Release Writing",
+          "Influencer Marketing"
+        ]
+      },
+      {
+        "name": "Broadcasting",
+        "skills": [
+          "Radio Production",
+          "Television Production",
+          "Live Broadcasting",
+          "Sound Engineering",
+          "Teleprompter Operation"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Retail & E-commerce",
+    "subdomains": [
+      {
+        "name": "Retail Management",
+        "skills": [
+          "Store Operations",
+          "Visual Merchandising",
+          "Loss Prevention",
+          "Retail Buying",
+          "Inventory Control"
+        ]
+      },
+      {
+        "name": "E-commerce",
+        "skills": [
+          "E-commerce Platform Management (Shopify, Magento)",
+          "Conversion Rate Optimization (CRO)",
+          "Customer Journey Analytics",
+          "Marketplace Management (Amazon, eBay)",
+          "Dropshipping"
+        ]
+      },
+      {
+        "name": "Customer Experience",
+        "skills": [
+          "Omnichannel Strategy",
+          "Customer Service Management",
+          "Loyalty Programs",
+          "Personalization Strategy"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Real Estate",
+    "subdomains": [
+      {
+        "name": "Real Estate Sales & Brokerage",
+        "skills": [
+          "Real Estate Licensing",
+          "Property Valuation",
+          "Real Estate Negotiation",
+          "Lead Nurturing",
+          "CRM for Real Estate (e.g., Zillow Premier Agent)"
+        ]
+      },
+      {
+        "name": "Property Management",
+        "skills": [
+          "Lease Administration",
+          "Tenant Relations",
+          "Building Maintenance Management",
+          "Property Accounting",
+          "Fair Housing Laws"
+        ]
+      },
+      {
+        "name": "Real Estate Development & Investment",
+        "skills": [
+          "Site Acquisition",
+          "Zoning & Entitlement",
+          "Construction Project Management",
+          "Real Estate Finance",
+          "Market Analysis (Real Estate)"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Insurance",
+    "subdomains": [
+      {
+        "name": "Underwriting",
+        "skills": [
+          "Risk Analysis",
+          "Policy Issuance",
+          "Pricing Models",
+          "Underwriting Software (e.g., Guidewire)",
+          "Regulatory Compliance (Insurance)"
+        ]
+      },
+      {
+        "name": "Claims",
+        "skills": [
+          "Claims Adjusting",
+          "Fraud Investigation",
+          "Damage Assessment",
+          "Settlement Negotiation",
+          "Claims Processing Software"
+        ]
+      },
+      {
+        "name": "Actuarial Science",
+        "skills": [
+          "Probability & Statistics",
+          "Financial Mathematics",
+          "Stochastic Modeling",
+          "Actuarial Software (e.g., Prophet, Axis)",
+          "Rate Making"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Social Sciences",
+    "subdomains": [
+      {
+        "name": "Psychology",
+        "skills": [
+          "Clinical Psychology",
+          "Cognitive Psychology",
+          "Developmental Psychology",
+          "Social Psychology",
+          "Experimental Design",
+          "Psychometric Testing"
+        ]
+      },
+      {
+        "name": "Sociology",
+        "skills": [
+          "Social Theory",
+          "Urban Sociology",
+          "Criminology",
+          "Demography",
+          "Ethnography"
+        ]
+      },
+      {
+        "name": "Economics",
+        "skills": [
+          "Microeconomics",
+          "Macroeconomics",
+          "Econometrics",
+          "Behavioral Economics",
+          "Economic Modeling"
+        ]
+      },
+      {
+        "name": "Political Science",
+        "skills": [
+          "International Relations",
+          "Comparative Politics",
+          "Public Policy Analysis",
+          "Political Campaign Management",
+          "Geopolitical Analysis"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Public Sector & Non-Profit",
+    "subdomains": [
+      {
+        "name": "Public Administration",
+        "skills": [
+          "Public Budgeting",
+          "Government Affairs",
+          "Urban Planning",
+          "Public-Private Partnerships",
+          "Emergency Management"
+        ]
+      },
+      {
+        "name": "Non-Profit Management",
+        "skills": [
+          "Non-Profit Fundraising",
+          "Grant Management",
+          "Volunteer Management",
+          "Program Evaluation",
+          "Advocacy & Lobbying"
+        ]
+      },
+      {
+        "name": "Social Work",
+        "skills": [
+          "Case Management",
+          "Community Outreach",
+          "Crisis Intervention",
+          "Child Welfare",
+          "Mental Health Advocacy"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Sports, Fitness & Wellness",
+    "subdomains": [
+      {
+        "name": "Sports Coaching & Performance",
+        "skills": [
+          "Sports Coaching",
+          "Strength and Conditioning",
+          "Sports Analytics",
+          "Biomechanics",
+          "Sports Psychology"
+        ]
+      },
+      {
+        "name": "Fitness & Personal Training",
+        "skills": [
+          "Personal Training",
+          "Group Fitness Instruction",
+          "Yoga Instruction",
+          "Pilates Instruction",
+          "Nutrition Coaching"
+        ]
+      },
+      {
+        "name": "Wellness & Alternative Medicine",
+        "skills": [
+          "Massage Therapy",
+          "Acupuncture",
+          "Chiropractic",
+          "Holistic Health",
+          "Mindfulness & Meditation"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Skilled Trades (Advanced)",
+    "subdomains": [
+      {
+        "name": "Advanced Manufacturing & Machining",
+        "skills": [
+          "CNC Programming (G-code, M-code)",
+          "Robotic Welding",
+          "Metrology & Geometric Dimensioning and Tolerancing (GD&T)",
+          "Laser Cutting & Engraving",
+          "Waterjet Cutting"
+        ]
+      },
+      {
+        "name": "Specialized Automotive Technology",
+        "skills": [
+          "Electric Vehicle (EV) Maintenance",
+          "Advanced Driver-Assistance Systems (ADAS) Calibration",
+          "Diesel Engine Technology",
+          "Auto Body Repair & Refinishing",
+          "Performance Tuning"
+        ]
+      },
+      {
+        "name": "Renewable Energy Technology",
+        "skills": [
+          "Solar Panel Installation",
+          "Wind Turbine Technician",
+          "Energy Auditing",
+          "Home Energy Systems (e.g., Tesla Powerwall)"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Maritime & Naval",
+    "subdomains": [
+      {
+        "name": "Naval Architecture & Marine Engineering",
+        "skills": [
+          "Ship Design & Hydrodynamics",
+          "Marine Propulsion Systems",
+          "Offshore Engineering",
+          "Naval Combat Systems",
+          "Marine CAD/CAM (e.g., ShipConstructor, AVEVA Marine)"
+        ]
+      },
+      {
+        "name": "Maritime Operations",
+        "skills": [
+          "Maritime Logistics & Port Management",
+          "Navigation & Seamanship",
+          "Maritime Law",
+          "Vessel Traffic Services (VTS)",
+          "Marine Surveying"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Publishing & Literary",
+    "subdomains": [
+      {
+        "name": "Editorial",
+        "skills": [
+          "Developmental Editing",
+          "Copyediting",
+          "Proofreading",
+          "Acquisitions Editing",
+          "Fact-Checking"
+        ]
+      },
+      {
+        "name": "Publishing Operations",
+        "skills": [
+          "Literary Agenting",
+          "Rights Management",
+          "Book Marketing & Publicity",
+          "Typesetting & Book Design",
+          "Digital Publishing (eBooks, Audiobooks)"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Robotics & Automation",
+    "subdomains": [
+      {
+        "name": "Robotics Engineering",
+        "skills": [
+          "Robot Operating System (ROS)",
+          "SLAM (Simultaneous Localization and Mapping)",
+          "Motion Planning",
+          "Control Systems Design",
+          "Robotic Kinematics & Dynamics"
+        ]
+      },
+      {
+        "name": "Industrial Automation & PLC",
+        "skills": [
+          "PLC Programming (Ladder Logic, Structured Text)",
+          "SCADA/HMI Development",
+          "Industrial Networks (e.g., EtherNet/IP, Profibus)",
+          "Machine Vision Systems",
+          "Automated Guided Vehicles (AGVs)"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "FinTech & Financial Services",
+    "subdomains": [
+      {
+        "name": "Quantitative Finance",
+        "skills": [
+          "Algorithmic Trading",
+          "Financial Modeling & Simulation",
+          "Risk Modeling (VaR, Monte Carlo)",
+          "High-Frequency Trading (HFT) Systems",
+          "Quantitative Analysis"
+        ]
+      },
+      {
+        "name": "Blockchain & Digital Assets",
+        "skills": [
+          "Decentralized Finance (DeFi) Protocols",
+          "Cryptocurrency Analysis",
+          "Smart Contract Auditing",
+          "Tokenomics",
+          "Digital Wallets & Custody Solutions"
+        ]
+      },
+      {
+        "name": "Banking & Payments Technology",
+        "skills": [
+          "Payment Gateway Integration",
+          "Core Banking Systems",
+          "Digital Banking Platforms",
+          "Anti-Money Laundering (AML) Technology",
+          "RegTech"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Geospatial & Earth Sciences",
+    "subdomains": [
+      {
+        "name": "Geographic Information Systems (GIS)",
+        "skills": [
+          "GIS Software (ArcGIS, QGIS)",
+          "Spatial Analysis",
+          "Remote Sensing & Image Analysis",
+          "Cartography & Data Visualization",
+          "Geodatabase Management"
+        ]
+      },
+      {
+        "name": "Geology & Geophysics",
+        "skills": [
+          "Seismic Interpretation",
+          "Petroleum Geology",
+          "Hydrogeology",
+          "Mineral Exploration",
+          "Geotechnical Investigation"
+        ]
+      },
+      {
+        "name": "Meteorology & Climate Science",
+        "skills": [
+          "Weather Forecasting",
+          "Climate Modeling",
+          "Atmospheric Science",
+          "Oceanography"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "EdTech & Instructional Design",
+    "subdomains": [
+      {
+        "name": "Instructional Design",
+        "skills": [
+          "ADDIE Model",
+          "E-learning Authoring Tools (Articulate Storyline, Adobe Captivate)",
+          "Learning Experience Design (LXD)",
+          "Gamification in Learning",
+          "Corporate Training & Development"
+        ]
+      },
+      {
+        "name": "Education Technology",
+        "skills": [
+          "Learning Management System (LMS) Administration",
+          "Adaptive Learning Technologies",
+          "Virtual & Augmented Reality in Education",
+          "Student Information Systems (SIS)"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Creative Technology",
+    "subdomains": [
+      {
+        "name": "Interactive Media",
+        "skills": [
+          "Creative Coding (Processing, p5.js)",
+          "TouchDesigner",
+          "Max/MSP/Jitter",
+          "Interactive Installation",
+          "Projection Mapping"
+        ]
+      },
+      {
+        "name": "Physical Computing",
+        "skills": [
+          "Arduino",
+          "Raspberry Pi",
+          "Sensor Integration",
+          "Wearable Technology",
+          "Internet of Things (IoT) for Art"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Specialized Engineering",
+    "subdomains": [
+      {
+        "name": "Biomedical Engineering",
+        "skills": [
+          "Medical Device Design",
+          "Biomaterials",
+          "Biomechanics",
+          "Tissue Engineering",
+          "Bioinstrumentation"
+        ]
+      },
+      {
+        "name": "Nuclear Engineering",
+        "skills": [
+          "Reactor Physics",
+          "Radiation Detection & Measurement",
+          "Nuclear Safety & Security",
+          "Radiological Engineering",
+          "Nuclear Fuel Cycle"
+        ]
+      },
+      {
+        "name": "Acoustical Engineering",
+        "skills": [
+          "Architectural Acoustics",
+          "Audio Engineering",
+          "Noise Control",
+          "Underwater Acoustics",
+          "Vibration Analysis"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Philanthropy & Social Impact",
+    "subdomains": [
+      {
+        "name": "Social Impact Strategy",
+        "skills": [
+          "Theory of Change",
+          "Impact Measurement & Management (IMM)",
+          "Social Enterprise Management",
+          "Sustainable Development Goals (SDGs)",
+          "Community Development"
+        ]
+      },
+      {
+        "name": "Philanthropic Services",
+        "skills": [
+          "Impact Investing",
+          "Corporate Philanthropy",
+          "Foundation Management",
+          "Major Gift Fundraising",
+          "Donor Relations"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Consumer Goods & FMCG",
+    "subdomains": [
+      {
+        "name": "Brand & Product Management",
+        "skills": [
+          "CPG Brand Management",
+          "Product Lifecycle Management",
+          "Category Management",
+          "Consumer Insights",
+          "Packaging Design"
+        ]
+      },
+      {
+        "name": "Supply Chain & Distribution",
+        "skills": [
+          "FMCG Logistics",
+          "Retail Distribution",
+          "Trade Marketing",
+          "Demand & Supply Planning",
+          "Vendor Management"
+        ]
+      }
+    ]
+  },
+  {
+    "domain": "Telecommunications",
+    "subdomains": [
+      {
+        "name": "Network Engineering",
+        "skills": [
+          "Network Architecture",
+          "Optical Networking (Fiber Optics)",
+          "Microwave Transmission",
+          "Voice over IP (VoIP)",
+          "Network Security Operations"
+        ]
+      },
+      {
+        "name": "Wireless Communication",
+        "skills": [
+          "5G/LTE Technology",
+          "Radio Frequency (RF) Engineering",
+          "Cellular Network Optimization",
+          "Wi-Fi Networking",
+          "Satellite Communications (SatCom)"
+        ]
+      }
+    ]
+  }
+]
