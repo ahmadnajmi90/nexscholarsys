@@ -12,6 +12,7 @@ import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
 import ForceTermsModal from '../Components/ForceTermsModal';
 import TutorialModal from '../Components/Tutorial/TutorialModal';
+import StickyBanner from '../Components/ui/StickyBanner';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -213,6 +214,15 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     const isActive = (route) => url.startsWith(route); // Check if the current route matches
 
+    // Banner configuration
+    const bannerConfig = {
+        message: "New profile information skills is updated, please review and update your profile.",
+        type: "info", // 'info', 'warning', 'success', 'error'
+        dismissible: true,
+        persistKey: "skills-update-banner-2025", // Change this key when you want to show the banner again
+        hideOnScroll: false // Set to true if you want banner to hide on scroll
+    };
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Toast notifications */}
@@ -239,6 +249,15 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                         },
                     },
                 }}
+            />
+            
+            {/* Sticky Banner */}
+            <StickyBanner 
+                message={bannerConfig.message}
+                type={bannerConfig.type}
+                dismissible={bannerConfig.dismissible}
+                persistKey={bannerConfig.persistKey}
+                hideOnScroll={bannerConfig.hideOnScroll}
             />
             
             {/* New Two-Part Sidebar System for Desktop */}
@@ -271,7 +290,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 >
                     {TopMenuOpen && <TopMenu />}
                     <Head title={title} />
-                    <div className={`${!title ? 'px-4 py-2' : 'p-4'} bg-white shadow min-h-screen`}>
+                    <div className={`${!title ? 'px-4 py-2' : 'p-4'} bg-white shadow min-h-screen pt-16`}>
                         {title && (
                             // --- START: MODIFIED HEADER ---
                             <div className="mb-4">
@@ -326,12 +345,12 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 </div>
             ) : (
                 // Mobile-specific content area
-                <div>
+                <div className="pt-16">
                     <Head title={title} />
                     <div className="pb-20">
                         {/* Fixed sidebar toggle button for mobile */}
                         <button
-                            className="fixed top-4 right-4 z-50 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
+                            className="fixed top-20 right-4 z-40 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
                             onClick={toggleSidebar}
                         >
                             {isSidebarOpen ? '✕' : '☰'}
