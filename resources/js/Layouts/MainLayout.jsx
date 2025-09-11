@@ -345,12 +345,12 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 </div>
             ) : (
                 // Mobile-specific content area
-                <div className="pt-16">
+                <div>
                     <Head title={title} />
                     <div className="pb-20">
                         {/* Fixed sidebar toggle button for mobile */}
                         <button
-                            className="fixed top-20 right-4 z-40 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
+                            className="fixed top-6 right-4 z-40 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
                             onClick={toggleSidebar}
                         >
                             {isSidebarOpen ? '✕' : '☰'}

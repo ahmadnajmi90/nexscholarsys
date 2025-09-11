@@ -10,6 +10,9 @@ import ConnectionButton from "@/Components/ConnectionButton";
 import SearchBar from "@/Components/SearchBar";
 import Pagination from "@/Components/Pagination";
 import LoadingSkeletonCard from "./LoadingSkeletonCard";
+import SkillsSummary from "@/Components/SkillsSummary";
+import TopSkillsBadges from "@/Components/TopSkillsBadges";
+import SkillsModal from "@/Components/SkillsModal";
 
 // Helper function to capitalize each skill
 const capitalize = (s) => {
@@ -32,6 +35,7 @@ const AcademicianProfileCard = ({
   const [showRecommendationModal, setShowRecommendationModal] = useState(false);
   const [recommendingProfile, setRecommendingProfile] = useState(null);
   const [loadingProfileData, setLoadingProfileData] = useState(false);
+  const [showSkillsModal, setShowSkillsModal] = useState(false);
   
   // Search state - removed as it's now handled by SearchBar component
   
@@ -581,32 +585,26 @@ const AcademicianProfileCard = ({
                   {/* Skills */}
                   <div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">Skills</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
-                        selectedProfile.skills.map((skill) => {
-                          // Construct hierarchical name
-                          let displayName = skill.name;
-                          if (skill.subdomain && skill.subdomain.domain) {
-                            displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
-                          } else if (skill.full_name) {
-                            displayName = skill.full_name;
-                          } else {
-                            displayName = capitalize(skill.name);
-                          }
-                          
-                          return (
-                            <span 
-                              key={skill.id} 
-                              className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
-                            >
-                              {displayName}
-                            </span>
-                          );
-                        })
-                      ) : (
-                        <p className="text-gray-600">No skills listed</p>
-                      )}
-                    </div>
+                    {Array.isArray(selectedProfile.skills) && selectedProfile.skills.length > 0 ? (
+                      <div className="space-y-3">
+                        {/* Skills Summary */}
+                        <SkillsSummary 
+                          skills={selectedProfile.skills}
+                          className=""
+                          textClass="text-sm font-medium text-gray-700"
+                        />
+                        
+                        {/* Top Skills Badges with View All */}
+                        <TopSkillsBadges
+                          skills={selectedProfile.skills}
+                          maxSkills={5}
+                          onViewAll={() => setShowSkillsModal(true)}
+                          showViewAllButton={selectedProfile.skills.length > 5}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-gray-600">No skills listed</p>
+                    )}
                   </div>
                   
                   {/* Style of Supervision */}
@@ -752,6 +750,16 @@ const AcademicianProfileCard = ({
           academician={recommendingProfile}
           onClose={() => setShowRecommendationModal(false)}
           onSuccess={handleRecommendationSuccess}
+        />
+      )}
+
+      {/* Skills Modal */}
+      {showSkillsModal && selectedProfile && (
+        <SkillsModal
+          isOpen={showSkillsModal}
+          onClose={() => setShowSkillsModal(false)}
+          skills={selectedProfile.skills || []}
+          profileName={selectedProfile.full_name}
         />
       )}
     </div>

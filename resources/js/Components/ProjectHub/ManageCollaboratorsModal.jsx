@@ -432,7 +432,7 @@ export default function ManageCollaboratorsModal({ show, onClose, context, conte
                             ) : (
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
                                     <p className="text-sm text-yellow-700">
-                                        You have no available connections to invite. Connect with other users first.
+                                        You have no available connections to invite. Add connections and <span className="font-bold underline">tag them as collaborators</span> to enable invitations.
                                     </p>
                                 </div>
                             )}
