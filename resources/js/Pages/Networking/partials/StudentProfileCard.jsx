@@ -148,7 +148,7 @@ const ProfileGridWithDualFilter = ({
     const uni = universitiesList.find((u) => u.id === id);
     return {
       value: id ? id.toString() : "",
-      label: uni ? uni.short_name : "Unknown University",
+      label: uni ? uni.short_name : "Not registered yet",
     };
   });
 
@@ -191,12 +191,12 @@ const ProfileGridWithDualFilter = ({
 
   const getUniversityNameById = (id) => {
     const university = universitiesList.find((u) => u.id === id);
-    return university ? university.full_name : "Unknown University";
+    return university ? university.full_name : "Not registered yet";
   };
 
   const getFacultyNameById = (id) => {
     const faculty = faculties.find((u) => u.id === id);
-    return faculty ? faculty.name : "Unknown University";
+    return faculty ? faculty.name : "Not registered yet";
   };
 
   // Function to handle recommendation button click
@@ -326,7 +326,7 @@ const ProfileGridWithDualFilter = ({
               >
                 {/* University Badge */}
                 <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
-                  {universitiesList.find((u) => u.id === profile.university)?.short_name || "Unknown University"}
+                  {universitiesList.find((u) => u.id === profile.university)?.short_name || "Not registered yet"}
                 </div>
 
                 {!isUndergraduateList && (
