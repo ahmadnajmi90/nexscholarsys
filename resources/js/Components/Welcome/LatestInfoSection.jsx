@@ -133,7 +133,6 @@ const LatestInfoSection = ({ grants = [], scholarships = [], events = [] }) => {
         description: grant.description ? grant.description.replace(/<[^>]*>/g, '').trim() : 'No description available.',
         keywords: Array.isArray(grant.grant_theme) && grant.grant_theme.length > 0 ? grant.grant_theme : ['Research'],
         url: grant.url,
-        type: 'grant',
         application_deadline: grant.application_deadline
     }));
 
@@ -151,7 +150,6 @@ const LatestInfoSection = ({ grants = [], scholarships = [], events = [] }) => {
             ? scholarship.scholarship_type
             : [scholarship.scholarship_type || 'Education'],
         url: scholarship.url,
-        type: 'scholarship',
         application_deadline: scholarship.application_deadline
     }));
 

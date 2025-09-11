@@ -190,6 +190,8 @@ export default function ResearchFieldsTab() {
                 if (selectedField && selectedField.id === currentField.id) {
                     setSelectedField(null);
                 }
+
+                fetchFields();
             },
             onError: (errors) => {
                 // Fallback for client-side or network errors
@@ -243,6 +245,8 @@ export default function ResearchFieldsTab() {
                 if (selectedArea && selectedArea.id === currentArea.id) {
                     setSelectedArea(null);
                 }
+
+                fetchAreas();
             },
             onError: (errors) => {
                 // Fallback for client-side or network errors
@@ -291,6 +295,8 @@ export default function ResearchFieldsTab() {
 
                 // Always close the modal after the action
                 setModalStates(prev => ({ ...prev, domainDelete: false }));
+
+                fetchDomains();
             },
             onError: (errors) => {
                 // Fallback for client-side or network errors

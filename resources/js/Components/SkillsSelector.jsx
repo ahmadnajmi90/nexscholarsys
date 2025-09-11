@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
+import SelectedSkillsDisplay from '@/Components/SelectedSkillsDisplay';
 
 export default function SkillsSelector({ 
   value = [], 
@@ -640,54 +641,14 @@ export default function SkillsSelector({
         required={required}
       />
       
-      {/* Selected Skills Display */}
-      {selectedSkills.length > 0 && (
-        <div className="mt-2 mb-3">
-          <div className={`flex flex-wrap gap-2 ${isMobile ? 'gap-3' : 'gap-2'}`}>
-            {selectedSkills.map(skillId => {
-              const skill = skillDetails[skillId];
-              if (!skill) return null;
-              
-              return (
-                <div
-                  key={skillId}
-                  className={`inline-flex items-center rounded-full text-sm bg-blue-100 text-blue-800 ${
-                    isMobile ? 'px-4 py-2 text-base' : 'px-3 py-1'
-                  }`}
-                >
-                  <span className="mr-2">
-                    {isMobile ? (
-                      // Mobile: Show full hierarchy on separate lines
-                      <div className="text-left">
-                        <div className="font-medium">{skill.name}</div>
-                        <div className="text-xs text-blue-600 opacity-75">
-                          {skill.subdomain?.domain?.name} - {skill.subdomain?.name}
-                        </div>
-                      </div>
-                    ) : (
-                      // Desktop: Show single line hierarchy
-                      `${skill.subdomain?.domain?.name} - ${skill.subdomain?.name} - ${skill.name}`
-                    )}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSkill(skillId)}
-                    className={`flex-shrink-0 rounded-full inline-flex items-center justify-center text-blue-400 hover:bg-blue-200 hover:text-blue-600 focus:outline-none focus:bg-blue-500 focus:text-white ${
-                      isMobile ? 'ml-3 h-6 w-6' : 'ml-1 h-4 w-4'
-                    }`}
-                    aria-label={`Remove ${skill.name}`}
-                  >
-                    <span className="sr-only">Remove skill</span>
-                    <svg className={isMobile ? 'h-3 w-3' : 'h-2 w-2'} stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                      <path strokeLinecap="round" strokeWidth="1.5" d="m1 1 6 6m0-6-6 6" />
-                    </svg>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Selected Skills Display - New Hierarchical Layout */}
+      <SelectedSkillsDisplay 
+        selectedSkills={selectedSkills}
+        skillDetails={skillDetails}
+        onRemoveSkill={handleRemoveSkill}
+        showCounts={true}
+        showRemoveButtons={true}
+      />
 
       {/* Skills Selector Dropdown */}
       <div className="relative">
@@ -1103,12 +1064,6 @@ export default function SkillsSelector({
       </div>
 
       <InputError className="mt-2" message={error} />
-      
-      {selectedSkills.length > 0 && (
-        <p className="mt-1 text-sm text-gray-500">
-          {selectedSkills.length} skill{selectedSkills.length !== 1 ? 's' : ''} selected
-        </p>
-      )}
     </div>
   );
 }
