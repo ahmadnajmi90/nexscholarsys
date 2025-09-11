@@ -24,6 +24,7 @@ class InjectUserRoles
             'canPostGrants' => $user ? BouncerFacade::can('post-grants') : false,
             'canPostProjects' => $user ? BouncerFacade::can('post-projects') : false,
             'canPostEvents' => $user ? BouncerFacade::can('post-events') : false,
+            'canCreatePosts' => $user ? BouncerFacade::can('create-posts') : false,
             'canCreateFacultyAdmin' => $user ? BouncerFacade::can('create-facultyAdmin') : false,
             'canAssignAbilities' => $user ? BouncerFacade::can('assign-abilities') : false,
         ]);

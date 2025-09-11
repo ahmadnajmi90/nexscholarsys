@@ -21,6 +21,10 @@ class CreatePostController extends Controller
 
     public function index(Request $request)
     {
+        if (Auth::user()->cannot('create-posts')) {
+            abort(403, 'Unauthorized access.');
+        }
+
         $search = $request->input('search');
 
         $createPosts = CreatePost::query()
@@ -40,11 +44,19 @@ class CreatePostController extends Controller
 
     public function create()
     {
+        if (Auth::user()->cannot('create-posts')) {
+            abort(403, 'Unauthorized access.');
+        }
+
         return Inertia::render('CreatePosts/Create');
     }
 
     public function store(Request $request)
     {
+        if (Auth::user()->cannot('create-posts')) {
+            abort(403, 'Unauthorized access.');
+        }
+
         try {
             $author = Auth::user();
             $request->merge(['author_id' => $author->unique_id]);
@@ -85,6 +97,10 @@ class CreatePostController extends Controller
 
     public function edit($id)
     {
+        if (Auth::user()->cannot('create-posts')) {
+            abort(403, 'Unauthorized access.');
+        }
+
         $post = auth()->user()->createPosts()->findOrFail($id);
         return Inertia::render('CreatePosts/Edit', [
             'post' => $post,
@@ -93,6 +109,10 @@ class CreatePostController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (Auth::user()->cannot('create-posts')) {
+            abort(403, 'Unauthorized access.');
+        }
+
         try {
             $post = auth()->user()->createPosts()->findOrFail($id);
             $author = Auth::user();
@@ -154,6 +174,10 @@ class CreatePostController extends Controller
 
     public function destroy($id)
     {
+        if (Auth::user()->cannot('create-posts')) {
+            abort(403, 'Unauthorized access.');
+        }
+        
         $createPost = auth()->user()->createPosts()->findOrFail($id);
         $this->createPostService->deletePost($createPost);
 

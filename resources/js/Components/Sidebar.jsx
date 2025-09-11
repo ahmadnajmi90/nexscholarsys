@@ -37,7 +37,7 @@ import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
 const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
-    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreatePosts, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const { auth, pendingRequestCount } = usePage().props;
     const user = auth.user;
 
@@ -244,12 +244,14 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">View Post</span>
                             </Link>
                         </motion.div>
-                        <motion.div variants={itemVariants}>
-                            <Link href={route('create-posts.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <FileText className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Post</span>
-                            </Link>
-                        </motion.div>
+                        {canCreatePosts && (
+                            <motion.div variants={itemVariants}>
+                                <Link href={route('create-posts.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                    <FileText className="text-gray-600 mb-2 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Post</span>
+                                </Link>
+                            </motion.div>
+                        )}
                     </>
                 );
 

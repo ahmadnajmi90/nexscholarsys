@@ -12,6 +12,7 @@ const useRoles = () => {
         canPostGrants: props.canPostGrants || false,
         canPostEvents: props.canPostEvents || false,
         canPostProjects: props.canPostProjects || false,
+        canCreatePosts: props.canCreatePosts || false,
         canCreateFacultyAdmin: props.canCreateFacultyAdmin || false,
         canAssignAbilities: props.canAssignAbilities || false,
     };
