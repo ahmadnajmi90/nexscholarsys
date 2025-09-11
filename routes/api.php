@@ -100,6 +100,40 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
             ->name('api.niche-domains.destroy');
             
         // Skills Taxonomy - Admin management
+        Route::get('skills/domains', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'index'])
+            ->name('api.skills-domains.index');
+        Route::post('skills/domains', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'store'])
+            ->name('api.skills-domains.store');
+        Route::get('skills/domains/{skills_domain}', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'show'])
+            ->name('api.skills-domains.show');
+        Route::post('skills/domains/{skills_domain}', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'update'])
+            ->name('api.skills-domains.update');
+        Route::delete('skills/domains/{skills_domain}', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'destroy'])
+            ->name('api.skills-domains.destroy');
+            
+        Route::get('skills/subdomains', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'index'])
+            ->name('api.skills-subdomains.index');
+        Route::post('skills/subdomains', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'store'])
+            ->name('api.skills-subdomains.store');
+        Route::get('skills/subdomains/{skills_subdomain}', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'show'])
+            ->name('api.skills-subdomains.show');
+        Route::post('skills/subdomains/{skills_subdomain}', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'update'])
+            ->name('api.skills-subdomains.update');
+        Route::delete('skills/subdomains/{skills_subdomain}', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'destroy'])
+            ->name('api.skills-subdomains.destroy');
+            
+        Route::get('skills', [\App\Http\Controllers\Api\V1\SkillController::class, 'index'])
+            ->name('api.skills.index');
+        Route::post('skills', [\App\Http\Controllers\Api\V1\SkillController::class, 'store'])
+            ->name('api.skills.store');
+        Route::get('skills/{skill}', [\App\Http\Controllers\Api\V1\SkillController::class, 'show'])
+            ->name('api.skills.show');
+        Route::post('skills/{skill}', [\App\Http\Controllers\Api\V1\SkillController::class, 'update'])
+            ->name('api.skills.update');
+        Route::delete('skills/{skill}', [\App\Http\Controllers\Api\V1\SkillController::class, 'destroy'])
+            ->name('api.skills.destroy');
+            
+        // Skills Taxonomy - Legacy endpoints for backward compatibility
         Route::get('skills/taxonomy', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getTaxonomy'])
             ->name('api.skills.taxonomy');
         Route::get('skills/search', [\App\Http\Controllers\Api\V1\SkillsController::class, 'search'])
@@ -167,6 +201,22 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('api.app.niche-domains.index');
         Route::get('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'show'])
             ->name('api.app.niche-domains.show');
+            
+        // Skills Taxonomy - Read-only for frontend data fetching
+        Route::get('skills-domains', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'index'])
+            ->name('api.app.skills-domains.index');
+        Route::get('skills-domains/{skills_domain}', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'show'])
+            ->name('api.app.skills-domains.show');
+            
+        Route::get('skills-subdomains', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'index'])
+            ->name('api.app.skills-subdomains.index');
+        Route::get('skills-subdomains/{skills_subdomain}', [\App\Http\Controllers\Api\V1\SkillsSubdomainController::class, 'show'])
+            ->name('api.app.skills-subdomains.show');
+            
+        Route::get('skills', [\App\Http\Controllers\Api\V1\SkillController::class, 'index'])
+            ->name('api.app.skills.index');
+        Route::get('skills/{skill}', [\App\Http\Controllers\Api\V1\SkillController::class, 'show'])
+            ->name('api.app.skills.show');
             
         // Skills Taxonomy - Admin management (Create/Update/Delete)
         // Note: Read-only skills endpoints are available to all users above

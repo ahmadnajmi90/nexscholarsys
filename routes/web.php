@@ -412,6 +412,22 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/data-management/postgraduate-programs', [App\Http\Controllers\Admin\DataManagement\PostgraduateProgramController::class, 'store'])->name('admin.data-management.postgraduate-programs.store');
     Route::post('/admin/data-management/postgraduate-programs/{postgraduateProgram}', [App\Http\Controllers\Admin\DataManagement\PostgraduateProgramController::class, 'update'])->name('admin.data-management.postgraduate-programs.update');
     Route::delete('/admin/data-management/postgraduate-programs/{postgraduateProgram}', [App\Http\Controllers\Admin\DataManagement\PostgraduateProgramController::class, 'destroy'])->name('admin.data-management.postgraduate-programs.destroy');
+    
+    // Skills Taxonomy
+    // Skills Domains
+    Route::post('/admin/data-management/skills-domains', [App\Http\Controllers\Admin\DataManagement\SkillsDomainController::class, 'store'])->name('admin.data-management.skills-domains.store');
+    Route::post('/admin/data-management/skills-domains/{skillsDomain}', [App\Http\Controllers\Admin\DataManagement\SkillsDomainController::class, 'update'])->name('admin.data-management.skills-domains.update');
+    Route::delete('/admin/data-management/skills-domains/{skillsDomain}', [App\Http\Controllers\Admin\DataManagement\SkillsDomainController::class, 'destroy'])->name('admin.data-management.skills-domains.destroy');
+    
+    // Skills Subdomains
+    Route::post('/admin/data-management/skills-subdomains', [App\Http\Controllers\Admin\DataManagement\SkillsSubdomainController::class, 'store'])->name('admin.data-management.skills-subdomains.store');
+    Route::post('/admin/data-management/skills-subdomains/{skillsSubdomain}', [App\Http\Controllers\Admin\DataManagement\SkillsSubdomainController::class, 'update'])->name('admin.data-management.skills-subdomains.update');
+    Route::delete('/admin/data-management/skills-subdomains/{skillsSubdomain}', [App\Http\Controllers\Admin\DataManagement\SkillsSubdomainController::class, 'destroy'])->name('admin.data-management.skills-subdomains.destroy');
+    
+    // Skills
+    Route::post('/admin/data-management/skills', [App\Http\Controllers\Admin\DataManagement\SkillController::class, 'store'])->name('admin.data-management.skills.store');
+    Route::post('/admin/data-management/skills/{skill}', [App\Http\Controllers\Admin\DataManagement\SkillController::class, 'update'])->name('admin.data-management.skills.update');
+    Route::delete('/admin/data-management/skills/{skill}', [App\Http\Controllers\Admin\DataManagement\SkillController::class, 'destroy'])->name('admin.data-management.skills.destroy');
 });
 });
 
