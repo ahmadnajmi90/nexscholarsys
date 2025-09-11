@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaResearchgate, FaDownload, FaArrowLeft, FaHome, FaUniversity } from 'react-icons/fa';
+import SkillsGroupedDisplay from '@/Components/SkillsGroupedDisplay';
 
 const ProfileContent = ({ 
     profile, 
@@ -86,29 +87,14 @@ const ProfileContent = ({
             
             {/* Skills */}
             {profile.skills && Array.isArray(profile.skills) && profile.skills.length > 0 && (
-                <div className="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4">
-                    <h2 className="text-lg sm:text-xl font-semibold mb-4">Skills</h2>
-                    <div className="flex flex-wrap gap-2">
-                        {profile.skills.map((skill, index) => {
-                            // Construct hierarchical name
-                            let displayName = skill.name;
-                            if (skill.subdomain && skill.subdomain.domain) {
-                                displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
-                            } else if (skill.full_name) {
-                                displayName = skill.full_name;
-                            }
-                            
-                            return (
-                                <span 
-                                    key={skill.id || index} 
-                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
-                                >
-                                    {displayName}
-                                </span>
-                            );
-                        })}
-                    </div>
-                </div>
+                <SkillsGroupedDisplay 
+                    skills={profile.skills}
+                    title="Skills"
+                    showSummaryBar={true}
+                    showCounts={true}
+                    className=""
+                    cardClassName="bg-white shadow sm:rounded-lg p-4 sm:p-6 mb-4"
+                />
             )}
         </>
     );
@@ -203,29 +189,14 @@ const ProfileContent = ({
 
                     {/* Skills */}
                     {profile.skills && Array.isArray(profile.skills) && profile.skills.length > 0 && (
-                        <div className="border rounded-lg p-4 mt-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-3">Skills</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {profile.skills.map((skill, index) => {
-                                    // Construct hierarchical name
-                                    let displayName = skill.name;
-                                    if (skill.subdomain && skill.subdomain.domain) {
-                                        displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
-                                    } else if (skill.full_name) {
-                                        displayName = skill.full_name;
-                                    }
-                                    
-                                    return (
-                                        <span 
-                                            key={skill.id || index} 
-                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
-                                        >
-                                            {displayName}
-                                        </span>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                        <SkillsGroupedDisplay 
+                            skills={profile.skills}
+                            title="Skills"
+                            showSummaryBar={true}
+                            showCounts={true}
+                            className=""
+                            cardClassName="border rounded-lg p-4 mt-6"
+                        />
                     )}
                 </div>
 
@@ -351,29 +322,14 @@ const ProfileContent = ({
 
                     {/* Skills */}
                     {profile.skills && Array.isArray(profile.skills) && profile.skills.length > 0 && (
-                        <div className="border rounded-lg p-4 mb-6">
-                            <h3 className="text-lg font-medium text-gray-900 mb-3">Skills</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {profile.skills.map((skill, index) => {
-                                    // Construct hierarchical name
-                                    let displayName = skill.name;
-                                    if (skill.subdomain && skill.subdomain.domain) {
-                                        displayName = `${skill.subdomain.domain.name} - ${skill.subdomain.name} - ${skill.name}`;
-                                    } else if (skill.full_name) {
-                                        displayName = skill.full_name;
-                                    }
-                                    
-                                    return (
-                                        <span 
-                                            key={skill.id || index} 
-                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
-                                        >
-                                            {displayName}
-                                        </span>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                        <SkillsGroupedDisplay 
+                            skills={profile.skills}
+                            title="Skills"
+                            showSummaryBar={true}
+                            showCounts={true}
+                            className=""
+                            cardClassName="border rounded-lg p-4 mb-6"
+                        />
                     )}
 
                     {/* CV File */}

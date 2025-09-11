@@ -1025,7 +1025,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                   value={data.skills}
                   onChange={(skillIds) => setData('skills', skillIds)}
                   error={errors.skills}
-                  required={false}
+                  required={true}
                   label="Skills"
                   placeholder="Select your skills..."
                 />
