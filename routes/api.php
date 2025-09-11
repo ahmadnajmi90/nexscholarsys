@@ -245,6 +245,49 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         ->name('api.app.notifications.mark-as-read');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
         ->name('api.app.notifications.mark-all-as-read');
+        
+    // Messaging Routes
+    Route::prefix('messaging')->group(function () {
+        // Conversations
+        Route::post('/conversations', [App\Http\Controllers\Messaging\ConversationController::class, 'store'])
+            ->name('api.app.messaging.conversations.store');
+        Route::put('/conversations/{conversation}', [App\Http\Controllers\Messaging\ConversationController::class, 'update'])
+            ->name('api.app.messaging.conversations.update');
+        Route::post('/conversations/{conversation}/participants', [App\Http\Controllers\Messaging\ConversationController::class, 'addParticipants'])
+            ->name('api.app.messaging.conversations.add-participants');
+        Route::delete('/conversations/{conversation}/participants/{userId}', [App\Http\Controllers\Messaging\ConversationController::class, 'removeParticipant'])
+            ->name('api.app.messaging.conversations.remove-participant');
+        Route::post('/conversations/{conversation}/leave', [App\Http\Controllers\Messaging\ConversationController::class, 'leave'])
+            ->name('api.app.messaging.conversations.leave');
+        Route::post('/conversations/{conversation}/archive', [App\Http\Controllers\Messaging\ConversationController::class, 'archive'])
+            ->name('api.app.messaging.conversations.archive');
+        Route::post('/conversations/{conversation}/unarchive', [App\Http\Controllers\Messaging\ConversationController::class, 'unarchive'])
+            ->name('api.app.messaging.conversations.unarchive');
+        Route::post('/conversations/{conversation}/pin', [App\Http\Controllers\Messaging\ConversationController::class, 'pin'])
+            ->name('api.app.messaging.conversations.pin');
+        Route::post('/conversations/{conversation}/unpin', [App\Http\Controllers\Messaging\ConversationController::class, 'unpin'])
+            ->name('api.app.messaging.conversations.unpin');
+        Route::post('/conversations/{conversation}/mute', [App\Http\Controllers\Messaging\ConversationController::class, 'mute'])
+            ->name('api.app.messaging.conversations.mute');
+        Route::post('/conversations/{conversation}/unmute', [App\Http\Controllers\Messaging\ConversationController::class, 'unmute'])
+            ->name('api.app.messaging.conversations.unmute');
+            
+        // Messages
+        Route::get('/conversations/{conversation}/messages', [App\Http\Controllers\Messaging\MessageController::class, 'index'])
+            ->name('api.app.messaging.messages.index');
+        Route::post('/conversations/{conversation}/messages', [App\Http\Controllers\Messaging\MessageController::class, 'store'])
+            ->name('api.app.messaging.messages.store');
+        Route::put('/messages/{message}', [App\Http\Controllers\Messaging\MessageController::class, 'update'])
+            ->name('api.app.messaging.messages.update');
+        Route::delete('/messages/{message}', [App\Http\Controllers\Messaging\MessageController::class, 'destroy'])
+            ->name('api.app.messaging.messages.destroy');
+        Route::post('/messages/{message}/read', [App\Http\Controllers\Messaging\MessageController::class, 'markAsRead'])
+            ->name('api.app.messaging.messages.mark-as-read');
+        Route::post('/conversations/{conversation}/messages/read-all', [App\Http\Controllers\Messaging\MessageController::class, 'markAllAsRead'])
+            ->name('api.app.messaging.messages.mark-all-as-read');
+        Route::post('/messages/{message}/react', [App\Http\Controllers\Messaging\MessageController::class, 'react'])
+            ->name('api.app.messaging.messages.react');
+    });
 });
 
 // Content Management API Routes - Stateless for external tools
