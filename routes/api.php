@@ -170,37 +170,33 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
     Route::get('skills', [\App\Http\Controllers\Api\V1\SkillsController::class, 'getAllSkills'])
         ->name('api.app.skills.all');
 
+    // Research Areas Taxonomy - Available to all authenticated users
+    Route::get('fields-of-research', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'index'])
+        ->name('api.app.fields-of-research.public.index');
+    Route::get('fields-of-research/{field_of_research}', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'show'])
+        ->name('api.app.fields-of-research.public.show');
+    Route::get('research-areas', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'index'])
+        ->name('api.app.research-areas.public.index');
+    Route::get('research-areas/{research_area}', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'show'])
+        ->name('api.app.research-areas.public.show');
+    Route::get('niche-domains', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'index'])
+        ->name('api.app.niche-domains.public.index');
+    Route::get('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'show'])
+        ->name('api.app.niche-domains.public.show');
+
     // Data Management API Routes (Admin Only) - Stateful for frontend
     Route::middleware(['admin'])->group(function () {
-        // Universities - Read-only for frontend data fetching
+        // Universities - Admin management for frontend
         Route::get('universities', [\App\Http\Controllers\Api\V1\UniversityController::class, 'index'])
             ->name('api.app.universities.index');
         Route::get('universities/{university}', [\App\Http\Controllers\Api\V1\UniversityController::class, 'show'])
             ->name('api.app.universities.show');
             
-        // Faculties - Read-only for frontend data fetching
+        // Faculties - Admin management for frontend
         Route::get('faculties', [\App\Http\Controllers\Api\V1\FacultyController::class, 'index'])
             ->name('api.app.faculties.index');
         Route::get('faculties/{faculty}', [\App\Http\Controllers\Api\V1\FacultyController::class, 'show'])
             ->name('api.app.faculties.show');
-            
-        // Fields of Research - Read-only for frontend data fetching
-        Route::get('fields-of-research', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'index'])
-            ->name('api.app.fields-of-research.index');
-        Route::get('fields-of-research/{field_of_research}', [\App\Http\Controllers\Api\V1\FieldOfResearchController::class, 'show'])
-            ->name('api.app.fields-of-research.show');
-            
-        // Research Areas - Read-only for frontend data fetching
-        Route::get('research-areas', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'index'])
-            ->name('api.app.research-areas.index');
-        Route::get('research-areas/{research_area}', [\App\Http\Controllers\Api\V1\ResearchAreaController::class, 'show'])
-            ->name('api.app.research-areas.show');
-            
-        // Niche Domains - Read-only for frontend data fetching
-        Route::get('niche-domains', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'index'])
-            ->name('api.app.niche-domains.index');
-        Route::get('niche-domains/{niche_domain}', [\App\Http\Controllers\Api\V1\NicheDomainController::class, 'show'])
-            ->name('api.app.niche-domains.show');
             
         // Skills Taxonomy - Read-only for frontend data fetching
         Route::get('skills-domains', [\App\Http\Controllers\Api\V1\SkillsDomainController::class, 'index'])

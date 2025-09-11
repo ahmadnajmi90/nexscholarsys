@@ -10,6 +10,7 @@ import axios from 'axios';
 import CVPreviewModal from './CVPreviewModal';
 import React from 'react';
 import SkillsSelector from '@/Components/SkillsSelector';
+import ResearchAreaSelector from '@/Components/ResearchAreaSelector';
 
 export default function AcademicianForm({ className = '', researchOptions, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   const academician = usePage().props.academician; // Related academician data
@@ -980,139 +981,15 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                 </div>
               </div>
 
-              {/* Research Expertise Searchable Dropdown */}
+              {/* Research Expertise */}
               <div className="w-full">
-                <label htmlFor="research_expertise" className="block text-sm font-medium text-gray-700">
-                  Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain <span className="text-red-600">*</span>
-                </label>
-                <Select
-                  id="research_expertise"
-                  isMulti
-                  options={researchOptions.map((option) => ({
-                    value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
-                    label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
-                  }))}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  classNamePrefix="select"
-                  menuPortalTarget={document.body}
-                  hideSelectedOptions={false} // Keep selected options visible in the dropdown
-                  closeMenuOnSelect={false} // Keep the menu open after selection
-                  styles={{
-                    valueContainer: (provided) => ({
-                      ...provided,
-                      maxWidth: '100%', // ensure the container stays within its parent width
-                    }),
-                    multiValueLabel: (provided) => ({
-                      ...provided,
-                      maxWidth: 250, // set a fixed max width for each selected label (adjust as needed)
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }),
-                    menuPortal: (provided) => ({
-                      ...provided,
-                      zIndex: 9999,
-                    }),
-                    // Style for options in dropdown to highlight already selected items
-                    option: (provided, { data, isSelected, isFocused, isDisabled }) => {
-                      return {
-                        ...provided,
-                        backgroundColor: isSelected
-                          ? '#2563EB' // Primary blue for active selection
-                          : isFocused
-                          ? '#F3F4F6' // Light gray on hover
-                          : 'white',
-                        color: isSelected 
-                          ? 'white' 
-                          : '#374151', // Default text color
-                        // Add checkmark for selected items
-                        paddingLeft: isSelected ? '25px' : provided.paddingLeft,
-                        position: 'relative',
-                        ':before': isSelected
-                          ? {
-                              content: '"✓"',
-                              position: 'absolute',
-                              left: '10px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              color: 'white',
-                            }
-                          : undefined,
-                      };
-                    },
-                  }}
-                  
-                  value={data.research_expertise?.map((selectedValue) => {
-                    const matchedOption = researchOptions.find(
-                      (option) =>
-                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` ===
-                        selectedValue
-                    );
-                    return {
-                      value: selectedValue,
-                      label: matchedOption
-                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                        : selectedValue,
-                    };
-                  })}
-                  onChange={(selectedOptions) => {
-                    const selectedValues = selectedOptions.map((option) => option.value);
-                    setData('research_expertise', selectedValues);
-                  }}
-                  placeholder="Select field of research..."
-                  
-                  // Using proper react-select props for sorting and grouping
-                  // This custom filter function controls the order of options
-                  filterOption={(option, inputValue) => {
-                    // Filter options based on input text
-                    return inputValue ? option.label.toLowerCase().includes(inputValue.toLowerCase()) : true;
-                  }}
-                  // This custom sort function ensures selected options appear at the top
-                  // In react-select v5 the order of options is determined by this parameter
-                  components={{
-                    MenuList: props => {
-                      // Clone the children (options) for sorting
-                      const children = React.Children.toArray(props.children);
-                      
-                      // Extract the currently selected values
-                      const selectedValues = data.research_expertise || [];
-                      
-                      // Sort children: first selected options, then unselected
-                      const sortedChildren = children.sort((a, b) => {
-                        if (!a || !b || !a.props || !b.props) return 0;
-                        
-                        // Get option values - respect react-select internal structure
-                        const aValue = a.props.data?.value;
-                        const bValue = b.props.data?.value;
-                        
-                        // Check if options are selected
-                        const aSelected = selectedValues.includes(aValue);
-                        const bSelected = selectedValues.includes(bValue);
-                        
-                        // Sort selected items first
-                        if (aSelected && !bSelected) return -1;
-                        if (!aSelected && bSelected) return 1;
-                        
-                        // If both have same selection status, sort alphabetically by label
-                        return a.props.data?.label?.localeCompare(b.props.data?.label) || 0;
-                      });
-                      
-                      // Return the MenuList with sorted children and fixed height with scrolling
-                      return (
-                        <div 
-                          className="react-select__menu-list" 
-                          {...props.innerProps}
-                          style={{
-                            maxHeight: '215px', // Height to show approximately 5-7 items
-                            overflowY: 'auto',  // Enable vertical scrolling
-                            padding: '5px 0'    // Maintain padding from original component
-                          }}
-                        >
-                          {sortedChildren}
-                        </div>
-                      );
-                    }
-                  }}
+                <ResearchAreaSelector
+                  value={data.research_expertise}
+                  onChange={(selectedAreas) => setData('research_expertise', selectedAreas)}
+                  error={errors.research_expertise}
+                  required={true}
+                  label="Research Expertise"
+                  placeholder="Select your research areas..."
                 />
               </div>
 

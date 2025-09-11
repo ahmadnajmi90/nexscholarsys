@@ -9,6 +9,7 @@ import NationalityForm from "./NationalityForm";
 import Select from 'react-select';
 import axios from 'axios';
 import SkillsSelector from '@/Components/SkillsSelector';
+import ResearchAreaSelector from '@/Components/ResearchAreaSelector';
 
 export default function PostgraduateForm({ universities, faculties, className = '', researchOptions, skills, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
     // Add useRef for tracking generation
@@ -925,121 +926,15 @@ export default function PostgraduateForm({ universities, faculties, className = 
                         </div>
                     )}
 
-                    {/* Research Expertise Searchable Dropdown */}
+                    {/* Field of Research */}
                     <div className="w-full">
-                        <InputLabel htmlFor="field_of_research">
-                            Field of Research (Multiple Selection) Structure : Field of Research - Research Area - Niche Domain <span className="text-red-600">*</span>
-                        </InputLabel>
-                        <Select
-                            id="field_of_research"
-                            isMulti
-                            options={researchOptions.map((option) => ({
-                                value: `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}`,
-                                label: `${option.field_of_research_name} - ${option.research_area_name} - ${option.niche_domain_name}`,
-                            }))}
-                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                            classNamePrefix="select"
-                            hideSelectedOptions={false}
-                            closeMenuOnSelect={false}
-                            value={data.field_of_research?.map((selectedValue) => {
-                                const matchedOption = researchOptions.find(
-                                    (option) =>
-                                        `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === selectedValue
-                                );
-                                return {
-                                    value: selectedValue,
-                                    label: matchedOption
-                                        ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                                        : selectedValue,
-                                };
-                            })}
-                            styles={{
-                                valueContainer: (provided) => ({
-                                  ...provided,
-                                  maxWidth: '100%',
-                                }),
-                                multiValueLabel: (provided) => ({
-                                  ...provided,
-                                  maxWidth: 250,
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }),
-                                menuPortal: (provided) => ({
-                                  ...provided,
-                                  zIndex: 9999,
-                                }),
-                                option: (provided, { data, isSelected, isFocused, isDisabled }) => {
-                                  return {
-                                    ...provided,
-                                    backgroundColor: isSelected
-                                      ? '#2563EB'
-                                      : isFocused
-                                      ? '#F3F4F6'
-                                      : 'white',
-                                    color: isSelected 
-                                      ? 'white' 
-                                      : '#374151',
-                                    paddingLeft: isSelected ? '25px' : provided.paddingLeft,
-                                    position: 'relative',
-                                    ':before': isSelected
-                                      ? {
-                                          content: '"✓"',
-                                          position: 'absolute',
-                                          left: '10px',
-                                          top: '50%',
-                                          transform: 'translateY(-50%)',
-                                          color: 'white',
-                                        }
-                                      : undefined,
-                                  };
-                                },
-                            }}
-                            onChange={(selectedOptions) => {
-                                const selectedValues = selectedOptions.map((option) => option.value);
-                                setData('field_of_research', selectedValues);
-                            }}
-                            placeholder="Select field of research..."
-                            
-                            filterOption={(option, inputValue) => {
-                              return inputValue ? option.label.toLowerCase().includes(inputValue.toLowerCase()) : true;
-                            }}
-                            components={{
-                              MenuList: props => {
-                                const children = React.Children.toArray(props.children);
-                                
-                                const selectedValues = data.field_of_research || [];
-                                
-                                const sortedChildren = children.sort((a, b) => {
-                                  if (!a || !b || !a.props || !b.props) return 0;
-                                  
-                                  const aValue = a.props.data?.value;
-                                  const bValue = b.props.data?.value;
-                                  
-                                  const aSelected = selectedValues.includes(aValue);
-                                  const bSelected = selectedValues.includes(bValue);
-                                  
-                                  if (aSelected && !bSelected) return -1;
-                                  if (!aSelected && bSelected) return 1;
-                                  
-                                  return a.props.data?.label?.localeCompare(b.props.data?.label) || 0;
-                                });
-                                
-                                return (
-                                  <div 
-                                    className="react-select__menu-list" 
-                                    {...props.innerProps}
-                                    style={{
-                                      maxHeight: '215px', // Height to show approximately 5-7 items
-                                      overflowY: 'auto',  // Enable vertical scrolling
-                                      padding: '5px 0'    // Maintain padding from original component
-                                    }}
-                                  >
-                                    {sortedChildren}
-                                  </div>
-                                );
-                              }
-                            }}
+                        <ResearchAreaSelector
+                            value={data.field_of_research}
+                            onChange={(selectedAreas) => setData('field_of_research', selectedAreas)}
+                            error={errors.field_of_research}
+                            required={true}
+                            label="Field of Research"
+                            placeholder="Select your field of research..."
                         />
                     </div>
 
