@@ -9,7 +9,7 @@ import {
 import useRoles from '@/Hooks/useRoles';
 
 const MobileSidebar = ({ isOpen, toggleSidebar }) => {
-    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
+    const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreatePosts, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const { auth, pendingRequestCount } = usePage().props;
     const [menuHistory, setMenuHistory] = useState(['main']);
     const activeMenu = menuHistory[menuHistory.length - 1];
@@ -78,7 +78,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                 ...(canPostEvents ? [{ label: 'Manage Event', href: route('post-events.index'), icon: Calendar }] : []),
                 // Post Management
                 { label: 'View Post', href: '/posts', icon: FileText },
-                { label: 'Manage Post', href: route('create-posts.index'), icon: FileText },
+                ...(canCreatePosts ? [{ label: 'Manage Post', href: route('create-posts.index'), icon: FileText }] : []),
             ]
         },
         survey: {
