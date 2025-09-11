@@ -18,7 +18,26 @@ class MessagingController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Messaging/Index');
+        // Get user's conversations with participants and latest message
+        $conversations = Conversation::whereHas('participants', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->with([
+                'participants.user',
+                'lastMessage.sender'
+            ])
+            ->orderByRaw('
+                CASE
+                    WHEN last_message_id IS NULL THEN 1
+                    ELSE 0
+                END,
+                updated_at DESC
+            ')
+            ->get();
+
+        return Inertia::render('Messaging/Index', [
+            'conversations' => $conversations,
+        ]);
     }
 
     /**

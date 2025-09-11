@@ -7,11 +7,12 @@ export default function ConversationCard({ conversation }) {
     // Get conversation title or participants names
     const getTitle = () => {
         if (conversation.title) return conversation.title;
-        
-        const otherParticipants = conversation.participants
-            .filter(p => p.user.id !== auth.user.id)
-            .map(p => p.user.name);
-            
+
+        const participants = conversation.participants || [];
+        const otherParticipants = participants
+            .filter(p => p.user?.id !== auth.user?.id)
+            .map(p => p.user?.name || 'Unknown');
+
         if (otherParticipants.length === 0) return 'Unknown';
         if (otherParticipants.length === 1) return otherParticipants[0];
         return otherParticipants.slice(0, 3).join(', ') + (otherParticipants.length > 3 ? ` +${otherParticipants.length - 3}` : '');
@@ -58,12 +59,13 @@ export default function ConversationCard({ conversation }) {
     
     // Check if conversation has unread messages
     const hasUnreadMessages = () => {
-        const currentUserParticipant = conversation.participants.find(p => p.user.id === auth.user.id);
+        const participants = conversation.participants || [];
+        const currentUserParticipant = participants.find(p => p.user?.id === auth.user?.id);
         if (!currentUserParticipant || !conversation.last_message) return false;
-        
+
         const lastReadId = currentUserParticipant.last_read_message_id;
         const lastMessageId = conversation.last_message.id;
-        
+
         return lastReadId === null || lastMessageId > lastReadId;
     };
     

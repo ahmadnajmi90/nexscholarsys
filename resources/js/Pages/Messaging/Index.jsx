@@ -8,11 +8,11 @@ export default function Index() {
     const [searchTerm, setSearchTerm] = useState('');
 
     // Filter conversations based on search term
-    const filteredConversations = conversations.filter(conversation => {
-        const title = conversation.title || 
-            conversation.participants
-                .filter(p => p.user.id !== usePage().props.auth.user.id)
-                .map(p => p.user.name)
+    const filteredConversations = (conversations || []).filter(conversation => {
+        const title = conversation.title ||
+            (conversation.participants || [])
+                .filter(p => p.user?.id !== usePage().props.auth?.user?.id)
+                .map(p => p.user?.name || 'Unknown')
                 .join(', ');
         return title.toLowerCase().includes(searchTerm.toLowerCase());
     });

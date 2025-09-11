@@ -1,10 +1,11 @@
 import React from 'react';
 import {
-    Zap, 
-    Users, 
-    Settings, 
+    Zap,
+    Users,
+    Settings,
     FolderOpen,
-    House
+    House,
+    MessageSquare
 } from 'lucide-react';
 
 const IconSidebar = ({ activeSection, onSectionChange }) => {
