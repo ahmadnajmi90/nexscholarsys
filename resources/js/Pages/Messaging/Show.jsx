@@ -12,12 +12,54 @@ export default function Show() {
     const [participants, setParticipants] = useState(conversation.participants || []);
     const [typingUsers, setTypingUsers] = useState([]);
     const [replyingTo, setReplyingTo] = useState(null);
+    const [onlineUsers, setOnlineUsers] = useState([]);
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
     const echoRef = useRef(null);
+    const readTimeoutRef = useRef(null);
 
     // Scroll to bottom of messages
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Handle scroll events for auto-mark-as-read
+    const handleScroll = () => {
+        if (!messagesContainerRef.current) return;
+
+        const container = messagesContainerRef.current;
+        const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
+
+        if (isNearBottom && messages.length > 0) {
+            // Clear existing timeout
+            if (readTimeoutRef.current) {
+                clearTimeout(readTimeoutRef.current);
+            }
+
+            // Set timeout to mark messages as read (debounced)
+            readTimeoutRef.current = setTimeout(() => {
+                markMessagesAsRead();
+            }, 500);
+        }
+    };
+
+    // Mark messages as read
+    const markMessagesAsRead = () => {
+        if (messages.length === 0) return;
+
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.id && lastMessage.id.toString().includes('temp_')) return; // Skip temp messages
+
+        router.post(
+            route('api.app.messaging.messages.mark-all-read', conversation.id),
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    console.error('Failed to mark messages as read:', errors);
+                }
+            }
+        );
     };
 
     // Load more messages
@@ -77,17 +119,24 @@ export default function Show() {
                     );
                 });
                 
-                // Join presence channel for typing indicators
+                // Join presence channel for typing indicators and online status
                 const presenceChannel = Echo.join(`presence.conversation.${conversation.id}`);
-                
+
                 presenceChannel.here((users) => {
                     // Set initial online users
+                    setOnlineUsers(users.map(u => ({ id: u.id, name: u.name })));
                 })
                 .joining((user) => {
                     // User joined
+                    setOnlineUsers(prev => {
+                        const filtered = prev.filter(u => u.id !== user.id);
+                        return [...filtered, { id: user.id, name: user.name }];
+                    });
                 })
                 .leaving((user) => {
-                    // User left, remove from typing if needed
+                    // User left
+                    setOnlineUsers(prev => prev.filter(u => u.id !== user.id));
+                    // Also remove from typing if needed
                     setTypingUsers(prev => prev.filter(u => u.id !== user.id));
                 })
                 .listenForWhisper('typing', (user) => {
@@ -97,7 +146,7 @@ export default function Show() {
                         const filtered = prev.filter(u => u.id !== user.id);
                         return [...filtered, user];
                     });
-                    
+
                     // Remove user after timeout
                     setTimeout(() => {
                         setTypingUsers(prev => prev.filter(u => u.id !== user.id));
@@ -109,11 +158,27 @@ export default function Show() {
         // Scroll to bottom on initial load
         scrollToBottom();
 
-        // Cleanup Echo channels on unmount
+        // Add scroll listener for auto-mark-as-read
+        const messagesContainer = messagesContainerRef.current;
+        if (messagesContainer) {
+            messagesContainer.addEventListener('scroll', handleScroll);
+        }
+
+        // Cleanup on unmount
         return () => {
             if (echoRef.current) {
                 echoRef.current.leave(`conversation.${conversation.id}`);
                 echoRef.current.leave(`presence.conversation.${conversation.id}`);
+            }
+
+            // Remove scroll listener
+            if (messagesContainer) {
+                messagesContainer.removeEventListener('scroll', handleScroll);
+            }
+
+            // Clear timeouts
+            if (readTimeoutRef.current) {
+                clearTimeout(readTimeoutRef.current);
             }
         };
     }, [conversation.id]);
@@ -181,7 +246,7 @@ export default function Show() {
                                 .map(p => p.user.name)
                                 .join(', ')}
                         </h1>
-                        <ParticipantList participants={participants} />
+                        <ParticipantList participants={participants} onlineUsers={onlineUsers} />
                     </div>
                     <div className="flex space-x-2">
                         <button className="p-2 text-gray-500 hover:text-gray-700">
@@ -193,7 +258,10 @@ export default function Show() {
                 </div>
 
                 {/* Messages Container */}
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                <div
+                    ref={messagesContainerRef}
+                    className="flex-1 overflow-y-auto p-4 bg-gray-50"
+                >
                     <div className="space-y-4">
                         {/* Load more button at top */}
                         {conversation.messages?.next_page_url && (
@@ -209,10 +277,11 @@ export default function Show() {
                         
                         {/* Messages List */}
                         {messages.map((message) => (
-                            <MessageItem 
+                            <MessageItem
                                 key={message.id}
                                 message={message}
                                 currentUser={auth.user}
+                                participants={participants}
                                 onReply={(msg) => setReplyingTo(msg)}
                             />
                         ))}

@@ -1,10 +1,23 @@
 import React from 'react';
 
-export default function MessageItem({ message, currentUser, onReply }) {
+export default function MessageItem({ message, currentUser, participants = [], onReply }) {
     const isCurrentUser = message.user_id === currentUser.id;
     const isText = message.type === 'text';
     const isSystem = message.type === 'system';
     const hasAttachments = message.attachments && message.attachments.length > 0;
+
+    // Check if message has been seen by other participants
+    const getSeenByOthers = () => {
+        if (!isCurrentUser || !participants.length) return [];
+
+        return participants
+            .filter(p => p.user.id !== currentUser.id) // Exclude current user
+            .filter(p => p.last_read_message_id && p.last_read_message_id >= message.id) // Seen this message
+            .map(p => p.user.name);
+    };
+
+    const seenByOthers = getSeenByOthers();
+    const hasBeenSeen = seenByOthers.length > 0;
     
     // Format timestamp
     const formatTime = (dateString) => {
@@ -131,8 +144,16 @@ export default function MessageItem({ message, currentUser, onReply }) {
                 {/* Message metadata */}
                 <div className={`text-xs mt-1 ${isCurrentUser ? 'text-indigo-100' : 'text-gray-500'} flex justify-between items-center`}>
                     <span>{formatTime(message.created_at)}</span>
-                    {isCurrentUser && message.read_at && (
-                        <span className="text-indigo-200">✓✓</span>
+                    {isCurrentUser && (
+                        <div className="flex items-center space-x-1">
+                            {hasBeenSeen ? (
+                                <span className="text-indigo-200" title={`Seen by ${seenByOthers.join(', ')}`}>
+                                    ✓✓
+                                </span>
+                            ) : (
+                                <span className="text-indigo-200 opacity-50">✓</span>
+                            )}
+                        </div>
                     )}
                 </div>
                 

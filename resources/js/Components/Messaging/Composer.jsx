@@ -10,35 +10,62 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const typingDebounceRef = useRef(null);
 
     // Focus textarea when component mounts
     useEffect(() => {
         textareaRef.current?.focus();
     }, []);
 
-    // Handle typing events
+    // Cleanup timeouts on unmount
+    useEffect(() => {
+        return () => {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+            if (typingDebounceRef.current) {
+                clearTimeout(typingDebounceRef.current);
+            }
+        };
+    }, []);
+
+    // Handle typing events with debounce
     const handleTyping = () => {
         const value = textareaRef.current.value;
         setMessage(value);
-        
+
         // Clear previous timeout
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
         }
-        
-        // Send typing event
-        if (echoChannel && value.trim()) {
-            // Emit typing event
-            echoChannel.whisper('typing', {
-                id: Date.now(),
-                name: auth.user.name
-            });
+
+        // Clear previous debounce
+        if (typingDebounceRef.current) {
+            clearTimeout(typingDebounceRef.current);
         }
-        
-        // Set timeout to clear typing status
+
+        // Send typing event with debounce (only if there's content)
+        if (echoChannel && value.trim()) {
+            typingDebounceRef.current = setTimeout(() => {
+                echoChannel.whisper('typing', {
+                    id: Date.now(),
+                    name: auth.user.name,
+                    timestamp: Date.now()
+                });
+
+                // Clear debounce after sending
+                typingDebounceRef.current = null;
+            }, 300); // 300ms debounce
+        }
+
+        // Set timeout to clear typing status after user stops typing
         typingTimeoutRef.current = setTimeout(() => {
-            // Clear typing status if needed
-        }, 1000);
+            // Typing stopped, clear any pending debounce
+            if (typingDebounceRef.current) {
+                clearTimeout(typingDebounceRef.current);
+                typingDebounceRef.current = null;
+            }
+        }, 1500); // Clear typing after 1.5s of inactivity
     };
 
     // Handle file selection
