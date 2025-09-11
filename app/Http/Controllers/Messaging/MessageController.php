@@ -8,6 +8,7 @@ use App\Http\Resources\Messaging\MessageResource;
 use App\Models\Messaging\Conversation;
 use App\Models\Messaging\Message;
 use App\Models\Messaging\ConversationParticipant;
+use App\Services\Messaging\AttachmentService;
 use App\Events\MessageSent;
 use App\Events\MessageUpdated;
 use App\Events\ConversationRead;
@@ -17,6 +18,12 @@ use Illuminate\Support\Facades\DB;
 
 class MessageController extends Controller
 {
+    protected AttachmentService $attachmentService;
+
+    public function __construct(AttachmentService $attachmentService)
+    {
+        $this->attachmentService = $attachmentService;
+    }
     /**
      * Send a new message to a conversation.
      *
@@ -40,6 +47,25 @@ class MessageController extends Controller
                 'body' => $validated['body'] ?? null,
                 'reply_to_id' => $validated['reply_to_id'] ?? null,
             ]);
+
+            // Process attachments if any
+            if (isset($validated['attachments']) && is_array($validated['attachments'])) {
+                $this->attachmentService->processMultipleAttachments(
+                    $validated['attachments'],
+                    $message->id,
+                    $conversation->id
+                );
+
+                // Update message type if it has attachments
+                if ($message->type === 'text' && !empty($validated['attachments'])) {
+                    $firstAttachment = $validated['attachments'][0];
+                    if ($firstAttachment->getMimeType() && str_starts_with($firstAttachment->getMimeType(), 'image/')) {
+                        $message->update(['type' => 'image']);
+                    } else {
+                        $message->update(['type' => 'file']);
+                    }
+                }
+            }
 
             // Update the conversation's last message
             $conversation->update(['last_message_id' => $message->id]);

@@ -122,6 +122,7 @@
     ```bash
     php artisan storage:link
     ```
+    *This is required for file uploads including messaging attachments, profile pictures, and CV files.*
 
 8.  **Install Python dependencies for Google Scholar scraping:**
     ```bash
