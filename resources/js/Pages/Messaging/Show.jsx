@@ -8,6 +8,7 @@ import { usePage, router } from '@inertiajs/react';
 
 export default function Show() {
     const { auth, conversation } = usePage().props;
+    console.log(conversation);
     const [messages, setMessages] = useState(conversation.messages?.data || []);
     const [participants, setParticipants] = useState(conversation.participants || []);
     const [typingUsers, setTypingUsers] = useState([]);
@@ -16,6 +17,7 @@ export default function Show() {
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const echoRef = useRef(null);
+    const presenceChannelRef = useRef(null);
     const readTimeoutRef = useRef(null);
 
     // Scroll to bottom of messages
@@ -51,7 +53,7 @@ export default function Show() {
         if (lastMessage.id && lastMessage.id.toString().includes('temp_')) return; // Skip temp messages
 
         router.post(
-            route('api.app.messaging.messages.mark-all-read', conversation.id),
+            route('api.app.messaging.messages.mark-all-read', conversation?.id),
             {},
             {
                 preserveScroll: true,
@@ -67,7 +69,7 @@ export default function Show() {
         if (messages.length > 0 && conversation.messages?.next_page_url) {
             const beforeId = messages[messages.length - 1].id;
             router.get(
-                route('messages.show', conversation.id),
+                route('messages.show', conversation?.id),
                 { before_id: beforeId },
                 {
                     preserveState: true,
@@ -86,102 +88,83 @@ export default function Show() {
 
     // Subscribe to Echo channels
     useEffect(() => {
-        // Import Echo dynamically to avoid issues with SSR
-        import('laravel-echo').then(module => {
-            const Echo = module.default || window.Echo;
-            
-            if (Echo) {
-                echoRef.current = Echo;
-                
-                // Join private conversation channel for messages
-                const privateChannel = Echo.private(`conversation.${conversation.id}`);
-                
-                privateChannel.listen('MessageSent', (e) => {
-                    // Add new message to the list
-                    setMessages(prev => [...prev, e.message]);
-                });
-                
-                privateChannel.listen('MessageUpdated', (e) => {
-                    // Update or remove message based on action
-                    if (e.action === 'deleted') {
-                        setMessages(prev => prev.filter(msg => msg.id !== e.message.id));
-                    } else if (e.action === 'edited') {
-                        setMessages(prev => 
-                            prev.map(msg => msg.id === e.message.id ? e.message : msg)
-                        );
-                    }
-                });
-                
-                privateChannel.listen('ConversationRead', (e) => {
-                    // Update participant read status
-                    setParticipants(prev => 
-                        prev.map(p => p.id === e.participant.id ? e.participant : p)
-                    );
-                });
-                
-                // Join presence channel for typing indicators and online status
-                const presenceChannel = Echo.join(`presence.conversation.${conversation.id}`);
-
-                presenceChannel.here((users) => {
-                    // Set initial online users
+        if (!conversation?.id) return;
+    
+        const echo = window.Echo; // Use the already-configured Echo instance
+    
+        if (echo) {
+            echoRef.current = echo;
+    
+            const privateChannel = echo.private(`conversation.${conversation.id}`);
+    
+            privateChannel.listen('MessageSent', (e) => {
+                setMessages(prev => [...prev, e.message]);
+            });
+    
+            privateChannel.listen('MessageUpdated', (e) => {
+                if (e.action === 'deleted') {
+                    setMessages(prev => prev.filter(msg => msg.id !== e.message.id));
+                } else if (e.action === 'edited') {
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === e.message.id ? e.message : msg
+                    ));
+                }
+            });
+    
+            privateChannel.listen('ConversationRead', (e) => {
+                setParticipants(prev =>
+                    prev.map(p => p.id === e.participant.id ? e.participant : p)
+                );
+            });
+    
+            const presenceChannel = echo.join(`presence.conversation.${conversation.id}`)
+                .here((users) => {
                     setOnlineUsers(users.map(u => ({ id: u.id, name: u.name })));
                 })
                 .joining((user) => {
-                    // User joined
-                    setOnlineUsers(prev => {
-                        const filtered = prev.filter(u => u.id !== user.id);
-                        return [...filtered, { id: user.id, name: user.name }];
-                    });
+                    setOnlineUsers(prev => [...prev.filter(u => u.id !== user.id), user]);
                 })
                 .leaving((user) => {
-                    // User left
                     setOnlineUsers(prev => prev.filter(u => u.id !== user.id));
-                    // Also remove from typing if needed
                     setTypingUsers(prev => prev.filter(u => u.id !== user.id));
                 })
                 .listenForWhisper('typing', (user) => {
-                    // Add user to typing list
-                    setTypingUsers(prev => {
-                        // Remove if already in list
-                        const filtered = prev.filter(u => u.id !== user.id);
-                        return [...filtered, user];
-                    });
-
-                    // Remove user after timeout
+                    setTypingUsers(prev => [...prev.filter(u => u.id !== user.id), user]);
                     setTimeout(() => {
                         setTypingUsers(prev => prev.filter(u => u.id !== user.id));
                     }, 3000);
                 });
-            }
-        });
 
-        // Scroll to bottom on initial load
+            // Store presence channel reference for use in Composer
+            presenceChannelRef.current = presenceChannel;
+        }
+    
         scrollToBottom();
-
-        // Add scroll listener for auto-mark-as-read
+    
         const messagesContainer = messagesContainerRef.current;
         if (messagesContainer) {
             messagesContainer.addEventListener('scroll', handleScroll);
         }
-
-        // Cleanup on unmount
+    
         return () => {
             if (echoRef.current) {
                 echoRef.current.leave(`conversation.${conversation.id}`);
                 echoRef.current.leave(`presence.conversation.${conversation.id}`);
             }
 
-            // Remove scroll listener
+            // Leave presence channel
+            if (presenceChannelRef.current) {
+                presenceChannelRef.current.leave();
+            }
+
             if (messagesContainer) {
                 messagesContainer.removeEventListener('scroll', handleScroll);
             }
-
-            // Clear timeouts
             if (readTimeoutRef.current) {
                 clearTimeout(readTimeoutRef.current);
             }
         };
-    }, [conversation.id]);
+    }, [conversation?.id]);    
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -194,7 +177,7 @@ export default function Show() {
         const tempId = `temp_${Date.now()}`;
         const tempMessage = {
             id: tempId,
-            conversation_id: conversation.id,
+            conversation_id: conversation?.id,
             user_id: auth.user.id,
             type: messageData.type || 'text',
             body: messageData.body,
@@ -207,19 +190,19 @@ export default function Show() {
         setMessages(prev => [...prev, tempMessage]);
         setReplyingTo(null);
         
-        // Send message to server
-        router.post(
-            route('api.app.messaging.messages.store', conversation.id),
+        // Send message to server and return the Promise
+        return router.post(
+            route('api.app.messaging.messages.store', conversation?.id),
             messageData,
             {
                 preserveScroll: true,
                 onSuccess: (page) => {
                     // Replace temporary message with real one
-                    const realMessage = page.props.flash?.message || 
+                    const realMessage = page.props.flash?.message ||
                                       page.props.conversation?.last_message;
                     if (realMessage) {
-                        setMessages(prev => 
-                            prev.map(msg => 
+                        setMessages(prev =>
+                            prev.map(msg =>
                                 msg.id === tempId ? realMessage : msg
                             )
                         );
@@ -234,17 +217,18 @@ export default function Show() {
     };
 
     return (
-        <MainLayout title={conversation.title || 'Conversation'}>
+        <MainLayout title={conversation?.title || 'Conversation'}>
             <div className="max-w-4xl mx-auto h-[calc(100vh-120px)] flex flex-col">
                 {/* Conversation Header */}
                 <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                     <div>
                         <h1 className="text-lg font-semibold">
-                            {conversation.title || 
-                             conversation.participants
-                                .filter(p => p.user.id !== auth.user.id)
-                                .map(p => p.user.name)
-                                .join(', ')}
+                            {conversation.title ||
+                             (conversation.participants || [])
+                                .filter(p => p.user?.id !== auth?.user?.id)
+                                .map(p => p.user?.name || 'Unknown')
+                                .join(', ') ||
+                             'Loading...'}
                         </h1>
                         <ParticipantList participants={participants} onlineUsers={onlineUsers} />
                     </div>
@@ -323,8 +307,8 @@ export default function Show() {
                     <Composer 
                         onSend={handleSendMessage}
                         replyingTo={replyingTo}
-                        conversationId={conversation.id}
-                        echoChannel={echoRef.current ? `presence.conversation.${conversation.id}` : null}
+                        conversationId={conversation?.id}
+                        echoChannel={presenceChannelRef.current}
                     />
                 </div>
             </div>
