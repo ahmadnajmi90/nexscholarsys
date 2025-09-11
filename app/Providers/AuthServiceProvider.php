@@ -15,6 +15,10 @@ use App\Models\Connection;
 use App\Policies\ConnectionPolicy;
 use App\Models\Project;
 use App\Policies\ProjectPolicy;
+use App\Models\Messaging\Conversation;
+use App\Policies\ConversationPolicy;
+use App\Models\Messaging\Message;
+use App\Policies\MessagePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -31,6 +35,8 @@ class AuthServiceProvider extends ServiceProvider
         Task::class => TaskPolicy::class,
         Connection::class => ConnectionPolicy::class,
         Project::class => ProjectPolicy::class,
+        Conversation::class => ConversationPolicy::class,
+        Message::class => MessagePolicy::class,
     ];
 
     /**
