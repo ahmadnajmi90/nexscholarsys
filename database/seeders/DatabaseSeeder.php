@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             ResearchAreaSeeder::class,
             NicheDomainSeeder::class,
             ConnectionTagSeeder::class,
+            // MessagingSeeder::class, // Uncomment to seed messaging demo data
         ]);
     }
 }

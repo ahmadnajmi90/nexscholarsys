@@ -57,6 +57,7 @@
 ### Technical Features
 
 -   **RESTful API**: A secure, Sanctum-authenticated API for data management, suitable for external tools like Postman or n8n.
+-   **Internal Messaging System**: Real-time chat with direct and group conversations, read receipts, typing indicators, and file attachments.
 -   **Google Scholar Integration**: Scrapes and integrates publication data from Google Scholar profiles.
 -   **Advanced UI/UX**: Features a responsive design, Framer Motion animations, and a rich user interface built with React and Tailwind CSS.
 -   **Interactive Tutorial System**: Comprehensive onboarding with multi-page tutorial modal and dedicated tutorial page for user guidance.
@@ -73,6 +74,106 @@
 -   **AI & Embeddings**: OpenAI API (GPT-4o, `text-embedding-3-small`)
 -   **Real-time Communication**: Laravel Reverb (WebSockets)
 -   **External Integrations**: Google Analytics 4, Google Custom Search, Google Scholar (via Python/Playwright scraping).
+
+## Internal Messaging System
+
+Nexscholar includes a comprehensive real-time messaging system for internal academic communication.
+
+### Features
+- **Direct & Group Conversations**: One-on-one chats and group discussions
+- **Real-time Messaging**: Instant message delivery via WebSocket (Pusher)
+- **Read Receipts**: See when messages are read by others
+- **Typing Indicators**: Know when someone is typing
+- **File Attachments**: Share images, documents, and files (up to 10MB)
+- **Message Management**: Edit/delete messages within time windows
+- **Presence Tracking**: See who's online in conversations
+
+### Basic Flows
+
+1. **Starting a Conversation**:
+   ```javascript
+   // Direct message
+   POST /api/v1/app/messaging/conversations
+   {
+     "type": "direct",
+     "user_id": 123
+   }
+
+   // Group conversation
+   POST /api/v1/app/messaging/conversations
+   {
+     "type": "group",
+     "title": "Research Team",
+     "members": [123, 456, 789]
+   }
+   ```
+
+2. **Sending Messages**:
+   ```javascript
+   POST /api/v1/app/messaging/messages/{conversation_id}
+   {
+     "type": "text",
+     "body": "Hello everyone!",
+     "reply_to_id": null
+   }
+   ```
+
+3. **Real-time Updates**: Messages appear instantly via WebSocket events
+4. **Pagination**: Use `before_id` parameter for efficient message loading
+
+### Environment Configuration
+
+Add these to your `.env` file:
+
+```dotenv
+# Broadcasting (Required for real-time messaging)
+BROADCAST_CONNECTION=pusher
+PUSHER_APP_ID=your_pusher_app_id
+PUSHER_APP_KEY=your_pusher_app_key
+PUSHER_APP_SECRET=your_pusher_app_secret
+PUSHER_HOST=
+PUSHER_PORT=443
+PUSHER_SCHEME=https
+PUSHER_APP_CLUSTER=mt1
+
+# File Storage (Required for attachments)
+FILESYSTEM_DISK=public
+
+# Messaging Configuration
+MESSAGING_EDIT_WINDOW=15
+MESSAGING_DELETE_WINDOW=60
+MESSAGING_MAX_FILE_SIZE=10240
+MESSAGING_MAX_IMAGE_SIZE=5120
+```
+
+### MVP Limitations
+
+- **No end-to-end encryption** (future enhancement)
+- **No push notifications** to external devices
+- **No message search** (Meilisearch integration planned)
+- **No cron jobs** - all operations are event-driven
+- **Local file storage only** (S3 support planned)
+- **No message reactions** (future feature)
+- **Basic typing indicators** (no advanced presence)
+
+### Demo Data
+
+To populate the messaging system with demo data:
+
+```bash
+# Run the messaging seeder
+php artisan db:seed --class=MessagingSeeder
+
+# Or uncomment in DatabaseSeeder.php and run:
+php artisan db:seed
+```
+
+This creates:
+- 5 demo users with different roles
+- 1 direct conversation
+- 1 group conversation
+- ~1000 messages for pagination testing
+- Simulated read receipts
 
 ## System Requirements
 
