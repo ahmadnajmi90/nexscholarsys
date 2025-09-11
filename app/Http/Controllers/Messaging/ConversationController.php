@@ -11,6 +11,7 @@ use App\Models\Messaging\ConversationParticipant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class ConversationController extends Controller
 {
@@ -62,6 +63,46 @@ class ConversationController extends Controller
 
             return new ConversationResource($conversation);
         });
+    }
+
+    /**
+     * Display a specific conversation.
+     *
+     * @param  \App\Models\Messaging\Conversation  $conversation
+     * @return \Inertia\Response
+     */
+    public function show(Conversation $conversation)
+    {
+        // Authorize that the user can view this conversation
+        $this->authorize('view', $conversation);
+
+        // Load conversation with all necessary relationships
+        $conversation->load([
+            'participants.user',
+            'messages' => function ($query) {
+                $query->with('sender', 'attachments')
+                      ->orderBy('created_at', 'desc')
+                      ->limit(50); // Load last 50 messages
+            },
+            'messages.replies',
+            'messages.replies.sender'
+        ]);
+
+        // Get participants for this conversation (excluding current user for display)
+        $participants = $conversation->participants->map(function ($participant) {
+            return [
+                'id' => $participant->id,
+                'user' => $participant->user,
+                'role' => $participant->role,
+                'joined_at' => $participant->joined_at,
+                'last_read_message_id' => $participant->last_read_message_id,
+            ];
+        });
+
+        return Inertia::render('Messaging/Show', [
+            'conversation' => $conversation,
+            'participants' => $participants,
+        ]);
     }
 
     /**

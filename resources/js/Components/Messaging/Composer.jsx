@@ -129,6 +129,9 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
     // Handle sending message
     const handleSend = () => {
         const trimmedMessage = message.trim();
+        console.log('[Messaging Debug] Composer handleSend called with raw message:', message);
+        console.log('[Messaging Debug] Composer trimmed message:', trimmedMessage);
+
         const hasContent = trimmedMessage || attachments.length > 0;
 
         if (!hasContent || isSending) return;
@@ -146,6 +149,8 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
             }
         }
 
+        console.log('[Messaging Debug] Composer determined message type:', messageType);
+
         // Prepare FormData for file uploads
         const formData = new FormData();
 
@@ -162,7 +167,14 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
             formData.append(`attachments[${index}]`, attachment.file);
         });
 
-        onSend(formData).finally(() => {
+        // Log all FormData entries
+        console.log('[Messaging Debug] Composer FormData entries:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`[Messaging Debug]   ${key}:`, value);
+        }
+
+        console.log('[Messaging Debug] Composer calling onSend with:', { formData, body: trimmedMessage });
+        onSend({ formData, body: trimmedMessage }).finally(() => {
             setMessage('');
             setAttachments([]);
             setIsSending(false);

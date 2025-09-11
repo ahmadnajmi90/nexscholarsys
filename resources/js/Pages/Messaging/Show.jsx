@@ -5,11 +5,14 @@ import Composer from '@/Components/Messaging/Composer';
 import TypingIndicator from '@/Components/Messaging/TypingIndicator';
 import ParticipantList from '@/Components/Messaging/ParticipantList';
 import { usePage, router } from '@inertiajs/react';
+import axios from 'axios';
 
 export default function Show() {
     const { auth, conversation } = usePage().props;
-    console.log(conversation);
-    const [messages, setMessages] = useState(conversation.messages?.data || []);
+    console.log('[Messaging Debug] Component mounted with props:', { auth, conversation });
+    console.log('[Messaging Debug] Initial conversation.messages:', conversation.messages);
+    const [messages, setMessages] = useState(conversation.messages || []);
+    console.log('[Messaging Debug] Initial messages state:', conversation.messages?.data || []);
     const [participants, setParticipants] = useState(conversation.participants || []);
     const [typingUsers, setTypingUsers] = useState([]);
     const [replyingTo, setReplyingTo] = useState(null);
@@ -147,14 +150,10 @@ export default function Show() {
         }
     
         return () => {
-            if (echoRef.current) {
-                echoRef.current.leave(`conversation.${conversation.id}`);
-                echoRef.current.leave(`presence.conversation.${conversation.id}`);
-            }
-
-            // Leave presence channel
-            if (presenceChannelRef.current) {
-                presenceChannelRef.current.leave();
+            // Leave Echo channels using the Echo instance
+            if (window.Echo && conversation?.id) {
+                window.Echo.leave(`conversation.${conversation.id}`);
+                window.Echo.leave(`presence.conversation.${conversation.id}`);
             }
 
             if (messagesContainer) {
@@ -172,48 +171,70 @@ export default function Show() {
     }, [messages]);
 
     // Handle sending a new message
-    const handleSendMessage = (messageData) => {
+    const handleSendMessage = ({ formData, body }) => {
+        console.log('[Messaging Debug] handleSendMessage called with:', { formData, body });
+
+        // Log FormData entries
+        console.log('[Messaging Debug] FormData entries:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`[Messaging Debug]   ${key}:`, value);
+        }
+
         // Optimistic update - add temporary message
         const tempId = `temp_${Date.now()}`;
         const tempMessage = {
             id: tempId,
             conversation_id: conversation?.id,
             user_id: auth.user.id,
-            type: messageData.type || 'text',
-            body: messageData.body,
-            reply_to_id: replyingTo?.id || null,
+            type: formData.get('type') || 'text',
+            body: body,
+            reply_to_id: formData.get('reply_to_id') || null,
             sender: auth.user,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         };
-        
-        setMessages(prev => [...prev, tempMessage]);
+
+        console.log('[Messaging Debug] Adding optimistic message:', tempMessage);
+        setMessages(prev => {
+            const newMessages = [...prev, tempMessage];
+            console.log('[Messaging Debug] Messages after optimistic update:', newMessages);
+            return newMessages;
+        });
         setReplyingTo(null);
-        
-        // Send message to server and return the Promise
-        return router.post(
+
+        // Send message to server and return a Promise that supports .finally()
+        return axios.post(
             route('api.app.messaging.messages.store', conversation?.id),
-            messageData,
+            formData,
             {
-                preserveScroll: true,
-                onSuccess: (page) => {
-                    // Replace temporary message with real one
-                    const realMessage = page.props.flash?.message ||
-                                      page.props.conversation?.last_message;
-                    if (realMessage) {
-                        setMessages(prev =>
-                            prev.map(msg =>
-                                msg.id === tempId ? realMessage : msg
-                            )
-                        );
-                    }
+                headers: {
+                    'Content-Type': 'multipart/form-data',
                 },
-                onError: (errors) => {
-                    // Remove temporary message on error
-                    setMessages(prev => prev.filter(msg => msg.id !== tempId));
-                }
             }
-        );
+        ).then(response => {
+            console.log('[Messaging Debug] Server response:', response);
+            console.log('[Messaging Debug] Real message from server:', response.data.data);
+
+            // Replace temporary message with real one
+            const realMessage = response.data.data;
+            setMessages(prev => {
+                const newMessages = prev.map(msg =>
+                    msg.id === tempId ? realMessage : msg
+                );
+                console.log('[Messaging Debug] Messages after replacing temp with real:', newMessages);
+                return newMessages;
+            });
+            return response;
+        }).catch(error => {
+            console.log('[Messaging Debug] Error sending message:', error);
+            // Remove temporary message on error
+            setMessages(prev => {
+                const newMessages = prev.filter(msg => msg.id !== tempId);
+                console.log('[Messaging Debug] Messages after removing temp on error:', newMessages);
+                return newMessages;
+            });
+            throw error;
+        });
     };
 
     return (

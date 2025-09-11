@@ -51,8 +51,31 @@ class MessagingController extends Controller
         // Authorize that the user can view this conversation
         $this->authorize('view', $conversation);
 
+        // Load conversation with all necessary relationships
+        $conversation->load([
+            'participants.user',
+            'messages' => function ($query) {
+                $query->with('sender', 'attachments')
+                      ->orderBy('created_at', 'asc');
+            },
+            'messages.replies',
+            'messages.replies.sender'
+        ]);
+
+        // Get participants for this conversation (excluding current user for display)
+        $participants = $conversation->participants->map(function ($participant) {
+            return [
+                'id' => $participant->id,
+                'user' => $participant->user,
+                'role' => $participant->role,
+                'joined_at' => $participant->joined_at,
+                'last_read_message_id' => $participant->last_read_message_id,
+            ];
+        });
+
         return Inertia::render('Messaging/Show', [
             'conversation' => $conversation,
+            'participants' => $participants,
         ]);
     }
 }

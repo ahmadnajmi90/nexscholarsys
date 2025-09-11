@@ -89,9 +89,6 @@ class MessagingSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
-            // Assign role (simplified - in real app would use proper role assignment)
-            $user->assignRole($userData['role']);
-
             $users->push($user);
         }
 
@@ -233,7 +230,7 @@ class MessagingSeeder extends Seeder
 
         foreach ($participants as $participant) {
             // Simulate that users have read up to a random point (80-100% of messages)
-            $readUpTo = rand((int)($messages * 0.8), count($messages) - 1);
+            $readUpTo = rand((int)(count($messages) * 0.8), count($messages) - 1);
             if ($readUpTo >= 0 && isset($messages[$readUpTo])) {
                 $participant->markAsRead($messages[$readUpTo]->id);
             }

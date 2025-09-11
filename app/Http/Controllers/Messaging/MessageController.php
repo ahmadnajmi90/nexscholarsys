@@ -33,8 +33,8 @@ class MessageController extends Controller
      */
     public function store(SendMessageRequest $request, Conversation $conversation)
     {
-        // Authorize that the user can send messages to this conversation
-        $this->authorize('send', [$conversation]);
+        // Authorize that the user can create messages in this conversation
+        $this->authorize('create', [Message::class, $conversation]);
 
         $validated = $request->validated();
 
@@ -87,7 +87,10 @@ class MessageController extends Controller
         // Broadcast the message
         broadcast(new MessageSent($message))->toOthers();
 
-        return new MessageResource($message);
+        // Return JSON response with the created message
+        return response()->json([
+            'data' => new MessageResource($message->load(['sender', 'attachments', 'replyTo.sender']))
+        ]);
     }
 
     /**

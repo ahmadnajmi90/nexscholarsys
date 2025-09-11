@@ -506,7 +506,7 @@ Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(
 // Messaging Routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/messages', [App\Http\Controllers\Messaging\MessagingController::class, 'index'])->name('messages.index');
-    Route::get('/messages/{conversation}', [App\Http\Controllers\Messaging\MessagingController::class, 'show'])->name('messages.show');
+    Route::get('/messages/{conversation}', [App\Http\Controllers\Messaging\ConversationController::class, 'show'])->name('messages.show');
 });
 
 require __DIR__.'/auth.php';

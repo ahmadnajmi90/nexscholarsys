@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Messaging\Message;
 use App\Models\User;
+use App\Models\Messaging\Conversation;
 use Illuminate\Auth\Access\Response;
 
 class MessagePolicy
@@ -29,9 +30,11 @@ class MessagePolicy
      * Determine whether the user can create messages.
      * Only active participants can send messages to a conversation.
      */
-    public function create(User $user): bool
+    public function create(User $user, Conversation $conversation): bool
     {
-        return true;
+        return $conversation->participants()
+            ->where('user_id', $user->id)
+            ->exists();
     }
 
     /**
