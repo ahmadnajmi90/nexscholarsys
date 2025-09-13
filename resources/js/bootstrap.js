@@ -1,3 +1,5 @@
+console.log('[Debug] bootstrap.js is running');
+
 import axios from 'axios';
 window.axios = axios;
 
@@ -108,24 +110,21 @@ import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
+console.log('[Debug import.meta.env]', import.meta.env);
+console.log('[Debug VITE_PUSHER_APP_KEY]', import.meta.env.VITE_PUSHER_APP_KEY);
+console.log('[Debug VITE_PUSHER_APP_CLUSTER]', import.meta.env.VITE_PUSHER_APP_CLUSTER);
+
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_REVERB_APP_KEY || 'nexscholarsys_key',
-    wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-    wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https',
-    encrypted: true,
-    disableStats: true,
-    enabledTransports: ['ws', 'wss'],
-    cluster: import.meta.env.VITE_REVERB_APP_CLUSTER || 'mt1',
-    authEndpoint: '/broadcasting/auth',
-    auth: {
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-        },
-    },
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    forceTLS: true,
 });
+
+// Debug
+console.log('[Pusher Debug] import.meta.env:', import.meta.env);
+console.log('[Pusher Debug] key:', import.meta.env.VITE_PUSHER_APP_KEY);
+console.log('[Pusher Debug] cluster:', import.meta.env.VITE_PUSHER_APP_CLUSTER);
 
 
 /**

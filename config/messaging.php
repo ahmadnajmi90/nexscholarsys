@@ -1,49 +1,27 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
-    | Message Edit/Delete Window
+    | Message Edit Window
     |--------------------------------------------------------------------------
     |
-    | Define how long users can edit or delete their messages after sending.
-    | Values are in minutes.
+    | This value determines how many minutes a user has to edit their message
+    | after sending it. After this window expires, the message can no longer
+    | be edited.
     |
     */
-
     'edit_window_minutes' => env('MESSAGING_EDIT_WINDOW', 15),
-    'delete_window_minutes' => env('MESSAGING_DELETE_WINDOW', 60),
 
     /*
     |--------------------------------------------------------------------------
-    | File Upload Limits
+    | Message Delete Window
     |--------------------------------------------------------------------------
     |
-    | Configure file upload limits for message attachments.
-    | Size limits are in KB.
+    | This value determines how many minutes a user has to delete their message
+    | after sending it. After this window expires, the message can no longer
+    | be deleted by the sender (though admins can still delete it).
     |
     */
-
-    'max_file_size' => env('MESSAGING_MAX_FILE_SIZE', 10240), // 10MB
-    'max_image_size' => env('MESSAGING_MAX_IMAGE_SIZE', 5120), // 5MB
-    
-    'allowed_mimes' => [
-        'images' => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-        'documents' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'],
-        'videos' => ['mp4', 'webm', 'mov'], // Optional for future
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Storage Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Define storage paths and disk configuration for message attachments.
-    |
-    */
-
-    'storage_disk' => env('MESSAGING_STORAGE_DISK', 'public'),
-    'storage_path' => 'messaging',
-
+    'delete_window_minutes' => env('MESSAGING_DELETE_WINDOW', 15),
 ];

@@ -509,4 +509,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/messages/{conversation}', [App\Http\Controllers\Messaging\ConversationController::class, 'show'])->name('messages.show');
 });
 
+// Resource Routes
+use App\Http\Controllers\ResourceController;
+Route::get('/resources/{category}', [ResourceController::class, 'showCategory'])->name('resources.category');
+Route::get('/resources/{category}/{slug}', [ResourceController::class, 'showGuide'])->name('resources.guide');
+
 require __DIR__.'/auth.php';

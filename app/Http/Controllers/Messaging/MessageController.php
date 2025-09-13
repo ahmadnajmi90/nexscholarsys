@@ -84,8 +84,11 @@ class MessageController extends Controller
         // Load relationships for the response
         $message->load(['sender', 'attachments', 'replyTo.sender']);
 
-        // Broadcast the message
-        broadcast(new MessageSent($message))->toOthers();
+        // Get temp_id from request if available
+        $tempId = $request->input('temp_id');
+        
+        // Broadcast the message with temp_id for optimistic UI updates
+        broadcast(new MessageSent($message, $tempId))->toOthers();
 
         // Return JSON response with the created message
         return response()->json([

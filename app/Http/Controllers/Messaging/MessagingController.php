@@ -53,14 +53,24 @@ class MessagingController extends Controller
 
         // Load conversation with all necessary relationships
         $conversation->load([
-            'participants.user',
-            'messages' => function ($query) {
-                $query->with('sender', 'attachments')
-                      ->orderBy('created_at', 'asc');
-            },
-            'messages.replies',
-            'messages.replies.sender'
+            'participants.user'
         ]);
+        
+        // Get the latest 50 messages for the conversation (optimized initial load)
+        $messages = $conversation->messages()
+            ->with(['sender', 'attachments', 'replyTo.sender'])
+            ->orderBy('created_at', 'desc')
+            ->take(50)
+            ->get();
+            
+        // Get the oldest message ID for pagination
+        $nextBeforeId = $messages->count() > 0 ? $messages->last()->id : null;
+        
+        // Reverse the messages to show oldest first
+        $messages = $messages->reverse()->values();
+        
+        // Add the messages to the conversation
+        $conversation->setRelation('messages', $messages);
 
         // Get participants for this conversation (excluding current user for display)
         $participants = $conversation->participants->map(function ($participant) {
@@ -76,6 +86,8 @@ class MessagingController extends Controller
         return Inertia::render('Messaging/Show', [
             'conversation' => $conversation,
             'participants' => $participants,
+            'next_before_id' => $nextBeforeId,
+            'has_more_messages' => $messages->count() >= 50,
         ]);
     }
 }

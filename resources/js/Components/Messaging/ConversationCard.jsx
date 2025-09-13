@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
 
-export default function ConversationCard({ conversation }) {
+export default function ConversationCard({ conversation, isSelected, onClick }) {
     const { auth } = usePage().props;
     
     // Get conversation title or participants names
@@ -18,6 +18,25 @@ export default function ConversationCard({ conversation }) {
         return otherParticipants.slice(0, 3).join(', ') + (otherParticipants.length > 3 ? ` +${otherParticipants.length - 3}` : '');
     };
     
+    // Get subtitle (research area, department, etc)
+    const getSubtitle = () => {
+        // For now, use a placeholder. In a real implementation, this would come from user data
+        const participants = conversation.participants || [];
+        const otherParticipants = participants.filter(p => p.user?.id !== auth.user?.id);
+        
+        if (otherParticipants.length === 1) {
+            // For direct messages, show field of research or department
+            return otherParticipants[0].user?.role === 'Academician' ? 
+                'AI in Healthcare Diagnostics' : 
+                otherParticipants[0].user?.role === 'Postgraduate' ?
+                'Natural Language Processing' :
+                'Computer Vision Applications';
+        }
+        
+        // For group chats, show number of participants
+        return `${participants.length} participants`;
+    };
+    
     // Get last message preview
     const getLastMessagePreview = () => {
         if (!conversation.last_message) return 'No messages yet';
@@ -26,32 +45,37 @@ export default function ConversationCard({ conversation }) {
         const sender = message.sender?.id === auth.user.id ? 'You' : message.sender?.name || 'Someone';
         
         if (message.type === 'text') {
-            return `${sender}: ${message.body.substring(0, 50)}${message.body.length > 50 ? '...' : ''}`;
+            return `${message.body.substring(0, 50)}${message.body.length > 50 ? '...' : ''}`;
         }
         
         if (message.type === 'image') {
-            return `${sender}: sent an image`;
+            return `${sender} sent an image`;
         }
         
         if (message.type === 'file') {
-            return `${sender}: sent a file`;
+            return `${sender} sent a file`;
         }
         
-        return `${sender}: ${message.body}`;
+        return message.body;
     };
     
-    // Format time
-    const formatTime = (dateString) => {
+    // Format time in relative format
+    const formatRelativeTime = (dateString) => {
         const date = new Date(dateString);
         const now = new Date();
-        const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        const diffInDays = Math.floor(diffInHours / 24);
         
-        if (diffInDays === 0) {
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        } else if (diffInDays === 1) {
-            return 'Yesterday';
+        if (diffInSeconds < 60) {
+            return 'just now';
+        } else if (diffInMinutes < 60) {
+            return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+        } else if (diffInHours < 24) {
+            return `about ${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
         } else if (diffInDays < 7) {
-            return date.toLocaleDateString([], { weekday: 'short' });
+            return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
         } else {
             return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
@@ -72,21 +96,54 @@ export default function ConversationCard({ conversation }) {
     // Count unread messages
     const getUnreadCount = () => {
         // In a real implementation, you would calculate this based on the actual unread messages
-        // For now, we'll just return 1 if there are unread messages
-        return hasUnreadMessages() ? 1 : 0;
+        // For now, we'll just return a placeholder count
+        return hasUnreadMessages() ? Math.floor(Math.random() * 5) + 1 : 0;
+    };
+    
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        const name = getTitle();
+        const names = name.split(' ');
+        
+        if (names.length === 1) {
+            return names[0].charAt(0).toUpperCase();
+        }
+        
+        return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+    };
+    
+    // Check if user is online (placeholder)
+    const isUserOnline = () => {
+        // This would be determined by presence channel in a real implementation
+        // For now, just randomly determine if user is online
+        const participants = conversation.participants || [];
+        const otherParticipants = participants.filter(p => p.user?.id !== auth.user?.id);
+        
+        if (otherParticipants.length === 1) {
+            // For demo purposes, make the first conversation's user online
+            return conversation.id % 3 === 0;
+        }
+        
+        return false;
     };
 
     return (
         <Link 
             href={route('messages.show', conversation.id)}
-            className="block p-4 hover:bg-gray-50 transition-colors"
+            className={`block p-4 hover:bg-gray-50 transition-colors ${isSelected ? 'bg-gray-100' : ''}`}
+            onClick={onClick}
         >
             <div className="flex items-center">
-                {/* Avatar */}
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <span className="text-indigo-800 font-semibold">
-                        {getTitle().charAt(0).toUpperCase()}
-                    </span>
+                {/* Avatar with online indicator */}
+                <div className="flex-shrink-0 relative">
+                    <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <span className="text-indigo-800 font-semibold">
+                            {getUserInitials()}
+                        </span>
+                    </div>
+                    {isUserOnline() && (
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    )}
                 </div>
                 
                 {/* Conversation Info */}
@@ -95,28 +152,22 @@ export default function ConversationCard({ conversation }) {
                         <h3 className={`text-sm font-medium ${hasUnreadMessages() ? 'text-gray-900' : 'text-gray-700'}`}>
                             {getTitle()}
                         </h3>
-                        <div className="flex items-center space-x-2">
-                            {conversation.pinned && (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm11 1H6v8l4-2 4 2V6z" clipRule="evenodd" />
-                                </svg>
-                            )}
-                            {conversation.muted_until && new Date(conversation.muted_until) > new Date() && (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM13.757 14.505a.5.5 0 01-.707 0 13.524 13.524 0 01-1.545-1.845.5.5 0 11.757-.663c.458.55.97.994 1.507 1.334a.5.5 0 010 .774zm1.697-1.343a.5.5 0 01-.707 0C13.45 11.7 12.5 9.85 12.5 8s.95-3.7 2.247-5.162a.5.5 0 11.757.663C14.45 4.3 13.5 6.15 13.5 8s.95 3.7 2.004 5.162a.5.5 0 010 .774z" clipRule="evenodd" />
-                                </svg>
-                            )}
-                            <span className="text-xs text-gray-500">
-                                {conversation.last_message && formatTime(conversation.last_message.created_at)}
-                            </span>
-                        </div>
+                        <span className="text-xs text-gray-500">
+                            {conversation.last_message && formatRelativeTime(conversation.last_message.created_at)}
+                        </span>
                     </div>
+                    
+                    {/* Subtitle line */}
+                    <div className="text-xs text-gray-500 mt-0.5">
+                        {getSubtitle()}
+                    </div>
+                    
                     <div className="flex items-center justify-between mt-1">
                         <p className={`text-sm truncate ${hasUnreadMessages() ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
                             {getLastMessagePreview()}
                         </p>
                         {hasUnreadMessages() && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-indigo-500 rounded-full">
+                            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                                 {getUnreadCount()}
                             </span>
                         )}

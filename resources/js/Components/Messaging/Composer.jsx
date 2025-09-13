@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { usePage } from '@inertiajs/react';
+import { Paperclip, Send, Smile } from 'lucide-react';
 
 export default function Composer({ onSend, replyingTo, conversationId, echoChannel }) {
     const { auth } = usePage().props;
@@ -12,10 +13,28 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
     const typingTimeoutRef = useRef(null);
     const typingDebounceRef = useRef(null);
 
-    // Focus textarea when component mounts
+    // Auto-resize textarea as content grows
+    useEffect(() => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+        
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }, [message]);
+
+    // Focus textarea and load draft when component mounts
     useEffect(() => {
         textareaRef.current?.focus();
-    }, []);
+        
+        // Load draft from localStorage if available
+        if (conversationId) {
+            const draftKey = `draft:conversation:${conversationId}`;
+            const savedDraft = localStorage.getItem(draftKey);
+            if (savedDraft) {
+                setMessage(savedDraft);
+            }
+        }
+    }, [conversationId]);
 
     // Cleanup timeouts on unmount
     useEffect(() => {
@@ -30,15 +49,25 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
     }, []);
 
     // Handle typing events with debounce
-    const handleTyping = () => {
-        const value = textareaRef.current.value;
+    const handleTyping = (e) => {
+        const value = e.target.value;
         setMessage(value);
-
+        
+        // Save draft to localStorage
+        if (conversationId) {
+            const draftKey = `draft:conversation:${conversationId}`;
+            if (value.trim()) {
+                localStorage.setItem(draftKey, value);
+            } else {
+                localStorage.removeItem(draftKey);
+            }
+        }
+        
         // Clear previous timeout
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
         }
-
+        
         // Clear previous debounce
         if (typingDebounceRef.current) {
             clearTimeout(typingDebounceRef.current);
@@ -47,17 +76,17 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
         // Send typing event with debounce (only if there's content)
         if (echoChannel && value.trim()) {
             typingDebounceRef.current = setTimeout(() => {
-                echoChannel.whisper('typing', {
-                    id: Date.now(),
+            echoChannel.whisper('typing', {
+                id: Date.now(),
                     name: auth.user.name,
                     timestamp: Date.now()
-                });
+            });
 
                 // Clear debounce after sending
                 typingDebounceRef.current = null;
             }, 300); // 300ms debounce
         }
-
+        
         // Set timeout to clear typing status after user stops typing
         typingTimeoutRef.current = setTimeout(() => {
             // Typing stopped, clear any pending debounce
@@ -135,9 +164,9 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
         const hasContent = trimmedMessage || attachments.length > 0;
 
         if (!hasContent || isSending) return;
-
+        
         setIsSending(true);
-
+        
         // Determine message type
         let messageType = 'text';
         if (attachments.length > 0) {
@@ -174,11 +203,20 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
         }
 
         console.log('[Messaging Debug] Composer calling onSend with:', { formData, body: trimmedMessage });
+        // Add temp_id to FormData for optimistic UI updates
+        const tempId = `temp_${Date.now()}`;
+        formData.append('temp_id', tempId);
+        
         onSend({ formData, body: trimmedMessage }).finally(() => {
             setMessage('');
             setAttachments([]);
             setIsSending(false);
             textareaRef.current?.focus();
+            
+            // Clear draft from localStorage
+            if (conversationId) {
+                localStorage.removeItem(`draft:conversation:${conversationId}`);
+            }
 
             // Clean up object URLs
             attachments.forEach(attachment => {
@@ -238,30 +276,38 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
                 </div>
             )}
 
-            {/* Drag and Drop Area */}
+            {/* Message Input */}
             <div
-                className={`relative border-2 border-dashed rounded-lg transition-colors ${
-                    isDragOver
-                        ? 'border-indigo-400 bg-indigo-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                className={`relative rounded-full border border-gray-300 bg-white shadow-sm transition-colors ${
+                    isDragOver ? 'border-indigo-400 bg-indigo-50' : 'hover:border-gray-400'
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
-                <div className="flex items-end space-x-2 p-3">
-                    <div className="flex-1 relative">
-                        <textarea
-                            ref={textareaRef}
-                            value={message}
-                            onChange={handleTyping}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Type a message..."
-                            className="w-full px-4 py-3 border-0 focus:ring-0 resize-none"
-                            rows="1"
-                            disabled={isSending}
-                        />
-                    </div>
+                <div className="flex items-end">
+                    {/* Emoji Button */}
+                    <button
+                        className="flex-shrink-0 p-3 text-gray-500 hover:text-gray-700"
+                        title="Add emoji"
+                    >
+                        <Smile className="h-5 w-5" />
+                    </button>
+                    
+                    {/* Text Input */}
+                    <div className="flex-1 min-w-0">
+                <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={handleTyping}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type a message..."
+                            className="w-full py-3 border-0 focus:ring-0 resize-none bg-transparent"
+                            style={{ maxHeight: '120px' }}
+                    rows="1"
+                    disabled={isSending}
+                />
+            </div>
 
                     {/* File Upload Button */}
                     <input
@@ -275,39 +321,36 @@ export default function Composer({ onSend, replyingTo, conversationId, echoChann
 
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                        className="flex-shrink-0 p-3 text-gray-500 hover:text-gray-700"
                         title="Attach files"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a3 3 0 01-3 3H8a1 1 0 010-2h3a1 1 0 010-2H8a1 1 0 010-2h3a3 3 0 003-3V7a5 5 0 00-5-5z" clipRule="evenodd" />
-                        </svg>
+                        <Paperclip className="h-5 w-5" />
                     </button>
 
-                    <button
-                        onClick={handleSend}
+                    {/* Send Button */}
+            <button
+                onClick={handleSend}
                         disabled={(!message.trim() && attachments.length === 0) || isSending}
-                        className={`p-3 rounded-full transition-colors ${
+                        className={`flex-shrink-0 p-3 rounded-full transition-colors ${
                             (message.trim() || attachments.length > 0) && !isSending
-                                ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                                : 'bg-gray-200 text-gray-400'
+                                ? 'text-indigo-600 hover:text-indigo-800'
+                                : 'text-gray-400'
                         }`}
-                    >
-                        {isSending ? (
-                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                            </svg>
+            >
+                {isSending ? (
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                ) : (
+                            <Send className="h-5 w-5" />
                         )}
                     </button>
                 </div>
 
                 {/* Drag and drop overlay */}
                 {isDragOver && (
-                    <div className="absolute inset-0 bg-indigo-500 bg-opacity-10 border-2 border-indigo-500 border-dashed rounded-lg flex items-center justify-center">
+                    <div className="absolute inset-0 bg-indigo-500 bg-opacity-10 border-2 border-indigo-500 border-dashed rounded-full flex items-center justify-center">
                         <div className="text-indigo-600 font-medium">
                             Drop files here to attach
                         </div>

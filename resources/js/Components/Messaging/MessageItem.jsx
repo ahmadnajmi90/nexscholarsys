@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function MessageItem({ message, currentUser, participants = [], onReply }) {
+export default function MessageItem({ message, currentUser, participants = [], onReply, isGroupChat = false }) {
     const isCurrentUser = message.user_id === currentUser.id;
     const isText = message.type === 'text';
     const isSystem = message.type === 'system';
@@ -24,12 +24,30 @@ export default function MessageItem({ message, currentUser, participants = [], o
         const date = new Date(dateString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
+    
+    // Format date for message groups
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    };
 
     // Handle reply action
     const handleReply = () => {
         if (onReply) {
             onReply(message);
         }
+    };
+    
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        const name = message.sender?.name || 'Unknown';
+        const names = name.split(' ');
+        
+        if (names.length === 1) {
+            return names[0].charAt(0).toUpperCase();
+        }
+        
+        return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
     };
 
     // Render attachments
@@ -55,7 +73,7 @@ export default function MessageItem({ message, currentUser, participants = [], o
                         ) : (
                             <div className="flex items-center p-3 bg-gray-100 rounded-lg max-w-xs">
                                 <div className="flex-shrink-0 mr-3">
-                                    {attachment.mime.startsWith('video/') ? (
+                                    {attachment.mime?.startsWith('video/') ? (
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                                         </svg>
@@ -99,7 +117,7 @@ export default function MessageItem({ message, currentUser, participants = [], o
     const renderMessageContent = () => {
         if (isSystem) {
             return (
-                <div className="text-center text-sm text-gray-500 py-2">
+                <div className="text-center text-sm text-gray-500 py-2 bg-gray-100 rounded-full px-4">
                     {message.body}
                 </div>
             );
@@ -122,53 +140,66 @@ export default function MessageItem({ message, currentUser, participants = [], o
 
     if (isSystem) {
         return (
-            <div className="flex justify-center">
+            <div className="flex justify-center my-2">
                 {renderMessageContent()}
             </div>
         );
     }
 
     return (
-        <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-xs md:max-w-md lg:max-w-lg ${isCurrentUser ? 'bg-indigo-500 text-white' : 'bg-white border border-gray-200'} rounded-lg p-3 shadow-sm`}>
-                {/* Sender name for group chats (non-current user) */}
+        <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}>
+            {/* Avatar for other users in group chats */}
+            {!isCurrentUser && isGroupChat && (
+                <div className="flex-shrink-0 mr-2 self-end mb-1">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <span className="text-indigo-800 font-semibold text-xs">
+                            {getUserInitials()}
+                        </span>
+                    </div>
+                </div>
+            )}
+            
+            <div className="flex flex-col max-w-xs md:max-w-md">
+                {/* Sender name for group chats or when not current user */}
                 {!isCurrentUser && (
-                    <div className="text-xs font-semibold mb-1 text-gray-600">
+                    <div className="text-xs font-medium text-gray-600 mb-1 ml-1">
                         {message.sender?.name}
                     </div>
                 )}
                 
-                {/* Message content */}
-                {renderMessageContent()}
-                
-                {/* Message metadata */}
-                <div className={`text-xs mt-1 ${isCurrentUser ? 'text-indigo-100' : 'text-gray-500'} flex justify-between items-center`}>
-                    <span>{formatTime(message.created_at)}</span>
-                    {isCurrentUser && (
-                        <div className="flex items-center space-x-1">
-                            {hasBeenSeen ? (
-                                <span className="text-indigo-200" title={`Seen by ${seenByOthers.join(', ')}`}>
-                                    ✓✓
-                                </span>
-                            ) : (
-                                <span className="text-indigo-200 opacity-50">✓</span>
-                            )}
-                        </div>
-                    )}
+                {/* Message bubble */}
+                <div 
+                    className={`rounded-2xl px-4 py-2 shadow-sm ${
+                        isCurrentUser 
+                            ? 'bg-indigo-600 text-white rounded-br-none' 
+                            : 'bg-white border border-gray-200 rounded-bl-none'
+                    }`}
+                >
+                    {/* Message content */}
+                    {renderMessageContent()}
                 </div>
                 
-                {/* Reply button (only for text messages without attachments) */}
-                {isText && !hasAttachments && (
-                    <div className="mt-1">
-                        <button
-                            onClick={handleReply}
-                            className={`text-xs ${isCurrentUser ? 'text-indigo-200 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}
-                        >
-                            Reply
-                        </button>
-                    </div>
-                )}
+                {/* Message metadata */}
+                <div className={`text-xs mt-1 flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                    <span className="text-gray-500">{formatTime(message.created_at)}</span>
+                    {isCurrentUser && hasBeenSeen && (
+                        <span className="ml-1 text-gray-500" title={`Seen by ${seenByOthers.join(', ')}`}>
+                            • Seen
+                        </span>
+                    )}
+                </div>
             </div>
+            
+            {/* Avatar for current user */}
+            {isCurrentUser && isGroupChat && (
+                <div className="flex-shrink-0 ml-2 self-end mb-1">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <span className="text-indigo-800 font-semibold text-xs">
+                            {getUserInitials()}
+                        </span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

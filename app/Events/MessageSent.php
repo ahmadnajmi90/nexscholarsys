@@ -21,15 +21,23 @@ class MessageSent implements ShouldBroadcast
      * @var \App\Models\Messaging\Message
      */
     public $message;
+    
+    /**
+     * The temporary ID for optimistic UI updates.
+     *
+     * @var string|null
+     */
+    protected $tempId;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct(Message $message)
+    public function __construct(Message $message, ?string $tempId = null)
     {
         $this->message = $message;
+        $this->tempId = $tempId;
         
         // Load relationships for serialization
         $this->message->load(['sender', 'attachments', 'replyTo']);
@@ -91,6 +99,7 @@ class MessageSent implements ShouldBroadcast
                     'height' => $attachment->height,
                 ];
             }),
+            'temp_id' => $this->tempId,
             'created_at' => $this->message->created_at->toIso8601String(),
             'updated_at' => $this->message->updated_at->toIso8601String(),
         ];
