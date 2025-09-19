@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\DB;
 class ConnectionController extends Controller
 {
     /**
-     * Display the user's network connections page.
+     * Display the user's network connections page or return JSON for API requests.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Inertia\Response
+     * @return \Inertia\Response|\Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -102,6 +102,28 @@ class ConnectionController extends Controller
             'sentRequests' => $transformedSentRequests['meta'] ?? 'No meta data',
         ]);
         
+        // Handle API requests differently - return JSON response
+        if ($request->wantsJson() || $request->is('api/*')) {
+            // Check if we need to filter by status
+            $status = $request->input('status');
+            
+            if ($status === 'accepted') {
+                return response()->json($transformedAcceptedConnections);
+            } elseif ($status === 'received' || $status === 'pending') {
+                return response()->json($transformedReceivedRequests);
+            } elseif ($status === 'sent') {
+                return response()->json($transformedSentRequests);
+            }
+            
+            // Default: return all connections
+            return response()->json([
+                'accepted' => $transformedAcceptedConnections,
+                'received' => $transformedReceivedRequests,
+                'sent' => $transformedSentRequests
+            ]);
+        }
+        
+        // For web requests, return the Inertia view
         return Inertia::render('Networking/MyConnections', [
             'acceptedConnections' => $transformedAcceptedConnections,
             'receivedRequests' => $transformedReceivedRequests,

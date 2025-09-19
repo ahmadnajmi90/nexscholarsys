@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
 use App\Models\Academician;
 use App\Models\Industry;
@@ -47,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'agreed_to_terms',
         'has_seen_tutorial',
         'email_verified_at',
+        'last_seen_at',
     ];
 
     /**
@@ -64,7 +66,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array<int, string>
      */
-    protected $appends = ['connection_status_with_auth_user', 'full_name', 'collaborator_count'];
+    protected $appends = ['connection_status_with_auth_user', 'full_name', 'collaborator_count', 'is_online'];
 
     /**
      * Get the attributes that should be cast.
@@ -77,6 +79,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'agreed_to_terms' => 'boolean',
+            'last_seen_at' => 'datetime',
         ];
     }
 
@@ -95,6 +98,37 @@ class User extends Authenticatable implements MustVerifyEmail
                ?? $this->undergraduate->full_name
                ?? $this->name
                ?? '';
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        $this->loadMissing(['academician', 'postgraduate', 'undergraduate']);
+
+        $path = $this->academician->profile_picture
+            ?? $this->postgraduate->profile_picture
+            ?? $this->undergraduate->profile_picture
+            ?? null;
+
+        if (!$path) {
+            return null;
+        }
+
+        // Adjust disk if your profile photos are stored elsewhere
+        $disk = config('filesystems.default', 'public');
+
+        try {
+            return asset('storage/' . $path);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Backward-compat alias for callers expecting 'profile_photo_url'.
+     */
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        return $this->avatar_url;
     }
 
     public function academician()
@@ -365,6 +399,32 @@ class User extends Authenticatable implements MustVerifyEmail
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class, 'profile_skills', 'unique_id', 'skill_id', 'unique_id', 'id')
+            ->withTimestamps();
+    }
+    
+    /**
+     * Get the online status based on last_seen_at.
+     * 
+     * @return bool
+     */
+    public function getIsOnlineAttribute(): bool
+    {
+        if (!$this->last_seen_at) {
+            return false;
+        }
+        
+        // Consider online if seen in the last 5 minutes
+        return $this->last_seen_at->diffInMinutes(now()) <= 5;
+    }
+    
+    /**
+     * Get conversations where the user is a participant.
+     */
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Messaging\Conversation::class, 'conversation_participants')
+            ->withPivot(['role', 'last_read_message_id', 'joined_at', 'left_at', 'archived_at'])
+            ->whereNull('left_at')
             ->withTimestamps();
     }
 }

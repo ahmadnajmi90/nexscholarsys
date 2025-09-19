@@ -229,6 +229,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
     });
 
     // Connection Routes - Stateful for frontend
+    Route::get('/connections', [ConnectionController::class, 'index'])
+        ->name('api.app.connections.index');
     Route::post('/connections/{user}', [ConnectionController::class, 'store'])
         ->name('api.app.connections.store');
     Route::patch('/connections/{connection}/accept', [ConnectionController::class, 'accept'])
@@ -245,6 +247,52 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         ->name('api.app.notifications.mark-as-read');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
         ->name('api.app.notifications.mark-all-as-read');
+        
+    // Messaging Routes - Stateful for frontend
+    Route::prefix('messaging')->name('messaging.')->group(function () {
+        // Conversations
+        Route::get('/conversations', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'index'])
+            ->name('conversations.index');
+        Route::post('/conversations', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'store'])
+            ->name('conversations.store');
+        Route::get('/conversations/{conversation}', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'show'])
+            ->name('conversations.show');
+        Route::post('/conversations/{conversation}/archive', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'archive'])
+            ->name('conversations.archive');
+            
+        // Messages
+        Route::get('/conversations/{conversation}/messages', [\App\Http\Controllers\Api\V1\Messaging\MessageController::class, 'index'])
+            ->name('messages.index');
+        Route::post('/conversations/{conversation}/messages', [\App\Http\Controllers\Api\V1\Messaging\MessageController::class, 'store'])
+            ->name('messages.store');
+        Route::patch('/messages/{message}', [\App\Http\Controllers\Api\V1\Messaging\MessageController::class, 'update'])
+            ->name('messages.update');
+        Route::delete('/messages/{message}', [\App\Http\Controllers\Api\V1\Messaging\MessageController::class, 'destroy'])
+            ->name('messages.destroy');
+            
+        // Read receipts
+        Route::post('/conversations/{conversation}/read', [\App\Http\Controllers\Api\V1\Messaging\ReadController::class, 'update'])
+            ->name('read.update');
+            
+        // Typing indicators
+        Route::post('/conversations/{conversation}/typing', [\App\Http\Controllers\Api\V1\Messaging\TypingController::class, 'update'])
+            ->name('typing.update');
+            
+        // Attachments
+        Route::get('/attachments/{attachment}', [\App\Http\Controllers\Api\V1\Messaging\AttachmentController::class, 'show'])
+            ->name('attachments.show');
+        Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\Api\V1\Messaging\AttachmentController::class, 'download'])
+            ->name('attachments.download');
+    });
+    
+    // User presence heartbeat
+    Route::post('/me/heartbeat', function (Request $request) {
+        $user = $request->user();
+        $user->last_seen_at = now();
+        $user->save();
+        
+        return response()->json(['success' => true]);
+    })->name('me.heartbeat');
 });
 
 // Content Management API Routes - Stateless for external tools

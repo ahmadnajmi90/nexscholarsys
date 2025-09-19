@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Home, Sparkles, Users, FolderOpen, Settings, ChevronLeft,
     GraduationCap, LayoutGrid, Shield, Calendar,
-    FileText, ClipboardList, LogOut, Bookmark, Building2, Database, User2, BookUser, Library, Building, DollarSign
+    FileText, ClipboardList, LogOut, Bookmark, Building2, Database, User2, BookUser, Library, Building, DollarSign,
+    MessageSquare
 } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
@@ -52,6 +53,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                 { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap },
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
                 { label: 'Scholar Lab', href: route('project-hub.index'), icon: LayoutGrid },
+                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare },
             ]
         },
         networking: {
