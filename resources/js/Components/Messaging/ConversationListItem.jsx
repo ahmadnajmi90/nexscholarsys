@@ -85,28 +85,33 @@ export default function ConversationListItem({ conversation, isActive, onSelect 
           : 'hover:bg-muted/50'
       )}
     >
-      <div className="relative">
+      <div className="relative shrink-0">
         {getAvatar()}
         {otherParticipants.length > 0 && otherParticipants[0]?.user?.is_online && (
           <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
         )}
       </div>
       
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium flex-1 min-w-0 basis-0 truncate overflow-hidden text-ellipsis whitespace-nowrap">
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex items-center justify-between min-w-0">
+          <h3 
+            className="font-medium truncate pr-2 min-w-0 flex-1 overflow-hidden"
+            title={displayName}
+          >
             {displayName}
           </h3>
 
-          <span className="text-xs text-muted-foreground shrink-0 pl-2 whitespace-nowrap">
+          <span className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">
             {formattedTime}
           </span>
         </div>
         
-        <div className="mt-0.5 flex items-center min-w-0">
+        <div className="mt-0.5 flex items-center justify-between min-w-0">
           <p
-            className="text-sm text-muted-foreground flex-1 min-w-0 basis-0 truncate overflow-hidden text-ellipsis whitespace-nowrap"
-            title={getMessageSnippet()} // hover full text
+            className="text-sm text-muted-foreground truncate pr-1 min-w-0 flex-1 break-words overflow-hidden"
+            title={last_message?.sender?.id === meId
+              ? `You: ${getMessageSnippet()}`
+              : getMessageSnippet()}
           >
             {last_message?.sender?.id === meId
               ? `You: ${getMessageSnippet()}`

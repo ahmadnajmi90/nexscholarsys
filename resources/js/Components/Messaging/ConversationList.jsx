@@ -35,15 +35,15 @@ export default function ConversationList({
   }, []);
   
   return (
-    <div className="h-full flex flex-col min-w-0">
-      <div className="p-3">
+    <div className="h-full flex flex-col min-w-0 overflow-hidden">
+      <div className="p-3 shrink-0">
         <div className="relative">
           <input
             type="text"
             placeholder="Search conversations..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="w-full p-2 pl-8 text-sm bg-muted/50 border-0 rounded-lg focus:ring-1 focus:ring-primary"
+            className="w-full p-2 pl-8 text-sm bg-muted/50 border-0 rounded-lg focus:ring-1 focus:ring-primary min-w-0"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -62,8 +62,8 @@ export default function ConversationList({
         </div>
       </div>
       
-      <ScrollArea className="flex-1 min-w-0">
-        <div className="p-3 space-y-1">
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+        <div className="p-3 space-y-1 min-w-0 overflow-hidden">
           {conversations.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
               No conversations found
@@ -79,7 +79,7 @@ export default function ConversationList({
             ))
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }

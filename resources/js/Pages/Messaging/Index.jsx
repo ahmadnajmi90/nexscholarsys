@@ -91,13 +91,22 @@ export default function Index({ auth }) {
     try {
       const response = await axios.post('/api/v1/app/messaging/conversations', data);
       const newConversation = response.data.data;
-      
-      // Update conversations list
-      fetchConversations();
-      
+
+      // Optimistically update conversations list by prepending the new conversation
+      // This avoids race conditions where fetchConversations() might run before the new group is committed
+      setConversations(prev => {
+        // Check if the conversation already exists in the list (to avoid duplicates)
+        const exists = prev.some(conv => conv.id === newConversation.id);
+        if (!exists) {
+          // Prepend the new conversation (it should appear at the top as the most recent)
+          return [newConversation, ...prev];
+        }
+        return prev;
+      });
+
       // Select the new conversation
       setSelectedConversationId(newConversation.id);
-      
+
       return newConversation;
     } catch (err) {
       console.error('Error creating conversation:', err);
@@ -158,14 +167,14 @@ export default function Index({ auth }) {
       <div className="py-6 lg:py-0">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-0">
           <Card className="overflow-hidden">
-            <div className="flex h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)]">
+            <div className="flex h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] overflow-hidden">
               {/* Left sidebar */}
-              <div className="w-full md:w-80 border-r flex flex-col">
+              <div className="w-full md:w-80 md:flex-none md:max-w-80 border-r flex flex-col min-w-0 overflow-hidden">
                 <div className="p-4 border-b flex justify-between items-center">
-                  <h2 className="text-lg font-medium">Chats</h2>
+                  <h2 className="text-lg font-medium truncate">Chats</h2>
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="rounded-full w-8 h-8 p-0 flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-colors"
+                    className="rounded-full w-8 h-8 p-0 flex items-center justify-center bg-primary text-white hover:bg-primary/90 transition-colors shrink-0"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -183,7 +192,7 @@ export default function Index({ auth }) {
               </div>
               
               {/* Main content area */}
-              <div className="hidden md:flex flex-1">
+              <div className="hidden md:flex flex-1 min-w-0 overflow-hidden">
                 {selectedConversationId ? (
                   <ThreadPane
                     conversationId={selectedConversationId}
