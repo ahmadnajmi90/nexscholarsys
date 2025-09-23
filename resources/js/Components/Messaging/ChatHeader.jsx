@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, usePage } from '@inertiajs/react';
 import Avatar from '@/Components/Shared/Avatar';
+import ViewParticipantsModal from './ViewParticipantsModal';
 
 export default function ChatHeader({ conversation, onArchive }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
   const { auth } = usePage().props;
 
   // Get the current user ID
@@ -106,6 +108,15 @@ export default function ChatHeader({ conversation, onArchive }) {
     }
     setIsMenuOpen(false);
   };
+
+  // Handle participants modal
+  const openParticipantsModal = () => {
+    setIsParticipantsModalOpen(true);
+  };
+
+  const closeParticipantsModal = () => {
+    setIsParticipantsModalOpen(false);
+  };
   
   return (
     <div className="flex items-center justify-between p-3 border-b">
@@ -149,14 +160,40 @@ export default function ChatHeader({ conversation, onArchive }) {
             <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
               {type === 'direct' && (
                 <Link
-                  href={`/networking/${otherParticipants[0]?.user?.role?.toLowerCase()}/${otherParticipants[0]?.user?.url || otherParticipants[0]?.user_id}`}
+                  href={(() => {
+                    const user = otherParticipants[0]?.user;
+                    const role = user?.role?.toLowerCase();
+                    let profileUrl = null;
+
+                    if (role === 'academician' && user?.academician?.url) {
+                      profileUrl = route('academicians.show', user.academician.url);
+                    } else if (role === 'postgraduate' && user?.postgraduate?.url) {
+                      profileUrl = route('postgraduates.show', user.postgraduate.url);
+                    } else if (role === 'undergraduate' && user?.undergraduate?.url) {
+                      profileUrl = route('undergraduates.show', user.undergraduate.url);
+                    }
+
+                    return profileUrl;
+                  })()}
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
                   View Profile
                 </Link>
               )}
-              <button
+              {type === 'group' && (
+                <button
+                  onClick={() => {
+                    openParticipantsModal();
+                    setIsMenuOpen(false); // Close the dropdown menu
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                >
+                  View Participants
+                </button>
+              )}
+              {/* <button
                 onClick={handleArchive}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 role="menuitem"
@@ -169,11 +206,18 @@ export default function ChatHeader({ conversation, onArchive }) {
                 role="menuitem"
               >
                 Back to Inbox
-              </Link>
+              </Link> */}
             </div>
           </div>
         )}
       </div>
+
+      {/* Participants Modal */}
+      <ViewParticipantsModal
+        show={isParticipantsModalOpen}
+        onClose={closeParticipantsModal}
+        participants={participants}
+      />
     </div>
   );
 }

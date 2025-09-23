@@ -65,10 +65,5 @@ class AuthServiceProvider extends ServiceProvider
         // Log policy mappings for debugging
         $convPolicy = Gate::getPolicyFor(Conversation::class);
         $messagePolicy = Gate::getPolicyFor(Message::class);
-        
-        Log::debug('Policy mappings:', [
-            'Conversation' => get_class($convPolicy),
-            'Message' => get_class($messagePolicy)
-        ]);
     }
 } 

@@ -226,16 +226,24 @@ export default function ThreadPane({
     channel.listen('.MessageSent', (e) => {
       const newMessage = e.message;
 
-      // Check if we already have this message (to avoid duplicates)
-      const messageExists = messages.some(m => m.id === newMessage.id);
-      if (!messageExists) {
-        setMessages(prev => [...prev, newMessage]);
+      // Use functional state update to check for duplicates and add message
+      setMessages(prev => {
+        // Check if we already have this message (to avoid duplicates)
+        const messageExists = prev.some(m => m.id === newMessage.id);
 
-        // If this is a message from someone else and we're at the bottom, auto-mark as read
-        if (newMessage.user_id !== currentUserId && isAtBottom) {
-          handleMessageRead(newMessage.id);
+        if (!messageExists) {
+          // If this is a message from someone else and we're at the bottom, auto-mark as read
+          if (newMessage.user_id !== currentUserId && isAtBottom) {
+            handleMessageRead(newMessage.id);
+          }
+
+          // Return new state with message added
+          return [...prev, newMessage];
         }
-      }
+
+        // Return unchanged state if message already exists
+        return prev;
+      });
     });
     
     // Listen for edited messages
@@ -296,7 +304,7 @@ export default function ThreadPane({
       setConversation(e.conversation);
     });
     
-  }, [conversation, conversationId, messages]);
+  }, [conversation, conversationId]);
   
   // Fetch conversation details
   const fetchConversation = async () => {

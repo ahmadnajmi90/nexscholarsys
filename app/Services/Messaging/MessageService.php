@@ -2,6 +2,9 @@
 
 namespace App\Services\Messaging;
 
+use App\Events\Messaging\MessageSent;
+use App\Events\Messaging\MessageEdited;
+use App\Events\Messaging\MessageDeleted;
 use App\Models\Messaging\Conversation;
 use App\Models\Messaging\Message;
 use App\Models\User;
@@ -67,6 +70,9 @@ class MessageService
             // Load relationships for the response
             $message->load(['sender', 'attachments']);
 
+            // Broadcast the message to other participants
+            broadcast(new MessageSent($message));
+
             return $message;
         });
     }
@@ -86,8 +92,13 @@ class MessageService
                 'body' => $data['body'],
                 'edited_at' => now(),
             ]);
-            
-            return $message->fresh();
+
+            $updatedMessage = $message->fresh();
+
+            // Broadcast the message edit to other participants
+            broadcast(new MessageEdited($updatedMessage));
+
+            return $updatedMessage;
         });
     }
     
@@ -101,10 +112,13 @@ class MessageService
      */
     public function delete(Message $message, string $scope, User $user): bool
     {
+        $conversationId = $message->conversation_id;
+        $messageId = $message->id;
+
         if ($scope === 'all') {
             // Delete for everyone
             $message->delete();
-            
+
             // If this was the conversation's last message, update to previous message
             $conversation = $message->conversation;
             if ($conversation->last_message_id === $message->id) {
@@ -112,10 +126,13 @@ class MessageService
                     ->where('id', '!=', $message->id)
                     ->orderBy('created_at', 'desc')
                     ->first();
-                    
+
                 $conversation->update(['last_message_id' => $previousMessage->id ?? null]);
             }
-            
+
+            // Broadcast the message deletion to other participants
+            broadcast(new MessageDeleted($conversationId, $messageId, $scope));
+
             return true;
         } else {
             // Delete for current user only (future implementation)

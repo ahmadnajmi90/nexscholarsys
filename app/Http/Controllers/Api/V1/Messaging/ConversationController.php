@@ -71,17 +71,17 @@ class ConversationController extends Controller
         $this->authorize('view', $conversation);
         
         $conversation->load([
-            'participants.user', 
-            'participants.user.academician:academician_id,full_name,profile_picture',
-            'participants.user.postgraduate:postgraduate_id,full_name,profile_picture',
-            'participants.user.undergraduate:undergraduate_id,full_name,profile_picture',
+            'participants.user',
+            'participants.user.academician:id,academician_id,full_name,profile_picture,url',
+            'participants.user.postgraduate:id,postgraduate_id,full_name,profile_picture,url',
+            'participants.user.undergraduate:id,undergraduate_id,full_name,profile_picture,url',
             'lastMessage',
             'lastMessage.sender',
-            'lastMessage.sender.academician:academician_id,full_name,profile_picture',
-            'lastMessage.sender.postgraduate:postgraduate_id,full_name,profile_picture',
-            'lastMessage.sender.undergraduate:undergraduate_id,full_name,profile_picture',
+            'lastMessage.sender.academician:id,academician_id,full_name,profile_picture,url',
+            'lastMessage.sender.postgraduate:id,postgraduate_id,full_name,profile_picture,url',
+            'lastMessage.sender.undergraduate:id,undergraduate_id,full_name,profile_picture,url',
         ]);
-        
+
         return new ConversationResource($conversation);
     }
 

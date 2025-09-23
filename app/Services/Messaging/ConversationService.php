@@ -166,13 +166,13 @@ class ConversationService
         // Load relationships with role profiles for full_name and avatar_url accessors
         $query->with([
             'participants.user',
-            'participants.user.academician:academician_id,full_name,profile_picture',
-            'participants.user.postgraduate:postgraduate_id,full_name,profile_picture',
-            'participants.user.undergraduate:undergraduate_id,full_name,profile_picture',
+            'participants.user.academician:id,academician_id,full_name,profile_picture,url',
+            'participants.user.postgraduate:id,postgraduate_id,full_name,profile_picture,url',
+            'participants.user.undergraduate:id,undergraduate_id,full_name,profile_picture,url',
             'lastMessage.sender',
-            'lastMessage.sender.academician:academician_id,full_name,profile_picture',
-            'lastMessage.sender.postgraduate:postgraduate_id,full_name,profile_picture',
-            'lastMessage.sender.undergraduate:undergraduate_id,full_name,profile_picture',
+            'lastMessage.sender.academician:id,academician_id,full_name,profile_picture,url',
+            'lastMessage.sender.postgraduate:id,postgraduate_id,full_name,profile_picture,url',
+            'lastMessage.sender.undergraduate:id,undergraduate_id,full_name,profile_picture,url',
         ]);
         
         // Sort by last message time (or created_at if no messages)
