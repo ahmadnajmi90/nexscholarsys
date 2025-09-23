@@ -53,6 +53,7 @@
     -   Real-time collaboration with WebSocket updates.
     -   Specialized task types for academic paper writing.
 -   **Faculty Admin System**: A dedicated role for faculty members to manage and verify academicians within their faculty.
+-   **Messaging System**: Real-time direct and group messaging with file attachments, typing indicators, and read receipts.
 
 ### Technical Features
 
@@ -71,7 +72,7 @@
 -   **Authentication**: Laravel Sanctum for API and web sessions.
 -   **Authorization**: Bouncer for role-based permissions.
 -   **AI & Embeddings**: OpenAI API (GPT-4o, `text-embedding-3-small`)
--   **Real-time Communication**: Laravel Reverb (WebSockets)
+-   **Real-time Communication**: Pusher (WebSockets)
 -   **External Integrations**: Google Analytics 4, Google Custom Search, Google Scholar (via Python/Playwright scraping).
 
 ## System Requirements
@@ -160,6 +161,24 @@ Used for all AI-powered features, including profile generation, semantic search,
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 OPENAI_MODEL=gpt-4o
+```
+
+### Pusher (Real-time Communication)
+
+Required for real-time messaging and notifications.
+
+```dotenv
+BROADCAST_DRIVER=pusher
+PUSHER_APP_ID=your_pusher_app_id
+PUSHER_APP_KEY=your_pusher_app_key
+PUSHER_APP_SECRET=your_pusher_app_secret
+PUSHER_APP_CLUSTER=mt1
+PUSHER_SCHEME=https
+PUSHER_PORT=443
+
+# Vite-exposed keys for the browser (Echo)
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
 ```
 
 ### Qdrant Vector Database

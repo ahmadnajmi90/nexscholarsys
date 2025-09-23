@@ -39,19 +39,20 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         }
         
         // Features section
-        if (path.includes('/ai-matching') || 
-            path.includes('/postgraduate-recommendations') || 
-            path.includes('/bookmarks') || 
+        if (path.includes('/ai-matching') ||
+            path.includes('/postgraduate-recommendations') ||
+            path.includes('/bookmarks') ||
             path.includes('/project-hub')) {
             return 'features';
         }
         
         // Networking section
-        if (path.includes('/connections') || 
-            path.includes('/postgraduates') || 
-            path.includes('/undergraduates') || 
-            path.includes('/academicians') || 
-            path.includes('/universities')) {
+        if (path.includes('/connections') ||
+            path.includes('/postgraduates') ||
+            path.includes('/undergraduates') ||
+            path.includes('/academicians') ||
+            path.includes('/universities') ||
+            path.includes('/messaging')) {
             return 'networking';
         }
         

@@ -15,6 +15,12 @@ use App\Models\Connection;
 use App\Policies\ConnectionPolicy;
 use App\Models\Project;
 use App\Policies\ProjectPolicy;
+use App\Models\Messaging\Conversation;
+use App\Policies\Messaging\ConversationPolicy;
+use App\Models\Messaging\Message;
+use App\Policies\Messaging\MessagePolicy;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -31,6 +37,8 @@ class AuthServiceProvider extends ServiceProvider
         Task::class => TaskPolicy::class,
         Connection::class => ConnectionPolicy::class,
         Project::class => ProjectPolicy::class,
+        Conversation::class => ConversationPolicy::class,
+        Message::class => MessagePolicy::class,
     ];
 
     /**
@@ -48,6 +56,14 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->registerPolicies();
+
+        // ✅ Belt-and-suspenders explicit mapping
+        Gate::policy(Conversation::class, ConversationPolicy::class);
+        Gate::policy(Message::class, MessagePolicy::class);
+
+        // Log policy mappings for debugging
+        $convPolicy = Gate::getPolicyFor(Conversation::class);
+        $messagePolicy = Gate::getPolicyFor(Message::class);
     }
 } 

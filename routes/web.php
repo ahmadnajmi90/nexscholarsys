@@ -441,6 +441,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('postgraduate-recommendations.supervisors');
 });
 
+// Messaging Routes
+Route::middleware(['auth', 'verified'])->prefix('messaging')->name('messaging.')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Messaging/Index');
+    })->name('inbox');
+    
+    // Debug route to check conversation access
+    Route::get('/debug/{conversation}', function ($conversation) {
+        $user = request()->user();
+        $participant = \App\Models\Messaging\ConversationParticipant::where('conversation_id', $conversation)
+            ->where('user_id', $user->id)
+            ->whereNull('left_at')
+            ->first();
+            
+        $conversationExists = \App\Models\Messaging\Conversation::find($conversation) !== null;
+            
+        return response()->json([
+            'user_id' => $user->id,
+            'conversation_id' => $conversation,
+            'conversation_exists' => $conversationExists,
+            'is_participant' => $participant !== null,
+            'participant_data' => $participant
+        ]);
+    })->name('debug');
+    
+    // Legacy route - redirect to the new two-pane layout with query param
+    Route::get('/{conversation}', function ($conversation) {
+        // Check if the user is a participant in this conversation
+        $user = request()->user();
+        $isParticipant = \App\Models\Messaging\ConversationParticipant::where('conversation_id', $conversation)
+            ->where('user_id', $user->id)
+            ->whereNull('left_at')
+            ->exists();
+            
+        if (!$isParticipant) {
+            return redirect()->route('messaging.inbox')->with('error', 'You do not have access to this conversation.');
+        }
+        
+        // Redirect to the two-pane layout with the conversation ID as a query param
+        return redirect()->route('messaging.inbox', ['cid' => $conversation]);
+    })->name('chat')->where('conversation', '[0-9]+');
+});
+
 // Project Hub Routes
 Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(function () {
     // Main Project Hub routes

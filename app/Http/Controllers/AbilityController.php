@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Ability;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class AbilityController extends Controller
@@ -15,7 +14,6 @@ class AbilityController extends Controller
         //     abort(403, 'You do not have permission to view this page.');
         // }
         // else{
-            log::info($request->all());
             $request->validate([
                 'name' => 'required|string|max:255|unique:abilities',
                 'title' => 'nullable|string|max:255',

@@ -12,8 +12,8 @@ return [
     |
     */
 
-    'edit_window_minutes' => env('MESSAGING_EDIT_WINDOW', 15),
-    'delete_window_minutes' => env('MESSAGING_DELETE_WINDOW', 60),
+    'edit_window_minutes' => env('CHAT_EDIT_WINDOW_MIN', 10),
+    'delete_window_minutes' => env('CHAT_DELETE_WINDOW_MIN', 60),
 
     /*
     |--------------------------------------------------------------------------
@@ -21,17 +21,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure file upload limits for message attachments.
-    | Size limits are in KB.
+    | Size limits are in MB.
     |
     */
 
-    'max_file_size' => env('MESSAGING_MAX_FILE_SIZE', 10240), // 10MB
-    'max_image_size' => env('MESSAGING_MAX_IMAGE_SIZE', 5120), // 5MB
+    'max_upload_mb' => env('CHAT_MAX_UPLOAD_MB', 20),
     
     'allowed_mimes' => [
         'images' => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
         'documents' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'],
-        'videos' => ['mp4', 'webm', 'mov'], // Optional for future
+        'videos' => ['mp4', 'webm', 'mov'],
+        'audio' => ['mp3', 'wav', 'ogg'],
     ],
 
     /*
@@ -43,7 +43,7 @@ return [
     |
     */
 
-    'storage_disk' => env('MESSAGING_STORAGE_DISK', 'public'),
-    'storage_path' => 'messaging',
-
+    'storage_disk' => env('CHAT_STORAGE_DISK', 'public'),
+    'storage_path' => 'messaging/attachments',
+    'thumbnail_path' => 'messaging/thumbnails',
 ];
