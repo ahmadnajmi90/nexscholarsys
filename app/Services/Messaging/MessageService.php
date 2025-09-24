@@ -5,6 +5,7 @@ namespace App\Services\Messaging;
 use App\Events\Messaging\MessageSent;
 use App\Events\Messaging\MessageEdited;
 use App\Events\Messaging\MessageDeleted;
+use App\Events\Messaging\ConversationListDelta;
 use App\Models\Messaging\Conversation;
 use App\Models\Messaging\Message;
 use App\Models\User;
@@ -73,6 +74,9 @@ class MessageService
             // Broadcast the message to other participants
             broadcast(new MessageSent($message));
 
+            // Broadcast conversation list delta to all participants (except sender)
+            broadcast(new ConversationListDelta($conversation, $user->id, 'message_sent'));
+
             return $message;
         });
     }
@@ -97,6 +101,9 @@ class MessageService
 
             // Broadcast the message edit to other participants
             broadcast(new MessageEdited($updatedMessage));
+
+            // Broadcast conversation list delta (no unread change on edit)
+            broadcast(new ConversationListDelta($message->conversation, null, 'message_edited'));
 
             return $updatedMessage;
         });
@@ -132,6 +139,9 @@ class MessageService
 
             // Broadcast the message deletion to other participants
             broadcast(new MessageDeleted($conversationId, $messageId, $scope));
+
+            // Broadcast conversation list delta (may need to update last message)
+            broadcast(new ConversationListDelta($conversation, null, 'message_deleted'));
 
             return true;
         } else {
