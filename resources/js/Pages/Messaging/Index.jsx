@@ -224,44 +224,41 @@ export default function Index({ auth }) {
   }, [auth.user.id, selectedConversationId, searchTerm]);
 
   // Handle conversation list delta for sidebar updates
-  const handleConversationListDelta = async (delta) => {
-    const { conversation_id, last_message_preview, last_message_type, last_message_sender_id, updated_at, unread_delta, title, icon_path } = delta;
-
+  const handleConversationListDelta = (delta) => {
     setConversations(prev => {
-      const conversationIndex = prev.findIndex(c => c.id === conversation_id);
-
-      if (conversationIndex === -1) {
-        // Conversation not in local state, fetch it
-        fetchConversationById(conversation_id);
+      if (!prev) return prev;
+      const next = [...prev];
+      const idx = next.findIndex(c => String(c.id) === String(delta.conversation_id));
+      if (idx === -1) {
         return prev;
       }
-
-      const updatedConversation = {
-        ...prev[conversationIndex],
-        updated_at,
-        unread_count: Math.max(0, (prev[conversationIndex].unread_count || 0) + unread_delta),
+      const conv = { ...next[idx] };
+      const senderId = delta.last_message_sender_id != null ? Number(delta.last_message_sender_id) : null;
+      conv.updated_at = delta.updated_at ?? conv.updated_at;
+      conv.title = delta.title ?? conv.title;
+      conv.icon_path = delta.icon_path ?? conv.icon_path;
+      if (senderId !== null) {
+        conv.last_message_sender_id = senderId;
+      }
+      const prevLast = conv.last_message ?? {};
+      conv.last_message = {
+        ...prevLast,
+        body: delta.last_message_preview ?? (prevLast.body ?? ''),
+        preview: delta.last_message_preview ?? (prevLast.preview ?? ''),
+        type: delta.last_message_type ?? (prevLast.type ?? 'text'),
+        sender: senderId !== null
+          ? { ...(prevLast.sender ?? {}), id: senderId }
+          : (prevLast.sender ?? null),
       };
 
-      if (title !== undefined) updatedConversation.title = title;
-      if (icon_path !== undefined) updatedConversation.icon_path = icon_path;
-
-      if (last_message_preview !== undefined) {
-        updatedConversation.last_message = {
-          ...updatedConversation.last_message,
-          body: last_message_preview,
-          type: last_message_type,
-          sender_id: last_message_sender_id,
-        };
+      if (typeof delta.unread_delta === 'number') {
+        const currentUnread = conv.unread_count ?? 0;
+        conv.unread_count = Math.max(0, currentUnread + delta.unread_delta);
       }
 
-      // Remove from current position
-      const conversationsWithoutCurrent = [
-        ...prev.slice(0, conversationIndex),
-        ...prev.slice(conversationIndex + 1)
-      ];
-
-      // Add to the beginning
-      return [updatedConversation, ...conversationsWithoutCurrent];
+      next.splice(idx, 1);
+      next.unshift(conv);
+      return next;
     });
   };
 
