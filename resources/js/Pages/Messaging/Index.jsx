@@ -133,12 +133,40 @@ export default function Index({ auth }) {
     );
   };
 
+  // Handle updating conversation with new message and reordering
+  const handleConversationMessageUpdate = (conversationId, message) => {
+    setConversations(prev => {
+      // Find the conversation to update
+      const conversationIndex = prev.findIndex(c => c.id === conversationId);
+      if (conversationIndex === -1) return prev;
+
+      // Create updated conversation with new last message
+      const updatedConversation = {
+        ...prev[conversationIndex],
+        last_message: message,
+        updated_at: message.created_at // Update timestamp for sorting
+      };
+
+      // Remove the conversation from its current position
+      const conversationsWithoutCurrent = [
+        ...prev.slice(0, conversationIndex),
+        ...prev.slice(conversationIndex + 1)
+      ];
+
+      // Add it to the beginning of the list (most recent)
+      return [updatedConversation, ...conversationsWithoutCurrent];
+    });
+  };
+
   // Handle after send callback
   const handleAfterSend = (conversationId, sentMessage) => {
     // Clear unread badge for the current conversation (sender never sees unread)
     setConversations(prev =>
       prev.map(c => c.id === conversationId ? { ...c, unread_count: 0 } : c)
     );
+
+    // Update the conversation's last message with the sent message
+    handleConversationMessageUpdate(conversationId, sentMessage);
   };
 
   // Set up general Echo listener for other conversations' messages
@@ -150,12 +178,107 @@ export default function Index({ auth }) {
       if (e.conversation_id !== selectedConversationId) {
         handleConversationIncrementUnread(e.conversation_id);
       }
+
+      // Update the conversation's last message and reorder conversations
+      handleConversationMessageUpdate(e.conversation_id, e.message);
+    });
+
+    channel.listen('.MessageEdited', (e) => {
+      // Update the conversation's last message if the edited message is the last one
+      setConversations(prev => {
+        return prev.map(c => {
+          if (c.last_message && c.last_message.id === e.id) {
+            // Update the last message with the edited content
+            return {
+              ...c,
+              last_message: {
+                ...c.last_message,
+                body: e.body,
+                edited_at: e.edited_at
+              }
+            };
+          }
+          return c;
+        });
+      });
+    });
+
+    channel.listen('.MessageDeleted', (e) => {
+      // If the deleted message was the last one, we need to fetch the conversation
+      // to get the new last message. For now, we'll refetch conversations.
+      // TODO: Optimize this to only update the specific conversation
+      fetchConversations(searchTerm);
+    });
+
+    // Handle conversation list deltas for sidebar updates
+    channel.listen('.ConversationListDelta', (delta) => {
+      handleConversationListDelta(delta);
     });
 
     return () => {
       channel.stopListening('.MessageSent');
+      channel.stopListening('.MessageEdited');
+      channel.stopListening('.MessageDeleted');
+      channel.stopListening('.ConversationListDelta');
     };
-  }, [auth.user.id, selectedConversationId]);
+  }, [auth.user.id, selectedConversationId, searchTerm]);
+
+  // Handle conversation list delta for sidebar updates
+  const handleConversationListDelta = (delta) => {
+    setConversations(prev => {
+      if (!prev) return prev;
+      const next = [...prev];
+      const idx = next.findIndex(c => String(c.id) === String(delta.conversation_id));
+      if (idx === -1) {
+        return prev;
+      }
+      const conv = { ...next[idx] };
+      const senderId = delta.last_message_sender_id != null ? Number(delta.last_message_sender_id) : null;
+      conv.updated_at = delta.updated_at ?? conv.updated_at;
+      conv.title = delta.title ?? conv.title;
+      conv.icon_path = delta.icon_path ?? conv.icon_path;
+      if (senderId !== null) {
+        conv.last_message_sender_id = senderId;
+      }
+      const prevLast = conv.last_message ?? {};
+      conv.last_message = {
+        ...prevLast,
+        body: delta.last_message_preview ?? (prevLast.body ?? ''),
+        preview: delta.last_message_preview ?? (prevLast.preview ?? ''),
+        type: delta.last_message_type ?? (prevLast.type ?? 'text'),
+        sender: senderId !== null
+          ? { ...(prevLast.sender ?? {}), id: senderId }
+          : (prevLast.sender ?? null),
+      };
+
+      if (typeof delta.unread_delta === 'number') {
+        const currentUnread = conv.unread_count ?? 0;
+        conv.unread_count = Math.max(0, currentUnread + delta.unread_delta);
+      }
+
+      next.splice(idx, 1);
+      next.unshift(conv);
+      return next;
+    });
+  };
+
+  // Helper to fetch a single conversation if not in local state
+  const fetchConversationById = async (conversationId) => {
+    try {
+      const response = await axios.get(`/api/v1/app/messaging/conversations/${conversationId}`);
+      const conversation = response.data.data;
+
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === conversation.id);
+        if (!exists) {
+          return [conversation, ...prev];
+        }
+        return prev;
+      });
+    } catch (err) {
+      console.error('Error fetching conversation:', err);
+    }
+  };
   
   return (
     <MainLayout

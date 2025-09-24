@@ -7,7 +7,11 @@ import { formatConversationTimestamp } from '@/lib/datetime';
 export default function ConversationListItem({ conversation, isActive, onSelect }) {
   const { id, title, type, participants, last_message, unread_count } = conversation;
   const { auth } = usePage().props;
-  const meId = auth.user.id;
+  const meId = Number(auth.user.id);
+  const flatSenderId = conversation.last_message_sender_id;
+  const nestedSenderId = last_message?.sender?.id;
+  const senderId = flatSenderId != null ? Number(flatSenderId) : (nestedSenderId != null ? Number(nestedSenderId) : null);
+  const isOwn = senderId != null && senderId === meId;
 
   // Get the other participant(s) for display
   const otherParticipants = participants.filter(
@@ -51,18 +55,18 @@ export default function ConversationListItem({ conversation, isActive, onSelect 
   const formattedTime = formatConversationTimestamp(last_message?.created_at ?? conversation.updated_at);
   
   // Get the message snippet
-  const getMessageSnippet = () => {
-    if (!last_message) return 'No messages yet';
+  const getMessageSnippet = (message) => {
+    if (!message) return 'No messages yet';
     
-    if (last_message.type === 'text') {
-      const body = last_message.body ?? '';
+    if (message.type === 'text') {
+      const body = message.body ?? '';
       return body.trim().replace(/\s+/g, ' ');
-    } else if (last_message.type === 'image') {
+    } else if (message.type === 'image') {
       return '📷 Image';
-    } else if (last_message.type === 'file') {
+    } else if (message.type === 'file') {
       return '📎 File';
-    } else if (last_message.type === 'system') {
-      const body = last_message.body ?? '';
+    } else if (message.type === 'system') {
+      const body = message.body ?? '';
       return body.trim().replace(/\s+/g, ' ');
     }
     
@@ -74,6 +78,11 @@ export default function ConversationListItem({ conversation, isActive, onSelect 
       onSelect(id);
     }
   };
+
+  const snippet = getMessageSnippet(last_message);
+  const prefix = isOwn ? `You: ` : '';
+
+  const preview = `${prefix}${snippet}`;
 
   return (
     <div
@@ -109,13 +118,9 @@ export default function ConversationListItem({ conversation, isActive, onSelect 
         <div className="mt-0.5 flex items-center justify-between min-w-0">
           <p
             className="text-sm text-muted-foreground truncate pr-1 min-w-0 flex-1 break-words overflow-hidden"
-            title={last_message?.sender?.id === meId
-              ? `You: ${getMessageSnippet()}`
-              : getMessageSnippet()}
+            title={preview}
           >
-            {last_message?.sender?.id === meId
-              ? `You: ${getMessageSnippet()}`
-              : getMessageSnippet()}
+            {preview}
           </p>
 
           {unread_count > 0 && (

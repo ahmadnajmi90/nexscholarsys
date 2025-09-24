@@ -182,4 +182,77 @@ class ConversationService
         
         return $query->paginate($filters['per_page'] ?? 15);
     }
+
+    /**
+     * Create a compact conversation delta payload for sidebar updates.
+     *
+     * @param Conversation $conversation
+     * @param int|null $actorUserId
+     * @param string $changeType
+     * @return array
+     */
+    public function makeListDelta(Conversation $conversation, ?int $actorUserId = null, string $changeType = 'message_sent'): array
+    {
+        // Ensure relationships are loaded
+        $conversation->loadMissing(['lastMessage.sender']);
+
+        $payload = [
+            'conversation_id' => $conversation->id,
+            'updated_at' => $conversation->updated_at->toISOString(),
+            'unread_delta' => $this->calculateUnreadDelta($changeType, $actorUserId),
+        ];
+
+        if ($conversation->title) {
+            $payload['title'] = $conversation->title;
+        }
+
+        if ($conversation->icon_path) {
+            $payload['icon_path'] = $conversation->icon_path;
+        }
+
+        if ($conversation->lastMessage) {
+            $payload['last_message_preview'] = $this->getLastMessagePreview($conversation->lastMessage);
+            $payload['last_message_type'] = $conversation->lastMessage->type;
+            $payload['last_message_sender_id'] = $conversation->lastMessage->sender->id;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Get the last message preview text.
+     *
+     * @param Message $message
+     * @return string|null
+     */
+    protected function getLastMessagePreview($message): ?string
+    {
+        if ($message->type === 'text') {
+            return substr($message->body, 0, 50) . (strlen($message->body) > 50 ? '...' : '');
+        } elseif ($message->hasAttachments()) {
+            return '📎 ' . $message->attachments->count() . ' file(s)';
+        } else {
+            return '📄 ' . ucfirst($message->type);
+        }
+    }
+
+    /**
+     * Calculate the unread delta based on change type and actor.
+     *
+     * @param string $changeType
+     * @param int|null $actorUserId
+     * @return int
+     */
+    protected function calculateUnreadDelta(string $changeType, ?int $actorUserId): int
+    {
+        switch ($changeType) {
+            case 'message_sent':
+                return $actorUserId ? 0 : 1; // 0 for actor, 1 for others
+            case 'message_edited':
+            case 'message_deleted':
+                return 0; // No change
+            default:
+                return 0;
+        }
+    }
 }
