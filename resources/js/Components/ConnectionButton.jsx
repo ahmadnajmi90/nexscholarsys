@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FaUserPlus, FaCheck, FaTimes, FaSpinner, FaClock, FaUserCheck } from 'react-icons/fa';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 /**
  * Reusable connection button component that changes based on connection status
@@ -90,9 +96,18 @@ const ConnectionButton = ({ user, onRemoveConnection }) => {
   
   if (isLoading) {
     return (
-      <div className="text-gray-500 text-lg cursor-wait" title="Processing...">
-        <FaSpinner className="animate-spin" />
-      </div>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="text-gray-500 text-lg cursor-wait">
+              <FaSpinner className="animate-spin" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Processing...</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
   
@@ -100,64 +115,110 @@ const ConnectionButton = ({ user, onRemoveConnection }) => {
   switch (connectionStatus) {
     case 'not_connected':
       return (
-        <button 
-          onClick={connect}
-          className="text-gray-500 text-lg cursor-pointer hover:text-blue-700"
-          title="Connect"
-        >
-          <FaUserPlus />
-        </button>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={connect}
+                className="text-gray-500 text-lg cursor-pointer hover:text-blue-700"
+              >
+                <FaUserPlus />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Connect</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     case 'pending_sent':
       return (
-        <button 
-          onClick={removeConnection}
-          className="text-yellow-500 text-lg cursor-pointer hover:text-red-500"
-          title="Request Sent (Click to withdraw)"
-        >
-          <FaClock />
-        </button>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={removeConnection}
+                className="text-yellow-500 text-lg cursor-pointer hover:text-red-500"
+              >
+                <FaClock />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Request Sent (Click to withdraw)</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     case 'pending_received':
       return (
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={acceptRequest}
-            className="text-green-500 text-lg cursor-pointer hover:text-green-700"
-            title="Accept Request"
-          >
-            <FaCheck />
-          </button>
-          <button 
-            onClick={rejectRequest}
-            className="text-red-500 text-lg cursor-pointer hover:text-red-700"
-            title="Reject Request"
-          >
-            <FaTimes />
-          </button>
-        </div>
+        <TooltipProvider delayDuration={0}>
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={acceptRequest}
+                  className="text-green-500 text-lg cursor-pointer hover:text-green-700"
+                >
+                  <FaCheck />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Accept Request</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={rejectRequest}
+                  className="text-red-500 text-lg cursor-pointer hover:text-red-700"
+                >
+                  <FaTimes />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reject Request</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
       );
     case 'connected':
       return (
-        <button 
-          onClick={removeConnection}
-          className="text-green-600 text-lg cursor-pointer hover:text-red-600"
-          title="Connected (Click to remove)"
-        >
-          <FaUserCheck />
-        </button>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={removeConnection}
+                className="text-green-600 text-lg cursor-pointer hover:text-red-600"
+              >
+                <FaUserCheck />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Connected (Click to remove)</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     case 'is_self':
       return null;
     default:
       return (
-        <button 
-          onClick={connect}
-          className="text-gray-500 text-lg cursor-pointer hover:text-blue-700"
-          title="Connect"
-        >
-          <FaUserPlus />
-        </button>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={connect}
+                className="text-gray-500 text-lg cursor-pointer hover:text-blue-700"
+              >
+                <FaUserPlus />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Connect</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
   }
 };

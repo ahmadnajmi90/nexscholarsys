@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { User2, CheckCircle2, BookOpen, FolderKanban, Sparkles, Mail, ExternalLink, UserPlus, Heart } from 'lucide-react';
-import Tooltip from '@/Components/Tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import InsightModal from '@/Components/Postgraduate/InsightModal';
 import BookmarkHandler from '@/Utils/BookmarkHandler';
 
@@ -120,7 +125,8 @@ export default function SupervisorCard({ supervisor }) {
   const emailTo = supervisor?.email || '';
 
   return (
-    <div className="border rounded-xl p-5 bg-white shadow-sm transition-all duration-200 ease-in-out hover:shadow-lg hover:ring-2 hover:ring-indigo-200 hover:-translate-y-1">
+    <TooltipProvider delayDuration={0}>
+      <div className="border rounded-xl p-5 bg-white shadow-sm transition-all duration-200 ease-in-out hover:shadow-lg hover:ring-2 hover:ring-indigo-200 hover:-translate-y-1">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3 min-w-0">
@@ -252,31 +258,42 @@ export default function SupervisorCard({ supervisor }) {
         )}
 
         {/* Secondary Icon-Only Actions */}
-        <Tooltip content="Save">
-          <button onClick={toggleBookmark} className="inline-flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-50" disabled={isBookmarkLoading}>
-            <span className="sr-only">Save</span>
-            {isBookmarked ? (
-              <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-            ) : (
-              <Heart className="w-4 h-4" />
-            )}
-          </button>
-        </Tooltip>
-        <Tooltip content="Contact">
-          {emailTo ? (
-            <Link href={route('email.compose', { to: emailTo })} className="inline-flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-50">
-              <span className="sr-only">Contact</span>
-              <Mail className="w-4 h-4" />
-            </Link>
-          ) : (
-            <button className="inline-flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md text-gray-300 bg-white" disabled>
-              <span className="sr-only">Contact</span>
-              <Mail className="w-4 h-4" />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button onClick={toggleBookmark} className="inline-flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-50" disabled={isBookmarkLoading}>
+              <span className="sr-only">Save</span>
+              {isBookmarked ? (
+                <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+              ) : (
+                <Heart className="w-4 h-4" />
+              )}
             </button>
-          )}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Save</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {emailTo ? (
+              <Link href={route('email.compose', { to: emailTo })} className="inline-flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md text-gray-600 bg-white hover:bg-gray-50">
+                <span className="sr-only">Contact</span>
+                <Mail className="w-4 h-4" />
+              </Link>
+            ) : (
+              <button className="inline-flex items-center justify-center h-9 w-9 border border-gray-300 rounded-md text-gray-300 bg-white" disabled>
+                <span className="sr-only">Contact</span>
+                <Mail className="w-4 h-4" />
+              </button>
+            )}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Contact</p>
+          </TooltipContent>
         </Tooltip>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 

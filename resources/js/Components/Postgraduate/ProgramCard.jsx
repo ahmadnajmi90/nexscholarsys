@@ -70,7 +70,7 @@ export default function ProgramCard({ rec, onViewSupervisors }) {
       </div>
 
       {/* Research Areas */}
-      {Array.isArray(program?.research_areas) && program.research_areas.length > 0 && (
+      {/* {Array.isArray(program?.research_areas) && program.research_areas.length > 0 && (
         <div className="mt-4">
           <p className="text-sm font-medium text-gray-800 mb-2">Research Areas:</p>
           <div className="flex flex-wrap gap-2">
@@ -79,7 +79,7 @@ export default function ProgramCard({ rec, onViewSupervisors }) {
               ))}
           </div>
       </div>
-      )}
+      )} */}
 
       {/* Why this match */}
       {justification && (

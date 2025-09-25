@@ -13,6 +13,12 @@ import LoadingSkeletonCard from "./LoadingSkeletonCard";
 import SkillsSummary from "@/Components/SkillsSummary";
 import TopSkillsBadges from "@/Components/TopSkillsBadges";
 import SkillsModal from "@/Components/SkillsModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Helper function to capitalize each skill
 const capitalize = (s) => {
@@ -217,7 +223,8 @@ const ProfileGridWithDualFilter = ({
   };
 
   return (
-    <div className="min-h-screen">
+    <TooltipProvider delayDuration={0}>
+      <div className="min-h-screen">
       {/* Mobile Header with Search and Filter */}
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
@@ -437,28 +444,40 @@ const ProfileGridWithDualFilter = ({
                   {/* Connection Button */}
                   <ConnectionButton user={profile.user} />
                   
-                  <Link
-                    href={route('email.compose', { 
-                      to: users.find(
-                        (user) =>
-                          user.unique_id === 
-                          (profile.postgraduate_id || profile.undergraduate_id)
-                      )?.email 
-                    })}
-                    className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                    title="Send Email"
-                  >
-                    <FaPaperPlane className="text-lg" />
-                  </Link>
-                  <a
-                    href={profile.linkedin || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-500 text-lg hover:text-blue-800"
-                    title="LinkedIn"
-                  >
-                    <FaLinkedin className="text-lg" />
-                  </a>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={route('email.compose', {
+                          to: users.find(
+                            (user) =>
+                              user.unique_id ===
+                              (profile.postgraduate_id || profile.undergraduate_id)
+                          )?.email
+                        })}
+                        className="text-gray-500 text-lg cursor-pointer hover:text-blue-700"
+                      >
+                        <FaPaperPlane className="text-lg" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Send Email</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={profile.linkedin || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-500 text-lg hover:text-blue-800"
+                      >
+                        <FaLinkedin className="text-lg" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>LinkedIn</p>
+                    </TooltipContent>
+                  </Tooltip>
                   <BookmarkButton 
                     bookmarkableType={isUndergraduateList ? "undergraduate" : isPostgraduateList ? "postgraduate" : "academician"}
                     bookmarkableId={profile.id}
@@ -632,6 +651,7 @@ const ProfileGridWithDualFilter = ({
         />
       )}
     </div>
+    </TooltipProvider>
   );
 };
 

@@ -13,6 +13,12 @@ import LoadingSkeletonCard from "./LoadingSkeletonCard";
 import SkillsSummary from "@/Components/SkillsSummary";
 import TopSkillsBadges from "@/Components/TopSkillsBadges";
 import SkillsModal from "@/Components/SkillsModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Helper function to capitalize each skill
 const capitalize = (s) => {
@@ -269,7 +275,8 @@ const AcademicianProfileCard = ({
   };
 
   return (
-    <div className="min-h-screen">
+    <TooltipProvider delayDuration={0}>
+      <div className="min-h-screen">
       {/* Mobile Header with Search and Filter */}
       <div className="fixed top-20 right-4 z-50 flex flex-col items-end space-y-2 lg:hidden">
         <button
@@ -392,17 +399,20 @@ const AcademicianProfileCard = ({
                     </div>
                     {/* Move verified badge outside the profile image circle */}
                     {profile.verified === 1 && (
-                      <div className="absolute bottom-0 right-0 p-1 rounded-full group cursor-pointer">
-                        <div className="flex items-center justify-center w-7 h-7 bg-blue-500 rounded-full">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        {/* Tooltip */}
-                        <div className="absolute bottom-8 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10 w-48">
-                          This account is verified by {getUniversityNameById(profile.university)}
-                        </div>
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                        <div className="absolute bottom-0 right-0 p-1 rounded-full group cursor-pointer">
+                          <div className="flex items-center justify-center w-7 h-7 bg-blue-500 rounded-full cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p>This account is verified by {getUniversityNameById(profile.university)}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 </div>
@@ -455,27 +465,39 @@ const AcademicianProfileCard = ({
                 {/* Social Action Links */}
                 <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
                   <ConnectionButton user={profile.user} />
-                  <Link
-                    href={route('email.compose', { 
-                      to: users.find(
-                        (user) =>
-                          user.unique_id === 
-                          (profile.academician_id)
-                      )?.email 
-                    })}
-                    className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                    title="Send Email"
-                  >
-                    <FaPaperPlane className="text-lg" />
-                  </Link>
-                  <a
-                    href="#"
-                    onClick={(e) => handleRecommendClick(profile, e)}
-                    className="text-gray-500 text-lg hover:text-yellow-500"
-                    title="Recommend"
-                  >
-                    <FaStar className="text-lg" />
-                  </a>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={route('email.compose', {
+                          to: users.find(
+                            (user) =>
+                              user.unique_id ===
+                              (profile.academician_id)
+                          )?.email
+                        })}
+                        className="text-gray-500 text-lg cursor-pointer hover:text-blue-700"
+                      >
+                        <FaPaperPlane className="text-lg" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Send Email</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <a
+                        href="#"
+                        onClick={(e) => handleRecommendClick(profile, e)}
+                        className="text-gray-500 text-lg hover:text-yellow-500"
+                      >
+                        <FaStar className="text-lg" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Recommend</p>
+                    </TooltipContent>
+                  </Tooltip>
                   <BookmarkButton 
                     bookmarkableType="academician" 
                     bookmarkableId={profile.id}
@@ -763,6 +785,7 @@ const AcademicianProfileCard = ({
         />
       )}
     </div>
+    </TooltipProvider>
   );
 };
 

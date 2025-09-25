@@ -15,7 +15,12 @@ import clsx from 'clsx';
 import axios from 'axios';
 import Pagination from '@/Components/Pagination';
 import { isTaskCompleted } from '@/Utils/utils';
-import Tooltip from '@/Components/Tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Calendar } from 'lucide-react';
 
 export default function TableView({ board, onTaskClick }) {
@@ -112,12 +117,22 @@ export default function TableView({ board, onTaskClick }) {
                         <div className="flex items-center gap-2">
                             {/* --- CHANGE 1 START: Add default icon for Normal Tasks --- */}
                             {task.paper_writing_task ? (
-                                <Tooltip content="Paper Writing Task">
-                                    <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <BookOpen className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Paper Writing Task</p>
+                                    </TooltipContent>
                                 </Tooltip>
                             ) : (
-                                <Tooltip content="Normal Task">
-                                    <ClipboardList className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <ClipboardList className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Normal Task</p>
+                                    </TooltipContent>
                                 </Tooltip>
                             )}
                             {/* --- CHANGE 1 END --- */}
@@ -269,7 +284,8 @@ export default function TableView({ board, onTaskClick }) {
     }
     
     return (
-        <div className="table-view-container bg-white rounded-lg shadow flex flex-col h-full">
+        <TooltipProvider delayDuration={0}>
+            <div className="table-view-container bg-white rounded-lg shadow flex flex-col h-full">
             {/* Mobile-responsive controls */}
             <div className="px-3 md:px-4 py-3 border-b bg-gray-50 space-y-3 md:space-y-0 md:flex md:items-center md:justify-between flex-shrink-0">
                 {/* Search Input */}
@@ -396,5 +412,6 @@ export default function TableView({ board, onTaskClick }) {
                 </div>
             )}
         </div>
+        </TooltipProvider>
     );
 }
