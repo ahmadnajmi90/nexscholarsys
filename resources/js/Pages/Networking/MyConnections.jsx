@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import { FaUserFriends, FaUserPlus, FaUserClock, FaSearch, FaTags } from 'react-icons/fa';
-import { MoreVertical, CheckSquare, Tags, Trash2, Eye, X, Plus } from 'lucide-react';
+import { MoreVertical, CheckSquare, Tags, Trash2, Eye, X, Plus, Info, GraduationCap, Users } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -11,7 +11,12 @@ import ConnectionButton from '@/Components/ConnectionButton';
 import Dropdown from '@/Components/Dropdown';
 import ManageTagsModal from '@/Components/Networking/ManageTagsModal';
 import CreateTagModal from '@/Components/Networking/CreateTagModal';
-import Tooltip from '@/Components/Tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, tags = [], activeTagId = null }) => {
     const [activeTab, setActiveTab] = useState('connections');
@@ -157,6 +162,23 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         setAvailableTags(prevTags => [...prevTags, newTag]);
     };
     
+    // Function to get the appropriate icon for a tag
+    const getTagIcon = (tag) => {
+        // Default tags (no user_id) get specific icons
+        if (!tag.user_id) {
+            switch (tag.name.toLowerCase()) {
+                case 'collaborator':
+                    return <Users size={14} className="text-blue-600" />;
+                case 'student':
+                    return <GraduationCap size={14} className="text-green-600" />;
+                default:
+                    return <Tags size={14} className="text-blue-500" />;
+            }
+        }
+        // Custom tags get a generic tag icon
+        return <Tags size={14} className="text-gray-500" />;
+    };
+
     // Function to render the tag filtering sidebar
     const renderTagSidebar = () => {
         if (activeTab !== 'connections') return null;
@@ -164,15 +186,25 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
         return (
             <div className="w-64 bg-white shadow-sm rounded-lg p-4 mr-4 h-fit">
                 <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-medium text-gray-900">Filter by Tag</h3>
-                    <Tooltip content="Create New Tag">
-                        <button 
+                    <div className="flex items-center">
+                        <h3 className="font-medium text-gray-900 mr-2">Organize with Tags</h3>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                                Use tags to manually organize your connections. Tags are not assigned automatically based on a user's role. For example, you can tag someone as a 'Collaborator' to easily add them to your ScholarLab projects later.
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+                    {/* <Tooltip content="Create New Tag">
+                        <button
                             onClick={() => setIsCreateTagModalOpen(true)}
                             className="p-1 rounded-full text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                             <Plus size={18} />
                         </button>
-                    </Tooltip>
+                    </Tooltip> */}
                 </div>
                 
                 <div className="space-y-2">
@@ -192,15 +224,23 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                             <button
                                 key={tag.id}
                                 onClick={() => handleTagSelect(tag.id)}
-                                className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center ${
-                                    activeTagId === tag.id 
-                                        ? 'bg-blue-100 text-blue-800 font-medium' 
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center group ${
+                                    activeTagId === tag.id
+                                        ? 'bg-blue-100 text-blue-800 font-medium'
+                                        : tag.user_id
+                                            ? 'text-gray-700 hover:bg-gray-100'
+                                            : 'text-gray-800 hover:bg-blue-50 border border-blue-200 bg-blue-50/30'
                                 }`}
                             >
-                                <span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
-                                {tag.name}
-                                {tag.user_id && <span className="ml-auto text-xs text-gray-500">(Custom)</span>}
+                                <div className="flex items-center mr-3">
+                                    {getTagIcon(tag)}
+                                </div>
+                                <span className="flex-1">{tag.name}</span>
+                                {tag.user_id ? (
+                                    <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">(Custom)</span>
+                                ) : (
+                                    <span className="text-xs text-blue-600 font-medium">Suggested</span>
+                                )}
                             </button>
                         ))
                     ) : (
@@ -874,41 +914,43 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
     };
     
     return (
-        <MainLayout title="My Network">
-            <Head title="My Network" />
-            
-            <div className="md:mt-6 px-2 md:px-0 mt-20 ml-1">
-                {renderSearchBar()}
-                {renderTabs()}
-                {renderContent()}
-            </div>
-            
-            <ConfirmationModal
-                show={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onConfirm={handleRemoveConnection}
-                title="Remove Connection"
-                message="Are you sure you want to remove this connection? This action cannot be undone."
-                confirmButtonText="Remove"
-            />
-            
-            {/* Manage Tags Modal */}
-            <ManageTagsModal
-                show={isTagModalOpen}
-                onClose={() => {
-                    setIsTagModalOpen(false);
-                    setSelectedConnectionForTags(null);
-                }}
-                connectionIds={selectedConnectionForTags ? [selectedConnectionForTags] : selectedConnections}
-            />
-            
-            {/* Create Tag Modal */}
-            <CreateTagModal
-                show={isCreateTagModalOpen}
-                onClose={() => setIsCreateTagModalOpen(false)}
-                onTagCreated={handleTagCreated}
-            />
-        </MainLayout>
+        <TooltipProvider delayDuration={0}>
+            <MainLayout title="My Network">
+                <Head title="My Network" />
+
+                <div className="md:mt-6 px-2 md:px-0 mt-20 ml-1">
+                    {renderSearchBar()}
+                    {renderTabs()}
+                    {renderContent()}
+                </div>
+
+                <ConfirmationModal
+                    show={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onConfirm={handleRemoveConnection}
+                    title="Remove Connection"
+                    message="Are you sure you want to remove this connection? This action cannot be undone."
+                    confirmButtonText="Remove"
+                />
+
+                {/* Manage Tags Modal */}
+                <ManageTagsModal
+                    show={isTagModalOpen}
+                    onClose={() => {
+                        setIsTagModalOpen(false);
+                        setSelectedConnectionForTags(null);
+                    }}
+                    connectionIds={selectedConnectionForTags ? [selectedConnectionForTags] : selectedConnections}
+                />
+
+                {/* Create Tag Modal */}
+                <CreateTagModal
+                    show={isCreateTagModalOpen}
+                    onClose={() => setIsCreateTagModalOpen(false)}
+                    onTagCreated={handleTagCreated}
+                />
+            </MainLayout>
+        </TooltipProvider>
     );
 };
 
