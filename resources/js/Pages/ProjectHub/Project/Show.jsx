@@ -4,6 +4,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
 import ManageBoardMembersModal from '@/Components/ProjectHub/ManageBoardMembersModal';
+import InlineEdit from '@/Components/ProjectHub/InlineEdit';
 import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import toast from 'react-hot-toast';
@@ -79,6 +80,22 @@ export default function Show({ project, connections }) {
 
     // Check if the current user is the project owner
     const isProjectOwner = auth.user.id === project.data.owner_id;
+
+    const handleProjectRename = (newName) => {
+        router.put(route('project-hub.projects.update', project.data.id), {
+            name: newName,
+            description: project.data.description, // Keep existing description
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Project renamed successfully.');
+            },
+            onError: (errors) => {
+                toast.error('Failed to rename project.');
+                console.error(errors);
+            }
+        });
+    };
     
     return (
         <div className="w-full md:max-w-8xl md:mx-auto px-4 md:px-4 lg:px-2 py-4 md:py-6 lg:mt-2 mt-6">
@@ -89,7 +106,13 @@ export default function Show({ project, connections }) {
                     <span className="text-sm">Back to projects</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate max-w-3xl">{project.data.name}</h1>
+                    <InlineEdit
+                        value={project.data.name}
+                        onSave={handleProjectRename}
+                        canEdit={project.data.can.update}
+                        className="text-2xl font-bold text-gray-900 truncate max-w-3xl"
+                        placeholder="Project name"
+                    />
                     
                     {/* Manage Collaborators button - only visible to project owner */}
                     {isProjectOwner && (

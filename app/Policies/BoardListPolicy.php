@@ -25,8 +25,9 @@ class BoardListPolicy
      */
     public function update(User $user, BoardList $boardList): bool
     {
-        // User can update a list if they can view the parent board
-        return $user->can('view', $boardList->board);
+        // A user can update a list if they have permission to update the parent board.
+        // This correctly delegates the permission check to the BoardPolicy.
+        return $user->can('update', $boardList->board);
     }
 
     /**
@@ -34,7 +35,8 @@ class BoardListPolicy
      */
     public function delete(User $user, BoardList $boardList): bool
     {
-        // User can delete a list if they can view the parent board
-        return $user->can('view', $boardList->board);
+        // A user can delete a list if they have permission to update the parent board.
+        // This keeps the permissions consistent for update and delete actions.
+        return $user->can('update', $boardList->board);
     }
 } 

@@ -502,6 +502,7 @@ Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(
     // Project routes
     Route::post('/projects', [ProjectHubController::class, 'storeProject'])->name('projects.store');
     Route::get('/projects/{scholar_project}', [ProjectHubController::class, 'showProject'])->name('projects.show');
+    Route::put('/projects/{scholar_project}', [ProjectHubController::class, 'updateProject'])->name('projects.update');
     Route::delete('/projects/{scholar_project}', [ProjectHubController::class, 'destroyProject'])->name('projects.destroy');
     
     // Board routes

@@ -58,14 +58,16 @@ class BoardPolicy
             return false;
         }
         
-        // Check based on parent entity type
-        if ($boardable instanceof Workspace) {
-            // User can update a board if they are an admin of its parent workspace
+        // The owner of the parent entity (Workspace or Project) can always update
+        if ($user->id === $boardable->owner_id) {
+            return true;
+        }
+        
+        // Check based on parent entity type for admin role
+        if ($boardable instanceof Workspace || $boardable instanceof Project) {
+            // User can update a board if they are an admin of its parent
             $member = $boardable->members()->where('user_id', $user->id)->first();
             return $member && $member->pivot->role === 'admin';
-        } elseif ($boardable instanceof Project) {
-            // Only the project owner can update boards
-            return $user->id === $boardable->owner_id;
         }
         
         return false;

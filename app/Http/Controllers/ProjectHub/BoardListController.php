@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BoardListResource;
 use App\Models\Board;
 use App\Models\BoardList;
+use App\Events\BoardListUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -54,7 +55,19 @@ class BoardListController extends Controller
         ]);
         
         $boardList->update($validated);
-        
+
+        // Broadcast the update event for real-time updates
+        broadcast(new BoardListUpdated($boardList, $request->user(), 'renamed'))->toOthers();
+
+        // Return JSON response for AJAX calls (Inertia)
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'List updated successfully.',
+                'list' => $boardList
+            ]);
+        }
+
         return Redirect::back()->with('success', 'List updated successfully.');
     }
     

@@ -12,6 +12,7 @@ use App\Notifications\WorkspaceInvitationReceived;
 use App\Notifications\WorkspaceDeletedNotification;
 use App\Notifications\RoleChangedNotification;
 use App\Notifications\RemovedFromWorkspaceNotification;
+use App\Events\WorkspaceUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -171,10 +172,22 @@ class WorkspaceController extends Controller
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
         ]);
-        
+
+        // Broadcast the update event for real-time updates
+        broadcast(new WorkspaceUpdated($workspace, $request->user(), 'renamed'))->toOthers();
+
         // Load the owner for the resource
         $workspace->load('owner');
-        
+
+        // Return JSON response for AJAX calls (Inertia)
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Workspace updated successfully.',
+                'workspace' => new WorkspaceResource($workspace)
+            ]);
+        }
+
         return Redirect::back()->with('success', 'Workspace updated successfully.');
     }
 

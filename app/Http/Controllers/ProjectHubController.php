@@ -613,6 +613,38 @@ class ProjectHubController extends Controller
         
         return redirect()->route('project-hub.index')->with('success', 'Project created successfully.');
     }
+
+    /**
+     * Update the specified project in storage.
+     */
+    public function updateProject(Request $request, Project $scholar_project)
+    {
+        // Authorize that the user can update this project
+        $this->authorize('update', $scholar_project);
+
+        // Validate the incoming data
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        // Update the project
+        $scholar_project->update($validated);
+
+        // Optionally, you can broadcast an event for real-time updates
+        // broadcast(new ProjectUpdated($scholar_project, $request->user()))->toOthers();
+
+        // Return JSON response for AJAX calls (Inertia)
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Project updated successfully.',
+                'project' => new ProjectResource($scholar_project)
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Project updated successfully.');
+    }
     
     /**
      * Display a project and its boards.
