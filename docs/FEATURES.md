@@ -14,6 +14,7 @@ This document provides a detailed breakdown of the major features implemented in
 - [3. Collaboration & Networking](#3-collaboration--networking)
   - [ScholarLab (ProjectHub)](#scholarlab-projecthub)
   - [My Network (Connections)](#my-network-connections)
+  - [Messaging](#messaging)
 - [4. AI-Powered Services](#4-ai-powered-services)
   - [Semantic Search & AI Matching](#semantic-search--ai-matching)
   - [Postgraduate Program Recommendations](#postgraduate-program-recommendations)
@@ -144,6 +145,23 @@ A system for users to manage their professional connections within the platform.
     -   **Tagging System**: Users can organize their connections using default and custom-created tags. This allows for easy filtering (e.g., "Collaborators", "Students").
     -   **Bulk Actions**: Users can select multiple connections and apply tags in a single action.
     -   **Role-Based Logic**: Academicians have the exclusive ability to assign the "Student" tag to their connections.
+
+### Messaging
+
+A real-time, one-on-one and group messaging system designed for seamless communication.
+
+-   **Purpose**: To enable private and group conversations between users on the platform.
+-   **UI**: A responsive, three-pane layout (`ConversationList`, `ThreadPane`, `MessageComposer`) located in `resources/js/Pages/Messaging/`.
+-   **Backend Logic**: Controllers under `app/Http/Controllers/Api/V1/Messaging/` handle RESTful operations for conversations and messages.
+-   **Real-Time Updates**:
+    -   **Thread Pane**: New messages, edits, and deletions appear instantly for all participants within an open conversation. This is powered by broadcasting events (e.g., `MessageSent`) on a private `conversation.{id}` channel via **Pusher**.
+    -   **Conversation Sidebar**: The list of conversations updates in real time for all users, even if they are not actively viewing the messaging page. When a new message is sent, a compact `ConversationListDelta` event is broadcast to each participant's private `App.Models.User.{id}` channel via **Pusher**. This ensures the last message preview, timestamp, and unread count are always current across the application.
+-   **Key Features**:
+    -   Direct (one-to-one) and group conversations.
+    -   Rich text messaging with support for file attachments.
+    -   Read receipts (via `last_read_message_id`).
+    -   Search and filtering of conversations.
+-   **Database Models**: `Conversation`, `Message`, `ConversationParticipant`, `MessageAttachment`.
 
 ## 4. AI-Powered Services
 

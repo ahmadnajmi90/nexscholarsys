@@ -83,7 +83,7 @@ end
 ### Backend
 
 -   **Framework**: Laravel 11 (PHP 8.2)
--   **Real-time Communication**: Laravel Reverb (WebSocket server)
+-   **Real-time Communication**: Dual approach using Laravel Reverb (for ScholarLab) and Pusher (for Messaging).
 -   **Authentication**: Laravel Sanctum (for API and web sessions)
 -   **Authorization**: Bouncer (Role-based permissions)
 -   **API Specification**: `darkaonline/l5-swagger` for OpenAPI documentation.
@@ -103,7 +103,7 @@ end
 -   **Key Packages**:
     -   `@inertiajs/react`: Inertia adapter for React.
     -   `axios`: For making HTTP requests from the client.
-    -   `pusher-js`: WebSocket client for connecting to Laravel Reverb.
+    -   `pusher-js`: WebSocket client for connecting to real-time services like Pusher and Laravel Reverb.
     -   `react-quill`: Rich text editor.
 
 ### Database & Storage
@@ -145,13 +145,20 @@ The application exposes a RESTful API, primarily for administrative data managem
 -   **Stateful API (`/api/v1/app`)**: Protected by standard web session authentication. This is used by the Inertia frontend for certain asynchronous actions that don't fit the standard page-load model.
 -   **Routing**: Defined in `routes/api.php`, with clear separation between the stateless and stateful endpoints.
 
-### Real-Time Communication (Laravel Reverb)
+### Real-Time Communication
 
-Real-time features, particularly in **ScholarLab** (ProjectHub in coding perspective), are powered by WebSockets via Laravel Reverb.
+The platform uses a hybrid approach for real-time features, leveraging different technologies for specific modules.
 
--   **Server**: Reverb runs as a separate process, handling WebSocket connections.
--   **Backend**: Laravel Events (e.g., `TaskMoved`) are broadcasted from the backend to specific channels.
--   **Frontend**: The React application uses `pusher-js` to listen to these channels and update the UI in real-time without needing a page refresh.
+-   **ScholarLab (ProjectHub)**: This feature uses **Laravel Reverb**, a first-party WebSocket server, for handling real-time task management updates (e.g., moving tasks on a Kanban board).
+-   **Messaging**: The real-time chat feature is powered by **Pusher**. It uses WebSockets to deliver new messages and conversation updates instantly.
+-   **Frontend Client**: The React application uses the `pusher-js` library to connect to both services, as it is compatible with the Pusher protocol that Reverb uses.
+
+#### Dual-Channel Strategy for Messaging (via Pusher)
+
+The messaging system employs a sophisticated dual-channel approach to ensure both efficiency and a seamless user experience:
+
+-   **Conversation Channel (`private-conversation.{id}`):** This channel is used for broadcasting events related to a *specific, active conversation*, such as new messages (`MessageSent`), edits, and deletions. Only users who are currently viewing that conversation subscribe to this channel.
+-   **User Channel (`private-App.Models.User.{id}`):** This private channel is unique to each user. It is used for broadcasting events that need to update the global UI, such as the conversation list in the sidebar. When a new message arrives in any conversation, a lightweight `ConversationListDelta` event is sent to the user channels of all participants to keep the sidebar in sync.
 
 ### Background Processing
 

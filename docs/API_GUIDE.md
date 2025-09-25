@@ -549,3 +549,52 @@ These endpoints are designed for the frontend, use session-based authentication,
 -   **Method**: `POST`
 -   **Path**: `/api/v1/app/notifications/mark-all-as-read`
 -   **Response** (`200 OK`).
+
+---
+
+## WebSocket API (Real-Time Events)
+
+The platform uses WebSockets for real-time communication. Clients should subscribe to private channels to receive events.
+
+### Messaging Events (via Pusher)
+
+The following events are broadcast using the **Pusher** driver.
+
+#### Event: `ConversationListDelta`
+
+-   **Channel**: `App.Models.User.{id}` (Private User Channel)
+-   **Event Name**: `ConversationListDelta`
+-   **Description**: Fired when a message is sent, edited, or deleted in any conversation a user is part of. This event provides a compact summary to update the conversation list (sidebar) in real-time. It is sent to all participants of a conversation except the user who triggered the event (the actor).
+-   **When Triggered**:
+    -   After sending a new message.
+    -   After editing an existing message.
+    -   After deleting a message.
+-   **Payload Example**:
+    ```json
+    {
+      "conversation_id": 123,
+      "last_message_preview": "Okay, sounds good!",
+      "last_message_type": "text",
+      "last_message_sender_id": 45,
+      "updated_at": "2025-09-25T10:30:00.000000Z",
+      "unread_delta": 1,
+      "title": null,
+      "icon_path": null
+    }
+    ```
+-   **Client-side Handling**:
+    -   Upon receiving this event, the client should find the corresponding conversation in its local state.
+    -   Update the last message preview, timestamp, and sender details.
+    -   Increment the unread count using the `unread_delta` value.
+    -   Reorder the conversation to the top of the list based on the new `updated_at` timestamp.
+
+#### Event: `MessageSent`
+
+-   **Channel**: `conversation.{id}` (Private Conversation Channel)
+-   **Event Name**: `.MessageSent`
+-   **Description**: Fired when a new message is sent. This event contains the full `Message` resource and is intended to update the main thread pane of an open conversation.
+-   **Payload**: A full `MessageResource` JSON object.
+
+### ScholarLab Events (via Reverb)
+
+-   **Note**: Real-time events for the ScholarLab (ProjectHub) feature, such as `TaskMoved`, are broadcast using the **Laravel Reverb** driver. Please refer to the ScholarLab-specific documentation for details on those events.

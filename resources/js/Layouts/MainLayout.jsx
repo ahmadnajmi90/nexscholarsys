@@ -217,10 +217,10 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     // Banner configuration
     const bannerConfig = {
-        message: "New profile information skills is updated, please review and update your profile.",
+        message: "Messaging features are now available! Feel free to try them out. Any feedback or bugs can be reported through the provided feedback form.",
         type: "info", // 'info', 'warning', 'success', 'error'
         dismissible: true,
-        persistKey: "skills-update-banner-2025", // Change this key when you want to show the banner again
+        persistKey: "messaging-launch-banner-2025", // Change this key when you want to show the banner again
         hideOnScroll: false // Set to true if you want banner to hide on scroll
     };
 
