@@ -23,12 +23,14 @@ class NotificationController extends Controller
         $unreadNotifications = DatabaseNotification::where('notifiable_type', 'App\Models\User')
             ->where('notifiable_id', $user->id)
             ->whereNull('read_at')
+            ->orderBy('created_at', 'desc')
             ->get();
-            
+
         // Get read notifications
         $readNotifications = DatabaseNotification::where('notifiable_type', 'App\Models\User')
             ->where('notifiable_id', $user->id)
             ->whereNotNull('read_at')
+            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
         

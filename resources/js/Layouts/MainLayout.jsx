@@ -300,7 +300,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                                     <h1 className="text-2xl font-semibold">{title}</h1>
 
                                     <div className="flex items-center space-x-4">
-                                        {/* <NotificationBell /> */}
+                                        <NotificationBell />
                                         
                                         {/* Profile Dropdown */}
                                         <Dropdown>

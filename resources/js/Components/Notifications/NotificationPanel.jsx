@@ -130,7 +130,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <p className="text-sm">{data.message}</p>
-                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('en-GB')}</p>
               </div>
             </div>
             {!notification.read_at && (
@@ -161,7 +161,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <p className="text-sm">{data.message}</p>
-                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('en-GB')}</p>
               </div>
             </div>
           </div>
