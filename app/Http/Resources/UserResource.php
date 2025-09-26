@@ -65,8 +65,8 @@ class UserResource extends JsonResource
                 'updated_at' => $this->academician->updated_at,
 
                 // Add the new data
-                'scholar_profile' => $this->academician->scholarProfile,
-                'total_publications' => $this->academician->publications->count(),
+                'scholar_profile' => $this->academician->scholar_profile,
+                'total_publications' => $this->academician->total_publications,
             ];
         });
 

@@ -51,12 +51,7 @@ class HandleInertiaRequests extends Middleware
             // to ensure the data is available efficiently.
             $user->loadMissing('academician.scholarProfile', 'academician.publications');
 
-            // If the user has an academician profile, add the extra data to it.
-            if ($user->academician) {
-                // We create new properties on the academician object that will be serialized to JSON.
-                $user->academician->scholar_profile = $user->academician->scholarProfile;
-                $user->academician->total_publications = $user->academician->publications->count();
-            }
+            // Additional computed fields are provided via accessors on the model.
         }
 
         return array_merge(parent::share($request), [
