@@ -3,6 +3,8 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import PhoneNumberInput from "@/Components/ui/phone-input";
+import { normalizePhoneNumber, getDefaultCountryFromNumber } from "@/Utils/phone";
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import NationalityForm from "./NationalityForm";
@@ -16,10 +18,11 @@ export default function PostgraduateForm({ universities, faculties, className = 
     const generationTriggeredRef = useRef(false);
     
     const postgraduate = usePage().props.postgraduate; // Related postgraduate data
+    const initialPhoneNumber = normalizePhoneNumber(postgraduate?.phone_number);
 
     const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
         // common fields
-        phone_number: postgraduate?.phone_number || '',
+        phone_number: initialPhoneNumber || '',
         full_name: postgraduate?.full_name || '',
         previous_degree:
             typeof postgraduate?.previous_degree === 'string'
@@ -326,16 +329,17 @@ export default function PostgraduateForm({ universities, faculties, className = 
         e.preventDefault();
         const formData = new FormData();
         Object.keys(data).forEach((key) => {
-            // Exclude profile_picture from this submission if handled separately
-            if (key !== "profile_picture") {
-                if (Array.isArray(data[key])) {
-                    formData.append(key, JSON.stringify(data[key]));
-                } else if (key === "supervisorAvailability" || key === "grantAvailability") {
-                    // Send the actual boolean value without converting to string
-                    formData.append(key, data[key]);
-                } else {
-                    formData.append(key, data[key]);
-                }
+            if (key === "profile_picture") {
+                return;
+            }
+
+            if (Array.isArray(data[key])) {
+                formData.append(key, JSON.stringify(data[key]));
+            } else if (key === "supervisorAvailability" || key === "grantAvailability") {
+                formData.append(key, data[key]);
+            } else {
+                const value = key === "phone_number" ? normalizePhoneNumber(data[key]) : data[key];
+                formData.append(key, value);
             }
         });
 
@@ -697,17 +701,18 @@ export default function PostgraduateForm({ universities, faculties, className = 
 
                     {/* Contact Details */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-                        <div className="w-full">
-                            <InputLabel htmlFor="phone_number" value="Phone Number" />
-                            <TextInput
-                                id="phone_number"
-                                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                                value={data.phone_number}
-                                onChange={(e) => setData('phone_number', e.target.value)}
-                                autoComplete="tel"
-                            />
-                            <InputError className="mt-2" message={errors.phone_number} />
-                        </div>
+                <div className="w-full">
+                  <InputLabel htmlFor="phone_number" value="Phone Number" />
+                  <PhoneNumberInput
+                    id="phone_number"
+                    name="phone_number"
+                    value={data.phone_number}
+                    defaultCountry={getDefaultCountryFromNumber(data.phone_number)}
+                    onChange={(value) => setData('phone_number', value ?? '')}
+                    placeholder="Enter phone number"
+                  />
+                  <InputError className="mt-2" message={errors.phone_number} />
+                </div>
                         <div>
                             <NationalityForm title="Nationality" value={data.nationality} onChange={(value) => setData('nationality', value)} errors={errors} />
                         </div>

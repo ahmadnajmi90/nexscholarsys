@@ -2,6 +2,8 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import PhoneNumberInput from "@/Components/ui/phone-input";
+import { normalizePhoneNumber, getDefaultCountryFromNumber } from "@/Utils/phone";
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
@@ -14,13 +16,14 @@ import ResearchAreaSelector from '@/Components/ResearchAreaSelector';
 
 export default function AcademicianForm({ className = '', researchOptions, aiGenerationInProgress, aiGenerationMethod, generatedProfileData }) {
   const academician = usePage().props.academician; // Related academician data
+  const initialPhoneNumber = normalizePhoneNumber(academician?.phone_number);
   const allPrograms = usePage().props.allPrograms || [];
   const currentProgramIds = usePage().props.currentProgramIds || [];
 
-  const { data, setData, post, errors, processing, recentlySuccessful } =
+    const { data, setData, post, errors, processing, recentlySuccessful, reset } =
     useForm({
       // data common for all
-      phone_number: academician?.phone_number || '',
+      phone_number: initialPhoneNumber || '',
       full_name: academician?.full_name || '',
       profile_picture: academician?.profile_picture || '',
       research_expertise:
@@ -62,7 +65,7 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
   const [canUpdateScholar, setCanUpdateScholar] = useState(false);
 
   // Create a ref to track if generation has been triggered
-  const generationTriggeredRef = useRef(false);
+    const generationTriggeredRef = useRef(false);
   
   // Effect to apply generated profile data if available
   useEffect(() => {
@@ -446,7 +449,8 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
         } else if (Array.isArray(data[key])) {
           formData.append(key, JSON.stringify(data[key]));
         } else {
-          formData.append(key, data[key]);
+          const value = key === "phone_number" ? normalizePhoneNumber(data[key]) : data[key];
+          formData.append(key, value);
         }
       }
     });
@@ -877,12 +881,13 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
                 </div>
                 <div className="w-full">
                   <InputLabel htmlFor="phone_number" value="Phone Number" />
-                  <TextInput
+                  <PhoneNumberInput
                     id="phone_number"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    name="phone_number"
                     value={data.phone_number}
-                    onChange={(e) => setData('phone_number', e.target.value)}
-                    autoComplete="tel"
+                    defaultCountry={getDefaultCountryFromNumber(data.phone_number)}
+                    onChange={(value) => setData('phone_number', value ?? '')}
+                    placeholder="Enter phone number"
                   />
                   <InputError className="mt-2" message={errors.phone_number} />
                 </div>

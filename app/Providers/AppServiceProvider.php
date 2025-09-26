@@ -7,6 +7,8 @@ use Illuminate\Support\ServiceProvider;
 use App\Http\Middleware\InjectUserRoles;
 use App\Models\Academician;
 use App\Observers\AcademicianObserver;
+use App\Support\PhoneNumberNormalizer;
+use libphonenumber\PhoneNumberUtil;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        //
+        $this->app->singleton(PhoneNumberNormalizer::class, function () {
+            return new PhoneNumberNormalizer(PhoneNumberUtil::getInstance());
+        });
     }
 
     /**

@@ -9,6 +9,7 @@
         "barryvdh/laravel-dompdf": "^2.0",
         "darkaonline/l5-swagger": "^9.0",
         "doctrine/dbal": "^3.7",
+        "giggsey/libphonenumber-for-php": "^9.0",
         "google/analytics-data": "^0.22.2",
         "google/apiclient": "*",
         "guzzlehttp/guzzle": "^7.2",
