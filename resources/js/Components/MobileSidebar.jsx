@@ -141,7 +141,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                             </button>
                         )}
                         <h3 className={`text-lg font-semibold ${activeMenu === 'main' ? 'text-white ml-2' : 'text-gray-800'}`}>{currentMenuData.title}</h3>
-                        </div>
+                    </div>
 
                     {/* Animated Content */}
                     <div className="flex-1 overflow-hidden relative">
