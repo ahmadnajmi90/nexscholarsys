@@ -125,6 +125,9 @@ export default function Edit({ postProject, auth, researchOptions, universities 
         }
       } else if (Array.isArray(data[key])) {
         formData.append(key, JSON.stringify(data[key]));
+      } else if (typeof data[key] === 'boolean') {
+        // Convert boolean to '1' or '0' for Laravel validation
+        formData.append(key, data[key] ? '1' : '0');
       } else {
         formData.append(key, data[key]);
       }
@@ -343,7 +346,14 @@ export default function Edit({ postProject, auth, researchOptions, universities 
                 id="category"
                 name="category"
                 value={data.category}
-                onChange={(e) => setData("category", e.target.value)}
+                onChange={(e) => {
+                  const newCategory = e.target.value;
+                  setData("category", newCategory);
+                  // Clear field_of_research if category is KTP or CSR
+                  if (newCategory === "Knowledge Transfer Program (KTP)" || newCategory === "CSR (Corporate Social Responsibility)") {
+                    setData("field_of_research", []);
+                  }
+                }}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               >
                 <option value="" disabled hidden>
