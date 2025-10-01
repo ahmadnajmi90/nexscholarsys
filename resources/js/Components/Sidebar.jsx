@@ -33,6 +33,7 @@ import {
     Library,
     ChevronLeft,
     MessageSquare,
+    ClipboardList,
 } from 'lucide-react';
 import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
@@ -41,6 +42,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreatePosts, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
     const { auth, pendingRequestCount } = usePage().props;
     const user = auth.user;
+    const feedbackFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform';
 
     // Animation variants
     const containerVariants = {
@@ -282,6 +284,17 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                                 <BookOpenCheck className="text-gray-600 mb-2 w-5 h-5" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">Tutorial Guide</span>
                             </Link>
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <a
+                                href={feedbackFormUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center"
+                            >
+                                <ClipboardList className="text-gray-600 mb-2 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 truncate w-full">Feedback Form</span>
+                            </a>
                         </motion.div>
                         <motion.div variants={itemVariants}>
                             <Link href={route('logout')} method="post" as="button" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center w-full">
