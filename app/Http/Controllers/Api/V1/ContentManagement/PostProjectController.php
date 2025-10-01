@@ -168,6 +168,13 @@ class PostProjectController extends Controller
     public function store(Request $request)
     {
         try {
+            // Convert boolean string values to actual boolean before validation
+            if ($request->has('create_scholarlab_project')) {
+                $request->merge([
+                    'create_scholarlab_project' => filter_var($request->create_scholarlab_project, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                ]);
+            }
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
@@ -179,7 +186,7 @@ class PostProjectController extends Controller
                 'duration' => 'nullable|string|max:255',
                 'sponsored_by' => 'required|string|max:255',
                 'category' => 'required|string|max:255',
-                'field_of_research' => 'required',
+                'field_of_research' => 'required_if:category,Fundamental Research,Applied Research,Fundamental + Applied',
                 'supervisor_category' => 'nullable|string|max:255',
                 'supervisor_name' => 'nullable|string|max:255',
                 'university' => 'nullable|exists:university_list,id',
@@ -205,10 +212,6 @@ class PostProjectController extends Controller
             }
 
             $validated['author_id'] = $user->unique_id;
-
-            if ($request->has('create_scholarlab_project')) {
-                $validated['create_scholarlab_project'] = filter_var($request->create_scholarlab_project, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            }
 
             if ($request->has('tags') && is_array($request->tags)) {
                 $validated['tags'] = json_encode($request->tags);
@@ -304,7 +307,7 @@ class PostProjectController extends Controller
                 'duration' => 'nullable|string|max:255',
                 'sponsored_by' => 'required|string|max:255',
                 'category' => 'required|string|max:255',
-                'field_of_research' => 'required',
+                'field_of_research' => 'required_if:category,Fundamental Research,Applied Research,Fundamental + Applied',
                 'supervisor_category' => 'nullable|string|max:255',
                 'supervisor_name' => 'nullable|string|max:255',
                 'university' => 'nullable|exists:university_list,id',
