@@ -6,7 +6,7 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import Dropdown from '../Components/Dropdown';
-import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign } from 'lucide-react'; // Modern icons
+import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign, ClipboardList } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
@@ -224,6 +224,8 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         hideOnScroll: false // Set to true if you want banner to hide on scroll
     };
 
+    const feedbackFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform';
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Toast notifications */}
@@ -399,6 +401,22 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
 
             )}
+
+            {/* Feedback Form Bubble */}
+            <a
+                href={feedbackFormUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open feedback form"
+                className="fixed z-50 flex items-center gap-3 right-4 bottom-24 md:bottom-10 md:right-8 group"
+            >
+                <span className="pointer-events-none rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-focus-within:opacity-100 group-focus-within:translate-x-0 transition-all duration-200">
+                    Feedback Form
+                </span>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-xl transition-transform duration-200 group-hover:scale-105 group-focus-within:scale-105">
+                    <ClipboardList className="h-6 w-6" />
+                </div>
+            </a>
 
             {/* Force Terms Agreement Modal */}
             <ForceTermsModal show={showTermsModal} />
