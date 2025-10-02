@@ -190,7 +190,9 @@ const PhoneNumberInput = forwardRef(
           withCountryCallingCode
           placeholder={placeholder}
           className="flex w-full items-center gap-2"
-          inputClassName={cn(inputVariants({ error }), "rounded-md", inputClassName)}
+          numberInputProps={{
+            className: cn(inputVariants({ error }), "rounded-md", inputClassName)
+          }}
           countrySelectComponent={({ value: countryValue, onChange: handleChange, disabled: isSelectDisabled }) => (
             <CountrySelect
               value={countryValue}

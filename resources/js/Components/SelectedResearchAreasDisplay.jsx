@@ -8,7 +8,7 @@ export default function SelectedResearchAreasDisplay({
   showCounts = true,
   showRemoveButtons = true,
   className = ""
-}) {
+} = {}) {
   const [collapsedFields, setCollapsedFields] = useState(new Set());
   const [expandedAreas, setExpandedAreas] = useState(new Set());
 
@@ -231,14 +231,4 @@ SelectedResearchAreasDisplay.propTypes = {
   showCounts: PropTypes.bool,
   showRemoveButtons: PropTypes.bool,
   className: PropTypes.string
-};
-
-// Default props
-SelectedResearchAreasDisplay.defaultProps = {
-  selectedResearchAreas: [],
-  researchAreaDetails: {},
-  onRemoveResearchArea: null,
-  showCounts: true,
-  showRemoveButtons: true,
-  className: ''
 };

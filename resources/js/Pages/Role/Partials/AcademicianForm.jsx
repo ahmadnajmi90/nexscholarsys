@@ -468,21 +468,24 @@ export default function AcademicianForm({ className = '', researchOptions, aiGen
       data: formData,
       onStart: () => {
         // This ensures the processing state is properly set at the start
+        console.log('Starting profile update...');
       },
       onSuccess: () => {
         // This will be called when the server responds with a successful response
-        // Show success alert to the user
-        alert('Profile updated successfully!');
+        // Show success alert to the user with additional info about AI processing
+        alert('✅ Profile updated successfully!\n\n💡 AI matching features are being prepared in the background and will be ready shortly.');
         // The recentlySuccessful state will be automatically set to true here
         // and will be automatically set back to false after 2 seconds
       },
       onError: (errors) => {
         // Handle errors if needed
         console.error('Form submission errors:', errors);
+        alert('❌ Failed to update profile. Please check the form and try again.');
       },
       onFinish: () => {
         // This will be called regardless of success or error
         // Ensure any custom loading states are reset
+        console.log('Profile update request completed');
       }
     });
   };

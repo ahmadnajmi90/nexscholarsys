@@ -8,7 +8,7 @@ export default function SelectedSkillsDisplay({
   showCounts = true,
   showRemoveButtons = true,
   className = ''
-}) {
+} = {}) {
   const [collapsedDomains, setCollapsedDomains] = useState(new Set());
 
   // Update collapsed domains when skills data changes to ensure all domains start collapsed
@@ -211,13 +211,4 @@ SelectedSkillsDisplay.propTypes = {
   showCounts: PropTypes.bool,
   showRemoveButtons: PropTypes.bool,
   className: PropTypes.string
-};
-
-SelectedSkillsDisplay.defaultProps = {
-  selectedSkills: [],
-  skillDetails: {},
-  onRemoveSkill: null,
-  showCounts: true,
-  showRemoveButtons: true,
-  className: ''
 };

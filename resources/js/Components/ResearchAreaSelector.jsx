@@ -12,7 +12,7 @@ export default function ResearchAreaSelector({
   required = false, 
   label = "Research Areas",
   placeholder = "Select research areas..." 
-}) {
+} = {}) {
   const [fields, setFields] = useState([]);
   const [areas, setAreas] = useState([]);
   const [niches, setNiches] = useState([]);
@@ -1122,13 +1122,4 @@ ResearchAreaSelector.propTypes = {
   required: PropTypes.bool,
   label: PropTypes.string,
   placeholder: PropTypes.string
-};
-
-// Default props
-ResearchAreaSelector.defaultProps = {
-  value: [],
-  error: null,
-  required: false,
-  label: 'Research Areas',
-  placeholder: 'Select research areas...'
 };
