@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog';
+import Modal from '@/Components/Modal';
 import { Button } from '@/Components/ui/button';
 import { Label } from '@/Components/ui/label';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { ScrollArea } from '@/Components/ui/scroll-area';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -54,7 +53,7 @@ export default function AcceptSupervisorOfferModal({ isOpen, request, onClose, o
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const supervisorName = request?.academician?.full_name || 'Prof. Supervisor';
-  const program = request?.postgraduate_program?.name || 'your degree program';
+  // const program = request?.postgraduate_program?.name || 'your degree program';
 
   const allChecked = Object.values(checkboxes).every(v => v === true);
 
@@ -95,20 +94,21 @@ export default function AcceptSupervisorOfferModal({ isOpen, request, onClose, o
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (!open ? handleClose() : null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
+    <Modal show={isOpen} onClose={handleClose} maxWidth="2xl">
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="h-6 w-6 text-green-600" />
-            <DialogTitle className="text-xl font-semibold">Accept Supervisor Offer</DialogTitle>
+            <h2 className="text-xl font-semibold">Accept Supervisor Offer</h2>
           </div>
-          <DialogDescription>
+          <p className="text-sm text-slate-600">
             You are accepting an offer from <strong>{supervisorName}</strong> to be your supervisor on NexScholar.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
-        <ScrollArea className="max-h-[calc(90vh-180px)]">
-          <div className="px-6 pb-6 space-y-6">
+        <div className="max-h-[60vh] overflow-y-auto">
+          <div className="space-y-6">
             {/* Important Notice */}
             <Alert className="bg-amber-50 border-amber-200">
               <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -170,8 +170,8 @@ export default function AcceptSupervisorOfferModal({ isOpen, request, onClose, o
                 <AlertDescription className="text-sm text-green-900">
                   <strong className="font-semibold">Ready to Proceed</strong>
                   <p className="mt-1">
-                    By clicking "Agree & Accept", you confirm your acceptance of {supervisorName} as your supervisor 
-                    for {program}. Your supervision relationship will be activated, and both you and your supervisor 
+                    By clicking "Agree & Accept", you confirm your acceptance of {supervisorName} as your supervisor.
+                    Your supervision relationship will be activated, and both you and your supervisor 
                     will gain access to supervision features including meetings, ScholarLab workspace, and progress tracking.
                   </p>
                 </AlertDescription>
@@ -187,10 +187,10 @@ export default function AcceptSupervisorOfferModal({ isOpen, request, onClose, o
               </Alert>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t bg-slate-50 flex items-center justify-end gap-3">
+        <div className="mt-6 pt-4 border-t flex items-center justify-end gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -207,8 +207,8 @@ export default function AcceptSupervisorOfferModal({ isOpen, request, onClose, o
             Agree & Accept
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </Modal>
   );
 }
 

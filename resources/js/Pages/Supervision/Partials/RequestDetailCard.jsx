@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { X, MessageSquare, Calendar, Video, User2, FileText, History as HistoryIcon, CalendarClock } from 'lucide-react';
+import { X, MessageSquare, Calendar, Video, User2, FileText, CheckCircle2, History as HistoryIcon, CalendarClock, GraduationCap, Mail, Phone, Globe, Briefcase } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -163,19 +163,23 @@ export default function RequestDetailCard({ request, onClose, onUpdated }) {
               <Calendar className="mr-2 h-4 w-4" />
               Schedule
             </Button>
-            <Button
-              className="flex-1 bg-slate-900 hover:bg-slate-800"
-              disabled={!request?.meetings || request.meetings.length === 0}
-              onClick={() => {
-                const nextMeeting = request?.meetings?.[0];
-                if (nextMeeting?.location_link) {
-                  window.open(nextMeeting.location_link, '_blank', 'noopener,noreferrer');
+              <Button
+                className="flex-1 bg-slate-900 hover:bg-slate-800"
+                disabled={
+                  !request?.meetings || 
+                  request.meetings.length === 0 || 
+                  !request.meetings[0]?.location_link
                 }
-              }}
-            >
-              <Video className="mr-2 h-4 w-4" />
-              Join Meeting
-            </Button>
+                onClick={() => {
+                  const nextMeeting = request?.meetings?.[0];
+                  if (nextMeeting?.location_link) {
+                    window.open(nextMeeting.location_link, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+              >
+                <Video className="mr-2 h-4 w-4" />
+                Join Meeting
+              </Button>
           </div>
         </div>
 
@@ -278,9 +282,78 @@ function OverviewTab({ request }) {
   const submittedAt = request?.submitted_at ? format(new Date(request.submitted_at), 'dd/MM/yyyy') : '—';
   const meetings = request?.meetings ?? [];
   const hasMeetings = meetings.length > 0;
+  const academician = request?.academician ?? {};
 
   return (
     <div className="p-6 space-y-6">
+      {/* Supervisor Summary Card */}
+      <section className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Supervisor Summary</h3>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InfoItem icon={User2} label="Full Name" value={academician.full_name || '—'} />
+            <InfoItem icon={Briefcase} label="Position" value={academician.current_position || '—'} />
+            <InfoItem icon={Mail} label="Email" value={academician.email || '—'} />
+            <InfoItem icon={Phone} label="Phone" value={academician.phone_number || '—'} />
+          </div>
+
+          {(academician.university || academician.faculty || academician.department) && (
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-slate-500" />
+                Institution
+              </h4>
+              <div className="space-y-2">
+                {academician.university && (
+                  <div className="text-sm">
+                    <span className="font-medium text-slate-700">University: </span>
+                    <span className="text-slate-600">{academician.university.name || academician.university.full_name || '—'}</span>
+                  </div>
+                )}
+                {academician.faculty && (
+                  <div className="text-sm">
+                    <span className="font-medium text-slate-700">Faculty: </span>
+                    <span className="text-slate-600">{academician.faculty.name || '—'}</span>
+                  </div>
+                )}
+                {academician.department && (
+                  <div className="text-sm">
+                    <span className="font-medium text-slate-700">Department: </span>
+                    <span className="text-slate-600">{academician.department}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {academician.research_areas && Array.isArray(academician.research_areas) && academician.research_areas.length > 0 && (
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-semibold text-slate-700 mb-3">Research Expertise</h4>
+              <div className="flex flex-wrap gap-2">
+                {academician.research_areas.slice(0, 3).map((area, index) => (
+                  <span key={index} className="px-2.5 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    {area}
+                  </span>
+                ))}
+                {academician.research_areas.length > 3 && (
+                  <span className="px-2.5 py-1 text-xs rounded-full bg-slate-100 text-slate-600">
+                    +{academician.research_areas.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {academician.bio && (
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Bio</h4>
+              <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{academician.bio}</p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Proposal Summary Card */}
       <section className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Proposal Summary</h3>
@@ -299,10 +372,6 @@ function OverviewTab({ request }) {
               <div className="text-sm text-slate-500 mb-1">Sent:</div>
               <div className="font-medium text-slate-900">{submittedAt}</div>
             </div>
-            {/* <div>
-              <div className="text-sm text-slate-500 mb-1">Duration:</div>
-              <div className="font-medium text-slate-900">36 months</div>
-            </div> */}
           </div>
         </div>
       </section>
@@ -335,6 +404,18 @@ function OverviewTab({ request }) {
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+function InfoItem({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-start gap-2">
+      {Icon && <Icon className="mt-0.5 h-4 w-4 text-slate-400 flex-shrink-0" />}
+      <div className="min-w-0">
+        <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
+        <div className="text-sm text-slate-700 break-words">{value || '—'}</div>
+      </div>
     </div>
   );
 }

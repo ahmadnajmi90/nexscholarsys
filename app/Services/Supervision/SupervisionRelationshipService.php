@@ -181,9 +181,9 @@ class SupervisionRelationshipService
                 $this->scholarLabService->createSupervisionWorkspace($relationship, $student, $academician, $offerDetails);
             }
 
-            // Notify both parties
-            $student->user?->notify(new SupervisionRequestAccepted($relationship));
-            $academician->user?->notify(new \App\Notifications\Supervision\StudentAcceptedOffer($relationship));
+            // TODO: Notify both parties
+            // $student->user?->notify(new SupervisionRequestAccepted($relationship));
+            // $academician->user?->notify(new \App\Notifications\Supervision\StudentAcceptedOffer($relationship));
 
             return $relationship;
         });

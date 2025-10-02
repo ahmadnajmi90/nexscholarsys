@@ -259,6 +259,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/post-projects/{id}/edit', [PostProjectController::class, 'edit'])->name('post-projects.edit');
     Route::post('/post-projects/{id}', [PostProjectController::class, 'update'])->name('post-projects.update');
     Route::delete('/post-projects/{id}', [PostProjectController::class, 'destroy'])->name('post-projects.destroy');
+
+    Route::get('/my-supervisor', [\App\Http\Controllers\Supervision\StudentController::class, 'index'])->name('supervision.student.index');
+    Route::get('/supervisor-dashboard', [\App\Http\Controllers\Supervision\SupervisorController::class, 'index'])->name('supervision.supervisor.index');
 });
 
 Route::middleware(['auth'])->group(function () {

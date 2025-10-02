@@ -31,7 +31,7 @@ class SupervisorMatchingService
         // Step 3: Load supervisors with relations and counts
         $supervisors = $program->academicians()
             ->withCount(['publications', 'postProjects'])
-            ->with(['user'])
+            ->with(['user', 'universityDetails', 'faculty'])
             ->get();
 
         Log::info("Supervisors: " . $supervisors);
@@ -109,27 +109,44 @@ class SupervisorMatchingService
                 // 3c. Map research expertise IDs to names
                 $expertiseIds = is_array($sup->research_expertise ?? null) ? $sup->research_expertise : [];
                 $expertiseNames = [];
+                $researchDomains = []; // Only 3rd layer (niche domains)
+                
                 foreach ($expertiseIds as $rid) {
                     if (isset($researchOptions[$rid])) {
-                        $expertiseNames[] = $researchOptions[$rid];
+                        $fullPath = $researchOptions[$rid];
+                        $expertiseNames[] = $fullPath;
+                        
+                        // Extract only the 3rd layer (niche domain)
+                        $parts = explode(' - ', $fullPath);
+                        if (count($parts) >= 3) {
+                            $researchDomains[] = $parts[2]; // Get the 3rd part only
+                        }
                     }
                 }
 
                 // 3d. Assemble final payload per mapping requirements
                 $results[] = [
                     'id' => $sup->id,
+                    'academician_id' => $sup->academician_id ?? $sup->id,
                     'name' => $sup->full_name ?? ($sup->user->name ?? 'Supervisor'),
                     'research_areas' => $expertiseNames,
+                    'research_domains' => array_values(array_unique($researchDomains)), // Only niche domains for modal
                     'publications_count' => $sup->publications_count ?? null,
                     'post_projects_count' => $sup->post_projects_count ?? null,
                     'accepting_students' => (bool) ($sup->availability_as_supervisor ?? true),
                     'match_score' => $matchScore,
                     'justification' => $insight,
                     'department' => $sup->department ?? '',
+                    'current_position' => $sup->current_position ?? '',
                     'avatar_url' => $sup->profile_picture ?? '',
                     'email' => $sup->user->email ?? '',
                     'url' => $sup->url ?? '',
                     'user' => $sup->user ?? null,
+                    'university' => $sup->universityDetails ? [
+                        'name' => $sup->universityDetails->name ?? $sup->universityDetails->full_name ?? '',
+                        'full_name' => $sup->universityDetails->full_name ?? '',
+                    ] : null,
+                    'postgraduate_program_id' => $program->id,
                 ];
             } catch (\Throwable $t) {
                 Log::error('SupervisorMatchingService: error for supervisor ' . $sup->id . ' -> ' . $t->getMessage());

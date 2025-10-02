@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog';
+import Modal from '@/Components/Modal';
 import { Button } from '@/Components/ui/button';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { ScrollArea } from '@/Components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { XCircle, User2, Lightbulb, AlertCircle, Loader2 } from 'lucide-react';
@@ -122,20 +121,21 @@ Dr. ${request?.academician?.full_name || 'Supervisor'}`;
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (!open ? handleClose() : null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
+    <Modal show={isOpen} onClose={handleClose} maxWidth="2xl">
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <XCircle className="h-6 w-6 text-red-600" />
-            <DialogTitle className="text-xl font-semibold">Decline Supervision Request</DialogTitle>
+            <h2 className="text-xl font-semibold">Decline Supervision Request</h2>
           </div>
-          <DialogDescription>
+          <p className="text-sm text-slate-600">
             Provide feedback to {studentName} and optionally suggest alternative supervisors.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
-        <ScrollArea className="max-h-[calc(90vh-180px)]">
-          <div className="px-6 pb-6 space-y-6">
+        <div className="max-h-[60vh] overflow-y-auto">
+          <div className="space-y-6">
             {/* Request Summary */}
             <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Request Summary</h3>
@@ -289,10 +289,10 @@ Dr. ${request?.academician?.full_name || 'Supervisor'}`;
               </AlertDescription>
             </Alert>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t bg-slate-50 flex items-center justify-end gap-3">
+        <div className="mt-6 pt-4 border-t flex items-center justify-end gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -309,8 +309,8 @@ Dr. ${request?.academician?.full_name || 'Supervisor'}`;
             Send Rejection & Notify Student
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </Modal>
   );
 }
 

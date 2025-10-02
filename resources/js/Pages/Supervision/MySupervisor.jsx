@@ -72,6 +72,7 @@ export default function MySupervisor() {
   }, []);
 
   const hasActiveRelationship = relationships.some(rel => rel.status === 'active');
+  const activeRelationship = relationships.find(rel => rel.status === 'active') || null;
 
   return (
     <MainLayout title="My Supervisor">
@@ -125,6 +126,7 @@ export default function MySupervisor() {
                 <PotentialSupervisorList
                   shortlist={shortlist}
                   requests={requests}
+                  activeRelationship={activeRelationship}
                   reload={loadData}
                   isLoading={isLoading}
                   onRequestSupervisor={(supervisor) => {

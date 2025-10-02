@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog';
+import Modal from '@/Components/Modal';
 import { Button } from '@/Components/ui/button';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { ScrollArea } from '@/Components/ui/scroll-area';
 import { CheckCircle2, User2, GraduationCap, Lightbulb, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -110,20 +109,21 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (!open ? handleClose() : null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
+    <Modal show={isOpen} onClose={handleClose} maxWidth="2xl">
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="h-6 w-6 text-green-600" />
-            <DialogTitle className="text-xl font-semibold">Accept Supervision Request</DialogTitle>
+            <h2 className="text-xl font-semibold">Accept Supervision Request</h2>
           </div>
-          <DialogDescription>
+          <p className="text-sm text-slate-600">
             Confirm your decision to supervise {studentName} and set up the supervision parameters.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
-        <ScrollArea className="max-h-[calc(90vh-180px)]">
-          <div className="px-6 pb-6 space-y-6">
+        <div className="max-h-[60vh] overflow-y-auto">
+          <div className="space-y-6">
             {/* Student Details */}
             <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Student Details</h3>
@@ -137,13 +137,13 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-2">
+                {/* <div className="flex items-start gap-2">
                   <GraduationCap className="h-4 w-4 text-slate-500 mt-0.5" />
                   <div>
                     <div className="text-xs text-slate-500">Program</div>
                     <div className="text-sm font-medium text-slate-900">{program}</div>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-3 flex items-start gap-2">
@@ -277,16 +277,16 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
               <AlertDescription className="text-sm text-green-900">
                 <strong className="font-semibold">Ready to Accept</strong>
                 <p className="mt-1">
-                  By accepting, you agree to supervise {studentName} for their {program} degree. 
+                  By accepting, you agree to supervise {studentName}. 
                   The student will be notified immediately, and supervision records will be created after the student accepts your offer.
                 </p>
               </AlertDescription>
             </Alert>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t bg-slate-50 flex items-center justify-end gap-3">
+        <div className="mt-6 pt-4 border-t flex items-center justify-end gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -303,8 +303,8 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
             Confirm & Notify Student
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </Modal>
   );
 }
 

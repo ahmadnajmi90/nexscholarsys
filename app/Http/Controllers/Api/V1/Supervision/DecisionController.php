@@ -20,11 +20,32 @@ class DecisionController extends Controller
     /**
      * Supervisor accepts the request - changes status to pending_student_acceptance
      */
-    public function accept(Request $request, SupervisionRequest $supervisionRequest)
+    public function accept(Request $request, SupervisionRequest $supervisionRequest = null)
     {
         $user = $request->user();
-        if (!$user->academician || $user->academician->academician_id !== $supervisionRequest->academician_id) {
-            abort(403);
+        
+        \Log::info('Accept Request Debug', [
+            'user_id' => $user->id,
+            'has_academician' => (bool)$user->academician,
+            'user_academician_id' => $user->academician?->academician_id ?? null,
+            'request_object_is_null' => is_null($supervisionRequest),
+            'request_academician_id' => $supervisionRequest?->academician_id ?? null,
+            'request_id' => $supervisionRequest?->id ?? null,
+            'request_status' => $supervisionRequest?->status ?? null,
+            'route_parameter' => $request->route('request'),
+            'all_route_parameters' => $request->route()->parameters(),
+        ]);
+        
+        if (!$supervisionRequest) {
+            abort(404, 'Supervision request not found.');
+        }
+        
+        if (!$user->academician) {
+            abort(403, 'Only academicians can accept supervision requests.');
+        }
+        
+        if ($user->academician->academician_id !== $supervisionRequest->academician_id) {
+            abort(403, 'You can only accept supervision requests sent to you.');
         }
 
         if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING) {
@@ -57,8 +78,8 @@ class DecisionController extends Controller
             ],
         ]);
 
-        // Notify student about the offer
-        $supervisionRequest->student?->user?->notify(new \App\Notifications\Supervision\SupervisionOfferReceived($supervisionRequest));
+        // TODO: Notify student about the offer
+        // $supervisionRequest->student?->user?->notify(new \App\Notifications\Supervision\SupervisionOfferReceived($supervisionRequest));
 
         return response()->json([
             'success' => true,
@@ -73,8 +94,13 @@ class DecisionController extends Controller
     public function reject(Request $request, SupervisionRequest $supervisionRequest)
     {
         $user = $request->user();
-        if (!$user->academician || $user->academician->academician_id !== $supervisionRequest->academician_id) {
-            abort(403);
+        
+        if (!$user->academician) {
+            abort(403, 'Only academicians can reject supervision requests.');
+        }
+        
+        if ($user->academician->academician_id !== $supervisionRequest->academician_id) {
+            abort(403, 'You can only reject supervision requests sent to you.');
         }
 
         if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING) {
@@ -114,8 +140,13 @@ class DecisionController extends Controller
     public function studentAccept(Request $request, SupervisionRequest $supervisionRequest)
     {
         $user = $request->user();
-        if (!$user->postgraduate || $user->postgraduate->postgraduate_id !== $supervisionRequest->student_id) {
-            abort(403);
+        
+        if (!$user->postgraduate) {
+            abort(403, 'Only postgraduate students can accept supervision offers.');
+        }
+        
+        if ($user->postgraduate->postgraduate_id !== $supervisionRequest->student_id) {
+            abort(403, 'You can only accept your own supervision offers.');
         }
 
         if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE) {

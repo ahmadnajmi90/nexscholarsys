@@ -36,11 +36,14 @@ class SupervisionRequestService
                 ]);
             }
 
+            // Check for existing active request (exclude cancelled, auto-cancelled, and rejected)
+            // Students can re-submit requests after rejection
             $existingRequest = SupervisionRequest::where('student_id', $student->postgraduate_id)
                 ->where('academician_id', $academician->academician_id)
                 ->whereNotIn('status', [
                     SupervisionRequest::STATUS_CANCELLED,
                     SupervisionRequest::STATUS_AUTO_CANCELLED,
+                    SupervisionRequest::STATUS_REJECTED,
                 ])->first();
 
             if ($existingRequest) {
@@ -74,6 +77,7 @@ class SupervisionRequestService
 
             $this->syncAttachments($request, Arr::get($data, 'attachments', []));
 
+            // Auto-add supervisor to potential supervisors list when request is submitted
             PotentialSupervisor::updateOrCreate(
                 [
                     'student_id' => $student->postgraduate_id,

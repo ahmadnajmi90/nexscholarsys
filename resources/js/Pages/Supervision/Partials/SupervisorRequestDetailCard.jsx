@@ -249,7 +249,11 @@ export default function SupervisorRequestDetailCard({ request, onClose, onUpdate
               </TooltipProvider>
               <Button
                 className="flex-1 bg-slate-900 hover:bg-slate-800"
-                disabled={!request?.meetings || request.meetings.length === 0}
+                disabled={
+                  !request?.meetings || 
+                  request.meetings.length === 0 || 
+                  !request.meetings[0]?.location_link
+                }
                 onClick={() => {
                   const nextMeeting = request?.meetings?.[0];
                   if (nextMeeting?.location_link) {

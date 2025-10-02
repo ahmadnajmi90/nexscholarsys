@@ -22,13 +22,17 @@ import {
   CalendarClock,
   Clock3,
   FileText,
-  CheckCircle2
+  CheckCircle2,
+  GaugeCircle,
+  User2,
+  MessageCircle
 } from 'lucide-react';
 
 const REQUEST_TABS = [
-  { key: 'pending', label: 'Pending', badge: 'pending' },
+  { key: 'pending', label: 'Pending', badge: ['pending', 'pending_student_acceptance'] },
   { key: 'accepted', label: 'Accepted', badge: 'accepted' },
   { key: 'rejected', label: 'Rejected', badge: 'rejected' },
+  { key: 'cancelled', label: 'Cancelled', badge: ['cancelled', 'auto_cancelled'] },
 ];
 
 export default function SupervisorDashboard() {
@@ -74,7 +78,13 @@ export default function SupervisorDashboard() {
   }, []);
 
   const filteredRequests = useMemo(() => {
-    return requests.filter(req => req.status === requestFilter);
+    return requests.filter(req => {
+      const filterConfig = REQUEST_TABS.find(t => t.key === requestFilter);
+      if (!filterConfig) return false;
+      
+      const badges = Array.isArray(filterConfig.badge) ? filterConfig.badge : [filterConfig.badge];
+      return badges.includes(req.status);
+    });
   }, [requests, requestFilter]);
 
   return (
@@ -192,16 +202,17 @@ function RequestFilters({ filter, onChange, requests }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {REQUEST_TABS.map(tab => {
-        const count = requests.filter(req => req.status === tab.badge).length;
+        const badges = Array.isArray(tab.badge) ? tab.badge : [tab.badge];
+        const count = requests.filter(req => badges.includes(req.status)).length;
         return (
           <Button
             key={tab.key}
-            variant={filter === tab.badge ? 'default' : 'outline'}
-            onClick={() => onChange(tab.badge)}
+            variant={filter === tab.key ? 'default' : 'outline'}
+            onClick={() => onChange(tab.key)}
             className="flex items-center gap-2"
           >
             {tab.label}
-            <Badge variant={filter === tab.badge ? 'secondary' : 'outline'}>{count}</Badge>
+            <Badge variant={filter === tab.key ? 'secondary' : 'outline'}>{count}</Badge>
           </Button>
         );
       })}
@@ -213,83 +224,113 @@ function SupervisorRequestCard({ request, onOpenDetail }) {
   const student = request?.student;
   const fullName = student?.full_name ?? 'Student';
   const avatarUrl = student?.profile_picture ? `/storage/${student.profile_picture}` : null;
-  const submittedAt = request?.submitted_at ? format(new Date(request.submitted_at), 'PPP') : '—';
+  const university = student?.university?.name ?? null;
+  const status = request?.status ?? 'pending';
+  const submittedAt = request?.submitted_at ? format(new Date(request.submitted_at), 'dd/MM/yyyy') : '—';
   const submittedAgo = request?.submitted_at
     ? formatDistanceToNow(new Date(request.submitted_at), { addSuffix: true })
     : null;
-  const status = request?.status ?? 'pending';
 
   // Status badge styling
   const STATUS_BADGE_VARIANTS = {
     pending: 'bg-amber-50 text-amber-700 border-none',
+    pending_student_acceptance: 'bg-blue-50 text-blue-700 border-none',
     accepted: 'bg-emerald-50 text-emerald-700 border-none',
     rejected: 'bg-rose-50 text-rose-700 border-none',
+    cancelled: 'bg-slate-100 text-slate-600 border-none',
+    auto_cancelled: 'bg-slate-100 text-slate-600 border-none',
+  };
+
+  const STATUS_COPY = {
+    pending: 'Awaiting your review',
+    pending_student_acceptance: 'Awaiting student acceptance',
+    accepted: 'Accepted — relationship established',
+    rejected: 'Rejected — feedback provided',
+    cancelled: 'Cancelled by student',
+    auto_cancelled: 'Auto-cancelled after student accepted another offer',
   };
 
   const statusVariant = STATUS_BADGE_VARIANTS[status] ?? STATUS_BADGE_VARIANTS.pending;
+  const statusCopy = STATUS_COPY[status] ?? 'Pending response';
   const formattedStatus = status
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 
   return (
-    <Card 
-      className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" 
+    <div 
+      className="border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onOpenDetail(request)}
     >
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Avatar className="h-10 w-10">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
-              ) : (
-                <AvatarFallback className="bg-indigo-50 text-indigo-600">
-                  {fullName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-slate-800">{fullName}</div>
-              {submittedAgo && <div className="text-xs text-slate-500">Submitted {submittedAgo}</div>}
-            </div>
+      {/* Header: Student Info + Status Badge */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
+            ) : (
+              <User2 className="w-5 h-5 text-indigo-600" />
+            )}
           </div>
-          <Badge className={statusVariant}>
-            {formattedStatus}
-          </Badge>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate">{fullName}</h3>
+            {university && <p className="text-sm text-gray-600 truncate font-normal">{university}</p>}
+            {submittedAgo && <p className="text-xs text-slate-500 mt-0.5">{submittedAgo}</p>}
+          </div>
         </div>
-        <div className="mt-3">
-          <CardTitle className="text-base font-semibold text-slate-900 line-clamp-2">
-            {request?.proposal_title ?? 'Supervision request'}
-          </CardTitle>
+        <Badge className={`${statusVariant} flex-shrink-0`}>
+          {formattedStatus}
+        </Badge>
+      </div>
+
+      {/* Proposal Title - More Prominent */}
+      <div className="mt-4">
+        <h4 className="text-base font-semibold text-slate-900 line-clamp-2 leading-snug">{request?.proposal_title ?? 'Supervision request'}</h4>
+      </div>
+
+      {/* Status Message with Context */}
+      {statusCopy && (
+        <div className="mt-2 flex items-start gap-1.5">
+          <span className="text-sm text-slate-600">{statusCopy}</span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4 text-sm text-slate-600">
-        <Separator />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <InfoRow icon={Clock3} label="Submitted on" value={submittedAt} />
-          <InfoRow icon={FileText} label="Motivation" value={truncate(request?.motivation, 100)} />
+      )}
+
+      {/* Quick Info Bar - Clean Inline Display */}
+      <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+        <div className="flex items-center gap-1.5">
+          <Clock3 className="w-3.5 h-3.5" />
+          <span>{submittedAt}</span>
         </div>
-      </CardContent>
-      <CardFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 text-xs text-slate-500">
-          <Badge variant="outline" className="border-slate-200 text-slate-500">
-            <MessageSquare className="mr-1 h-3.5 w-3.5" />
-            Conversation ready
-          </Badge>
-        </div>
-        <Button 
-          className="sm:w-36" 
+        {request?.attachments && request.attachments.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5" />
+            <span>{request.attachments.length} file{request.attachments.length !== 1 ? 's' : ''}</span>
+          </div>
+        )}
+        {request?.conversation_id && (
+          <div className="flex items-center gap-1.5">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>Conversation active</span>
+          </div>
+        )}
+      </div>
+
+      {/* Actions - Simplified */}
+      <div className="mt-4 flex items-center gap-2 pt-4 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
           onClick={(e) => {
             e.stopPropagation();
             onOpenDetail(request);
           }}
         >
           <CheckCircle2 className="mr-2 h-4 w-4" />
-          View details
+          View Details
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -370,15 +411,19 @@ function EmptyRequestState({ status }) {
   const copy = {
     pending: {
       title: 'No pending requests',
-      description: 'You do not have any new supervision proposals right now. Students will appear here when they submit a request.'
+      description: 'You do not have any new supervision proposals right now. Students will appear here when they submit a request or when they need to accept your offer.'
     },
     accepted: {
       title: 'No accepted requests yet',
-      description: 'Accepted proposals appear here. When you approve a student, they will transition to the My Students tab.'
+      description: 'Accepted proposals appear here. When you approve a student and they accept, they will transition to the My Students tab.'
     },
     rejected: {
       title: 'No rejected requests',
       description: 'Rejected proposals will appear here for reference.'
+    },
+    cancelled: {
+      title: 'No cancelled requests',
+      description: 'Cancelled requests (by student or system) will appear here for reference.'
     }
   }[status] || {
     title: 'No requests found',

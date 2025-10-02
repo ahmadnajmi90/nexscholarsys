@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { User2, MessageSquareMore, Trash2, Loader2, BookOpen, FolderKanban, UserPlus } from 'lucide-react';
+import { User2, MessageSquareMore, Trash2, Loader2, BookOpen, FolderKanban, UserPlus, CheckCircle2, Send, Eye } from 'lucide-react';
 import { logError } from '@/Utils/logError';
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -25,6 +25,7 @@ const EMPTY_STATES = {
 export default function PotentialSupervisorList({
   shortlist = [],
   requests = [],
+  activeRelationship = null,
   isLoading = false,
   reload,
   onRequestSupervisor,
@@ -37,7 +38,8 @@ export default function PotentialSupervisorList({
   const activeRequestMap = useMemo(() => {
     if (!Array.isArray(requests)) return {};
     return requests.reduce((acc, request) => {
-      if (!['cancelled', 'auto_cancelled'].includes(request.status)) {
+      // Exclude cancelled, auto_cancelled, and rejected requests - allow students to submit new requests
+      if (!['cancelled', 'auto_cancelled', 'rejected'].includes(request.status)) {
         const key = String(request.academician_id ?? '');
         if (key) {
           acc[key] = request;
@@ -135,6 +137,7 @@ export default function PotentialSupervisorList({
             key={item.id}
             item={item}
             existingRequest={existingRequest}
+            activeRelationship={activeRelationship}
             onRemove={handleRemove}
             onRequest={onRequestSupervisor}
             onViewRequest={onViewRequest}
@@ -146,11 +149,8 @@ export default function PotentialSupervisorList({
   );
 }
 
-function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isRemoving, existingRequest }) {
+function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isRemoving, existingRequest, activeRelationship = null }) {
   const [showAllAreas, setShowAllAreas] = useState(false);
-  const [isConnLoading, setIsConnLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('not_connected');
-  const [connectionId, setConnectionId] = useState(null);
   
   const academician = item?.academician ?? {};
   const fullName = academician.full_name ?? 'Supervisor';
@@ -166,13 +166,24 @@ function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isR
   const user = academician?.user;
   const displayedAreas = showAllAreas ? researchAreas : researchAreas.slice(0, 1);
 
-  // Initialize connection status from user data
-  useEffect(() => {
-    if (user?.connection_status_with_auth_user) {
-      setConnectionStatus(user.connection_status_with_auth_user.status || 'not_connected');
-      setConnectionId(user.connection_status_with_auth_user.connection_id || null);
-    }
-  }, [user]);
+  // Check if this supervisor is the student's current/bound supervisor
+  const academicianIdentifier = item?.academician_id;
+  const isCurrentSupervisor = useMemo(() => {
+    if (!activeRelationship || !academicianIdentifier) return false;
+    return String(activeRelationship.academician_id) === String(academicianIdentifier);
+  }, [activeRelationship, academicianIdentifier]);
+
+  // Check if student has any active relationship
+  const hasActiveRelationship = Boolean(activeRelationship);
+
+  // Connection state - initialize directly from user data (like SupervisorCard.jsx)
+  const [isConnLoading, setIsConnLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(
+    user?.connection_status_with_auth_user?.status || 'not_connected'
+  );
+  const [connectionId, setConnectionId] = useState(
+    user?.connection_status_with_auth_user?.connection_id || null
+  );
 
   const connect = async () => {
     if (!user?.id) return;
@@ -354,14 +365,42 @@ function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isR
           }
         })()}
 
-        <Button
-          className="flex-1"
-          variant={existingRequest ? 'outline' : 'default'}
-          onClick={() => (existingRequest ? onViewRequest?.(existingRequest) : onRequest?.(item))}
-        >
-          <MessageSquareMore className="mr-2 h-4 w-4" />
-          {existingRequest ? 'View Request' : 'Request Supervision'}
-        </Button>
+        {!hasActiveRelationship ? (
+          <Button
+            className="flex-1 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            variant="ghost"
+            onClick={() => (existingRequest ? onViewRequest?.(existingRequest) : onRequest?.(item))}
+          >
+            {existingRequest ? (
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                View Request
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Request Supervision
+              </>
+            )}
+          </Button>
+        ) : isCurrentSupervisor ? (
+          <Button
+            className="flex-1 border-2 border-green-500 bg-green-50 text-green-700 hover:bg-green-100"
+            onClick={() => onViewRequest?.(existingRequest)}
+          >
+            <CheckCircle2 className="mr-2 h-4 w-4 fill-current" />
+            Your Current Supervisor
+          </Button>
+        ) : (
+          <Button
+            className="flex-1"
+            variant="outline"
+            disabled
+          >
+            <MessageSquareMore className="mr-2 h-4 w-4" />
+            Request Supervision
+          </Button>
+        )}
         
         <Button
           type="button"

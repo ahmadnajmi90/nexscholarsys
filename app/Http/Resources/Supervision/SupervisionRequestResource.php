@@ -3,9 +3,56 @@
 namespace App\Http\Resources\Supervision;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\FieldOfResearch;
+use App\Models\ResearchArea;
+use App\Models\NicheDomain;
 
 class SupervisionRequestResource extends JsonResource
 {
+    protected function resolveResearchExpertiseNames(array $expertiseIds): array
+    {
+        $resolved = [];
+        
+        foreach ($expertiseIds as $id) {
+            // Parse the ID format: "field_id-area_id-domain_id"
+            $parts = explode('-', $id);
+            if (count($parts) === 3) {
+                [$fieldId, $areaId, $domainId] = $parts;
+                
+                $field = FieldOfResearch::find($fieldId);
+                $area = ResearchArea::find($areaId);
+                $domain = NicheDomain::find($domainId);
+                
+                if ($field && $area && $domain) {
+                    $resolved[] = "{$field->name} - {$area->name} - {$domain->name}";
+                }
+            }
+        }
+        
+        return $resolved;
+    }
+
+    protected function resolveDomainNames(array $expertiseIds): array
+    {
+        $domains = [];
+        
+        foreach ($expertiseIds as $id) {
+            // Parse the ID format: "field_id-area_id-domain_id"
+            $parts = explode('-', $id);
+            if (count($parts) === 3) {
+                $domainId = $parts[2];
+                
+                $domain = NicheDomain::find($domainId);
+                
+                if ($domain) {
+                    $domains[] = $domain->name;
+                }
+            }
+        }
+        
+        return $domains;
+    }
+
     public function toArray($request)
     {
         return [
@@ -27,12 +74,23 @@ class SupervisionRequestResource extends JsonResource
                     'id' => $this->academician->id,
                     'academician_id' => $this->academician->academician_id,
                     'full_name' => $this->academician->full_name,
+                    'email' => $this->academician->user ? $this->academician->user->email : null,
+                    'phone_number' => $this->academician->phone_number,
                     'profile_picture' => $this->academician->profile_picture,
                     'current_position' => $this->academician->current_position,
                     'department' => $this->academician->department,
+                    'bio' => $this->academician->bio,
+                    'research_areas' => is_array($this->academician->research_expertise) 
+                        ? $this->resolveResearchExpertiseNames(array_slice($this->academician->research_expertise, 0, 5))
+                        : [],
+                    'research_domains' => is_array($this->academician->research_expertise) 
+                        ? $this->resolveDomainNames(array_slice($this->academician->research_expertise, 0, 5))
+                        : [],
+                    'url' => $this->academician->url,
                     'university' => $this->academician->relationLoaded('universityDetails') && $this->academician->universityDetails ? [
                         'id' => $this->academician->universityDetails->id,
                         'name' => $this->academician->universityDetails->full_name,
+                        'full_name' => $this->academician->universityDetails->full_name,
                     ] : null,
                     'faculty' => $facultyRelation && is_object($facultyRelation) ? [
                         'id' => $facultyRelation->id,

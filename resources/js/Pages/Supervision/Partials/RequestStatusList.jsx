@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Link } from '@inertiajs/react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -7,8 +8,10 @@ import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
+import { User2 } from 'lucide-react';
 import { Separator } from '@/Components/ui/separator';
 import RequestDetailCard from './RequestDetailCard';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 import {
   Clock3,
   FileText,
@@ -37,12 +40,20 @@ const STATUS_COPY = {
 export default function RequestStatusList({ requests = [], reload, onOpenDetail }) {
   const [cancellingId, setCancellingId] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [requestToCancel, setRequestToCancel] = useState(null);
 
-  const handleCancel = async (request) => {
-    if (!request?.id) return;
-    setCancellingId(request.id);
+  const handleCancelClick = (request) => {
+    setRequestToCancel(request);
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!requestToCancel?.id) return;
+    setCancellingId(requestToCancel.id);
+    setShowCancelModal(false);
     try {
-      await axios.post(route('supervision.requests.cancel', request.id));
+      await axios.post(route('supervision.requests.cancel', requestToCancel.id));
       toast.success('Proposal withdrawn');
       reload?.();
     } catch (error) {
@@ -51,6 +62,7 @@ export default function RequestStatusList({ requests = [], reload, onOpenDetail 
       toast.error(message);
     } finally {
       setCancellingId(null);
+      setRequestToCancel(null);
     }
   };
 
@@ -88,7 +100,7 @@ export default function RequestStatusList({ requests = [], reload, onOpenDetail 
           <RequestCard
             key={request.id}
             request={request}
-            onCancel={handleCancel}
+            onCancel={handleCancelClick}
             onOpenDetail={(req) => setSelectedRequest(req)}
             isCancelling={cancellingId === request.id}
           />
@@ -103,14 +115,29 @@ export default function RequestStatusList({ requests = [], reload, onOpenDetail 
           onUpdated={reload}
         />
       )}
+
+      {/* Cancel Confirmation Modal */}
+      <ConfirmationModal
+        show={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setRequestToCancel(null);
+        }}
+        onConfirm={handleConfirmCancel}
+        title="Cancel Supervision Request"
+        message={`Are you sure you want to withdraw your supervision request${requestToCancel?.academician?.full_name ? ` to ${requestToCancel.academician.full_name}` : ''}? This action cannot be undone.`}
+        confirmButtonText="Yes, Cancel Request"
+      />
     </>
   );
 }
 
 function RequestCard({ request, onCancel, onOpenDetail, isCancelling }) {
   const academician = request?.academician ?? {};
+  const university = academician.university?.name ?? null;
   const fullName = academician.full_name ?? 'Supervisor';
   const avatarUrl = academician.profile_picture ? `/storage/${academician.profile_picture}` : null;
+  const profileUrl = academician.url || null;
   const statusVariant = STATUS_BADGE_VARIANTS[request?.status] ?? STATUS_BADGE_VARIANTS.pending;
   const statusCopy = STATUS_COPY[request?.status] ?? 'Pending supervisor response';
   const submittedAt = request?.submitted_at ? format(new Date(request.submitted_at), 'dd/MM/yyyy') : '—';
@@ -119,76 +146,122 @@ function RequestCard({ request, onCancel, onOpenDetail, isCancelling }) {
     : null;
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => onOpenDetail(request)}>
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Avatar className="h-10 w-10">
+    <div 
+      className="border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onOpenDetail(request)}
+    >
+      {/* Header: Supervisor Info + Status Badge */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          {profileUrl ? (
+            <Link 
+              href={route('academicians.show', profileUrl)} 
+              className="flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all cursor-pointer">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <User2 className="w-5 h-5 text-indigo-600" />
+                )}
+              </div>
+            </Link>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden flex-shrink-0">
               {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+                <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
               ) : (
-                <AvatarFallback className="bg-indigo-50 text-indigo-600">
-                  {fullName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
+                <User2 className="w-5 h-5 text-indigo-600" />
               )}
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-slate-800">{fullName}</div>
-              {submittedAgo && <div className="text-xs text-slate-500">Submitted {submittedAgo}</div>}
             </div>
+          )}
+          <div className="min-w-0 flex-1">
+            {profileUrl ? (
+              <Link 
+                href={route('academicians.show', profileUrl)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate hover:text-indigo-600 transition-colors cursor-pointer">{fullName}</h3>
+              </Link>
+            ) : (
+              <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate">{fullName}</h3>
+            )}
+            {university && <p className="text-sm text-gray-600 truncate font-normal">{university}</p>}
+            {submittedAgo && <p className="text-xs text-slate-500 mt-0.5">{submittedAgo}</p>}
           </div>
-          <Badge className={statusVariant.className}>
-            {(request?.status ?? 'pending').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-          </Badge>
         </div>
-        <div className="mt-3">
-          <CardTitle className="text-base font-semibold text-slate-900 line-clamp-2">{request?.proposal_title ?? 'Supervision request'}</CardTitle>
+        <Badge className={`${statusVariant.className} flex-shrink-0`}>
+          {(request?.status ?? 'pending').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+        </Badge>
+      </div>
+
+      {/* Proposal Title - More Prominent */}
+      <div className="mt-4">
+        <h4 className="text-base font-semibold text-slate-900 line-clamp-2 leading-snug">{request?.proposal_title ?? 'Supervision request'}</h4>
+      </div>
+
+      {/* Status Message with Context */}
+      {statusCopy && (
+        <div className="mt-2 flex items-start gap-1.5">
+          <span className="text-sm text-slate-600">{statusCopy}</span>
         </div>
-        <div className="mt-2">
-          <span className="text-xs text-slate-500">{statusCopy}</span>
+      )}
+
+      {/* Quick Info Bar - Clean Inline Display */}
+      <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+        <div className="flex items-center gap-1.5">
+          <Clock3 className="w-3.5 h-3.5" />
+          <span>{submittedAt}</span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4 text-sm text-slate-600">
-        <Separator />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <InfoRow icon={Clock3} label="Submitted on" value={submittedAt} />
-          <InfoRow icon={FileText} label="Motivation" value={truncate(request?.motivation, 100)} />
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-2 text-xs text-slate-500">
-          <Badge variant="outline" className="border-slate-200 text-slate-500">
-            <MessageCircle className="mr-1 h-3.5 w-3.5" />
-            Conversation ready
-          </Badge>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        {request?.attachments && request.attachments.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5" />
+            <span>{request.attachments.length} file{request.attachments.length !== 1 ? 's' : ''}</span>
+          </div>
+        )}
+        {request?.conversation_id && (
+          <div className="flex items-center gap-1.5">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>Conversation active</span>
+          </div>
+        )}
+      </div>
+
+      {/* Actions - Simplified */}
+      <div className="mt-4 flex items-center gap-2 pt-4 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDetail(request);
+          }}
+        >
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+          View Details
+        </Button>
+        {request?.status === 'pending' && (
           <Button
             variant="outline"
-            className="sm:w-32"
-            disabled={request?.status !== 'pending' || isCancelling}
+            size="sm"
+            disabled={isCancelling}
             onClick={(e) => {
               e.stopPropagation();
               onCancel?.(request);
             }}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
           >
             {isCancelling ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <XCircle className="mr-2 h-4 w-4" />
+              <XCircle className="h-4 w-4" />
             )}
-            Cancel
           </Button>
-          <Button className="sm:w-36" onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetail(request);
-          }}>
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-            View details
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+        )}
+      </div>
+    </div>
   );
 }
 

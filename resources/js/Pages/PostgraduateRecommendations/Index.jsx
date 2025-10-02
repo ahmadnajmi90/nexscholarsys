@@ -66,7 +66,7 @@ export default function Index({ existingCv = null, searchHistory = [] }) {
 
     return (
         <MainLayout title="Postgraduate Program Recommendations">
-            <div className="max-w-4xl mx-auto p-6">
+            <div className="max-w-7xl mx-auto p-6">
                 <Head title={isAcademician ? "Find Postgraduate Programs for Your Student" : "Find Your Perfect Postgraduate Match"} />
                 <h1 className="text-3xl font-bold mb-2 text-center text-gray-900">
                     {isAcademician ? 'Find Postgraduate Programs for Your Student' : 'Find Your Perfect Postgraduate Match'}

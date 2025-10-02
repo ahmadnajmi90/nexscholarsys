@@ -293,6 +293,46 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         
         return response()->json(['success' => true]);
     })->name('me.heartbeat');
+
+    Route::prefix('supervision')->name('supervision.')->group(function () {
+        Route::get('/shortlist', [\App\Http\Controllers\Api\V1\Supervision\ShortlistController::class, 'index'])
+            ->name('shortlist.index');
+        Route::post('/shortlist', [\App\Http\Controllers\Api\V1\Supervision\ShortlistController::class, 'store'])
+            ->name('shortlist.store');
+        Route::delete('/shortlist/{academician}', [\App\Http\Controllers\Api\V1\Supervision\ShortlistController::class, 'destroy'])
+            ->name('shortlist.destroy');
+
+        Route::get('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'index'])
+            ->name('requests.index');
+        Route::post('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'store'])
+            ->name('requests.store');
+        Route::post('/requests/{request}/cancel', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'cancel'])
+            ->name('requests.cancel');
+
+        Route::post('/requests/{supervisionRequest}/accept', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'accept'])
+            ->name('requests.accept');
+        Route::post('/requests/{supervisionRequest}/reject', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'reject'])
+            ->name('requests.reject');
+        Route::post('/requests/{supervisionRequest}/student-accept', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'studentAccept'])
+            ->name('requests.student-accept');
+
+        Route::get('/relationships', [\App\Http\Controllers\Api\V1\Supervision\RelationshipController::class, 'index'])
+            ->name('relationships.index');
+        Route::get('/relationships/{relationship}', [\App\Http\Controllers\Api\V1\Supervision\RelationshipController::class, 'show'])
+            ->name('relationships.show');
+
+        Route::post('/relationships/{relationship}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'store'])
+            ->name('meetings.store');
+
+        Route::get('/requests/{request}/notes', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'index'])
+            ->name('requests.notes.index');
+        Route::post('/requests/{request}/notes', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'store'])
+            ->name('requests.notes.store');
+        Route::put('/requests/{request}/notes/{note}', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'update'])
+            ->name('requests.notes.update');
+        Route::delete('/requests/{request}/notes/{note}', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'destroy'])
+            ->name('requests.notes.destroy');
+    });
 });
 
 // Content Management API Routes - Stateless for external tools

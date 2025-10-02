@@ -42,7 +42,8 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         if (path.includes('/ai-matching') ||
             path.includes('/postgraduate-recommendations') ||
             path.includes('/bookmarks') ||
-            path.includes('/project-hub')) {
+            path.includes('/project-hub') ||
+            path.includes('/my-supervisor')) {
             return 'features';
         }
         

@@ -138,6 +138,24 @@ class Postgraduate extends Model
     {
         return $this->morphMany(Bookmark::class, 'bookmarkable');
     }
+
+    /**
+     * Get all supervision relationships for this postgraduate.
+     */
+    public function supervisionRelationships()
+    {
+        return $this->hasMany(SupervisionRelationship::class, 'student_id', 'postgraduate_id');
+    }
+
+    /**
+     * Get the active supervision relationship for this postgraduate.
+     */
+    public function activeSupervisionRelationship()
+    {
+        return $this->hasOne(SupervisionRelationship::class, 'student_id', 'postgraduate_id')
+            ->where('status', SupervisionRelationship::STATUS_ACTIVE)
+            ->latest();
+    }
     
     /**
      * Get the route key for the model.

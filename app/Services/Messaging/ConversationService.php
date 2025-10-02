@@ -66,6 +66,41 @@ class ConversationService
             return $conversation;
         });
     }
+
+    public function createDirectConversation(User $initiator, User $target): Conversation
+    {
+        return DB::transaction(function () use ($initiator, $target) {
+            $existing = $this->findDirectConversation($initiator->id, $target->id);
+            if ($existing) {
+                return $existing;
+            }
+
+            $conversation = Conversation::create([
+                'type' => 'direct',
+                'title' => null,
+                'created_by' => $initiator->id,
+            ]);
+
+            ConversationParticipant::insert([
+                [
+                    'conversation_id' => $conversation->id,
+                    'user_id' => $initiator->id,
+                    'role' => 'member',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'conversation_id' => $conversation->id,
+                    'user_id' => $target->id,
+                    'role' => 'member',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]);
+
+            return $conversation;
+        });
+    }
     
     /**
      * Find an existing direct conversation between two users.

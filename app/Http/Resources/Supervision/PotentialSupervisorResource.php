@@ -93,6 +93,7 @@ class PotentialSupervisorResource extends JsonResource
                 'user' => $this->academician?->user ? [
                     'id' => $this->academician->user->id,
                     'name' => $this->academician->user->name,
+                    'connection_status_with_auth_user' => $this->academician->user->connection_status_with_auth_user,
                     'academician' => [
                         'academician_id' => $this->academician->user->academician?->academician_id,
                     ],
