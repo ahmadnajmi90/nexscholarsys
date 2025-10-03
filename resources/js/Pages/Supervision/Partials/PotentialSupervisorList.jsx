@@ -10,6 +10,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Componen
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 const EMPTY_STATES = {
   default: {
@@ -34,6 +35,8 @@ export default function PotentialSupervisorList({
   emptyState = 'default'
 }) {
   const [removingId, setRemovingId] = useState(null);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
 
   const activeRequestMap = useMemo(() => {
     if (!Array.isArray(requests)) return {};
@@ -49,13 +52,31 @@ export default function PotentialSupervisorList({
     }, {});
   }, [requests]);
 
-  const handleRemove = async (item) => {
-    if (!item?.academician_id) return;
-    setRemovingId(item.academician_id);
+  const handleRemoveClick = (item) => {
+    setItemToRemove(item);
+    setShowRemoveModal(true);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!itemToRemove) return;
+    
+    // Get the actual academician_id (string like "ACAD-XXX") from the nested academician object
+    const academicianId = itemToRemove?.academician?.academician_id;
+    
+    if (!academicianId) {
+      toast.error('Unable to identify supervisor to remove');
+      setShowRemoveModal(false);
+      setItemToRemove(null);
+      return;
+    }
+    
+    setRemovingId(academicianId);
+    setShowRemoveModal(false);
+    
     try {
-      await axios.delete(route('supervision.shortlist.destroy', item.academician_id));
+      await axios.delete(route('supervision.shortlist.destroy', academicianId));
       toast.success('Removed from your potential supervisor list');
-      onRemoveSuccess?.(item);
+      onRemoveSuccess?.(itemToRemove);
       reload?.();
     } catch (error) {
       logError(error, 'Supervision handleRemove');
@@ -63,6 +84,7 @@ export default function PotentialSupervisorList({
       toast.error(message);
     } finally {
       setRemovingId(null);
+      setItemToRemove(null);
     }
   };
 
@@ -124,28 +146,44 @@ export default function PotentialSupervisorList({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {shortlist.map((item) => {
-        const identifier = item?.academician_id
-          ?? item?.academician?.user?.academician?.academician_id
-          ?? item?.academician?.academician_id
-          ?? item?.academician?.user?.academician_id;
-        const existingRequest = identifier ? activeRequestMap[String(identifier)] : null;
+    <>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {shortlist.map((item) => {
+          const identifier = item?.academician_id
+            ?? item?.academician?.user?.academician?.academician_id
+            ?? item?.academician?.academician_id
+            ?? item?.academician?.user?.academician_id;
+          const existingRequest = identifier ? activeRequestMap[String(identifier)] : null;
+          const academicianId = item?.academician?.academician_id;
 
-        return (
-          <PotentialSupervisorCard
-            key={item.id}
-            item={item}
-            existingRequest={existingRequest}
-            activeRelationship={activeRelationship}
-            onRemove={handleRemove}
-            onRequest={onRequestSupervisor}
-            onViewRequest={onViewRequest}
-            isRemoving={removingId === item.academician_id}
-          />
-        );
-      })}
-    </div>
+          return (
+            <PotentialSupervisorCard
+              key={item.id}
+              item={item}
+              existingRequest={existingRequest}
+              activeRelationship={activeRelationship}
+              onRemove={handleRemoveClick}
+              onRequest={onRequestSupervisor}
+              onViewRequest={onViewRequest}
+              isRemoving={removingId === academicianId}
+            />
+          );
+        })}
+      </div>
+
+      {/* Remove Confirmation Modal */}
+      <ConfirmationModal
+        show={showRemoveModal}
+        onClose={() => {
+          setShowRemoveModal(false);
+          setItemToRemove(null);
+        }}
+        onConfirm={handleConfirmRemove}
+        title="Remove from Potential Supervisors"
+        message={`Are you sure you want to remove ${itemToRemove?.academician?.full_name || 'this supervisor'} from your potential supervisor list? You can always add them back later.`}
+        confirmButtonText="Yes, Remove"
+      />
+    </>
   );
 }
 

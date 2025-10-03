@@ -121,6 +121,9 @@ export default function SupervisorRequestDetailCard({ request, onClose, onUpdate
   const avatarUrl = student.profile_picture ? `/storage/${student.profile_picture}` : null;
   const status = request.status ?? 'pending';
   const conversationId = request?.conversation_id;
+  
+  // Disable all interactive features if request is not pending
+  const isInteractive = status === 'pending' || status === 'pending_student_acceptance';
 
   // Get initials for avatar
   const initials = fullName
@@ -215,56 +218,58 @@ export default function SupervisorRequestDetailCard({ request, onClose, onUpdate
               </div>
             )}
             
-            {/* Regular action buttons */}
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setActiveTab('chat')}
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Chat
-              </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="flex-1">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        disabled={!relationship}
-                        onClick={() => setIsScheduleMeetingOpen(true)}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Schedule Meeting
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {!relationship && (
-                    <TooltipContent>
-                      <p>Please accept the request first to schedule meetings</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-              <Button
-                className="flex-1 bg-slate-900 hover:bg-slate-800"
-                disabled={
-                  !request?.meetings || 
-                  request.meetings.length === 0 || 
-                  !request.meetings[0]?.location_link
-                }
-                onClick={() => {
-                  const nextMeeting = request?.meetings?.[0];
-                  if (nextMeeting?.location_link) {
-                    window.open(nextMeeting.location_link, '_blank', 'noopener,noreferrer');
+            {/* Regular action buttons - only show if interactive */}
+            {isInteractive && (
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setActiveTab('chat')}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Chat
+                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex-1">
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          disabled={!relationship}
+                          onClick={() => setIsScheduleMeetingOpen(true)}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          Schedule Meeting
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {!relationship && (
+                      <TooltipContent>
+                        <p>Please accept the request first to schedule meetings</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  className="flex-1 bg-slate-900 hover:bg-slate-800"
+                  disabled={
+                    !request?.meetings || 
+                    request.meetings.length === 0 || 
+                    !request.meetings[0]?.location_link
                   }
-                }}
-              >
-                <Video className="mr-2 h-4 w-4" />
-                Join Meeting
-              </Button>
-            </div>
+                  onClick={() => {
+                    const nextMeeting = request?.meetings?.[0];
+                    if (nextMeeting?.location_link) {
+                      window.open(nextMeeting.location_link, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
+                >
+                  <Video className="mr-2 h-4 w-4" />
+                  Join Meeting
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Tabs */}
@@ -283,18 +288,22 @@ export default function SupervisorRequestDetailCard({ request, onClose, onUpdate
                 >
                   Proposal
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="chat"
-                  className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-                >
-                  Chat
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="notes"
-                  className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-                >
-                  Notes
-                </TabsTrigger>
+                {isInteractive && (
+                  <>
+                    <TabsTrigger 
+                      value="chat"
+                      className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
+                    >
+                      Chat
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="notes"
+                      className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
+                    >
+                      Notes
+                    </TabsTrigger>
+                  </>
+                )}
                 <TabsTrigger 
                   value="history"
                   className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
@@ -371,6 +380,7 @@ export default function SupervisorRequestDetailCard({ request, onClose, onUpdate
         onAccepted={() => {
           setIsAcceptModalOpen(false);
           onUpdated?.();
+          onClose?.(); // Close the detail card
         }}
       />
 
@@ -393,6 +403,7 @@ export default function SupervisorRequestDetailCard({ request, onClose, onUpdate
           setIsScheduleMeetingOpen(false);
           onUpdated?.();
         }}
+        userRole="supervisor"
       />
 
       {/* Attachment Preview Modal */}

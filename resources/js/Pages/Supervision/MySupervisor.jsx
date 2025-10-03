@@ -11,6 +11,7 @@ import RequestDetailCard from '@/Pages/Supervision/Partials/RequestDetailCard';
 import ManageSupervisorPanel from '@/Pages/Supervision/Partials/ManageSupervisorPanel';
 import ProposalModal from '@/Pages/Supervision/Partials/ProposalModal';
 import RelationshipDetailModal from '@/Pages/Supervision/Partials/RelationshipDetailModal';
+import ForceUnbindRequestModal from '@/Pages/Supervision/Partials/ForceUnbindRequestModal';
 
 export default function MySupervisor() {
   const [tab, setTab] = useState(() => {
@@ -73,6 +74,22 @@ export default function MySupervisor() {
 
   const hasActiveRelationship = relationships.some(rel => rel.status === 'active');
   const activeRelationship = relationships.find(rel => rel.status === 'active') || null;
+
+  // Check for supervisor-initiated unbind requests that need student approval
+  const pendingUnbindRequest = React.useMemo(() => {
+    for (const relationship of relationships) {
+      const unbindRequest = relationship.activeUnbindRequest || relationship.active_unbind_request;
+      if (unbindRequest && 
+          unbindRequest.status === 'pending' && 
+          unbindRequest.initiated_by === 'supervisor') {
+        return {
+          unbindRequest,
+          relationship
+        };
+      }
+    }
+    return null;
+  }, [relationships]);
 
   return (
     <MainLayout title="My Supervisor">
@@ -138,7 +155,6 @@ export default function MySupervisor() {
                     setDetailRelationship(null);
                     setTab('status');
                   }}
-                  onRemoveSuccess={() => toast.success('Removed from potential supervisors')}
                 />
               )}
             </TabsContent>
@@ -203,6 +219,16 @@ export default function MySupervisor() {
               setDetailRelationship(null);
             }}
             onUpdated={loadData}
+          />
+        )}
+
+        {/* Force Unbind Request Modal - Supervisor-initiated unbind requests */}
+        {pendingUnbindRequest && (
+          <ForceUnbindRequestModal
+            unbindRequest={pendingUnbindRequest.unbindRequest}
+            relationship={pendingUnbindRequest.relationship}
+            onResponse={loadData}
+            userRole="student"
           />
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
@@ -12,8 +12,10 @@ import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Separator } from '@/Components/ui/separator';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import RelationshipDetailModal from '@/Pages/Supervision/Partials/RelationshipDetailModal';
+import SupervisorRelationshipDetailModal from '@/Pages/Supervision/Partials/SupervisorRelationshipDetailModal';
 import ScheduleMeetingDialog from '@/Pages/Supervision/Partials/ScheduleMeetingDialog';
 import SupervisorRequestDetailCard from '@/Pages/Supervision/Partials/SupervisorRequestDetailCard';
+import ForceUnbindRequestModal from '@/Pages/Supervision/Partials/ForceUnbindRequestModal';
 import { logError } from '@/Utils/logError';
 import {
   BookOpenCheck,
@@ -25,7 +27,12 @@ import {
   CheckCircle2,
   GaugeCircle,
   User2,
-  MessageCircle
+  MessageCircle,
+  History,
+  XCircle,
+  Users,
+  UserPlus,
+  Settings
 } from 'lucide-react';
 
 const REQUEST_TABS = [
@@ -39,6 +46,7 @@ export default function SupervisorDashboard() {
   const [tab, setTab] = useState('requests');
   const [requests, setRequests] = useState([]);
   const [students, setStudents] = useState([]);
+  const [terminatedRelationships, setTerminatedRelationships] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedRelationship, setSelectedRelationship] = useState(null);
   const [meetingRelationship, setMeetingRelationship] = useState(null);
@@ -57,10 +65,30 @@ export default function SupervisorDashboard() {
         axios.get(route('supervision.relationships.index')),
       ]);
       setRequests(requestResp.data.data || []);
-      setStudents((relationshipResp.data.data || []).filter(rel => rel.status === 'active'));
+      const allRelationships = relationshipResp.data.data || [];
+      const activeRelationships = allRelationships.filter(rel => rel.status === 'active' || (rel.status === 'active' && rel.activeUnbindRequest));
+      const terminated = allRelationships.filter(rel => rel.status === 'terminated');
+      
+      setStudents(activeRelationships);
+      setTerminatedRelationships(terminated);
+      
+      // Update selectedRelationship with fresh data if modal is open
+      if (selectedRelationship) {
+        const updatedRelationship = activeRelationships.find(s => s.id === selectedRelationship.id) || 
+                                     terminated.find(s => s.id === selectedRelationship.id);
+        if (updatedRelationship) {
+          setSelectedRelationship(updatedRelationship);
+        } else {
+          // Relationship no longer exists, close modal
+          setSelectedRelationship(null);
+        }
+      }
+      
+      return allRelationships;
     } catch (err) {
       logError(err, 'Supervision fetchData');
       setError('Unable to load supervision data right now.');
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +105,22 @@ export default function SupervisorDashboard() {
     fetchData();
   }, []);
 
+  // Check for student-initiated unbind requests that need supervisor approval
+  const pendingUnbindRequest = useMemo(() => {
+    for (const student of students) {
+      const unbindRequest = student.activeUnbindRequest;
+      if (unbindRequest && 
+          unbindRequest.status === 'pending' && 
+          unbindRequest.initiated_by === 'student') {
+        return {
+          unbindRequest,
+          relationship: student
+        };
+      }
+    }
+    return null;
+  }, [students]);
+
   const filteredRequests = useMemo(() => {
     return requests.filter(req => {
       const filterConfig = REQUEST_TABS.find(t => t.key === requestFilter);
@@ -86,6 +130,44 @@ export default function SupervisorDashboard() {
       return badges.includes(req.status);
     });
   }, [requests, requestFilter]);
+
+  // Calculate metrics for dashboard cards
+  const metrics = useMemo(() => {
+    // Total active students
+    const totalStudents = students.length;
+    
+    // Pending requests (pending + pending_student_acceptance)
+    const pendingRequests = requests.filter(req => 
+      req.status === 'pending' || req.status === 'pending_student_acceptance'
+    ).length;
+    
+    // Meetings this month across all students
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const meetingsThisMonth = students.reduce((count, rel) => {
+      if (rel.meetings && Array.isArray(rel.meetings)) {
+        const monthMeetings = rel.meetings.filter(meeting => {
+          if (!meeting.scheduled_for) return false;
+          const meetingDate = new Date(meeting.scheduled_for);
+          return meetingDate.getMonth() === currentMonth && meetingDate.getFullYear() === currentYear;
+        });
+        return count + monthMeetings.length;
+      }
+      return count;
+    }, 0);
+    
+    // Active workspaces (ScholarLab)
+    const activeWorkspaces = students.filter(rel => rel.scholarlab_board_id).length;
+    
+    return {
+      totalStudents,
+      pendingRequests,
+      meetingsThisMonth,
+      activeWorkspaces
+    };
+  }, [students, requests]);
 
   return (
     <MainLayout title="Supervisor Dashboard">
@@ -110,8 +192,42 @@ export default function SupervisorDashboard() {
           </Alert>
         )}
 
+        {/* Metrics Cards */}
+        {!isLoading && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              value={metrics.totalStudents}
+              label="Total Students"
+              icon={Users}
+              iconColor="text-indigo-600"
+              bgColor="bg-indigo-50"
+            />
+            <MetricCard
+              value={metrics.pendingRequests}
+              label="Pending Requests"
+              icon={UserPlus}
+              iconColor="text-amber-600"
+              bgColor="bg-amber-50"
+            />
+            <MetricCard
+              value={metrics.meetingsThisMonth}
+              label="Meetings this Month"
+              icon={CalendarClock}
+              iconColor="text-green-600"
+              bgColor="bg-green-50"
+            />
+            <MetricCard
+              value={metrics.activeWorkspaces}
+              label="Active Workspaces"
+              icon={GaugeCircle}
+              iconColor="text-blue-600"
+              bgColor="bg-blue-50"
+            />
+          </div>
+        )}
+
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg h-12">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg h-12">
             <TabsTrigger 
               value="requests"
               className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 rounded-md transition-all py-2"
@@ -123,6 +239,12 @@ export default function SupervisorDashboard() {
               className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 rounded-md transition-all py-2"
             >
               My Students
+            </TabsTrigger>
+            <TabsTrigger 
+              value="terminated"
+              className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=inactive]:text-gray-600 rounded-md transition-all py-2"
+            >
+              Terminated
             </TabsTrigger>
           </TabsList>
 
@@ -170,27 +292,71 @@ export default function SupervisorDashboard() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="terminated">
+            {isLoading ? (
+              <StudentSkeleton />
+            ) : terminatedRelationships.length === 0 ? (
+              <EmptyTerminatedState />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {terminatedRelationships.map(relationship => (
+                  <TerminatedRelationshipCard
+                    key={relationship.id}
+                    relationship={relationship}
+                    onViewHistory={(rel) => {
+                      setSelectedRelationship(rel);
+                      setSelectedRequest(null);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
 
-        <RelationshipDetailModal
-          request={selectedRequest}
-          relationship={selectedRelationship}
-          onClose={() => {
-            setSelectedRequest(null);
-            setSelectedRelationship(null);
-          }}
-          onUpdated={refresh}
-        />
+        {/* Use SupervisorRelationshipDetailModal for active relationships */}
+        {selectedRelationship && !selectedRequest && (
+          <SupervisorRelationshipDetailModal
+            relationship={selectedRelationship}
+            onClose={() => setSelectedRelationship(null)}
+            onUpdated={refresh}
+          />
+        )}
+        
+        {/* Use old modal for pending relationships with requests */}
+        {selectedRequest && (
+          <RelationshipDetailModal
+            request={selectedRequest}
+            relationship={selectedRelationship}
+            onClose={() => {
+              setSelectedRequest(null);
+              setSelectedRelationship(null);
+            }}
+            onUpdated={refresh}
+          />
+        )}
         <ScheduleMeetingDialog
           relationship={meetingRelationship}
           onClose={() => setMeetingRelationship(null)}
           onScheduled={refresh}
+          userRole="supervisor"
         />
         {detailRequest && (
           <SupervisorRequestDetailCard
             request={detailRequest}
             onClose={() => setDetailRequest(null)}
             onUpdated={refresh}
+          />
+        )}
+
+        {/* Force Unbind Request Modal - Student-initiated unbind requests */}
+        {pendingUnbindRequest && (
+          <ForceUnbindRequestModal
+            unbindRequest={pendingUnbindRequest.unbindRequest}
+            relationship={pendingUnbindRequest.relationship}
+            onResponse={refresh}
+            userRole="supervisor"
           />
         )}
       </div>
@@ -307,12 +473,12 @@ function SupervisorRequestCard({ request, onOpenDetail }) {
             <span>{request.attachments.length} file{request.attachments.length !== 1 ? 's' : ''}</span>
           </div>
         )}
-        {request?.conversation_id && (
+        {/* {request?.conversation_id && (
           <div className="flex items-center gap-1.5">
             <MessageCircle className="w-3.5 h-3.5" />
             <span>Conversation active</span>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Actions - Simplified */}
@@ -352,57 +518,171 @@ function truncate(text, limit) {
 }
 
 function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }) {
-  const student = relationship.student;
-  const avatarUrl = student?.profile_picture ? `/storage/${student.profile_picture}` : null;
+  const student = relationship?.student ?? {};
+  const profilePicture = student.profile_picture ? `/storage/${student.profile_picture}` : null;
+  const fullName = student.full_name ?? 'Student';
+  const university = student.university?.name || student.university?.full_name || '';
+  const faculty = student.faculty?.name || '';
+  
+  // Get research topic from student's field_of_research (first domain)
+  const researchTopic = student.research_domains?.[0] || student.field_of_research?.[0] || '';
+  
+  const role = relationship?.role === 'main' ? 'Main' : 'Co-supervisor';
+  const statusLabel = 'Accepted by Student';
+  const cohort = relationship?.cohort || '';
+  
+  // Capitalize meeting cadence
+  const cadence = relationship?.meeting_cadence 
+    ? relationship.meeting_cadence.charAt(0).toUpperCase() + relationship.meeting_cadence.slice(1)
+    : '';
+  
+  // Get initials for avatar
+  const initials = fullName
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 3);
+
+  // Calculate metrics
+  const meetingsCount = relationship?.meetings?.length || 0;
+  const tasksCount = relationship?.onboarding_checklist_items?.filter(item => !item.completed).length || 0;
+  const documentsCount = relationship?.documents?.length || 0;
+
+  const handleScheduleMeeting = () => {
+    // Open the modal first, then trigger schedule meeting dialog
+    onOpenDetail?.({ ...relationship, preferred_tab: 'overview' });
+    // Trigger the schedule meeting dialog after modal opens
+    setTimeout(() => {
+      onScheduleMeeting?.(relationship);
+    }, 100);
+  };
+
+  const handleOpenChat = () => {
+    onOpenDetail?.({ ...relationship, preferred_tab: 'chat' });
+  };
+
+  const handleShareDocument = () => {
+    onOpenDetail?.({ ...relationship, preferred_tab: 'documents' });
+  };
+
+  const handleManage = () => {
+    // Navigate to full-page view
+    router.visit(route('supervision.relationships.show', relationship.id));
+  };
 
   return (
-    <Card className="flex h-full flex-col justify-between">
-      <CardHeader className="space-y-3">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={student?.full_name} className="h-full w-full object-cover" />
-            ) : (
-              <AvatarFallback className="bg-indigo-50 text-indigo-600">
-                {student?.full_name?.slice(0, 2)?.toUpperCase() ?? 'PG'}
-              </AvatarFallback>
+    <Card 
+      className="shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onOpenDetail?.({ ...relationship, preferred_tab: 'overview' })}
+    >
+      {/* Header Section */}
+      <CardHeader className="pb-4">
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-14 w-14 border-2 border-slate-200">
+              {profilePicture ? (
+                <img src={profilePicture} alt={fullName} className="h-full w-full object-cover" />
+              ) : (
+                <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold text-sm">
+                  {initials}
+                </AvatarFallback>
+              )}
+            </Avatar>
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-bold text-slate-900 truncate mb-1">{fullName}</h3>
+            <p className="text-sm text-slate-600 truncate">
+              {university && faculty ? `${university} • ${faculty}` : (university || faculty || 'University')}
+            </p>
+            {researchTopic && (
+              <p className="text-xs text-slate-500 mt-1.5 line-clamp-1">{researchTopic}</p>
             )}
-          </Avatar>
-          <div className="min-w-0">
-            <CardTitle className="text-base font-semibold text-slate-900">{student?.full_name}</CardTitle>
-            <p className="text-xs text-slate-500">Accepted {relationship?.accepted_at ? new Date(relationship.accepted_at).toLocaleDateString() : '—'}</p>
+          </div>
+
+          {/* Badges */}
+          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+            <Badge className="bg-slate-900 text-white border-none hover:bg-slate-800 px-3 py-1">
+              {role}
+            </Badge>
+            {/* <Badge className="bg-green-50 text-green-700 border-green-200 border px-3 py-1">
+              {statusLabel}
+            </Badge> */}
+            {cohort && cadence && (
+              <p className="text-xs text-slate-500 mt-1">{cohort} • {cadence}</p>
+            )}
           </div>
         </div>
-        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-none w-fit">{relationship.role === 'main' ? 'Main supervisor' : 'Co-supervisor'}</Badge>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="rounded-lg border border-slate-200 p-3">
-          <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <BookOpenCheck className="h-4 w-4 text-indigo-500" />
-            Meeting cadence
-          </h4>
-          <p className="mt-2 text-sm text-slate-600">{relationship.meeting_cadence || 'Not specified yet'}</p>
+
+      <CardContent className="space-y-5 pb-5">
+        {/* Metrics Row */}
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="p-4 rounded-lg bg-slate-50">
+            <div className="text-2xl font-bold text-slate-900">{meetingsCount}</div>
+            <div className="text-xs text-slate-600 mt-1.5">Meetings</div>
+          </div>
+          <div className="p-4 rounded-lg bg-slate-50">
+            <div className="text-2xl font-bold text-slate-900">{tasksCount}</div>
+            <div className="text-xs text-slate-600 mt-1.5">Tasks</div>
+          </div>
+          <div className="p-4 rounded-lg bg-slate-50">
+            <div className="text-2xl font-bold text-slate-900">{documentsCount}</div>
+            <div className="text-xs text-slate-600 mt-1.5">Documents</div>
+          </div>
         </div>
-        <div className="rounded-lg border border-slate-200 p-3">
-          <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <GaugeCircle className="h-4 w-4 text-indigo-500" />
-            ScholarLab workspace
-          </h4>
-          <p className="mt-2 text-sm text-slate-600">
-            {relationship.scholarlab_board_id ? 'Workspace activated' : 'Not provisioned yet'}
-          </p>
+
+        {/* Action Buttons Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleScheduleMeeting();
+            }}
+          >
+            <CalendarClock className="mr-2 h-4 w-4" />
+            Schedule Meeting
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenChat();
+            }}
+          >
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Chat
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShareDocument();
+            }}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Share Document
+          </Button>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleManage();
+            }}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Manage
+          </Button>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col gap-2">
-        <Button variant="outline" onClick={() => onOpenDetail?.({ ...relationship, preferred_tab: 'overview' })}>
-          <MessageSquare className="mr-2 h-4 w-4" />
-          Open student details
-        </Button>
-        <Button onClick={() => onScheduleMeeting?.(relationship)}>
-          <CalendarClock className="mr-2 h-4 w-4" />
-          Schedule meeting
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
@@ -449,6 +729,113 @@ function EmptyStudentState() {
       <CardContent className="text-sm text-slate-600">
         Once you accept a student, they will appear here for ongoing management. Use the Manage Requests tab to approve new proposals.
       </CardContent>
+    </Card>
+  );
+}
+
+function EmptyTerminatedState() {
+  return (
+    <Card className="border-dashed border-slate-200">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold text-slate-800">No terminated relationships</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-slate-600">
+        Terminated supervision relationships will appear here for historical reference. This includes unbind requests, graduations, and other reasons for ending supervision.
+      </CardContent>
+    </Card>
+  );
+}
+
+function TerminatedRelationshipCard({ relationship, onViewHistory }) {
+  const student = relationship?.student;
+  const fullName = student?.full_name || 'Student';
+  const initials = fullName
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 3);
+
+  const startDate = relationship?.accepted_at ? format(new Date(relationship.accepted_at), 'dd/MM/yyyy') : '—';
+  const endDate = relationship?.terminated_at ? format(new Date(relationship.terminated_at), 'dd/MM/yyyy') : '—';
+  
+  // Determine termination reason
+  const getTerminationReason = () => {
+    // Check for unbind request
+    const unbindRequest = relationship?.unbindRequests?.find(req => 
+      req.status === 'approved' || req.status === 'force_unbind'
+    );
+    
+    if (unbindRequest) {
+      if (unbindRequest.status === 'force_unbind') {
+        return 'Force Unbind (3 attempts)';
+      }
+      return 'Unbind Request Approved';
+    }
+    
+    return 'Supervision Ended';
+  };
+
+  const terminationReason = getTerminationReason();
+
+  return (
+    <Card className="border-slate-200 bg-slate-50/50 hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-3">
+          <Avatar className="h-12 w-12">
+            {student?.profile_picture ? (
+              <img src={`/storage/${student.profile_picture}`} alt={fullName} className="h-full w-full object-cover" />
+            ) : (
+              <AvatarFallback className="bg-slate-200 text-slate-600 font-semibold">
+                {initials}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-slate-900 truncate">{fullName}</h3>
+            <p className="text-sm text-slate-500">{student?.university?.name || 'University'}</p>
+            <div className="mt-2">
+              <Badge className="bg-red-50 text-red-700 border-red-200 border">
+                Terminated
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-3 pb-3">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-xs text-slate-500 mb-1">Started</div>
+            <div className="font-medium text-slate-700">{startDate}</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-500 mb-1">Ended</div>
+            <div className="font-medium text-slate-700">{endDate}</div>
+          </div>
+        </div>
+
+        <div className="pt-2 border-t border-slate-200">
+          <div className="flex items-start gap-2">
+            <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="text-xs text-slate-500 mb-0.5">Reason</div>
+              <div className="text-sm text-slate-700">{terminationReason}</div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="pt-3">
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => onViewHistory(relationship)}
+        >
+          <History className="mr-2 h-4 w-4" />
+          View History
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
@@ -507,5 +894,23 @@ function StudentSkeleton() {
         </Card>
       ))}
     </div>
+  );
+}
+
+function MetricCard({ value, label, icon: Icon, iconColor, bgColor }) {
+  return (
+    <Card className="border-slate-200 shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-3xl font-bold text-slate-900">{value}</p>
+            <p className="text-sm text-slate-600 mt-1">{label}</p>
+          </div>
+          <div className={`${bgColor} p-3 rounded-lg`}>
+            <Icon className={`h-6 w-6 ${iconColor}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

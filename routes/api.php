@@ -299,7 +299,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('shortlist.index');
         Route::post('/shortlist', [\App\Http\Controllers\Api\V1\Supervision\ShortlistController::class, 'store'])
             ->name('shortlist.store');
-        Route::delete('/shortlist/{academician}', [\App\Http\Controllers\Api\V1\Supervision\ShortlistController::class, 'destroy'])
+        Route::delete('/shortlist/{academicianId}', [\App\Http\Controllers\Api\V1\Supervision\ShortlistController::class, 'destroy'])
             ->name('shortlist.destroy');
 
         Route::get('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'index'])
@@ -323,6 +323,58 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
 
         Route::post('/relationships/{relationship}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'store'])
             ->name('meetings.store');
+
+        // Unbind Request Routes
+        Route::get('/unbind-requests', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'index'])
+            ->name('unbind-requests.index');
+        Route::post('/relationships/{relationship}/unbind', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'initiate'])
+            ->name('relationships.unbind.initiate');
+        // Student approves/rejects supervisor-initiated unbind
+        Route::post('/unbind-requests/{unbindRequest}/approve', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'approve'])
+            ->name('unbind-requests.approve');
+        Route::post('/unbind-requests/{unbindRequest}/reject', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'reject'])
+            ->name('unbind-requests.reject');
+        // Supervisor approves/rejects student-initiated unbind
+        Route::post('/unbind-requests/{unbindRequest}/supervisor-approve', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'supervisorApprove'])
+            ->name('unbind-requests.supervisor-approve');
+        Route::post('/unbind-requests/{unbindRequest}/supervisor-reject', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'supervisorReject'])
+            ->name('unbind-requests.supervisor-reject');
+
+        // Research Management Routes
+        Route::get('/relationships/{relationship}/research', [\App\Http\Controllers\Api\V1\Supervision\ResearchController::class, 'show'])
+            ->name('relationships.research.show');
+        Route::put('/relationships/{relationship}/research', [\App\Http\Controllers\Api\V1\Supervision\ResearchController::class, 'update'])
+            ->name('relationships.research.update');
+        Route::post('/relationships/{relationship}/milestones', [\App\Http\Controllers\Api\V1\Supervision\ResearchController::class, 'storeMilestone'])
+            ->name('relationships.milestones.store');
+        Route::put('/milestones/{milestone}', [\App\Http\Controllers\Api\V1\Supervision\ResearchController::class, 'updateMilestone'])
+            ->name('milestones.update');
+        Route::delete('/milestones/{milestone}', [\App\Http\Controllers\Api\V1\Supervision\ResearchController::class, 'destroyMilestone'])
+            ->name('milestones.destroy');
+
+        // Document Management Routes
+        Route::get('/relationships/{relationship}/documents', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'index'])
+            ->name('relationships.documents.index');
+        Route::post('/relationships/{relationship}/documents', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'upload'])
+            ->name('relationships.documents.upload');
+        Route::put('/documents/{document}', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'update'])
+            ->name('documents.update');
+        Route::delete('/documents/{document}', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'destroy'])
+            ->name('documents.destroy');
+        Route::post('/documents/{document}/versions/{version}/revert', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'revertVersion'])
+            ->name('documents.versions.revert');
+        Route::get('/document-versions/{version}/preview', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'preview'])
+            ->name('document-versions.preview');
+        Route::get('/document-versions/{version}/download', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'download'])
+            ->name('document-versions.download');
+
+        // University Letter Routes
+        Route::post('/relationships/{relationship}/university-letter', [\App\Http\Controllers\Api\V1\Supervision\UniversityLetterController::class, 'upload'])
+            ->name('relationships.university-letter.upload');
+        Route::get('/relationships/{relationship}/university-letter/download', [\App\Http\Controllers\Api\V1\Supervision\UniversityLetterController::class, 'download'])
+            ->name('relationships.university-letter.download');
+        Route::delete('/relationships/{relationship}/university-letter', [\App\Http\Controllers\Api\V1\Supervision\UniversityLetterController::class, 'delete'])
+            ->name('relationships.university-letter.delete');
 
         Route::get('/requests/{request}/notes', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'index'])
             ->name('requests.notes.index');

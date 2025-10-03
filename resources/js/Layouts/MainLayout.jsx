@@ -43,7 +43,8 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             path.includes('/postgraduate-recommendations') ||
             path.includes('/bookmarks') ||
             path.includes('/project-hub') ||
-            path.includes('/my-supervisor')) {
+            path.includes('/my-supervisor') ||
+            path.includes('/supervisor-dashboard')) {
             return 'features';
         }
         

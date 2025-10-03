@@ -23,6 +23,7 @@ class SupervisionRelationship extends Model
         'conversation_id',
         'accepted_at',
         'terminated_at',
+        'university_letter_path',
     ];
 
     protected $casts = [
@@ -72,6 +73,28 @@ class SupervisionRelationship extends Model
     public function onboardingChecklistItems()
     {
         return $this->hasMany(SupervisionOnboardingChecklistItem::class)->orderBy('order');
+    }
+
+    public function unbindRequests()
+    {
+        return $this->hasMany(SupervisionRelationshipUnbindRequest::class, 'relationship_id');
+    }
+
+    public function activeUnbindRequest()
+    {
+        return $this->hasOne(SupervisionRelationshipUnbindRequest::class, 'relationship_id')
+            ->where('status', SupervisionRelationshipUnbindRequest::STATUS_PENDING)
+            ->latest();
+    }
+
+    public function researchDetail()
+    {
+        return $this->hasOne(SupervisionResearchDetail::class, 'relationship_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(SupervisionDocument::class, 'relationship_id');
     }
 }
 

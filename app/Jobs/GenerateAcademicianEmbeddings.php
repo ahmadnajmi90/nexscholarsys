@@ -124,10 +124,12 @@ class GenerateAcademicianEmbeddings implements ShouldQueue
         );
         
         if ($result) {
-            // Update only the Qdrant status in MySQL
-            $academician->qdrant_migrated = true;
-            $academician->qdrant_migrated_at = now();
-            $academician->save();
+            // Update only the Qdrant status in MySQL without triggering observers
+            $academician->withoutEvents(function () use ($academician) {
+                $academician->qdrant_migrated = true;
+                $academician->qdrant_migrated_at = now();
+                $academician->save();
+            });
             
             Log::info("Generated and stored embedding in Qdrant for academician {$academician->id}");
         } else {

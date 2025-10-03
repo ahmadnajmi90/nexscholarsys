@@ -51,12 +51,14 @@ export default function RequestDetailCard({ request, onClose, onUpdated }) {
 
   const academician = request?.academician ?? {};
   const fullName = academician.full_name ?? 'Supervisor';
-  console.log(academician); 
   const currentPosition = academician.current_position ?? '';
   const avatarUrl = academician.profile_picture ? `/storage/${academician.profile_picture}` : null;
   const university = academician.university?.name ?? '';
   const status = request.status ?? 'pending';
   const conversationId = request?.conversation_id;
+  
+  // Disable all interactive features if request is not pending
+  const isInteractive = status === 'pending' || status === 'pending_student_acceptance';
 
   // Get initials for avatar
   const initials = fullName
@@ -144,25 +146,26 @@ export default function RequestDetailCard({ request, onClose, onUpdated }) {
             </div>
           )}
           
-          {/* Regular action buttons */}
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setActiveTab('chat')}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Chat
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1"
-              disabled
-              title="Only supervisors can schedule meetings"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              Schedule
-            </Button>
+          {/* Regular action buttons - only show if interactive */}
+          {isInteractive && (
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setActiveTab('chat')}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Chat
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                disabled
+                title="Only supervisors can schedule meetings"
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Schedule
+              </Button>
               <Button
                 className="flex-1 bg-slate-900 hover:bg-slate-800"
                 disabled={
@@ -180,7 +183,8 @@ export default function RequestDetailCard({ request, onClose, onUpdated }) {
                 <Video className="mr-2 h-4 w-4" />
                 Join Meeting
               </Button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -199,12 +203,14 @@ export default function RequestDetailCard({ request, onClose, onUpdated }) {
               >
                 Proposal
               </TabsTrigger>
-              <TabsTrigger 
-                value="chat"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-              >
-                Chat
-              </TabsTrigger>
+              {isInteractive && (
+                <TabsTrigger 
+                  value="chat"
+                  className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
+                >
+                  Chat
+                </TabsTrigger>
+              )}
               <TabsTrigger 
                 value="history"
                 className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"

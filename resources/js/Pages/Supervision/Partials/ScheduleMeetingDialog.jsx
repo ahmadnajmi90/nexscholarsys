@@ -17,7 +17,7 @@ const defaultDateTime = () => {
   return local.toISOString().slice(0, 16);
 };
 
-export default function ScheduleMeetingDialog({ relationship, onClose, onScheduled }) {
+export default function ScheduleMeetingDialog({ relationship, onClose, onScheduled, userRole = 'supervisor' }) {
   const [title, setTitle] = useState('Supervision Meeting');
   const [scheduledFor, setScheduledFor] = useState(defaultDateTime());
   const [location, setLocation] = useState('');
@@ -25,15 +25,21 @@ export default function ScheduleMeetingDialog({ relationship, onClose, onSchedul
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // Determine who we're meeting with based on role
+  const isSupervisor = userRole === 'supervisor';
+  const otherPerson = isSupervisor 
+    ? relationship?.student?.full_name ?? 'student'
+    : relationship?.academician?.full_name ?? 'supervisor';
+
   useEffect(() => {
     if (relationship) {
-      setTitle(`Meeting with ${relationship?.student?.full_name ?? 'student'}`);
+      setTitle(`Meeting with ${otherPerson}`);
       setScheduledFor(defaultDateTime());
       setLocation('');
       setAgenda(relationship?.meeting_cadence ? `Discuss ${relationship.meeting_cadence.toLowerCase()}` : '');
       setError(null);
     }
-  }, [relationship]);
+  }, [relationship, otherPerson]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -68,8 +74,15 @@ export default function ScheduleMeetingDialog({ relationship, onClose, onSchedul
     } catch (err) {
       logError(err, 'Supervision schedule meeting');
       const message = err?.response?.data?.message || 'Failed to schedule meeting. Please try again.';
-      setError(message);
-      toast.error(message);
+      const errors = err?.response?.data?.errors;
+      if (errors) {
+        const errorMessages = Object.values(errors).flat().join(', ');
+        setError(errorMessages);
+        toast.error(errorMessages);
+      } else {
+        setError(message);
+        toast.error(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -82,7 +95,7 @@ export default function ScheduleMeetingDialog({ relationship, onClose, onSchedul
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Schedule supervision meeting</h2>
             <p className="mt-1 text-sm text-gray-600">
-              Create a meeting invite for {relationship?.student?.full_name ?? 'your student'}. The student will see the meeting once scheduled.
+              Create a meeting invite for {otherPerson}. {isSupervisor ? 'The student' : 'Your supervisor'} will see the meeting once scheduled.
             </p>
           </div>
           <button

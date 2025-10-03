@@ -262,6 +262,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/my-supervisor', [\App\Http\Controllers\Supervision\StudentController::class, 'index'])->name('supervision.student.index');
     Route::get('/supervisor-dashboard', [\App\Http\Controllers\Supervision\SupervisorController::class, 'index'])->name('supervision.supervisor.index');
+    Route::get('/supervision/relationships/{relationship}', [\App\Http\Controllers\Supervision\RelationshipViewController::class, 'show'])->name('supervision.relationships.show');
+    
+    // Unbind Request Routes (for Inertia frontend)
+    Route::post('/supervision/unbind-requests/{unbindRequest}/approve', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'approve'])->name('supervision.unbind-requests.approve');
+    Route::post('/supervision/unbind-requests/{unbindRequest}/reject', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'reject'])->name('supervision.unbind-requests.reject');
 });
 
 Route::middleware(['auth'])->group(function () {

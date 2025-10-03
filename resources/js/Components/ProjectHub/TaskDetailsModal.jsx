@@ -2,7 +2,7 @@ import React, { useState, Fragment, useEffect, useMemo } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop, Description } from '@headlessui/react';
 import { Transition } from '@headlessui/react';
-import { X, Calendar, User, Clock, MessageSquare, Send, Trash2, Paperclip, FileText, Download, BookOpen, FileType, Globe, TrendingUp, Archive } from 'lucide-react';
+import { X, Calendar, User, Clock, MessageSquare, Send, Trash2, Paperclip, FileText, Download, BookOpen, FileType, Globe, TrendingUp, Archive, Eye } from 'lucide-react';
 import { isTaskCompleted } from '@/Utils/utils';
 import Select from 'react-select';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -790,7 +790,7 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                         >
-                                                            <Download className="w-4 h-4" />
+                                                            <Eye className="w-4 h-4" />
                                                         </a>
                                                         <button
                                                             type="button"

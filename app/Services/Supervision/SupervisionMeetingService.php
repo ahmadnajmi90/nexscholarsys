@@ -10,15 +10,19 @@ use Illuminate\Validation\ValidationException;
 
 class SupervisionMeetingService
 {
-    public function schedule(SupervisionRelationship $relationship, User $supervisor, array $data): SupervisionMeeting
+    public function schedule(SupervisionRelationship $relationship, User $user, array $data): SupervisionMeeting
     {
-        if ($relationship->academician->user?->id !== $supervisor->id) {
+        // Check if user is either the supervisor or the student in this relationship
+        $isSupervisor = $relationship->academician->user?->id === $user->id;
+        $isStudent = $relationship->student->user?->id === $user->id;
+
+        if (!$isSupervisor && !$isStudent) {
             throw ValidationException::withMessages([
-                'supervision_relationship_id' => __('Only the supervisor can schedule meetings.'),
+                'supervision_relationship_id' => __('You can only schedule meetings for your own supervision relationships.'),
             ]);
         }
 
-        return DB::transaction(function () use ($relationship, $supervisor, $data) {
+        return DB::transaction(function () use ($relationship, $user, $data) {
             return SupervisionMeeting::create([
                 'supervision_relationship_id' => $relationship->id,
                 'title' => $data['title'],
@@ -28,7 +32,7 @@ class SupervisionMeetingService
                 'attachments' => $data['attachments'] ?? [],
                 'external_event_id' => $data['external_event_id'] ?? null,
                 'external_provider' => $data['external_provider'] ?? null,
-                'created_by' => $supervisor->id,
+                'created_by' => $user->id,
             ]);
         });
     }
