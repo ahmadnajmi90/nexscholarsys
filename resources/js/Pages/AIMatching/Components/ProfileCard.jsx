@@ -512,15 +512,72 @@ export default function ProfileCard({
                 })()}
               </div>
               
-              {/* Infographics Placeholders */}
+              {/* Infographics */}
               <div className="space-y-4 pt-4 border-t border-white/20">
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">📊 Research Overlap</h4>
-                  <div className="bg-white/10 rounded-lg p-4 text-center text-xs text-white/60">
-                    [Visualization Coming Soon]
+                {/* Research Overlap */}
+                {match.comparison?.researchOverlap ? (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">📊 Research Overlap</h4>
+                    <div className="bg-white/10 rounded-lg p-4">
+                      {/* Overall Overlap Percentage */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-white/70">Overlap</span>
+                        <span className="text-lg font-bold">{match.comparison.researchOverlap.overlapPercentage}%</span>
+                      </div>
+                      
+                      {/* Common Research Areas */}
+                      {match.comparison.researchOverlap.commonAreas.length > 0 && (
+                        <div className="mb-3">
+                          <div className="text-xs text-white/70 mb-1">Common Areas ({match.comparison.researchOverlap.totalCommon})</div>
+                          <div className="flex flex-wrap gap-1">
+                            {match.comparison.researchOverlap.commonAreas.slice(0, 3).map((area, idx) => (
+                              <span key={idx} className="text-xs bg-green-500/30 text-green-100 px-2 py-0.5 rounded-full">
+                                ✓ Area {idx + 1}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Comparison Bars */}
+                      <div className="space-y-2 text-xs">
+                        <div>
+                          <div className="flex justify-between text-white/70 mb-1">
+                            <span>Your Fields</span>
+                            <span>{match.comparison.researchOverlap.totalYours}</span>
+                          </div>
+                          <div className="w-full bg-white/10 rounded-full h-1.5">
+                            <div 
+                              className="bg-blue-400 h-1.5 rounded-full"
+                              style={{ width: `${Math.min(100, (match.comparison.researchOverlap.totalYours / 10) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex justify-between text-white/70 mb-1">
+                            <span>Their Fields</span>
+                            <span>{match.comparison.researchOverlap.totalTheirs}</span>
+                          </div>
+                          <div className="w-full bg-white/10 rounded-full h-1.5">
+                            <div 
+                              className="bg-purple-400 h-1.5 rounded-full"
+                              style={{ width: `${Math.min(100, (match.comparison.researchOverlap.totalTheirs / 10) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">📊 Research Overlap</h4>
+                    <div className="bg-white/10 rounded-lg p-4 text-center text-xs text-white/60">
+                      Comparison data not available
+                    </div>
+                  </div>
+                )}
                 
+                {/* Collaboration Score */}
                 <div>
                   <h4 className="text-sm font-semibold mb-2">📈 Collaboration Score</h4>
                   <div className="bg-white/10 rounded-lg p-4">
@@ -537,12 +594,63 @@ export default function ProfileCard({
                   </div>
                 </div>
                 
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">🎯 Key Strengths Match</h4>
-                  <div className="bg-white/10 rounded-lg p-4 text-xs text-white/60 text-center">
-                    [Skills Matching Visualization Coming Soon]
+                {/* Key Strengths Match */}
+                {match.comparison?.skillsMatch ? (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">🎯 Key Strengths Match</h4>
+                    <div className="bg-white/10 rounded-lg p-4">
+                      {/* Overall Skills Match */}
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-white/70">Skills Alignment</span>
+                        <span className="text-lg font-bold">{match.comparison.skillsMatch.overallSkillMatch}%</span>
+                      </div>
+                      
+                      {/* Top Matching Skills */}
+                      {match.comparison.skillsMatch.topMatches.length > 0 ? (
+                        <div className="space-y-2">
+                          {match.comparison.skillsMatch.topMatches.slice(0, 5).map((skill, idx) => (
+                            <div key={idx}>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs text-white/90 truncate flex-1">{skill.skill}</span>
+                                <span className="text-xs text-white/70 ml-2">{skill.matchScore}%</span>
+                              </div>
+                              <div className="w-full bg-white/10 rounded-full h-1.5">
+                                <div 
+                                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                                    skill.matchScore >= 80 ? 'bg-green-400' :
+                                    skill.matchScore >= 60 ? 'bg-yellow-400' :
+                                    'bg-orange-400'
+                                  }`}
+                                  style={{ width: `${skill.matchScore}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-white/60 text-center py-2">
+                          No matching skills found
+                        </div>
+                      )}
+                      
+                      {/* Total Matched Skills */}
+                      {match.comparison.skillsMatch.totalMatchedSkills > 0 && (
+                        <div className="mt-3 pt-3 border-t border-white/10 text-center">
+                          <span className="text-xs text-white/60">
+                            {match.comparison.skillsMatch.totalMatchedSkills} total matched skill{match.comparison.skillsMatch.totalMatchedSkills !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2">🎯 Key Strengths Match</h4>
+                    <div className="bg-white/10 rounded-lg p-4 text-xs text-white/60 text-center">
+                      Skills comparison data not available
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

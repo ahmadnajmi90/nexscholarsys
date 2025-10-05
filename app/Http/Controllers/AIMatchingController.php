@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Skill;
 use App\Services\SemanticSearchService;
 use App\Services\AIMatchInsightService;
+use App\Services\ProfileComparisonService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Cache;
@@ -23,11 +24,16 @@ class AIMatchingController extends Controller
 {
     protected $semanticSearchService;
     protected $aiMatchInsightService;
+    protected $profileComparisonService;
     
-    public function __construct(SemanticSearchService $semanticSearchService, AIMatchInsightService $aiMatchInsightService)
-    {
+    public function __construct(
+        SemanticSearchService $semanticSearchService, 
+        AIMatchInsightService $aiMatchInsightService,
+        ProfileComparisonService $profileComparisonService
+    ) {
         $this->semanticSearchService = $semanticSearchService;
         $this->aiMatchInsightService = $aiMatchInsightService;
+        $this->profileComparisonService = $profileComparisonService;
     }
 
     /**
@@ -234,15 +240,48 @@ class AIMatchingController extends Controller
             $studentType
         );
         
+        // Get current user profile for comparison
+        $currentUserProfile = null;
+        $currentUserType = null;
+        if ($studentId && $studentType) {
+            if ($studentType === 'postgraduate') {
+                $currentUserProfile = Postgraduate::find($studentId);
+                $currentUserType = 'postgraduate';
+            } elseif ($studentType === 'undergraduate') {
+                $currentUserProfile = Undergraduate::find($studentId);
+                $currentUserType = 'undergraduate';
+            }
+        }
+        
         // Convert to the expected format for the frontend
         $matches = [];
         foreach ($paginatedAcademicians as $academician) {
-            $matches[] = [
+            $matchData = [
                 'academician' => $academician,
                 'score' => $academician['match_score'], // Make sure score is accessible
                 'ai_insights' => $academician['ai_insights'],
                 'result_type' => 'academician'
             ];
+            
+            // Add comparison data if we have current user profile
+            if ($currentUserProfile) {
+                try {
+                    $comparison = $this->profileComparisonService->calculateFullComparison(
+                        $currentUserProfile->toArray(),
+                        $academician,
+                        $currentUserType,
+                        'academician'
+                    );
+                    $matchData['comparison'] = $comparison;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to calculate comparison', [
+                        'error' => $e->getMessage(),
+                        'student_id' => $studentId
+                    ]);
+                }
+            }
+            
+            $matches[] = $matchData;
         }
         
         // Format response
@@ -307,15 +346,38 @@ class AIMatchingController extends Controller
             $academicianId
         );
         
+        // Get current academician profile for comparison
+        $currentAcademician = $academician;
+        
         // Convert to the expected format for the frontend
         $matches = [];
         foreach ($paginatedStudents as $student) {
-            $matches[] = [
+            $matchData = [
                 'student' => $student,
                 'score' => $student['match_score'],
                 'ai_insights' => $student['ai_insights'],
                 'result_type' => $student['student_type'] // 'postgraduate' or 'undergraduate'
             ];
+            
+            // Add comparison data
+            if ($currentAcademician) {
+                try {
+                    $comparison = $this->profileComparisonService->calculateFullComparison(
+                        $currentAcademician->toArray(),
+                        $student,
+                        'academician',
+                        $student['student_type']
+                    );
+                    $matchData['comparison'] = $comparison;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to calculate comparison', [
+                        'error' => $e->getMessage(),
+                        'academician_id' => $academicianId
+                    ]);
+                }
+            }
+            
+            $matches[] = $matchData;
         }
         
         // Format response
@@ -389,6 +451,11 @@ class AIMatchingController extends Controller
         $paginatedResults = array_slice($combinedResults, $offset, $perPage);
         $hasMore = ($offset + $perPage) < $totalResults;
         
+        // Get current academician profile for comparison
+        $currentAcademician = $usePersonalization && $academicianId 
+            ? Academician::find($academicianId) 
+            : null;
+        
         // Generate AI insights for each match in the current page
         // If the user is an academician, generate personalized insights
         if ($usePersonalization && $academicianId) {
@@ -426,6 +493,24 @@ class AIMatchingController extends Controller
             // Add the appropriate profile data based on result type
             // Only academicians are processed now
             $match['academician'] = $result;
+            
+            // Add comparison data if we have current academician profile
+            if ($currentAcademician) {
+                try {
+                    $comparison = $this->profileComparisonService->calculateFullComparison(
+                        $currentAcademician->toArray(),
+                        $result,
+                        'academician',
+                        'academician'
+                    );
+                    $match['comparison'] = $comparison;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to calculate comparison for collaborator', [
+                        'error' => $e->getMessage(),
+                        'academician_id' => $academicianId
+                    ]);
+                }
+            }
             
             $matches[] = $match;
         }
