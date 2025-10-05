@@ -209,29 +209,29 @@ export default function FilterPanel({
       {/* Filter Panel Container */}
       <div
         ref={filterContainerRef}
-        className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-white rounded-lg shadow-lg transition-transform duration-300 z-30 ${
+        className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-white lg:bg-transparent rounded-lg lg:rounded-none shadow-lg lg:shadow-none transition-transform duration-300 z-30 ${
           showFilters ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 overflow-auto pb-20 lg:pb-0`}
       >
-        <div className="p-5">
+        <div className="p-5 lg:p-0">
           {/* Mobile Close Button Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Filters</h3>
+          <div className="flex justify-between items-center mb-6 lg:mb-8">
+            <h3 className="text-xl font-bold text-gray-900">Filters</h3>
             <button 
               onClick={() => {
                 setShowFilters(false);
                 if (toggleOpen) toggleOpen(false);
                 if (onClose) onClose();
               }}
-              className="text-gray-500 hover:text-gray-700 lg:hidden"
+              className="text-gray-500 hover:text-gray-700 lg:hidden transition-colors"
             >
-              <FaTimes />
+              <FaTimes className="h-5 w-5" />
             </button>
           </div>
           
           {/* Research Area Filter */}
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
               Research Area
             </label>
             <Select
@@ -249,9 +249,12 @@ export default function FilterPanel({
             />
           </div>
           
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-6"></div>
+          
           {/* University Filter */}
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
               University
             </label>
             <Select
@@ -269,10 +272,13 @@ export default function FilterPanel({
             />
           </div>
           
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-6"></div>
+          
           {/* Skills Filter - Only show for student/collaborator searches */}
           {(searchType === 'students' || searchType === 'collaborators') && (
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Skills
               </label>
               <Select
@@ -293,29 +299,37 @@ export default function FilterPanel({
           
           {/* Availability Filter - Hide for collaborators */}
           {searchType !== 'collaborators' && (
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {getAvailabilityLabel()}
-              </label>
-              <select
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 
-                          focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm 
-                          rounded-md"
-                value={selectedAvailability}
-                onChange={(e) => setSelectedAvailability(e.target.value)}
-              >
-                <option value="">All</option>
-                <option value="1">Yes</option>
-                <option value="0">No</option>
-              </select>
-            </div>
+            <>
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-6"></div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  {getAvailabilityLabel()}
+                </label>
+                <select
+                  className="mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm 
+                            rounded-xl shadow-sm transition-all duration-200"
+                  value={selectedAvailability}
+                  onChange={(e) => setSelectedAvailability(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="1">Yes</option>
+                  <option value="0">No</option>
+                </select>
+              </div>
+            </>
           )}
           
-          {/* Reset Filters Button */}
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-6"></div>
+          
+          {/* Reset Filters Button - Premium Style */}
           <button
-            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm 
-                    font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none 
-                    focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100 
+                    rounded-xl shadow-sm text-sm font-semibold text-gray-700 
+                    transition-all duration-300 hover:shadow-md border border-gray-200"
             onClick={() => {
               setSelectedArea([]);
               setSelectedUniversity([]);
