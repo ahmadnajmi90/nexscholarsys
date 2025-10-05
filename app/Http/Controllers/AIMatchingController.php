@@ -251,6 +251,7 @@ class AIMatchingController extends Controller
             'searchType' => 'supervisor',
             'matches' => $matches,
             'total' => $totalResults,
+            'total_count' => $totalResults, // Add total_count for frontend consistency
             'profile_used' => ($studentId !== null),
             'current_page' => $page,
             'per_page' => $perPage,
@@ -323,6 +324,7 @@ class AIMatchingController extends Controller
             'searchType' => 'students',
             'matches' => $matches,
             'total' => $totalResults,
+            'total_count' => $totalResults, // Add total_count for frontend consistency
             'profile_used' => true, // Always use academician profile
             'current_page' => $page,
             'per_page' => $perPage,
@@ -434,6 +436,7 @@ class AIMatchingController extends Controller
             'searchType' => 'collaborators',
             'matches' => $matches,
             'total' => $totalResults,
+            'total_count' => $totalResults, // Add total_count for frontend consistency
             'profile_used' => $usePersonalization, // Indicate if personalization was used
             'current_page' => $page,
             'per_page' => $perPage,

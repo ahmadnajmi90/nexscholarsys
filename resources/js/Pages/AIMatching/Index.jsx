@@ -475,7 +475,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
                     <div className="flex items-center justify-start sm:justify-end gap-3 mb-2">
                       <h2 className="text-4xl font-bold text-gray-900">All Results</h2>
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                        {searchResults.matches.length}
+                        {searchResults.total_count || searchResults.total || searchResults.matches.length}
                       </span>
                     </div>
                     <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full sm:ml-auto"></div>

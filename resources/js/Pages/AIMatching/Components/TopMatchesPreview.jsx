@@ -234,7 +234,7 @@ export default function TopMatchesPreview({
               className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
             >
               <Sparkles className="h-5 w-5" />
-              <span>View All {searchResults.matches.length} Results</span>
+              <span>View All {searchResults.total_count || searchResults.total || searchResults.matches.length} Results</span>
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 className="h-5 w-5 group-hover:translate-x-1 transition-transform" 
