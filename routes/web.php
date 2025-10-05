@@ -352,6 +352,11 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/ai-matching/diagnostics', [\App\Http\Controllers\AIMatchingController::class, 'diagnostics'])
         ->name('ai.matching.diagnostics');
+    
+    // Network Map - Malaysia Research Network Visualization
+    Route::get('/network-map', function () {
+        return Inertia::render('NetworkMap/Index');
+    })->name('network.map');
 });
 
 // CSRF Token Refresh Route
