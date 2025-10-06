@@ -6,7 +6,7 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import Dropdown from '../Components/Dropdown';
-import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign, ClipboardList } from 'lucide-react'; // Modern icons
+import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign, ClipboardList, X } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
@@ -20,6 +20,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [activeSection, setActiveSection] = useState('dashboard'); // Active section for new sidebar
     const [showTermsModal, setShowTermsModal] = useState(false); // Terms agreement modal
     const [showTutorialModal, setShowTutorialModal] = useState(false); // Tutorial modal
+    const [showFeedbackBubble, setShowFeedbackBubble] = useState(true); // Feedback bubble visibility
     const { url } = usePage(); // Get current URL from Inertia
     const { auth } = usePage().props; // Get current URL and auth from Inertia
 
@@ -170,13 +171,21 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
     // Effect to close sidebar when navigation starts (using Inertia events)
     useEffect(() => {
         // This function will be called whenever a new Inertia visit starts
-        const handleStart = () => {
+        const handleStart = (event) => {
             // Check current screen size at the time of navigation (not stale closure)
             const isCurrentlyDesktop = window.innerWidth >= 1024;
             
-            // Only close sidebar on mobile (when not desktop)
+            // Check if navigating to AI Matching page
+            const targetUrl = event.detail?.visit?.url?.href || '';
+            const isNavigatingToAIMatching = targetUrl.toLowerCase().includes('/ai-matching');
+            
+            // Close sidebar on mobile OR when navigating to AI Matching
             if (!isCurrentlyDesktop) {
                 setIsSidebarOpen(false);
+            } else if (isNavigatingToAIMatching) {
+                // On desktop, close sidebar and save state when navigating to AI Matching
+                setIsSidebarOpen(false);
+                localStorage.setItem('isSidebarOpen', 'false');
             }
         };
 
@@ -212,6 +221,22 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             return () => clearTimeout(timer);
         }
     }, [auth, url]);
+
+    // Load feedback bubble visibility from localStorage
+    useEffect(() => {
+        const feedbackBubbleDismissed = localStorage.getItem('feedbackBubbleDismissed');
+        if (feedbackBubbleDismissed === 'true') {
+            setShowFeedbackBubble(false);
+        }
+    }, []);
+
+    // Function to dismiss feedback bubble
+    const dismissFeedbackBubble = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowFeedbackBubble(false);
+        localStorage.setItem('feedbackBubbleDismissed', 'true');
+    };
 
     const isActive = (route) => url.startsWith(route); // Check if the current route matches
 
@@ -348,7 +373,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 </div>
             ) : (
                 // Mobile-specific content area
-                <div>
+                <div className="flex-1 min-h-screen bg-white">
                     <Head title={title} />
                     <div className="pb-20">
                         {/* Fixed sidebar toggle button for mobile */}
@@ -402,21 +427,33 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
             )}
 
-            {/* Feedback Form Bubble */}
-            <a
-                href={feedbackFormUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open feedback form"
-                className="fixed z-50 flex items-center gap-3 right-4 bottom-24 md:bottom-10 md:right-8 group"
-            >
-                <span className="pointer-events-none rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-focus-within:opacity-100 group-focus-within:translate-x-0 transition-all duration-200">
-                    Feedback Form
-                </span>
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-xl transition-transform duration-200 group-hover:scale-105 group-focus-within:scale-105">
-                    <ClipboardList className="h-6 w-6" />
+            {/* Feedback Form Bubble - Dismissible & Less Prominent */}
+            {showFeedbackBubble && (
+                <div className="fixed z-50 right-4 bottom-24 md:bottom-10 md:right-8 group">
+                    <a
+                        href={feedbackFormUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Open feedback form"
+                        className="flex items-center gap-3"
+                    >
+                        <span className="pointer-events-none rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-lg opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-focus-within:opacity-100 group-focus-within:translate-x-0 transition-all duration-200">
+                            Feedback Form
+                        </span>
+                        <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-200">
+                            <ClipboardList className="h-5 w-5" />
+                            {/* Close button */}
+                            <button
+                                onClick={dismissFeedbackBubble}
+                                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
+                                aria-label="Dismiss feedback bubble"
+                            >
+                                <X className="h-3 w-3" />
+                            </button>
+                        </div>
+                    </a>
                 </div>
-            </a>
+            )}
 
             {/* Force Terms Agreement Modal */}
             <ForceTermsModal show={showTermsModal} />

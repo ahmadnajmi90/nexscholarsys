@@ -1,65 +1,96 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ArrowUpDown, TrendingUp, Award } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function RankingsTable({ data }) {
-    const [sortConfig, setSortConfig] = useState({
-        key: 'rank',
-        direction: 'ascending'
-    });
+    const [sortField, setSortField] = useState('researchersCount');
+    const [sortDirection, setSortDirection] = useState('desc');
+    const [rankingMode, setRankingMode] = useState('overall');
 
-    const sortedData = useMemo(() => {
-        let sortableData = [...data];
+    const handleSort = (field) => {
+        if (field !== 'name' && field !== 'shortName') {
+            setRankingMode(field);
+        }
         
-        if (sortConfig.key !== null) {
-            sortableData.sort((a, b) => {
-                const aValue = a[sortConfig.key];
-                const bValue = b[sortConfig.key];
-                
-                if (aValue < bValue) {
-                    return sortConfig.direction === 'ascending' ? -1 : 1;
-                }
-                if (aValue > bValue) {
-                    return sortConfig.direction === 'ascending' ? 1 : -1;
-                }
-                return 0;
-            });
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('desc');
         }
-        return sortableData;
-    }, [data, sortConfig]);
-
-    const requestSort = (key) => {
-        let direction = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
-        }
-        setSortConfig({ key, direction });
     };
 
-    const getSortIcon = (columnName) => {
-        if (sortConfig.key !== columnName) {
-            return null;
+    const getRankedData = () => {
+        // Create a copy with ranks
+        let dataWithRanks = [...data];
+        
+        if (rankingMode === 'overall') {
+            // Use original rank or assign based on publications
+            dataWithRanks = dataWithRanks.map((uni, index) => ({ 
+                ...uni, 
+                currentRank: uni.rank || index + 1 
+            }));
+        } else {
+            // Sort by the selected metric and assign new ranks
+            const sorted = [...data].sort((a, b) => b[rankingMode] - a[rankingMode]);
+            dataWithRanks = sorted.map((uni, index) => ({ ...uni, currentRank: index + 1 }));
         }
-        return sortConfig.direction === 'ascending' ? (
-            <ChevronUp className="w-4 h-4" />
-        ) : (
-            <ChevronDown className="w-4 h-4" />
-        );
+        
+        // Then apply user sorting
+        return dataWithRanks.sort((a, b) => {
+            const aValue = a[sortField];
+            const bValue = b[sortField];
+            
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            }
+            
+            return sortDirection === 'asc' 
+                ? (aValue || 0) - (bValue || 0)
+                : (bValue || 0) - (aValue || 0);
+        });
+    };
+
+    const sortedData = getRankedData();
+
+    const SortIcon = ({ field }) => {
+        if (sortField !== field) return <ArrowUpDown className="w-4 h-4 ml-1" />;
+        return sortDirection === 'asc' 
+            ? <ChevronUp className="w-4 h-4 ml-1" />
+            : <ChevronDown className="w-4 h-4 ml-1" />;
     };
 
     const getRankBadge = (rank) => {
         if (rank === 1) {
-            return <span className="text-xl">🥇</span>;
-        } else if (rank === 2) {
-            return <span className="text-xl">🥈</span>;
-        } else if (rank === 3) {
-            return <span className="text-xl">🥉</span>;
+            return (
+                <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white border-0">
+                    <Award className="w-3 h-3 mr-1" />1st
+                </Badge>
+            );
         }
-        return <span className="font-semibold text-gray-700 dark:text-gray-300">#{rank}</span>;
+        if (rank === 2) {
+            return (
+                <Badge className="bg-gray-400 hover:bg-gray-500 text-white border-0">
+                    <Award className="w-3 h-3 mr-1" />2nd
+                </Badge>
+            );
+        }
+        if (rank === 3) {
+            return (
+                <Badge className="bg-amber-600 hover:bg-amber-700 text-white border-0">
+                    <Award className="w-3 h-3 mr-1" />3rd
+                </Badge>
+            );
+        }
+        return <Badge variant="outline">{rank}</Badge>;
     };
 
     const columns = [
-        { key: 'rank', label: 'Rank', sortable: true },
+        { key: 'rank', label: 'Rank', sortable: false },
         { key: 'shortName', label: 'University', sortable: true },
         { key: 'state', label: 'State', sortable: true },
         { key: 'researchersCount', label: 'Researchers', sortable: true },
@@ -75,30 +106,47 @@ export default function RankingsTable({ data }) {
             transition={{ delay: 0.3 }}
             className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
         >
+            {/* Header */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    University Rankings by Publications
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Click column headers to sort
-                </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                University Rankings
+                            </h2>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {rankingMode === 'overall' 
+                                ? 'Ranked by overall research performance metrics'
+                                : `Ranked by ${rankingMode === 'activeProjects' ? 'active projects' : rankingMode === 'industryCitations' ? 'industry citations' : rankingMode.replace('Count', '')}`
+                            }
+                        </p>
+                    </div>
+                </div>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead className="bg-gray-50 dark:bg-gray-900">
                         <tr>
-                            {columns.map((column) => (
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Rank
+                            </th>
+                            {columns.slice(1).map((column) => (
                                 <th
                                     key={column.key}
-                                    onClick={() => column.sortable && requestSort(column.key)}
+                                    onClick={() => column.sortable && handleSort(column.key)}
                                     className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${
                                         column.sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 select-none' : ''
+                                    } ${
+                                        rankingMode === column.key ? 'text-blue-600 dark:text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]' : ''
                                     }`}
                                 >
                                     <div className="flex items-center gap-2">
                                         {column.label}
-                                        {column.sortable && getSortIcon(column.key)}
+                                        {column.sortable && <SortIcon field={column.key} />}
                                     </div>
                                 </th>
                             ))}
@@ -114,12 +162,10 @@ export default function RankingsTable({ data }) {
                                 className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                             >
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center gap-2">
-                                        {getRankBadge(row.rank)}
-                                    </div>
+                                    {getRankBadge(row.currentRank)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                    <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                                         {row.shortName}
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -127,23 +173,23 @@ export default function RankingsTable({ data }) {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                                    <Badge variant="secondary" className="text-xs">
                                         {row.state}
-                                    </span>
+                                    </Badge>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                                    {row.researchersCount.toLocaleString()}
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">
+                                    {row.researchersCount?.toLocaleString() || 'N/A'}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                                    {row.activeProjects}
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">
+                                    {row.activeProjects?.toLocaleString() || 'N/A'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                                        {row.publications.toLocaleString()}
+                                        {row.publications?.toLocaleString() || 'N/A'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-                                    {row.industryCitations.toLocaleString()}
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">
+                                    {row.industryCitations?.toLocaleString() || 'N/A'}
                                 </td>
                             </motion.tr>
                         ))}
