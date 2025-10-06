@@ -102,28 +102,6 @@ window.axios.interceptors.response.use(
     }
 );
 
-// Configure Laravel Echo
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-
-window.Pusher = Pusher;
-
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: "6eafd4f834d2307e0213",
-    cluster: 'ap1',
-    forceTLS: true,
-    encrypted: true,
-    authEndpoint: '/broadcasting/auth',
-    auth: {
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-        },
-    },
-});
-
-
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

@@ -152,6 +152,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/faculty-admins', [FacultyAdminController::class, 'index'])->name('faculty-admins.index');
     Route::post('/admin/faculty-admins', [FacultyAdminController::class, 'store'])->name('faculty-admins.store');
+    
+    // Profile management routes
+    Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
+    Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
+    Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
+    Route::post('/admin/profiles/deactivate', [App\Http\Controllers\Admin\ProfileReminderController::class, 'deactivateUser'])->name('admin.profiles.deactivate');
+    Route::post('/admin/profiles/batch-deactivate', [App\Http\Controllers\Admin\ProfileReminderController::class, 'deactivateBatchUsers'])->name('admin.profiles.batch-deactivate');
 });
 Route::get('/confirm-faculty-admin/{id}', [FacultyAdminController::class, 'confirm'])->name('faculty-admins.confirm');
 
@@ -353,6 +360,11 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/ai-matching/diagnostics', [\App\Http\Controllers\AIMatchingController::class, 'diagnostics'])
         ->name('ai.matching.diagnostics');
+    
+    // Network Map - Malaysia Research Network Visualization
+    Route::get('/network-map', function () {
+        return Inertia::render('NetworkMap/Index');
+    })->name('network.map');
 });
 
 // CSRF Token Refresh Route
@@ -379,10 +391,6 @@ Route::get('/csrf/refresh', function () {
     }
 })->name('csrf.refresh')->middleware('web');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/admin/profiles', [App\Http\Controllers\Admin\ProfileReminderController::class, 'index'])->name('admin.profiles.index');
-    Route::post('/admin/profiles/reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendReminder'])->name('admin.profiles.reminder');
-    Route::post('/admin/profiles/batch-reminder', [App\Http\Controllers\Admin\ProfileReminderController::class, 'sendBatchReminder'])->name('admin.profiles.batch-reminder');
 
 // Data Management Routes
 Route::get('/admin/data-management', function() {
@@ -436,7 +444,6 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/data-management/skills', [App\Http\Controllers\Admin\DataManagement\SkillController::class, 'store'])->name('admin.data-management.skills.store');
     Route::post('/admin/data-management/skills/{skill}', [App\Http\Controllers\Admin\DataManagement\SkillController::class, 'update'])->name('admin.data-management.skills.update');
     Route::delete('/admin/data-management/skills/{skill}', [App\Http\Controllers\Admin\DataManagement\SkillController::class, 'destroy'])->name('admin.data-management.skills.destroy');
-});
 });
 
 // Postgraduate Program Recommendations

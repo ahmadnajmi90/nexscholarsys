@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaLightbulb, FaHistory } from 'react-icons/fa';
-import NaturalLanguageQueryBuilder from './NaturalLanguageQueryBuilder';
+import { Sparkles, Search, History, ChevronDown, X } from 'lucide-react';
 
 const GuidedSearchInterface = ({ 
   onSearch, 
@@ -14,18 +13,28 @@ const GuidedSearchInterface = ({
   error = null,
   children, // Add children prop for search type selector
   searchQuery,
-  onSearchQueryChange
+  onSearchQueryChange,
+  searchType,
+  onSearchTypeChange,
+  isAcademician,
+  userId
 }) => {
+  // Generate context-aware storage key for recent searches
+  const getRecentSearchesKey = () => {
+    return `ai_recent_searches_${userId}_${searchType}`;
+  };
   const [recentSearches, setRecentSearches] = useState([]);
-  const [showRecent, setShowRecent] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [activeTab, setActiveTab] = useState('history'); // 'history' or 'suggestions'
   const [localError, setLocalError] = useState(null);
-  const recentSearchesRef = useRef(null);
+  const [suggestedTerms, setSuggestedTerms] = useState([]);
+  const dropdownRef = useRef(null);
   
-  // Handle clicks outside the recent searches dropdown
+  // Handle clicks outside the dropdown
   useEffect(() => {
     function handleClickOutside(event) {
-      if (recentSearchesRef.current && !recentSearchesRef.current.contains(event.target)) {
-        setShowRecent(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
       }
     }
     
@@ -33,34 +42,105 @@ const GuidedSearchInterface = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [recentSearchesRef]);
+  }, [dropdownRef]);
   
-  // Load recent searches from localStorage
+  // Load recent searches from localStorage (context-aware)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('supervisor_recent_searches');
+      const storageKey = getRecentSearchesKey();
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          setRecentSearches(parsed.slice(0, 5)); // Keep last 5 searches
+          const searches = parsed.slice(0, 5);
+          setRecentSearches(searches);
+          // Set default tab based on whether we have history
+          setActiveTab(searches.length > 0 ? 'history' : 'suggestions');
         }
+      } else {
+        // No history, default to suggestions
+        setActiveTab('suggestions');
       }
     } catch (e) {
       console.error('Error loading recent searches:', e);
+      setActiveTab('suggestions');
     }
-  }, []);
+  }, [userId, searchType]);
   
-  // Save a search to recent searches
+  // Generate natural language suggestions that showcase NLP capabilities
+  useEffect(() => {
+    // DEBUG: Log current search type when generating suggestions
+    console.log('💡 Generating suggestions for searchType:', searchType);
+    
+    // Smart, context-aware suggestions based on search type
+    const generateSmartSuggestions = () => {
+      const suggestions = [];
+      
+      if (searchType === 'supervisor') {
+        suggestions.push(
+          "Find me a supervisor specializing in machine learning and AI",
+          "I'm looking for experts in sustainable energy research",
+          "Who can guide me in data science and analytics?",
+          "Recommend supervisors for biomedical engineering research",
+          "Looking for mentors in computer vision and robotics"
+        );
+      } else if (searchType === 'students') {
+        suggestions.push(
+          "Students interested in deep learning and neural networks",
+          "Find motivated researchers for data analysis projects",
+          "Looking for students passionate about climate change research",
+          "Find postgraduates with experience in molecular biology",
+          "Students working on mobile and web development"
+        );
+      } else {
+        suggestions.push(
+          "Find collaborators for interdisciplinary AI research",
+          "Looking for partners in climate science and sustainability",
+          "Who's working on cybersecurity and privacy research?",
+          "Find colleagues interested in educational technology",
+          "Collaborators for joint publication in data science"
+        );
+      }
+      
+      return suggestions;
+    };
+    
+    setSuggestedTerms(generateSmartSuggestions());
+  }, [searchType]);
+  
+  // Save a search to recent searches (context-aware)
   const saveSearchToRecent = (query) => {
     try {
-      if (query && query.trim().length > 0) {
+      // Ensure query is a string
+      const queryString = typeof query === 'string' ? query : String(query);
+      
+      if (queryString && queryString.trim().length > 0) {
         // Add to beginning, remove duplicates, limit to 5
-        const updatedSearches = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
+        const updatedSearches = [queryString, ...recentSearches.filter(s => s !== queryString)].slice(0, 5);
         setRecentSearches(updatedSearches);
-        localStorage.setItem('supervisor_recent_searches', JSON.stringify(updatedSearches));
+        const storageKey = getRecentSearchesKey();
+        localStorage.setItem(storageKey, JSON.stringify(updatedSearches));
       }
     } catch (e) {
       console.error('Error saving recent search:', e);
+    }
+  };
+  
+  // Delete a search from history (context-aware)
+  const deleteSearchFromHistory = (searchToDelete, e) => {
+    e.stopPropagation(); // Prevent triggering the search
+    try {
+      const updatedSearches = recentSearches.filter(s => s !== searchToDelete);
+      setRecentSearches(updatedSearches);
+      const storageKey = getRecentSearchesKey();
+      localStorage.setItem(storageKey, JSON.stringify(updatedSearches));
+      
+      // If no more history, switch to suggestions tab
+      if (updatedSearches.length === 0) {
+        setActiveTab('suggestions');
+      }
+    } catch (e) {
+      console.error('Error deleting search:', e);
     }
   };
   
@@ -73,137 +153,242 @@ const GuidedSearchInterface = ({
     onSearch(searchQuery);
   };
   
-  const handleQueryChange = (newQuery) => {
-    onSearchQueryChange(newQuery);
+  const handleQueryChange = (e) => {
+    // Ensure we're always working with a string value
+    const value = typeof e === 'string' ? e : e?.target?.value || '';
+    onSearchQueryChange(value);
     setLocalError(null);
   };
   
-  const handleRecentSearch = (query) => {
-    onSearchQueryChange(query);
-    setShowRecent(false);
+  const handleItemSelect = (item) => {
+    // Ensure we're passing a string, not an object
+    const value = typeof item === 'string' ? item : String(item);
+    onSearchQueryChange(value);
+    setShowDropdown(false);
   };
   
-  // Handle Enter key press from NaturalLanguageQueryBuilder
-  const handleEnterPress = () => {
-    if (searchQuery.trim().length < 3) {
-      setLocalError('Please enter at least 3 characters to search');
-      return;
+  // Get search type label
+  const getSearchTypeLabel = () => {
+    if (searchType === 'supervisor') return 'Supervisor';
+    if (searchType === 'students') return 'Students';
+    if (searchType === 'collaborators') return 'Collaborators';
+    return 'Supervisor';
+  };
+  
+  // Get available search types based on role
+  const getAvailableSearchTypes = () => {
+    const types = [];
+    
+    // Students can search for supervisors
+    if (!isAcademician) {
+      types.push({ value: 'supervisor', label: 'Supervisor' });
     }
     
-    setLocalError(null);
-    saveSearchToRecent(searchQuery);
-    onSearch(searchQuery);
+    // Academicians can search for students only
+    if (isAcademician) {
+      types.push({ value: 'students', label: 'Students'});
+    }
+    
+    // Everyone can search for collaborators
+    types.push({ value: 'collaborators', label: 'Collaborators' });
+    
+    return types;
   };
   
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6 text-center">
-        <h1 className="text-2xl font-bold mb-4">{pageTitle}</h1>
-        <p className="text-gray-600 mb-6">
-          {searchDescription}
-        </p>
+    <div className="max-w-5xl mx-auto px-4 min-h-[50vh] flex flex-col items-center justify-center">
+      {/* Simplified header */}
+      <div className="mb-10 text-center">
+        <h1 className="text-xl text-gray-600 font-normal">What can we match you?</h1>
       </div>
       
-      <form onSubmit={handleSearchSubmit} className="mb-8">
-        <div className="relative flex">
-          <div className="relative flex-grow">
-            <NaturalLanguageQueryBuilder
-              onQueryChange={handleQueryChange}
-              value={searchQuery}
-              researchOptions={researchOptions}
-              onEnterPress={handleEnterPress}
-              placeholder={placeholder}
-            />
+      {/* Modern search bar */}
+      <div className="w-full max-w-4xl">
+        <form onSubmit={handleSearchSubmit} className="relative">
+          {/* Main search container */}
+          <div className="relative bg-white rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center">
+              {/* Search type dropdown */}
+              <div className="relative">
+                <select
+                  value={searchType}
+                  onChange={(e) => onSearchTypeChange(e.target.value)}
+                  className="appearance-none bg-transparent border-none pl-6 pr-10 py-4 text-sm font-medium text-gray-700 focus:outline-none cursor-pointer"
+                  style={{ minWidth: '140px' }}
+                >
+                  {getAvailableSearchTypes().map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.icon} {type.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
           </div>
           
-          {/* Recent searches button */}
-          <div className="absolute right-20 top-4 z-10">
-            <button
-              type="button"
-              className="text-gray-500 hover:text-gray-700"
-              onClick={() => setShowRecent(!showRecent)}
-              title="Recent searches"
-            >
-              <FaHistory />
-            </button>
-          </div>
+              {/* Divider */}
+              <div className="h-8 w-px bg-gray-300"></div>
+              
+              {/* Search input */}
+              <input
+                type="text"
+                value={typeof searchQuery === 'string' ? searchQuery : ''}
+                onChange={handleQueryChange}
+                onFocus={() => setShowDropdown(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (searchQuery.trim().length >= 3) {
+                      setLocalError(null);
+                      saveSearchToRecent(searchQuery);
+                      onSearch(searchQuery);
+                      setShowDropdown(false);
+                    } else {
+                      setLocalError('Please enter at least 3 characters to search');
+                    }
+                  }
+                }}
+                placeholder="Ask me anything about your research match..."
+                className="flex-1 px-6 py-4 text-base border-none outline-none focus:outline-none focus:ring-0 bg-transparent"
+              />
           
           {/* Search button */}
           <button
             type="submit"
-            className={`bg-blue-600 text-white px-6 py-3 rounded-r-lg flex items-center justify-center ${
-              isSearching ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-700'
-            }`}
-            disabled={isSearching}
+                disabled={isSearching}
+                className={`mr-2 p-3 rounded-full ${
+                  isSearching 
+                    ? 'bg-gray-300 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 transition-colors'
+                }`}
           >
             {isSearching ? (
-              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
             ) : (
-              <FaSearch />
+                  <Search className="h-5 w-5 text-white" />
             )}
           </button>
+            </div>
+          </div>
           
-          {/* Recent searches dropdown */}
-          {showRecent && recentSearches.length > 0 && (
+          {/* Dropdown with tabs */}
+          {showDropdown && (
             <div 
-              ref={recentSearchesRef}
-              className="absolute top-12 right-0 mt-2 w-full md:w-72 bg-white border border-gray-200 rounded-md shadow-lg z-30"
+              ref={dropdownRef}
+              className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-slideDown"
+              style={{
+                animation: 'slideDown 0.2s ease-out'
+              }}
             >
-              <div className="p-3">
-                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <FaHistory className="mr-2 text-gray-500" /> Recent Searches
-                </h3>
-                <ul className="space-y-1">
+              {/* Tabs */}
+              <div className="flex border-b border-gray-200 bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('history')}
+                  className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'history'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <History className="inline w-4 h-4 mr-2" />
+                  History {recentSearches.length > 0 && `(${recentSearches.length})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('suggestions')}
+                  className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'suggestions'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <Sparkles className="inline w-4 h-4 mr-2" />
+                  Suggestions
+                </button>
+              </div>
+              
+              {/* Tab content */}
+              <div className="max-h-96 overflow-y-auto p-4">
+                {activeTab === 'history' ? (
+                  <>
+                      {recentSearches.length > 0 ? (
+                      <div className="space-y-1">
                   {recentSearches.map((search, index) => (
-                    <li key={index}>
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleItemSelect(search)}
+                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors flex items-center group"
+                          >
+                            <History className="mr-3 text-gray-400 group-hover:text-blue-600 w-4 h-4 flex-shrink-0" />
+                            <span className="flex-1">{search}</span>
+                            <button
+                              onClick={(e) => deleteSearchFromHistory(search, e)}
+                              className="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                              title="Delete"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <History className="mx-auto w-12 h-12 mb-3 text-gray-300" />
+                        <p className="text-sm">No search history yet</p>
+                        <p className="text-xs mt-1">Your recent searches will appear here</p>
+                      </div>
+                    )}
+                  </>
+                  ) : (
+                    <div className="space-y-2">
+                      {suggestedTerms.map((term, index) => (
                       <button
+                          key={index}
                         type="button"
-                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                        onClick={() => handleRecentSearch(search)}
+                          onClick={() => handleItemSelect(term)}
+                          className="w-full px-4 py-3 text-sm text-gray-700 bg-gradient-to-r from-gray-50 to-blue-50 hover:from-blue-50 hover:to-blue-100 hover:text-blue-800 rounded-lg transition-all text-left border border-gray-200 hover:border-blue-400 hover:shadow-sm flex items-start group"
                       >
-                        {search}
+                          <Sparkles className="w-4 h-4 mr-3 mt-0.5 text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
+                          <span className="flex-1">{term}</span>
                       </button>
-                    </li>
                   ))}
-                </ul>
+                    </div>
+                  )}
               </div>
             </div>
           )}
-        </div>
+        </form>
         
+        {/* Error message */}
         {(localError || error) && (
-          <p className="text-red-500 mt-2 text-center">{localError || error}</p>
+          <p className="text-red-500 mt-3 text-center text-sm">{localError || error}</p>
         )}
-        
-        {/* Search Type Selector - Render children below the search input */}
-        <div className="mt-4 text-center">
-          {children}
-        </div>
-      </form>
-      
-      {/* Search guidance - redesigned to match the image */}
-      <div className="mt-8 border-t border-gray-200 pt-10">
-        <div className="flex items-center mb-4">
-          <FaLightbulb className="text-yellow-500 mr-2" />
-          <h3 className="text-lg font-semibold">Tips for better searching</h3>
-        </div>
-        
-        <ol className="space-y-3 text-gray-600 list-decimal list-inside">
-          {tips.map((tip, index) => (
-            <li key={index} className="flex items-start">
-              <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0">
-                {index + 1}
-              </span>
-              <span>{tip}</span>
-            </li>
-          ))}
-        </ol>
       </div>
     </div>
   );
 };
 
 export default GuidedSearchInterface; 
+
+// Add slideDown animation styles
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+if (typeof document !== 'undefined' && !document.getElementById('slideDown-animation')) {
+  style.id = 'slideDown-animation';
+  document.head.appendChild(style);
+} 

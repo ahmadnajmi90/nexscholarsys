@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Head } from '@inertiajs/react';
-import MainLayout from '@/Layouts/MainLayout';
+import { Head, router } from '@inertiajs/react';
+import AIMatchingLayout from '@/Layouts/AIMatchingLayout';
 import GuidedSearchInterface from './Components/GuidedSearchInterface';
 import ResultsGrid from './Components/ResultsGrid';
 import SearchTypeSelector from './Components/SearchTypeSelector';
 import FilterPanel from './Components/FilterPanel';
+import TopMatchesPreview from './Components/TopMatchesPreview';
+import { MultiStepLoader } from '@/Components/ui/multi-step-loader';
 import { FaFilter, FaLightbulb, FaRobot, FaBrain, FaSearch, FaDatabase } from 'react-icons/fa';
 import axios from 'axios';
 import useRoles from '@/Hooks/useRoles';
@@ -14,9 +16,15 @@ import { Sparkles } from 'lucide-react';
 export default function Index({ auth, universities, faculties, users, researchOptions, skills }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
   
-  // Helper function to get initial state from sessionStorage
-  const getInitialState = (key, defaultValue) => {
+  // Generate context-aware storage key
+  const getStorageKey = (baseKey, searchTypeParam = 'supervisor') => {
+    return `${baseKey}_${auth.user.id}_${searchTypeParam}`;
+  };
+  
+  // Helper function to get initial state from sessionStorage with context
+  const getInitialState = (baseKey, searchTypeParam, defaultValue) => {
     try {
+      const key = getStorageKey(baseKey, searchTypeParam);
       const savedState = sessionStorage.getItem(key);
       return savedState ? JSON.parse(savedState) : defaultValue;
     } catch (error) {
@@ -25,22 +33,32 @@ export default function Index({ auth, universities, faculties, users, researchOp
     }
   };
   
-  const [searchQuery, setSearchQuery] = useState(() => getInitialState('ai_search_query', ''));
-  const [searchType, setSearchType] = useState('supervisor'); // Default: supervisor
+  // Set default search type based on user role
+  const getDefaultSearchType = () => {
+    if (isAcademician) {
+      return 'students'; // Academicians default to searching for students
+    }
+    return 'supervisor'; // Students default to searching for supervisors
+  };
+  
+  const defaultSearchType = getDefaultSearchType();
+  const [searchType, setSearchType] = useState(defaultSearchType);
+  const [searchQuery, setSearchQuery] = useState(() => getInitialState('ai_search_query', defaultSearchType, ''));
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState(() => getInitialState('ai_search_results', null));
+  const [searchResults, setSearchResults] = useState(() => getInitialState('ai_search_results', defaultSearchType, null));
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   
   // New state variables for AI Processing Modal
   const [showProcessingModal, setShowProcessingModal] = useState(false);
-  const [processingStep, setProcessingStep] = useState(0);
-  const processingInterval = useRef(null);
   
   // New state variables for AI Insight Modal
   const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
   const [currentInsight, setCurrentInsight] = useState('');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // New state for view management: 'search' | 'preview' | 'full'
+  const [currentView, setCurrentView] = useState('search');
   
   // Filter states
   const [selectedArea, setSelectedArea] = useState([]);
@@ -49,38 +67,60 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [selectedSkills, setSelectedSkills] = useState([]); // Add skills filter state
   const [showFilters, setShowFilters] = useState(false);
   
-  // Save state to sessionStorage when navigating away
+  // Save state to sessionStorage when navigating away (with context)
   useEffect(() => {
     // This cleanup function runs when the user navigates away
     return () => {
       try {
-        sessionStorage.setItem('ai_search_query', JSON.stringify(searchQuery));
-        sessionStorage.setItem('ai_search_results', JSON.stringify(searchResults));
+        const queryKey = getStorageKey('ai_search_query', searchType);
+        const resultsKey = getStorageKey('ai_search_results', searchType);
+        sessionStorage.setItem(queryKey, JSON.stringify(searchQuery));
+        sessionStorage.setItem(resultsKey, JSON.stringify(searchResults));
       } catch (error) {
         console.error("Error saving to sessionStorage", error);
       }
     };
-  }, [searchQuery, searchResults]);
+  }, [searchQuery, searchResults, searchType, auth.user.id]);
   
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
+    // DEBUG: Log search type change
+    // console.log('🔄 Search type changing:', {
+    //   from: searchType,
+    //   to: newType,
+    //   isAcademician
+    // });
+    
     // Only allow academicians to search for students
     if (newType === 'students' && !isAcademician) {
+      console.warn('⚠️ Access denied: Only academicians can search for students');
       setError('You need to be an academician to search for students.');
       return;
     }
     
+    // Load saved query and results for the new search type
+    const savedQuery = getInitialState('ai_search_query', newType, '');
+    const savedResults = getInitialState('ai_search_results', newType, null);
+    
+    // console.log('💾 Loading saved state for new search type:', {
+    //   searchType: newType,
+    //   hasSavedQuery: !!savedQuery,
+    //   hasSavedResults: !!savedResults,
+    //   savedResultsCount: savedResults?.matches?.length || 0
+    // });
+    
     setSearchType(newType);
-    setSearchQuery(''); // Clear search query when changing search type
-    setSearchResults(null); // Clear previous results when changing search type
+    setSearchQuery(savedQuery); // Load saved query for this search type
+    setSearchResults(savedResults); // Load saved results for this search type
     setError(null);
     
-    // Clear sessionStorage when changing search type
-    try {
-      sessionStorage.removeItem('ai_search_query');
-      sessionStorage.removeItem('ai_search_results');
-    } catch (error) {
-      console.error("Error clearing sessionStorage", error);
+    // Update current view based on whether we have results
+    if (savedResults && savedResults.matches && savedResults.matches.length > 0) {
+      // console.log('✅ Showing preview with cached results');
+      setCurrentView('preview'); // Show preview if we have results
+    } else {
+      // console.log('✅ Showing search interface');
+      setCurrentView('search'); // Show search interface if no results
     }
   };
   
@@ -89,8 +129,17 @@ export default function Index({ auth, universities, faculties, users, researchOp
     // Skip if already searching or query is empty
     if (isSearching || !query || query.trim() === '') return;
     
-    // Clear old results from sessionStorage before starting new search
-    sessionStorage.removeItem('ai_search_results');
+    // Clear old results from sessionStorage before starting new search (context-aware)
+    const resultsKey = getStorageKey('ai_search_results', searchType);
+    sessionStorage.removeItem(resultsKey);
+    
+    // DEBUG: Log the search parameters
+    // console.log('🔍 AI Matching Search Debug:', {
+    //   query,
+    //   searchType,
+    //   userId: auth.user.id,
+    //   storageKey: resultsKey
+    // });
     
     setSearchQuery(query);
     setIsSearching(true);
@@ -99,30 +148,11 @@ export default function Index({ auth, universities, faculties, users, researchOp
     
     // Show the processing modal
     setShowProcessingModal(true);
-    setProcessingStep(0);
-    
-    // Set up the processing steps animation
-    const processingSteps = [
-      "Analyzing your query...",
-      "Converting to semantic vectors...",
-      "Searching database for potential matches...",
-      "Generating personalized insights with AI...",
-      "Finalizing results..."
-    ];
-    
-    // Start cycling through processing steps - only advance until the last step
-    processingInterval.current = setInterval(() => {
-      setProcessingStep(prevStep => {
-        // If we are already at the last message, don't advance further
-        if (prevStep >= processingSteps.length - 1) {
-          return prevStep;
-        }
-        // Otherwise, go to the next message
-        return prevStep + 1;
-      });
-    }, 2000); // Change message every 2 seconds
     
     try {
+      // DEBUG: Log the request payload
+      console.log('📤 Sending request with payload:', { query, searchType });
+      
       // Use the helper function to handle CSRF token refreshing if needed
       const response = await handlePossibleSessionExpiration(() => 
         axios.post(route('ai.matching.search'), { 
@@ -133,9 +163,20 @@ export default function Index({ auth, universities, faculties, users, researchOp
       
       // Process results
       if (response.data && response.data.matches) {
+        // DEBUG: Log the response
+        console.log('📥 Received response:', {
+          searchType: response.data.searchType,
+          totalMatches: response.data.total,
+          matchTypes: response.data.matches.map(m => m.result_type),
+          firstMatch: response.data.matches[0]
+        });
+        
         // Process the results based on the search type
         setSearchResults(response.data);
+        // Show top matches preview after loading
+        setCurrentView('preview');
       } else {
+        console.error('❌ Invalid search results:', response.data);
         setError('Received invalid search results');
       }
     } catch (error) {
@@ -152,14 +193,31 @@ export default function Index({ auth, universities, faculties, users, researchOp
         setError(error.message || 'Failed to perform search. Please try again later.');
       }
     } finally {
-      // Clear the interval and hide the processing modal
-      if (processingInterval.current) {
-        clearInterval(processingInterval.current);
-        processingInterval.current = null;
-      }
+      // Hide the processing modal
       setShowProcessingModal(false);
       setIsSearching(false);
     }
+  };
+  
+  // Handle view all results - expand to full view
+  const handleViewAllResults = () => {
+    setCurrentView('full');
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // Handle back to search
+  const handleBackToSearch = () => {
+    setCurrentView('search');
+    setSearchResults(null);
+    setSearchQuery('');
+    setError(null);
+  };
+  
+  // Handle collapse to preview
+  const handleCollapseToPreview = () => {
+    setCurrentView('preview');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
   // Load more results (pagination)
@@ -277,51 +335,14 @@ export default function Index({ auth, universities, faculties, users, researchOp
     return 'Enter your search query below to find matches.';
   };
   
-  // AI Processing Modal component
-  const AIProcessingModal = () => {
-    // Processing steps messages
-    const processingSteps = [
-      { text: "Analyzing your query...", icon: <FaSearch className="text-blue-500" /> },
-      { text: "Converting to semantic vectors...", icon: <FaBrain className="text-purple-500" /> },
-      { text: "Searching database for potential matches...", icon: <FaDatabase className="text-green-500" /> },
-      { text: "Generating personalized insights with AI...", icon: <Sparkles className="w-4 h-4 mr-2" /> },
-      { text: "Finalizing results...", icon: <FaRobot className="text-red-500" /> }
-    ];
-    
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-          <div className="flex flex-col items-center">
-            {/* Animated AI Icon */}
-            <div className="w-20 h-20 mb-6 relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                {processingSteps[processingStep].icon}
-              </div>
-              <div className="absolute inset-0 border-t-4 border-blue-500 rounded-full animate-spin opacity-25"></div>
-            </div>
-            
-            {/* Processing Step Text */}
-            <h3 className="text-xl font-bold mb-2 text-gray-800">AI Processing</h3>
-            <p className="text-gray-600 text-center mb-4 min-h-[24px]">
-              {processingSteps[processingStep].text}
-            </p>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
-              <div 
-                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
-                style={{ width: `${(processingStep + 1) * 20}%` }}
-              ></div>
-            </div>
-            
-            <p className="text-sm text-gray-500 italic">
-              Our AI is working to find the best matches for your query...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Define loading states for MultiStepLoader
+  const loadingStates = [
+    { text: "Analyzing your query..." },
+    { text: "Converting to semantic vectors..." },
+    { text: "Searching database for potential matches..." },
+    { text: "Generating personalized insights with AI..." },
+    { text: "Finalizing results..." },
+  ];
   
   // AI Insight Modal component
   const AIInsightModal = ({ insight, onClose }) => {
@@ -359,11 +380,14 @@ export default function Index({ auth, universities, faculties, users, researchOp
   };
   
   return (
-    <>
-      <Head title="AI Matching" />
-      <MainLayout title="AI Matching">
-      {/* AI Processing Modal */}
-      {showProcessingModal && <AIProcessingModal />}
+    <AIMatchingLayout title="AI Matching">
+      {/* MultiStepLoader for AI Processing */}
+      <MultiStepLoader 
+        loadingStates={loadingStates} 
+        loading={showProcessingModal}
+        duration={2000}
+        loop={false}
+      />
       
       {/* AI Insight Modal */}
       {isInsightModalOpen && (
@@ -373,9 +397,10 @@ export default function Index({ auth, universities, faculties, users, researchOp
         />
       )}
       
-      <div className="bg-white">
-        <div className="p-6 pb-16">
-          {/* Guided Search Interface with Search Type Selector inside */}
+      <div className="w-full">
+        {/* View: SEARCH - Initial search interface */}
+        {currentView === 'search' && (
+          <div className="min-h-screen bg-white py-8">
           <GuidedSearchInterface
             onSearch={handleSearch}
             researchOptions={researchOptions}
@@ -388,20 +413,84 @@ export default function Index({ auth, universities, faculties, users, researchOp
             error={error}
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
-          >
-            {/* Search Type Selection */}
-            <SearchTypeSelector
-              currentType={searchType}
-              onTypeChange={handleSearchTypeChange}
+              searchType={searchType}
+              onSearchTypeChange={handleSearchTypeChange}
               isAcademician={isAcademician}
+              userId={auth.user.id}
             />
-          </GuidedSearchInterface>
+          </div>
+        )}
           
-          {/* Results and Filters */}
-          {searchResults && searchResults.matches && (
-            <div className="mt-8 flex flex-col lg:flex-row gap-6">
-              {/* Filters - Desktop (Side) */}
+        {/* View: PREVIEW - Top 5 Matches Carousel */}
+        {currentView === 'preview' && searchResults && searchResults.matches && (
+          <div className="min-h-screen bg-white py-8">
+              {/* Back to Search Button */}
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+                <button
+                  onClick={handleBackToSearch}
+                  className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors group"
+                >
+                  <svg className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Search
+                </button>
+              </div>
+
+              <TopMatchesPreview
+                searchResults={searchResults}
+                universitiesList={universities}
+                researchOptions={researchOptions}
+                users={users}
+                onViewAllResults={handleViewAllResults}
+                onQuickInfoClick={() => {}} // Handled in ResultsGrid modal
+                onRecommendClick={() => {}} // Handled in ResultsGrid modal
+                onShowInsight={(insight) => {
+                  setCurrentInsight(insight);
+                  setIsInsightModalOpen(true);
+                }}
+              />
+          </div>
+        )}
+
+        {/* View: FULL - All Results with Filters */}
+        {currentView === 'full' && searchResults && searchResults.matches && (
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+              {/* Premium Header Section */}
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                  {/* Back Button - Premium Style */}
+                  <button
+                    onClick={handleCollapseToPreview}
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 group hover:-translate-x-1"
+                  >
+                    <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Back to Top 5</span>
+                  </button>
+                  
+                  {/* Title Section with Gradient Line */}
+                  <div className="flex-1 sm:text-right">
+                    <div className="flex items-center justify-start sm:justify-end gap-3 mb-2">
+                      <h2 className="text-4xl font-bold text-gray-900">All Results</h2>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                        {searchResults.total_count || searchResults.total || searchResults.matches.length}
+                      </span>
+                    </div>
+                    <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full sm:ml-auto"></div>
+                    <p className="text-sm text-gray-500 mt-3">
+                      Matches for "{searchResults.query}"
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+                <div className="flex flex-col lg:flex-row gap-8">
+              {/* Filters - Desktop (Side) with Glass Morphism */}
               <div className="hidden lg:block w-full lg:w-1/4 xl:w-1/5">
+                    <div className="sticky top-24 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200/50 p-6">
                 <FilterPanel
                   searchType={searchType}
                   searchResults={searchResults}
@@ -418,6 +507,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
                   selectedSkills={selectedSkills}
                   setSelectedSkills={setSelectedSkills}
                 />
+                    </div>
               </div>
               
               {/* Filters - Mobile */}
@@ -442,7 +532,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
                 />
               </div>
               
-              {/* Results */}
+                  {/* Results Grid */}
                 <div className="w-full lg:w-3/4 xl:w-4/5">
                   <ResultsGrid
                     searchType={searchType}
@@ -463,12 +553,12 @@ export default function Index({ auth, universities, faculties, users, researchOp
                       setIsInsightModalOpen(true);
                     }}
                   />
+                  </div>
+                </div>
                 </div>
             </div>
           )}
-        </div>
       </div>
-      </MainLayout>
-    </>
+    </AIMatchingLayout>
   );
 }

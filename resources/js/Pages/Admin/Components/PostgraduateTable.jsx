@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FaSpinner, FaEnvelope, FaCheckCircle, FaChevronDown, FaChevronUp, FaExclamationCircle } from 'react-icons/fa';
+import { FaSpinner, FaEnvelope, FaCheckCircle, FaChevronDown, FaChevronUp, FaExclamationCircle, FaUserSlash, FaExclamationTriangle } from 'react-icons/fa';
 import { Link, router } from '@inertiajs/react';
 import Pagination from '@/Components/Pagination';
+import axios from 'axios';
 
 const PostgraduateTable = ({
     postgraduates,
@@ -17,6 +18,10 @@ const PostgraduateTable = ({
     const [batchSending, setBatchSending] = useState(false);
     const [batchSent, setBatchSent] = useState(false);
     const [expandedIds, setExpandedIds] = useState({});
+    const [deactivateStatus, setDeactivateStatus] = useState({});
+    const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(null);
+    const [selectedBulkAction, setSelectedBulkAction] = useState('send_reminder');
+    const [showBulkDeactivateConfirm, setShowBulkDeactivateConfirm] = useState(false);
 
 
     
@@ -89,6 +94,70 @@ const PostgraduateTable = ({
         }
     };
     
+    const handleBatchDeactivate = async () => {
+        if (selectedUsers.length === 0) return;
+        
+        setShowBulkDeactivateConfirm(false);
+        setBatchSending(true);
+        
+        try {
+            await axios.post(route('admin.profiles.batch-deactivate'), {
+                userIds: selectedUsers,
+                role: 'postgraduate'
+            });
+            
+            setBatchSending(false);
+            setBatchSent(true);
+            
+            // Reload the page after 2 seconds
+            setTimeout(() => {
+                router.reload({ only: ['postgraduates'] });
+                setSelectedUsers([]);
+                setBatchSent(false);
+            }, 2000);
+        } catch (error) {
+            console.error('Error batch deactivating users:', error);
+            setBatchSending(false);
+        }
+    };
+    
+    const handleBulkAction = () => {
+        if (selectedBulkAction === 'send_reminder') {
+            handleSendBatchReminder();
+        } else if (selectedBulkAction === 'deactivate') {
+            setShowBulkDeactivateConfirm(true);
+        }
+    };
+    
+    const handleDeactivateUser = async (userId) => {
+        setDeactivateStatus(prev => ({ ...prev, [userId]: 'deactivating' }));
+        setShowDeactivateConfirm(null);
+        
+        try {
+            await axios.post(route('admin.profiles.deactivate'), {
+                userId: userId
+            });
+            
+            setDeactivateStatus(prev => ({ ...prev, [userId]: 'deactivated' }));
+            
+            // Reload the page after 2 seconds
+            setTimeout(() => {
+                router.reload({ only: ['postgraduates'] });
+            }, 2000);
+        } catch (error) {
+            console.error('Error deactivating user:', error);
+            setDeactivateStatus(prev => ({ ...prev, [userId]: 'error' }));
+            
+            setTimeout(() => {
+                setDeactivateStatus(prev => {
+                    const newStatus = { ...prev };
+                    delete newStatus[userId];
+                    return newStatus;
+                });
+            }, 3000);
+        }
+    };
+    
     // Function to toggle expanded view for research fields
     const toggleExpand = (id) => {
         setExpandedIds(prev => ({
@@ -113,12 +182,26 @@ const PostgraduateTable = ({
                     )}
                 </div>
                 <div className="flex items-center space-x-2">
+                    {/* Bulk Action Dropdown */}
+                    <select
+                        value={selectedBulkAction}
+                        onChange={(e) => setSelectedBulkAction(e.target.value)}
+                        className="block py-2 pl-3 pr-10 text-sm border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        disabled={selectedUsers.length === 0}
+                    >
+                        <option value="send_reminder">Send Reminder</option>
+                        <option value="deactivate">Deactivate Accounts</option>
+                    </select>
+                    
+                    {/* Execute Bulk Action Button */}
                     <button
-                        onClick={handleSendBatchReminder}
+                        onClick={handleBulkAction}
                         disabled={selectedUsers.length === 0 || batchSending || batchSent}
                         className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
                             selectedUsers.length === 0 || batchSending || batchSent
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : selectedBulkAction === 'deactivate'
+                                ? 'bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
                                 : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
                         }`}
                     >
@@ -130,17 +213,77 @@ const PostgraduateTable = ({
                         )}
                         {!batchSending && !batchSent ? (
                             <>
-                                <FaEnvelope className="mr-2 h-4 w-4" />
-                                Send Reminders to Selected
+                                {selectedBulkAction === 'send_reminder' ? (
+                                    <>
+                                        <FaEnvelope className="mr-2 h-4 w-4" />
+                                        Send to Selected
+                                    </>
+                                ) : (
+                                    <>
+                                        <FaUserSlash className="mr-2 h-4 w-4" />
+                                        Deactivate Selected
+                                    </>
+                                )}
                             </>
                         ) : batchSending ? (
-                            'Sending Reminders...'
+                            selectedBulkAction === 'send_reminder' ? 'Sending...' : 'Deactivating...'
                         ) : (
-                            'Reminders Sent!'
+                            selectedBulkAction === 'send_reminder' ? 'Sent!' : 'Deactivated!'
                         )}
                     </button>
                 </div>
             </div>
+            
+            {/* Bulk Deactivate Confirmation Modal */}
+            {showBulkDeactivateConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                <FaExclamationTriangle className="h-6 w-6 text-red-600" />
+                            </div>
+                            <div className="ml-4">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    Confirm Batch Deactivation
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="mb-6">
+                            <p className="text-sm text-gray-600 mb-3">
+                                You are about to deactivate <span className="font-bold text-red-600">{selectedUsers.length}</span> postgraduate account{selectedUsers.length !== 1 ? 's' : ''}.
+                            </p>
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3">
+                                <p className="text-sm text-yellow-800">
+                                    <strong>Warning:</strong> This action will:
+                                </p>
+                                <ul className="list-disc list-inside text-sm text-yellow-700 mt-2 space-y-1">
+                                    <li>Delete all role profiles</li>
+                                    <li>Remove embeddings from Qdrant</li>
+                                    <li>Reset unique IDs to null</li>
+                                    <li>Mark profiles as incomplete</li>
+                                </ul>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                This is a <strong>destructive action</strong>. Are you sure you want to continue?
+                            </p>
+                        </div>
+                        <div className="flex items-center justify-end space-x-3">
+                            <button
+                                onClick={() => setShowBulkDeactivateConfirm(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBatchDeactivate}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                                Yes, Deactivate {selectedUsers.length} Account{selectedUsers.length !== 1 ? 's' : ''}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">

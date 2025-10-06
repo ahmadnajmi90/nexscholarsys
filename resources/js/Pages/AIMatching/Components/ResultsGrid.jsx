@@ -4,11 +4,10 @@ import { FaEnvelope, FaGoogle, FaGlobe, FaLinkedin, FaUserPlus, FaPaperPlane, Fa
 import axios from "axios";
 import RecommendationModal from "@/Pages/Networking/partials/RecommendationModal";
 import RecommendationDisplay from "@/Pages/Networking/partials/RecommendationDisplay";
-import BookmarkButton from "@/Components/BookmarkButton";
-import MatchIndicator from "./MatchIndicator";
 import ProgressiveLoadingResults from "./ProgressiveLoadingResults";
-import ConnectionButton from "@/Components/ConnectionButton";
+import ProfileCard from "./ProfileCard";
 import { Sparkles } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function ResultsGrid({
   searchType,
@@ -354,255 +353,34 @@ export default function ResultsGrid({
       {/* Results */}
       {!isSearching && searchResults && searchResults.matches && filteredResults.length > 0 && (
         <>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">
-              Found {filteredResults.length} matching results for "{searchResults.query}"
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Loaded profiles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+            {/* Loaded profiles using ProfileCard component with staggered animation */}
             {filteredResults.slice(0, loadedProfiles.length).map((match, index) => {
               // Get profile data from match
               const profile = match.academician || match.student || {};
               const profileId = profile.id || profile.academician_id || profile.postgraduate_id || profile.undergraduate_id || index;
-              const isAcademician = !!match.academician || match.result_type === 'academician';
-              
-              // Store AI insights in the profile object itself for later access
-              const aiInsights = match.ai_insights || '';
-              profile.ai_insights = aiInsights; // Add ai_insights to the profile object
-              
-              // Debug: Log match structure to check for ai_insights
-              console.log(`Match ${index} structure:`, match);
-              console.log(`Match ${index} ai_insights:`, match.ai_insights);
-              console.log(`Profile with ai_insights added:`, profile);
               
               return (
-                <div 
+                <motion.div
                   key={`${match.result_type}-${profileId}`}
-                  className="bg-white shadow-md rounded-lg overflow-hidden relative"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: index * 0.05,
+                    ease: "easeOut"
+                  }}
                 >
-                  {/* University Badge */}
-                  <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
-                    {universitiesList.find((u) => u.id === profile.university)?.short_name || 
-                     profile.university_name || profile.university_short_name || 'Unknown University'}
-                  </div>
-
-                  {/* Match Score Badge */}
-                  {match.score && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <div className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">
-                        {Math.round(match.score * 100)}% Match
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Profile Banner */}
-                  <div className="h-32">
-                    <img
-                      src={profile.background_image !== null ? `/storage/${profile.background_image}` : "/storage/profile_background_images/default.jpg"}
-                      alt="Banner"
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-
-                  {/* Profile Image */}
-                  <div className="flex justify-center -mt-12">
-                    <div className="relative w-24 h-24">
-                      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                        <img
-                          src={profile.profile_picture !== null ? `/storage/${profile.profile_picture}` : "/storage/profile_pictures/default.jpg"}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {/* Verified badge */}
-                      {profile.verified === 1 && (
-                        <div className="absolute bottom-1 right-1 bg-white p-1 rounded-full group cursor-pointer shadow-md">
-                          <div className="flex items-center justify-center w-7 h-7 bg-blue-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                          {/* Tooltip */}
-                          <div className="absolute bottom-8 right-0 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-3 py-2 shadow-lg z-10 w-48">
-                            This account is verified by {universitiesList.find((u) => u.id === profile.university)?.full_name || "their institution"}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Profile Info */}
-                  <div className="text-center mt-4">
-                    <h2 className="text-lg font-semibold truncate px-6">{profile.full_name}</h2>
-                    <p
-                      className="text-gray-500 text-sm px-6"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        minHeight: "2.5rem",
-                      }}
-                    >
-                      {(() => {
-                        // Get research expertise/field based on profile type
-                        let researchArray = [];
-                        
-                        if (isAcademician) {
-                          researchArray = profile.research_expertise || [];
-                        } else if (match.result_type === 'postgraduate' || profile.student_type === 'postgraduate') {
-                          researchArray = profile.field_of_research || [];
-                        } else {
-                          researchArray = profile.research_preference || [];
-                        }
-
-                        if (Array.isArray(researchArray) && researchArray.length > 0) {
-                          const id = researchArray[0];
-                          const matchedOption = researchOptions.find(
-                            (option) =>
-                              `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
-                          );
-                          
-                          return matchedOption
-                            ? `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`
-                            : id; // Fallback to the ID if no match found
-                        }
-                        
-                        return profile.current_position || "No Field of Research or Expertise";
-                      })()}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      {(() => {
-                        // Display different text based on profile type
-                        if (isAcademician) {
-                          return profile.current_position || "No Position";
-                        } else if (match.result_type === 'postgraduate' || profile.student_type === 'postgraduate') {
-                          return "Postgraduate";
-                        } else {
-                          return "Undergraduate";
-                        }
-                      })()}
-                    </p>
-                    
-                    {/* Match Indicator */}
-                    {match.score && (
-                      <div className="mt-3 px-4">
-                        <MatchIndicator score={match.score} showDetails={false} />
-                      </div>
-                    )}
-                    
-                    {/* AI Insights Section */}
-                    {aiInsights && (
-                      <div className="mt-3 px-4 py-2 bg-blue-50 mx-4 rounded-md">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-blue-700 flex items-center">
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            AI Match Insights
-                          </span>
-                          <button 
-                            onClick={() => {
-                              // Process the insights text to replace field IDs with readable names
-                              let processedInsights = aiInsights;
-                              
-                              // Find all patterns like "field_id-area_id-domain_id" in the text
-                              const fieldIdPattern = /\b(\d+-\d+-\d+)\b/g;
-                              const matches = aiInsights.match(fieldIdPattern) || [];
-                              
-                              // Replace each match with the corresponding readable name
-                              matches.forEach(match => {
-                                const matchedOption = researchOptions.find(
-                                  option => `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === match
-                                );
-                                
-                                if (matchedOption) {
-                                  const readableName = `${matchedOption.field_of_research_name} - ${matchedOption.research_area_name} - ${matchedOption.niche_domain_name}`;
-                                  processedInsights = processedInsights.replace(new RegExp(match, 'g'), readableName);
-                                }
-                              });
-                              
-                              // Call the parent component's function to show the insight in a modal
-                              onShowInsight(processedInsights);
-                            }}
-                            className="text-blue-600 text-xs hover:underline flex items-center"
-                          >
-                            <span>Show Insight</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        </div>
-                        <p className="text-xs text-gray-700 text-left h-16 overflow-hidden pr-1 mt-1">
-                          {aiInsights.substring(0, 210)}...
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="mt-4 flex justify-center gap-2">
-                      <button
-                        onClick={() => {
-                          // Make sure we log what we're passing to handleQuickInfoClick
-                          console.log('Quick Info clicked for profile:', profile);
-                          console.log('Profile has ai_insights:', profile.ai_insights);
-                          handleQuickInfoClick(profile);
-                        }}
-                        className="bg-blue-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-blue-600"
-                      >
-                        Quick Info
-                      </button>
-                      <Link
-                        href={
-                          isAcademician 
-                            ? route('academicians.show', profile.url || profile.academician_id || profile.id) 
-                            : match.result_type === 'postgraduate' || profile.student_type === 'postgraduate'
-                              ? route('postgraduates.show', profile.url || profile.postgraduate_id || profile.id)
-                              : route('undergraduates.show', profile.url || profile.undergraduate_id || profile.id)
-                        }
-                        className="bg-green-500 text-white text-[10px] px-2 font-semibold py-1 rounded-full hover:bg-green-600"
-                      >
-                        Full Profile
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Social Action Links */}
-                  <div className="flex justify-around items-center mt-6 py-4 border-t px-10">
-                    <ConnectionButton user={users.find(
-                      (user) =>
-                        user.unique_id === 
-                        (isAcademician ? profile.academician_id || profile.id : 
-                         profile.postgraduate_id || profile.undergraduate_id || profile.id)
-                    )} />
-                    <Link
-                      href={route('email.compose', { 
-                        to: users.find(
-                          (user) =>
-                            user.unique_id === 
-                            (isAcademician ? profile.academician_id || profile.id : 
-                             profile.postgraduate_id || profile.undergraduate_id || profile.id)
-                        )?.email || profile.email || ''
-                      })}
-                      className="text-gray-500 text-lg cursor-pointer hover:text-blue-700" 
-                      title="Send Email"
-                    >
-                      <FaPaperPlane className="text-lg" />
-                    </Link>
-                    <a
-                      href="#"
-                      onClick={(e) => handleRecommendClick(profile, e)}
-                      className="text-gray-500 text-lg hover:text-yellow-500"
-                      title="Recommend"
-                    >
-                      <FaStar className="text-lg" />
-                    </a>
-                    <BookmarkButton 
-                      bookmarkableType={isAcademician ? "academician" : match.result_type} 
-                      bookmarkableId={profileId}
-                      category={isAcademician ? "Academicians" : "Students"} 
-                    />
-                  </div>
-                </div>
+                  <ProfileCard
+                    match={match}
+                    universitiesList={universitiesList}
+                    researchOptions={researchOptions}
+                    users={users}
+                    onQuickInfoClick={handleQuickInfoClick}
+                    onRecommendClick={handleRecommendClick}
+                    onShowInsight={onShowInsight}
+                  />
+                </motion.div>
               );
             })}
             
@@ -623,28 +401,40 @@ export default function ResultsGrid({
             )}
           </div>
           
-          {/* Load more trigger/button */}
+          {/* Load more trigger/button - Premium Style */}
           {searchResults.has_more && (
             <div 
               ref={loadMoreRef} 
-              className="mt-8 text-center py-4"
+              className="mt-12 text-center py-6"
             >
               {isLoadingMore ? (
-                <div className="flex items-center justify-center">
-                  <svg className="animate-spin h-5 w-5 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <div className="flex items-center justify-center gap-3">
+                  <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                   </svg>
-                  Loading more results...
+                  <span className="text-gray-600 font-medium">Loading more results...</span>
                 </div>
               ) : (
                 <button 
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                   onClick={onLoadMore}
                 >
-                  Load more results
+                  <Sparkles className="h-5 w-5" />
+                  <span>Load More Results</span>
                 </button>
               )}
+            </div>
+          )}
+          
+          {/* End of Results Indicator */}
+          {!searchResults.has_more && filteredResults.length > 0 && (
+            <div className="mt-12 text-center py-6">
+              <div className="inline-flex items-center gap-2 text-gray-400">
+                <div className="h-px w-12 bg-gray-300"></div>
+                <span className="text-sm font-medium">End of results</span>
+                <div className="h-px w-12 bg-gray-300"></div>
+              </div>
             </div>
           )}
         </>

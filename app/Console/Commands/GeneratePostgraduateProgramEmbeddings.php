@@ -16,7 +16,8 @@ class GeneratePostgraduateProgramEmbeddings extends Command
      * @var string
      */
     protected $signature = 'embeddings:generate-postgraduate-programs
-                            {--batch-size=100 : Number of programs to process per chunk}';
+                            {--batch-size=100 : Number of programs to process per chunk}
+                            {--force : Force regeneration even if already embedded}';
 
     /**
      * The console command description.
