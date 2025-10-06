@@ -66,6 +66,9 @@ class SupervisionRequestResource extends JsonResource
             'submitted_at' => $this->submitted_at,
             'decision_at' => $this->decision_at,
             'cancel_reason' => $this->cancel_reason,
+            'rejection_feedback' => $this->rejection_feedback,
+            'recommended_supervisors' => $this->recommended_supervisors,
+            'suggested_keywords' => $this->suggested_keywords,
             'conversation_id' => $this->conversation_id,
             'academician' => $this->whenLoaded('academician', function () {
                 $facultyRelation = $this->academician->relationLoaded('faculty') ? $this->academician->getRelation('faculty') : null;

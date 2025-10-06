@@ -12,6 +12,7 @@ import ManageSupervisorPanel from '@/Pages/Supervision/Partials/ManageSupervisor
 import ProposalModal from '@/Pages/Supervision/Partials/ProposalModal';
 import RelationshipDetailModal from '@/Pages/Supervision/Partials/RelationshipDetailModal';
 import ForceUnbindRequestModal from '@/Pages/Supervision/Partials/ForceUnbindRequestModal';
+import RecommendedSupervisorsSection from '@/Pages/Supervision/Partials/RecommendedSupervisorsSection';
 
 export default function MySupervisor() {
   const [tab, setTab] = useState(() => {
@@ -167,14 +168,27 @@ export default function MySupervisor() {
                   </div>
                 </div>
               ) : (
-                <RequestStatusList
-                  requests={requests}
-                  reload={loadData}
-                  onOpenDetail={(request) => {
-                    setDetailRequest(request);
-                    setDetailRelationship(null);
-                  }}
-                />
+                <div className="space-y-6">
+                  {/* Show recommended supervisors for rejected requests */}
+                  {requests
+                    .filter(req => req.status === 'rejected' && req.recommended_supervisors && req.recommended_supervisors.length > 0)
+                    .map(req => (
+                      <RecommendedSupervisorsSection
+                        key={req.id}
+                        requestId={req.id}
+                      />
+                    ))
+                  }
+                  
+                  <RequestStatusList
+                    requests={requests}
+                    reload={loadData}
+                    onOpenDetail={(request) => {
+                      setDetailRequest(request);
+                      setDetailRelationship(null);
+                    }}
+                  />
+                </div>
               )}
             </TabsContent>
             <TabsContent value="manage">

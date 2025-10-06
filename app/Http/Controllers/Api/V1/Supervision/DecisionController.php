@@ -8,6 +8,7 @@ use App\Models\SupervisionRequest;
 use App\Notifications\Supervision\SupervisionRequestRejected;
 use App\Services\Supervision\SupervisionRelationshipService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class DecisionController extends Controller
@@ -24,7 +25,7 @@ class DecisionController extends Controller
     {
         $user = $request->user();
         
-        \Log::info('Accept Request Debug', [
+        Log::info('Accept Request Debug', [
             'user_id' => $user->id,
             'has_academician' => (bool)$user->academician,
             'user_academician_id' => $user->academician?->academician_id ?? null,
@@ -125,6 +126,9 @@ class DecisionController extends Controller
             'recommended_supervisors' => $data['recommended_supervisors'] ?? null,
             'suggested_keywords' => $data['suggested_keywords'] ?? null,
         ]);
+
+        // Load academician relationship for email template
+        $supervisionRequest->load('academician');
 
         $supervisionRequest->student?->user?->notify(new SupervisionRequestRejected($supervisionRequest));
 

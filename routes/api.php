@@ -384,6 +384,16 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('requests.notes.update');
         Route::delete('/requests/{request}/notes/{note}', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'destroy'])
             ->name('requests.notes.destroy');
+
+        // Recommendation Routes
+        Route::get('/recommendations/supervisor-connections', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'getSupervisorConnections'])
+            ->name('recommendations.supervisor-connections');
+        Route::get('/recommendations/search-academicians', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'searchAcademicians'])
+            ->name('recommendations.search-academicians');
+        Route::post('/recommendations/add-to-shortlist', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'addRecommendationsToShortlist'])
+            ->name('recommendations.add-to-shortlist');
+        Route::get('/requests/{supervisionRequest}/recommendations', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'getRecommendedSupervisors'])
+            ->name('requests.recommendations');
     });
 });
 
