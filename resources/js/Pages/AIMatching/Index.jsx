@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
-import AIMatchingLayout from '@/Layouts/AIMatchingLayout';
+import MainLayout from '@/Layouts/MainLayout';
 import GuidedSearchInterface from './Components/GuidedSearchInterface';
 import ResultsGrid from './Components/ResultsGrid';
 import SearchTypeSelector from './Components/SearchTypeSelector';
@@ -380,7 +380,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
   };
   
   return (
-    <AIMatchingLayout title="AI Matching">
+    <MainLayout title="AI Matching">
       {/* MultiStepLoader for AI Processing */}
       <MultiStepLoader 
         loadingStates={loadingStates} 
@@ -455,7 +455,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
 
         {/* View: FULL - All Results with Filters */}
         {currentView === 'full' && searchResults && searchResults.matches && (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+            <div className="min-h-screen bg-white">
               {/* Premium Header Section */}
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
@@ -559,6 +559,6 @@ export default function Index({ auth, universities, faculties, users, researchOp
             </div>
           )}
       </div>
-    </AIMatchingLayout>
+    </MainLayout>
   );
 }

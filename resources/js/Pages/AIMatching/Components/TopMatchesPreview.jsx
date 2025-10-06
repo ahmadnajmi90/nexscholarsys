@@ -178,7 +178,7 @@ export default function TopMatchesPreview({
   };
 
   return (
-    <div className="w-full py-8">
+    <div className="w-full py-4">
       {/* Premium Header with Gradient Line */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -193,7 +193,7 @@ export default function TopMatchesPreview({
       </motion.div>
 
       {/* Carousel Container */}
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-6xl mx-auto">
         {/* Cards Carousel */}
         <div
           ref={carouselRef}
