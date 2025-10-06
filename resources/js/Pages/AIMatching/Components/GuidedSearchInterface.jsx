@@ -92,7 +92,18 @@ const GuidedSearchInterface = ({
           "Find postgraduates with experience in molecular biology",
           "Students working on mobile and web development"
         );
+      } else if (searchType === 'collaborators') {
+        // Explicit case for collaborators to avoid falling through
+        suggestions.push(
+          "Find collaborators for interdisciplinary AI research",
+          "Looking for partners in climate science and sustainability",
+          "Who's working on cybersecurity and privacy research?",
+          "Find colleagues interested in educational technology",
+          "Collaborators for joint publication in data science"
+        );
       } else {
+        // Fallback for any unexpected search type
+        console.warn('⚠️ Unexpected search type:', searchType, '- using default suggestions');
         suggestions.push(
           "Find collaborators for interdisciplinary AI research",
           "Looking for partners in climate science and sustainability",

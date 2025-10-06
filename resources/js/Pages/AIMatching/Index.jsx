@@ -84,12 +84,12 @@ export default function Index({ auth, universities, faculties, users, researchOp
   
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
-    // DEBUG: Log search type change
-    // console.log('🔄 Search type changing:', {
-    //   from: searchType,
-    //   to: newType,
-    //   isAcademician
-    // });
+    // DEBUG: Log search type change - ENABLE THIS FOR DEBUGGING
+    console.log('🔄 Search type changing:', {
+      from: searchType,
+      to: newType,
+      isAcademician
+    });
     
     // Only allow academicians to search for students
     if (newType === 'students' && !isAcademician) {
@@ -102,12 +102,12 @@ export default function Index({ auth, universities, faculties, users, researchOp
     const savedQuery = getInitialState('ai_search_query', newType, '');
     const savedResults = getInitialState('ai_search_results', newType, null);
     
-    // console.log('💾 Loading saved state for new search type:', {
-    //   searchType: newType,
-    //   hasSavedQuery: !!savedQuery,
-    //   hasSavedResults: !!savedResults,
-    //   savedResultsCount: savedResults?.matches?.length || 0
-    // });
+    console.log('💾 Loading saved state for new search type:', {
+      searchType: newType,
+      hasSavedQuery: !!savedQuery,
+      hasSavedResults: !!savedResults,
+      savedResultsCount: savedResults?.matches?.length || 0
+    });
     
     setSearchType(newType);
     setSearchQuery(savedQuery); // Load saved query for this search type
@@ -116,10 +116,10 @@ export default function Index({ auth, universities, faculties, users, researchOp
     
     // Update current view based on whether we have results
     if (savedResults && savedResults.matches && savedResults.matches.length > 0) {
-      // console.log('✅ Showing preview with cached results');
+      console.log('✅ Showing preview with cached results');
       setCurrentView('preview'); // Show preview if we have results
     } else {
-      // console.log('✅ Showing search interface');
+      console.log('✅ Showing search interface');
       setCurrentView('search'); // Show search interface if no results
     }
   };
@@ -150,8 +150,13 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setShowProcessingModal(true);
     
     try {
-      // DEBUG: Log the request payload
-      console.log('📤 Sending request with payload:', { query, searchType });
+      // DEBUG: Log the request payload - ALWAYS ENABLED FOR DEBUGGING
+      console.log('📤 Sending search request:', { 
+        query, 
+        searchType,
+        currentSearchTypeState: searchType,
+        timestamp: new Date().toISOString()
+      });
       
       // Use the helper function to handle CSRF token refreshing if needed
       const response = await handlePossibleSessionExpiration(() => 
