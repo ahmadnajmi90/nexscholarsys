@@ -53,14 +53,16 @@ export default function TopMatchesPreview({
 
   const scrollLeft = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -400, behavior: "smooth" });
+      const scrollAmount = window.innerWidth < 640 ? 280 : window.innerWidth < 1024 ? 300 : 320;
+      carouselRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
       setTimeout(checkScrollability, 300);
     }
   };
 
   const scrollRight = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 400, behavior: "smooth" });
+      const scrollAmount = window.innerWidth < 640 ? 280 : window.innerWidth < 1024 ? 300 : 320;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
       setTimeout(checkScrollability, 300);
     }
   };
@@ -178,27 +180,27 @@ export default function TopMatchesPreview({
   };
 
   return (
-    <div className="w-full py-4">
+    <div className="w-full py-4 overflow-hidden max-w-sm sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-7xl mx-auto">
       {/* Premium Header with Gradient Line */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        className="mb-8 sm:mb-12 px-4 sm:px-0 md:px-4 lg:px-2 xl:px-0"
       >
-        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
           Top 5 Matches
         </h2>
-        <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+        <div className="h-1 w-16 sm:w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
       </motion.div>
 
       {/* Carousel Container */}
-      <div className="relative max-w-6xl mx-auto">
+      <div className="relative w-full overflow-hidden px-4 sm:px-0 md:px-4 lg:px-2 xl:px-0">
         {/* Cards Carousel */}
         <div
           ref={carouselRef}
           onScroll={checkScrollability}
-          className="flex overflow-x-auto overscroll-x-none scroll-smooth gap-8 pb-8 px-4 sm:px-6 lg:px-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex overflow-x-auto overscroll-x-none scroll-smooth gap-4 sm:gap-6 lg:gap-8 pb-6 sm:pb-8 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {topMatches.map((match, index) => (
             <motion.div
@@ -206,8 +208,7 @@ export default function TopMatchesPreview({
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 * index }}
-              className="flex-shrink-0"
-              style={{ width: '320px' }}
+              className="flex-shrink-0 w-[280px] sm:w-[300px] lg:w-[320px]"
             >
               <ProfileCard
                 match={match}
@@ -221,9 +222,11 @@ export default function TopMatchesPreview({
             </motion.div>
           ))}
         </div>
+      </div>
 
-        {/* Bottom Controls */}
-        <div className="flex items-center justify-between mt-10 px-4 sm:px-6 lg:px-8">
+      {/* Bottom Controls */}
+      <div className="px-4 sm:px-0 md:px-4 lg:px-2 xl:px-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 sm:mt-8 lg:mt-10">
           {/* View All Button - Premium CTA */}
           {searchResults.matches.length > 5 && (
             <motion.button
@@ -231,13 +234,13 @@ export default function TopMatchesPreview({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.5 }}
               onClick={onViewAllResults}
-              className="group inline-flex items-center gap-3 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
+              className="group inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 lg:py-4 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
             >
-              <Sparkles className="h-5 w-5" />
-              <span>View All {searchResults.total_count || searchResults.total || searchResults.matches.length} Results</span>
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">View All {searchResults.total_count || searchResults.total || searchResults.matches.length} Results</span>
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 group-hover:translate-x-1 transition-transform" 
+                className="h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform flex-shrink-0" 
                 fill="none" 
                 viewBox="0 0 24 24" 
                 stroke="currentColor"
@@ -248,20 +251,20 @@ export default function TopMatchesPreview({
           )}
 
           {/* Navigation Arrows - Modern Style */}
-          <div className="flex gap-3 ml-auto">
+          <div className="flex gap-2 sm:gap-3 sm:ml-auto">
             <button
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 border border-gray-200"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 border border-gray-200"
               onClick={scrollLeft}
               disabled={!canScrollLeft}
             >
-              <IconArrowNarrowLeft className="h-6 w-6 text-gray-700" />
+              <IconArrowNarrowLeft className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
             </button>
             <button
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 border border-gray-200"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 border border-gray-200"
               onClick={scrollRight}
               disabled={!canScrollRight}
             >
-              <IconArrowNarrowRight className="h-6 w-6 text-gray-700" />
+              <IconArrowNarrowRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
             </button>
           </div>
         </div>

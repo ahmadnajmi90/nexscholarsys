@@ -196,10 +196,10 @@ const GuidedSearchInterface = ({
   };
   
   return (
-    <div className="max-w-5xl mx-auto px-4 min-h-[50vh] flex flex-col items-center justify-center">
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
       {/* Simplified header */}
-      <div className="mb-10 text-center">
-        <h1 className="text-xl text-gray-600 font-normal">What can we match you?</h1>
+      <div className="mb-4 sm:mb-6 text-center">
+        <h1 className="text-base sm:text-lg text-gray-600 font-normal">What can we match you?</h1>
       </div>
       
       {/* Modern search bar */}
@@ -209,12 +209,12 @@ const GuidedSearchInterface = ({
           <div className="relative bg-white rounded-full shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center">
               {/* Search type dropdown */}
-              <div className="relative">
+              <div className="relative flex-shrink-0">
                 <select
                   value={searchType}
                   onChange={(e) => onSearchTypeChange(e.target.value)}
-                  className="appearance-none bg-transparent border-none pl-6 pr-10 py-4 text-sm font-medium text-gray-700 focus:outline-none cursor-pointer"
-                  style={{ minWidth: '140px' }}
+                  className="appearance-none bg-transparent border-none pl-3 sm:pl-5 pr-7 sm:pr-9 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-gray-700 focus:outline-none cursor-pointer"
+                  style={{ minWidth: '110px' }}
                 >
                   {getAvailableSearchTypes().map(type => (
                     <option key={type.value} value={type.value}>
@@ -222,11 +222,11 @@ const GuidedSearchInterface = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                <ChevronDown className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4 pointer-events-none" />
           </div>
           
               {/* Divider */}
-              <div className="h-8 w-px bg-gray-300"></div>
+              <div className="h-5 sm:h-6 w-px bg-gray-300 flex-shrink-0"></div>
               
               {/* Search input */}
               <input
@@ -248,26 +248,26 @@ const GuidedSearchInterface = ({
                   }
                 }}
                 placeholder="Ask me anything about your research match..."
-                className="flex-1 px-6 py-4 text-base border-none outline-none focus:outline-none focus:ring-0 bg-transparent"
+                className="flex-1 px-3 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base border-none outline-none focus:outline-none focus:ring-0 bg-transparent min-w-0"
               />
           
           {/* Search button */}
           <button
             type="submit"
                 disabled={isSearching}
-                className={`mr-2 p-3 rounded-full ${
+                className={`mr-1.5 sm:mr-2 p-2 sm:p-2.5 rounded-full flex-shrink-0 ${
                   isSearching 
                     ? 'bg-gray-300 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-700 transition-colors'
+                    : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors'
                 }`}
           >
             {isSearching ? (
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
             ) : (
-                  <Search className="h-5 w-5 text-white" />
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             )}
           </button>
             </div>
@@ -277,41 +277,41 @@ const GuidedSearchInterface = ({
           {showDropdown && (
             <div 
               ref={dropdownRef}
-              className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-slideDown"
+              className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-slideDown max-h-[40vh]"
               style={{
                 animation: 'slideDown 0.2s ease-out'
               }}
             >
               {/* Tabs */}
-              <div className="flex border-b border-gray-200 bg-gray-50">
+              <div className="flex border-b border-gray-200 bg-gray-50 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setActiveTab('history')}
-                  className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium transition-colors ${
                     activeTab === 'history'
                       ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <History className="inline w-4 h-4 mr-2" />
+                  <History className="inline w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   History {recentSearches.length > 0 && `(${recentSearches.length})`}
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('suggestions')}
-                  className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  className={`flex-1 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-medium transition-colors ${
                     activeTab === 'suggestions'
                       ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <Sparkles className="inline w-4 h-4 mr-2" />
+                  <Sparkles className="inline w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Suggestions
                 </button>
               </div>
               
               {/* Tab content */}
-              <div className="max-h-96 overflow-y-auto p-4">
+              <div className="overflow-y-auto p-2 sm:p-3" style={{ maxHeight: 'calc(40vh - 42px)' }}>
                 {activeTab === 'history' ? (
                   <>
                       {recentSearches.length > 0 ? (
@@ -365,7 +365,7 @@ const GuidedSearchInterface = ({
         
         {/* Error message */}
         {(localError || error) && (
-          <p className="text-red-500 mt-3 text-center text-sm">{localError || error}</p>
+          <p className="text-red-500 mt-2 text-center text-xs sm:text-sm">{localError || error}</p>
         )}
       </div>
     </div>

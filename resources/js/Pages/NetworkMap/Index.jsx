@@ -298,7 +298,7 @@ export default function NetworkMap({ auth }) {
     };
 
     return (
-        <AuthenticatedLayout user={auth.user}>
+        <div user={auth.user}>
             <Head title="Network Map - NexScholar Malaysia" />
 
             <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900">
@@ -413,6 +413,6 @@ export default function NetworkMap({ auth }) {
                     onClose={() => setSelectedIndustry(null)}
                 />
             )}
-        </AuthenticatedLayout>
+        </div>
     );
 }
