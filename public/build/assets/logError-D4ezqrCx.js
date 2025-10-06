@@ -1,1 +1,0 @@
-function n(s,e="Supervision"){typeof console>"u"||typeof console.error!="function"||(console.error(`[${e}]`,s),s!=null&&s.response&&console.error(`[${e}] response`,{status:s.response.status,data:s.response.data,headers:s.response.headers}),s!=null&&s.request&&!(s!=null&&s.response)&&console.error(`[${e}] request`,s.request))}export{n as l};
