@@ -345,15 +345,15 @@ export default function ResultsGrid({
       
       {/* No filter matches message */}
       {!isSearching && searchResults && searchResults.matches && filteredResults.length === 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <p className="text-gray-500">No results match your filters. Try adjusting your filter criteria.</p>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 text-center mx-2">
+          <p className="text-sm sm:text-base text-gray-500">No results match your filters. Try adjusting your filter criteria.</p>
         </div>
       )}
       
       {/* Results */}
       {!isSearching && searchResults && searchResults.matches && filteredResults.length > 0 && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 lg:gap-10">
             {/* Loaded profiles using ProfileCard component with staggered animation */}
             {filteredResults.slice(0, loadedProfiles.length).map((match, index) => {
               // Get profile data from match
@@ -405,22 +405,22 @@ export default function ResultsGrid({
           {searchResults.has_more && (
             <div 
               ref={loadMoreRef} 
-              className="mt-12 text-center py-6"
+              className="mt-8 sm:mt-10 md:mt-12 text-center py-4 sm:py-6"
             >
               {isLoadingMore ? (
-                <div className="flex items-center justify-center gap-3">
-                  <svg className="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <div className="flex items-center justify-center gap-2 sm:gap-3">
+                  <svg className="animate-spin h-5 w-5 sm:h-6 sm:w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                   </svg>
-                  <span className="text-gray-600 font-medium">Loading more results...</span>
+                  <span className="text-gray-600 font-medium text-sm sm:text-base">Loading more results...</span>
                 </div>
               ) : (
                 <button 
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 active:scale-95 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1 touch-manipulation"
                   onClick={onLoadMore}
                 >
-                  <Sparkles className="h-5 w-5" />
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Load More Results</span>
                 </button>
               )}
@@ -429,11 +429,11 @@ export default function ResultsGrid({
           
           {/* End of Results Indicator */}
           {!searchResults.has_more && filteredResults.length > 0 && (
-            <div className="mt-12 text-center py-6">
+            <div className="mt-8 sm:mt-10 md:mt-12 text-center py-4 sm:py-6">
               <div className="inline-flex items-center gap-2 text-gray-400">
-                <div className="h-px w-12 bg-gray-300"></div>
-                <span className="text-sm font-medium">End of results</span>
-                <div className="h-px w-12 bg-gray-300"></div>
+                <div className="h-px w-8 sm:w-12 bg-gray-300"></div>
+                <span className="text-xs sm:text-sm font-medium">End of results</span>
+                <div className="h-px w-8 sm:w-12 bg-gray-300"></div>
               </div>
             </div>
           )}
@@ -442,10 +442,10 @@ export default function ResultsGrid({
       
       {/* No results at all message */}
       {!isSearching && searchResults && searchResults.matches && searchResults.matches.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <FaSearch className="text-gray-400 text-5xl mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-gray-700 mb-2">No matching results found</h3>
-          <p className="text-gray-500 max-w-md mx-auto">
+        <div className="text-center py-8 sm:py-10 md:py-12 bg-gray-50 rounded-lg mx-2">
+          <FaSearch className="text-gray-400 text-3xl sm:text-4xl md:text-5xl mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-lg sm:text-xl font-medium text-gray-700 mb-2 px-4">No matching results found</h3>
+          <p className="text-sm sm:text-base text-gray-500 max-w-md mx-auto px-4">
             Try broadening your search terms or exploring different research areas.
           </p>
         </div>

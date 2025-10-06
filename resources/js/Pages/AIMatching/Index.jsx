@@ -64,8 +64,8 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [selectedArea, setSelectedArea] = useState([]);
   const [selectedUniversity, setSelectedUniversity] = useState([]);
   const [selectedAvailability, setSelectedAvailability] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState([]); // Add skills filter state
-  const [showFilters, setShowFilters] = useState(false);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   
   // Save state to sessionStorage when navigating away (with context)
   useEffect(() => {
@@ -84,12 +84,12 @@ export default function Index({ auth, universities, faculties, users, researchOp
   
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
-    // DEBUG: Log search type change
-    // console.log('🔄 Search type changing:', {
-    //   from: searchType,
-    //   to: newType,
-    //   isAcademician
-    // });
+    // DEBUG: Log search type change - ENABLE THIS FOR DEBUGGING
+    console.log('🔄 Search type changing:', {
+      from: searchType,
+      to: newType,
+      isAcademician
+    });
     
     // Only allow academicians to search for students
     if (newType === 'students' && !isAcademician) {
@@ -102,12 +102,12 @@ export default function Index({ auth, universities, faculties, users, researchOp
     const savedQuery = getInitialState('ai_search_query', newType, '');
     const savedResults = getInitialState('ai_search_results', newType, null);
     
-    // console.log('💾 Loading saved state for new search type:', {
-    //   searchType: newType,
-    //   hasSavedQuery: !!savedQuery,
-    //   hasSavedResults: !!savedResults,
-    //   savedResultsCount: savedResults?.matches?.length || 0
-    // });
+    console.log('💾 Loading saved state for new search type:', {
+      searchType: newType,
+      hasSavedQuery: !!savedQuery,
+      hasSavedResults: !!savedResults,
+      savedResultsCount: savedResults?.matches?.length || 0
+    });
     
     setSearchType(newType);
     setSearchQuery(savedQuery); // Load saved query for this search type
@@ -116,10 +116,10 @@ export default function Index({ auth, universities, faculties, users, researchOp
     
     // Update current view based on whether we have results
     if (savedResults && savedResults.matches && savedResults.matches.length > 0) {
-      // console.log('✅ Showing preview with cached results');
+      console.log('✅ Showing preview with cached results');
       setCurrentView('preview'); // Show preview if we have results
     } else {
-      // console.log('✅ Showing search interface');
+      console.log('✅ Showing search interface');
       setCurrentView('search'); // Show search interface if no results
     }
   };
@@ -150,8 +150,13 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setShowProcessingModal(true);
     
     try {
-      // DEBUG: Log the request payload
-      console.log('📤 Sending request with payload:', { query, searchType });
+      // DEBUG: Log the request payload - ALWAYS ENABLED FOR DEBUGGING
+      console.log('📤 Sending search request:', { 
+        query, 
+        searchType,
+        currentSearchTypeState: searchType,
+        timestamp: new Date().toISOString()
+      });
       
       // Use the helper function to handle CSRF token refreshing if needed
       const response = await handlePossibleSessionExpiration(() => 
@@ -400,7 +405,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
       <div className="w-full">
         {/* View: SEARCH - Initial search interface */}
         {currentView === 'search' && (
-          <div className="min-h-screen bg-white py-8">
+          <div className="h-[calc(100vh-100px)] sm:h-[calc(100vh-110px)] bg-white overflow-hidden flex items-start justify-center pt-[calc(50vh-180px)] sm:pt-[calc(50vh-200px)]">
           <GuidedSearchInterface
             onSearch={handleSearch}
             researchOptions={researchOptions}
@@ -425,7 +430,7 @@ export default function Index({ auth, universities, faculties, users, researchOp
         {currentView === 'preview' && searchResults && searchResults.matches && (
           <div className="min-h-screen bg-white py-8">
               {/* Back to Search Button */}
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-0 md:px-6 lg:px-8 xl:px-0 mb-6">
                 <button
                   onClick={handleBackToSearch}
                   className="flex items-center text-gray-600 hover:text-gray-900 font-medium transition-colors group"
@@ -456,106 +461,112 @@ export default function Index({ auth, universities, faculties, users, researchOp
         {/* View: FULL - All Results with Filters */}
         {currentView === 'full' && searchResults && searchResults.matches && (
             <div className="min-h-screen bg-white">
-              {/* Premium Header Section */}
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                  {/* Back Button - Premium Style */}
-                  <button
-                    onClick={handleCollapseToPreview}
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-all duration-300 group hover:-translate-x-1"
-                  >
-                    <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span>Back to Top 5</span>
-                  </button>
+              {/* Premium Header Section with Filter Button */}
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-4 sm:pt-6 md:pt-8 pb-4 sm:pb-6 md:pb-8">
+                {/* Mobile: Stack vertically | Tablet+: Horizontal layout */}
+                <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center">
+                  {/* Back Button - Mobile: Full width | Desktop: Left aligned */}
+                  <div className="sm:col-span-3 lg:col-span-2">
+                    <button
+                      onClick={handleCollapseToPreview}
+                      className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium 
+                               transition-all duration-300 group text-sm sm:text-base"
+                    >
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span className="hidden xs:inline">Back to Top 5</span>
+                      <span className="xs:hidden">Back</span>
+                    </button>
+                  </div>
                   
-                  {/* Title Section with Gradient Line */}
-                  <div className="flex-1 sm:text-right">
-                    <div className="flex items-center justify-start sm:justify-end gap-3 mb-2">
-                      <h2 className="text-4xl font-bold text-gray-900">All Results</h2>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                  {/* Title Section - Centered on all screens */}
+                  <div className="sm:col-span-6 lg:col-span-8 text-center">
+                    <div className="flex flex-col xs:flex-row items-center justify-center gap-2 mb-2">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">All Results</h2>
+                      <span className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold 
+                                     bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                         {searchResults.total_count || searchResults.total || searchResults.matches.length}
                       </span>
                     </div>
-                    <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full sm:ml-auto"></div>
-                    <p className="text-sm text-gray-500 mt-3">
+                    <div className="h-0.5 sm:h-1 w-12 sm:w-16 md:w-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto"></div>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 px-2 sm:px-4 line-clamp-1">
                       Matches for "{searchResults.query}"
                     </p>
+                  </div>
+
+                  {/* Filter Button - Mobile: Full width | Desktop: Right aligned */}
+                  <div className="sm:col-span-3 lg:col-span-2 flex justify-end">
+                    <button
+                      onClick={() => setIsFilterModalOpen(true)}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 
+                               px-4 sm:px-5 py-2.5 sm:py-3 
+                               bg-gradient-to-r from-blue-600 to-purple-600 
+                               hover:from-blue-700 hover:to-purple-700 
+                               active:scale-95 sm:active:scale-100
+                               text-white font-semibold rounded-xl 
+                               shadow-lg hover:shadow-xl 
+                               transition-all duration-300 sm:hover:scale-105 
+                               group relative touch-manipulation"
+                    >
+                      <FaFilter className="text-base sm:text-lg group-hover:rotate-12 transition-transform" />
+                      <span className="text-sm sm:text-base">Filters</span>
+                      {/* Active Filter Count Badge */}
+                      {(selectedArea.length > 0 || selectedUniversity.length > 0 || selectedSkills.length > 0 || selectedAvailability) && (
+                        <span className="absolute -top-1.5 sm:-top-2 -right-1.5 sm:-right-2 
+                                       bg-red-500 text-white text-xs font-bold rounded-full 
+                                       h-5 w-5 sm:h-6 sm:w-6 
+                                       flex items-center justify-center animate-pulse">
+                          {selectedArea.length + selectedUniversity.length + selectedSkills.length + (selectedAvailability ? 1 : 0)}
+                        </span>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-                <div className="flex flex-col lg:flex-row gap-8">
-              {/* Filters - Desktop (Side) with Glass Morphism */}
-              <div className="hidden lg:block w-full lg:w-1/4 xl:w-1/5">
-                    <div className="sticky top-24 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200/50 p-6">
-                <FilterPanel
+              {/* Full-Width Results Section */}
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pb-12 sm:pb-16">
+                <ResultsGrid
                   searchType={searchType}
                   searchResults={searchResults}
-                  universities={universities}
+                  selectedArea={selectedArea}
+                  selectedUniversity={selectedUniversity}
+                  selectedAvailability={selectedAvailability}
+                  selectedSkills={selectedSkills}
+                  onLoadMore={handleLoadMore}
+                  isLoadingMore={isLoadingMore}
+                  universitiesList={universities}
                   faculties={faculties}
                   researchOptions={researchOptions}
+                  users={users}
                   skills={skills}
-                  selectedArea={selectedArea}
-                  setSelectedArea={setSelectedArea}
-                  selectedUniversity={selectedUniversity}
-                  setSelectedUniversity={setSelectedUniversity}
-                  selectedAvailability={selectedAvailability}
-                  setSelectedAvailability={setSelectedAvailability}
-                  selectedSkills={selectedSkills}
-                  setSelectedSkills={setSelectedSkills}
-                />
-                    </div>
-              </div>
-              
-              {/* Filters - Mobile */}
-              <div className="lg:hidden">
-                <FilterPanel
-                  searchType={searchType}
-                  searchResults={searchResults}
-                  universities={universities}
-                  faculties={faculties}
-                  researchOptions={researchOptions}
-                  skills={skills}
-                  selectedArea={selectedArea}
-                  setSelectedArea={setSelectedArea}
-                  selectedUniversity={selectedUniversity}
-                  setSelectedUniversity={setSelectedUniversity}
-                  selectedAvailability={selectedAvailability}
-                  setSelectedAvailability={setSelectedAvailability}
-                  selectedSkills={selectedSkills}
-                  setSelectedSkills={setSelectedSkills}
-                  isOpen={showFilters}
-                  toggleOpen={setShowFilters}
+                  onShowInsight={(insight) => {
+                    setCurrentInsight(insight);
+                    setIsInsightModalOpen(true);
+                  }}
                 />
               </div>
-              
-                  {/* Results Grid */}
-                <div className="w-full lg:w-3/4 xl:w-4/5">
-                  <ResultsGrid
-                    searchType={searchType}
-                    searchResults={searchResults}
-                    selectedArea={selectedArea}
-                    selectedUniversity={selectedUniversity}
-                    selectedAvailability={selectedAvailability}
-                    selectedSkills={selectedSkills}
-                    onLoadMore={handleLoadMore}
-                    isLoadingMore={isLoadingMore}
-                    universitiesList={universities}
-                    faculties={faculties}
-                    researchOptions={researchOptions}
-                    users={users}
-                    skills={skills}
-                    onShowInsight={(insight) => {
-                      setCurrentInsight(insight);
-                      setIsInsightModalOpen(true);
-                    }}
-                  />
-                  </div>
-                </div>
-                </div>
+
+              {/* Filter Modal */}
+              <FilterPanel
+                searchType={searchType}
+                searchResults={searchResults}
+                universities={universities}
+                faculties={faculties}
+                researchOptions={researchOptions}
+                skills={skills}
+                selectedArea={selectedArea}
+                setSelectedArea={setSelectedArea}
+                selectedUniversity={selectedUniversity}
+                setSelectedUniversity={setSelectedUniversity}
+                selectedAvailability={selectedAvailability}
+                setSelectedAvailability={setSelectedAvailability}
+                selectedSkills={selectedSkills}
+                setSelectedSkills={setSelectedSkills}
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+              />
             </div>
           )}
       </div>
