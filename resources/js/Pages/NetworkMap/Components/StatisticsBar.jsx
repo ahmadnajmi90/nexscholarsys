@@ -83,15 +83,15 @@ export default function StatisticsBar({ statistics }) {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.2 + index * 0.05 }}
-                        className={`${getColorClasses(stat.color)} rounded-xl p-4 border shadow-sm`}
+                        className={`${getColorClasses(stat.color)} rounded-xl p-3 border shadow-sm`}
                     >
-                        <div className="flex items-center gap-2 mb-2">
-                            <Icon className={`w-4 h-4 ${getIconColor(stat.color)}`} />
-                            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <Icon className={`w-3.5 h-3.5 ${getIconColor(stat.color)}`} />
+                            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
                                 {stat.label}
                             </span>
                         </div>
-                        <div className={`text-2xl font-semibold ${getTextColor(stat.color)}`}>
+                        <div className={`text-m font-semibold ${getTextColor(stat.color)}`}>
                             {stat.value}
                         </div>
                     </motion.div>
