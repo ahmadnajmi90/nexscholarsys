@@ -353,29 +353,31 @@ export default function NetworkMap({ auth }) {
                             {activeTab === 'overview' && <StatisticsBar statistics={statistics} />}
 
                             {/* Map */}
-                            <MapView
-                                mode={activeTab}
-                                focusedResearcher={focusedResearcher}
-                                showNetwork={showNetwork}
-                                onUniversityClick={handleUniversityClick}
-                                onResearcherClick={handleResearcherClick}
-                                onProjectClick={handleProjectClick}
-                                onIndustryClick={handleIndustryClick}
-                                onShowNetwork={() => setShowNetwork(true)}
-                                layers={{
-                                    universities: filters.showUniversities,
-                                    projects: filters.showProjects,
-                                    industry: filters.showIndustry
-                                }}
-                                networkTypes={networkTypes}
-                                universities={filteredData.universities}
-                                researchers={mockResearchers}
-                                projects={filteredData.projects}
-                                industries={filteredData.industry}
-                                paperNetworkData={paperNetworkData}
-                                projectNetworkData={projectNetworkData}
-                                researcherLocations={researcherLocations}
-                            />
+                            <div className="relative z-0">
+                                <MapView
+                                    mode={activeTab}
+                                    focusedResearcher={focusedResearcher}
+                                    showNetwork={showNetwork}
+                                    onUniversityClick={handleUniversityClick}
+                                    onResearcherClick={handleResearcherClick}
+                                    onProjectClick={handleProjectClick}
+                                    onIndustryClick={handleIndustryClick}
+                                    onShowNetwork={() => setShowNetwork(true)}
+                                    layers={{
+                                        universities: filters.showUniversities,
+                                        projects: filters.showProjects,
+                                        industry: filters.showIndustry
+                                    }}
+                                    networkTypes={networkTypes}
+                                    universities={filteredData.universities}
+                                    researchers={mockResearchers}
+                                    projects={filteredData.projects}
+                                    industries={filteredData.industry}
+                                    paperNetworkData={paperNetworkData}
+                                    projectNetworkData={projectNetworkData}
+                                    researcherLocations={researcherLocations}
+                                />
+                            </div>
 
                             {/* University Rankings - only show in overview */}
                             {activeTab === 'overview' && <RankingsTable data={rankingsData} />}
