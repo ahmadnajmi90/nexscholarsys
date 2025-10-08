@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Supervision\SupervisionRelationshipResource;
 use App\Models\SupervisionRequest;
 use App\Notifications\Supervision\SupervisionRequestRejected;
+use App\Notifications\Supervision\SupervisionOfferReceived;
+use App\Notifications\Supervision\StudentRejectedOffer;
 use App\Services\Supervision\SupervisionRelationshipService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -79,8 +81,11 @@ class DecisionController extends Controller
             ],
         ]);
 
-        // TODO: Notify student about the offer
-        // $supervisionRequest->student?->user?->notify(new \App\Notifications\Supervision\SupervisionOfferReceived($supervisionRequest));
+        // Load academician relationship for notification
+        $supervisionRequest->load('academician');
+
+        // Notify student about the offer
+        $supervisionRequest->student?->user?->notify(new SupervisionOfferReceived($supervisionRequest));
 
         return response()->json([
             'success' => true,
@@ -168,6 +173,45 @@ class DecisionController extends Controller
         );
 
         return new SupervisionRelationshipResource($relationship->load(['student.user', 'academician.user', 'onboardingChecklistItems']));
+    }
+
+    /**
+     * Student rejects the supervisor's offer
+     */
+    public function studentReject(Request $request, SupervisionRequest $supervisionRequest)
+    {
+        $user = $request->user();
+        
+        if (!$user->postgraduate) {
+            abort(403, 'Only postgraduate students can reject supervision offers.');
+        }
+        
+        if ($user->postgraduate->postgraduate_id !== $supervisionRequest->student_id) {
+            abort(403, 'You can only reject your own supervision offers.');
+        }
+
+        if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE) {
+            throw ValidationException::withMessages([
+                'status' => __('This offer is not available for rejection.'),
+            ]);
+        }
+
+        // Update request status to rejected
+        $supervisionRequest->update([
+            'status' => SupervisionRequest::STATUS_REJECTED,
+            'decision_at' => now(),
+        ]);
+
+        // Load academician for notification
+        $supervisionRequest->load('academician', 'student');
+
+        // Notify supervisor about the rejection
+        $supervisionRequest->academician?->user?->notify(new StudentRejectedOffer($supervisionRequest));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Supervision offer rejected',
+        ]);
     }
 }
 

@@ -69,6 +69,9 @@ class SupervisionRequestResource extends JsonResource
             'rejection_feedback' => $this->rejection_feedback,
             'recommended_supervisors' => $this->recommended_supervisors,
             'suggested_keywords' => $this->suggested_keywords,
+            'rejection_acknowledged_at' => $this->rejection_acknowledged_at,
+            'offer_acknowledged_at' => $this->offer_acknowledged_at,
+            'student_response_acknowledged_at' => $this->student_response_acknowledged_at,
             'conversation_id' => $this->conversation_id,
             'academician' => $this->whenLoaded('academician', function () {
                 $facultyRelation = $this->academician->relationLoaded('faculty') ? $this->academician->getRelation('faculty') : null;
@@ -161,28 +164,19 @@ class SupervisionRequestResource extends JsonResource
                 ];
             }),
             'relationship' => $this->getRelationshipData(),
-            'meetings' => function () {
-                // Provide meetings at top level for easier access in frontend
-                $relationship = \App\Models\SupervisionRelationship::where('student_id', $this->student_id)
-                    ->where('academician_id', $this->academician_id)
-                    ->with('meetings')
-                    ->first();
-                
-                if (!$relationship) {
-                    return [];
-                }
-                
-                return $relationship->meetings->map(function ($meeting) {
+            'meetings' => $this->whenLoaded('meetings', function () {
+                // Return meetings directly linked to this request
+                return $this->meetings->map(function ($meeting) {
                     return [
                         'id' => $meeting->id,
                         'title' => $meeting->title,
                         'scheduled_for' => $meeting->scheduled_for,
                         'location_link' => $meeting->location_link,
                         'agenda' => $meeting->agenda,
-                        'type' => $meeting->type ?? 'online',
+                        'type' => $meeting->external_provider ?? 'Online',
                     ];
                 });
-            },
+            }),
         ];
     }
 

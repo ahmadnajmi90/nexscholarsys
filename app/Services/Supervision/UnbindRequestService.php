@@ -5,6 +5,9 @@ namespace App\Services\Supervision;
 use App\Models\SupervisionRelationship;
 use App\Models\SupervisionRelationshipUnbindRequest;
 use App\Models\User;
+use App\Notifications\Supervision\UnbindRequestInitiated;
+use App\Notifications\Supervision\UnbindRequestApproved;
+use App\Notifications\Supervision\UnbindRequestRejected;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
@@ -99,12 +102,12 @@ class UnbindRequestService
                 $this->terminateRelationship($relationship, $unbindRequest);
             }
 
-            // TODO: Send notification to the other party
-            // if ($isSupervisor) {
-            //     $relationship->student?->user?->notify(new UnbindRequestInitiated($unbindRequest));
-            // } else {
-            //     $relationship->academician?->user?->notify(new UnbindRequestInitiated($unbindRequest));
-            // }
+            // Send notification to the other party
+            if ($isSupervisor) {
+                $relationship->student?->user?->notify(new UnbindRequestInitiated($unbindRequest));
+            } else {
+                $relationship->academician?->user?->notify(new UnbindRequestInitiated($unbindRequest));
+            }
 
             return $unbindRequest;
         });
@@ -132,8 +135,8 @@ class UnbindRequestService
             // Terminate the relationship
             $this->terminateRelationship($unbindRequest->relationship, $unbindRequest);
 
-            // TODO: Send notification to supervisor
-            // $unbindRequest->relationship->academician?->user?->notify(new UnbindRequestApproved($unbindRequest));
+            // Send notification to supervisor
+            $unbindRequest->relationship->academician?->user?->notify(new UnbindRequestApproved($unbindRequest));
         });
     }
 
@@ -160,8 +163,8 @@ class UnbindRequestService
                 'cooldown_until' => $cooldownUntil,
             ]);
 
-            // TODO: Send notification to supervisor
-            // $unbindRequest->relationship->academician?->user?->notify(new UnbindRequestRejected($unbindRequest));
+            // Send notification to supervisor
+            $unbindRequest->relationship->academician?->user?->notify(new UnbindRequestRejected($unbindRequest));
         });
     }
 
@@ -194,8 +197,8 @@ class UnbindRequestService
             // Terminate the relationship
             $this->terminateRelationship($unbindRequest->relationship, $unbindRequest);
 
-            // TODO: Send notification to student
-            // $unbindRequest->relationship->student?->user?->notify(new UnbindRequestApproved($unbindRequest));
+            // Send notification to student
+            $unbindRequest->relationship->student?->user?->notify(new UnbindRequestApproved($unbindRequest));
         });
     }
 
@@ -229,8 +232,8 @@ class UnbindRequestService
                 'cooldown_until' => $cooldownUntil,
             ]);
 
-            // TODO: Send notification to student
-            // $unbindRequest->relationship->student?->user?->notify(new UnbindRequestRejected($unbindRequest));
+            // Send notification to student
+            $unbindRequest->relationship->student?->user?->notify(new UnbindRequestRejected($unbindRequest));
         });
     }
 

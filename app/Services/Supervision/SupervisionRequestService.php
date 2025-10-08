@@ -88,6 +88,9 @@ class SupervisionRequestService
                 ]
             );
 
+            // Load student relationship for notification
+            $request->load('student');
+
             $academician->user?->notify(new SupervisionRequestSubmitted($request));
 
             return $request;

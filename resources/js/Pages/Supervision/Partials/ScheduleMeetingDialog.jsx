@@ -17,7 +17,7 @@ const defaultDateTime = () => {
   return local.toISOString().slice(0, 16);
 };
 
-export default function ScheduleMeetingDialog({ relationship, onClose, onScheduled, userRole = 'supervisor' }) {
+export default function ScheduleMeetingDialog({ relationship = null, request = null, onClose, onScheduled, userRole = 'supervisor' }) {
   const [title, setTitle] = useState('Supervision Meeting');
   const [scheduledFor, setScheduledFor] = useState(defaultDateTime());
   const [location, setLocation] = useState('');
@@ -25,35 +25,39 @@ export default function ScheduleMeetingDialog({ relationship, onClose, onSchedul
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  // Determine which entity we're working with
+  const isRequestPhase = request && !relationship;
+  const targetEntity = relationship || request;
+
   // Determine who we're meeting with based on role
   const isSupervisor = userRole === 'supervisor';
   const otherPerson = isSupervisor 
-    ? relationship?.student?.full_name ?? 'student'
-    : relationship?.academician?.full_name ?? 'supervisor';
+    ? (relationship?.student?.full_name || request?.student?.full_name || 'student')
+    : (relationship?.academician?.full_name || request?.academician?.full_name || 'supervisor');
 
   useEffect(() => {
-    if (relationship) {
+    if (targetEntity) {
       setTitle(`Meeting with ${otherPerson}`);
       setScheduledFor(defaultDateTime());
       setLocation('');
       setAgenda(relationship?.meeting_cadence ? `Discuss ${relationship.meeting_cadence.toLowerCase()}` : '');
       setError(null);
     }
-  }, [relationship, otherPerson]);
+  }, [targetEntity, otherPerson, relationship?.meeting_cadence]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!relationship || isSubmitting) return;
+    if (!targetEntity || isSubmitting) return;
 
     if (!title.trim() || !scheduledFor || !location.trim()) {
       setError('Please provide a title, meeting date, and meeting link/location.');
       return;
     }
 
-    // Safety check for relationship.id
-    if (!relationship.id) {
-      setError('Cannot schedule meeting: Invalid relationship data. Please try again.');
-      toast.error('Invalid relationship data');
+    // Safety check for entity ID
+    if (!targetEntity.id) {
+      setError('Cannot schedule meeting: Invalid data. Please try again.');
+      toast.error('Invalid data');
       return;
     }
 
@@ -61,7 +65,12 @@ export default function ScheduleMeetingDialog({ relationship, onClose, onSchedul
     setError(null);
 
     try {
-      await axios.post(route('supervision.meetings.store', relationship.id), {
+      // Use different endpoint based on whether we're in request or relationship phase
+      const endpoint = isRequestPhase
+        ? route('supervision.requests.meetings.store', request.id)
+        : route('supervision.meetings.store', relationship.id);
+
+      await axios.post(endpoint, {
         title,
         scheduled_for: new Date(scheduledFor).toISOString(),
         location_link: location,
@@ -89,7 +98,7 @@ export default function ScheduleMeetingDialog({ relationship, onClose, onSchedul
   };
 
   return (
-    <Modal show={Boolean(relationship)} onClose={onClose} maxWidth="lg">
+    <Modal show={Boolean(targetEntity)} onClose={onClose} maxWidth="lg">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div>

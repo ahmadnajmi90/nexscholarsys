@@ -315,6 +315,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('requests.reject');
         Route::post('/requests/{supervisionRequest}/student-accept', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'studentAccept'])
             ->name('requests.student-accept');
+        Route::post('/requests/{supervisionRequest}/student-reject', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'studentReject'])
+            ->name('requests.student-reject');
 
         Route::get('/relationships', [\App\Http\Controllers\Api\V1\Supervision\RelationshipController::class, 'index'])
             ->name('relationships.index');
@@ -323,6 +325,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
 
         Route::post('/relationships/{relationship}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'store'])
             ->name('meetings.store');
+        Route::post('/requests/{supervisionRequest}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'storeForRequest'])
+            ->name('requests.meetings.store');
 
         // Unbind Request Routes
         Route::get('/unbind-requests', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'index'])
@@ -394,6 +398,20 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('recommendations.add-to-shortlist');
         Route::get('/requests/{supervisionRequest}/recommendations', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'getRecommendedSupervisors'])
             ->name('requests.recommendations');
+
+        // Acknowledgment Routes
+        Route::post('/acknowledge/rejections', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeRejection'])
+            ->name('acknowledge.rejections');
+        Route::post('/acknowledge/offers', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeOffer'])
+            ->name('acknowledge.offers');
+        Route::post('/acknowledge/student-responses', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeStudentResponse'])
+            ->name('acknowledge.student-responses');
+
+        // Activity Feed Routes
+        Route::get('/activity/recent', [\App\Http\Controllers\Api\V1\Supervision\ActivityFeedController::class, 'recentActivity'])
+            ->name('activity.recent');
+        Route::get('/activity/upcoming-meetings', [\App\Http\Controllers\Api\V1\Supervision\ActivityFeedController::class, 'upcomingMeetings'])
+            ->name('activity.upcoming-meetings');
     });
 });
 

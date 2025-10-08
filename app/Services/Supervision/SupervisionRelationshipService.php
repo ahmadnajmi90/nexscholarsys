@@ -11,6 +11,7 @@ use App\Models\Connection;
 use App\Services\Messaging\ConversationService;
 use App\Notifications\Supervision\SupervisionRequestAccepted;
 use App\Notifications\Supervision\SupervisionRequestRejected;
+use App\Notifications\Supervision\StudentAcceptedOffer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -181,9 +182,9 @@ class SupervisionRelationshipService
                 $this->scholarLabService->createSupervisionWorkspace($relationship, $student, $academician, $offerDetails);
             }
 
-            // TODO: Notify both parties
-            // $student->user?->notify(new SupervisionRequestAccepted($relationship));
-            // $academician->user?->notify(new \App\Notifications\Supervision\StudentAcceptedOffer($relationship));
+            // Notify both parties
+            $student->user?->notify(new SupervisionRequestAccepted($relationship));
+            $academician->user?->notify(new StudentAcceptedOffer($relationship));
 
             return $relationship;
         });

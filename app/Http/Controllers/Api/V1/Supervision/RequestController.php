@@ -8,6 +8,7 @@ use App\Models\Academician;
 use App\Models\SupervisionRequest;
 use App\Models\Postgraduate;
 use App\Services\Supervision\SupervisionRequestService;
+use App\Notifications\Supervision\SupervisionRequestCancelled;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\ValidationException;
@@ -28,7 +29,8 @@ class RequestController extends Controller
                 'academician.user',
                 'academician.universityDetails',
                 'academician.faculty',
-                'attachments'
+                'attachments',
+                'meetings'
             ])
                 ->where('student_id', $user->postgraduate->postgraduate_id)
                 ->orderByDesc('submitted_at')
@@ -39,7 +41,8 @@ class RequestController extends Controller
                 'student.universityDetails',
                 'student.faculty',
                 'attachments',
-                'notes.author'
+                'notes.author',
+                'meetings'
             ])
                 ->where('academician_id', $user->academician->academician_id)
                 ->orderByDesc('submitted_at')
@@ -95,6 +98,12 @@ class RequestController extends Controller
             'decision_at' => now(),
             'cancel_reason' => 'student_cancelled',
         ]);
+
+        // Load student for notification
+        $supervisionRequest->load('student', 'academician');
+
+        // Notify supervisor about the cancellation
+        $supervisionRequest->academician?->user?->notify(new SupervisionRequestCancelled($supervisionRequest));
 
         return response()->json(['success' => true]);
     }

@@ -11,9 +11,6 @@ import {
   GaugeCircle,
   ExternalLink,
   User2,
-  UserCheck,
-  Users,
-  ClipboardList,
   Upload,
   FileText,
   Settings,
@@ -36,47 +33,6 @@ export default function ManageSupervisorPanel({ relationships = [], reload, onOp
     () => (Array.isArray(relationships) ? relationships.filter(rel => rel.status === 'active') : []),
     [relationships]
   );
-
-  // Calculate metrics
-  const metrics = useMemo(() => {
-    const primaryCount = activeRelationships.filter(rel => rel.role === 'main').length;
-    const coSupervisorCount = activeRelationships.filter(rel => rel.role === 'co' || rel.role === 'co-supervisor').length;
-    // console.log(activeRelationships)
-    // Count meetings scheduled for current month
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    const meetingsThisMonth = activeRelationships.reduce((count, rel) => {
-      if (rel.meetings && Array.isArray(rel.meetings)) {
-        const monthMeetings = rel.meetings.filter(meeting => {
-          if (!meeting.scheduled_for) return false;
-          const meetingDate = new Date(meeting.scheduled_for);
-          return meetingDate.getMonth() === currentMonth && meetingDate.getFullYear() === currentYear;
-        });
-        return count + monthMeetings.length;
-      }
-      return count;
-    }, 0);
-    
-    // Count incomplete onboarding tasks
-    const pendingTasks = activeRelationships.reduce((count, rel) => {
-      if (rel.onboarding_checklist_items && Array.isArray(rel.onboarding_checklist_items)) {
-        const incompleteTasks = rel.onboarding_checklist_items.filter(item => !item.completed);
-        return count + incompleteTasks.length;
-      }
-      return count;
-    }, 0);
-    
-    return {
-      primaryCount,
-      coSupervisorCount,
-      meetingsThisMonth,
-      pendingTasks
-    };
-  }, [activeRelationships]);
-
-  // console.log(metrics)
 
   const handleOpenModal = (relationship, tab = 'overview') => {
     setSelectedRelationship(relationship);
@@ -117,40 +73,8 @@ export default function ManageSupervisorPanel({ relationships = [], reload, onOp
 
   return (
     <>
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard
-          value={metrics.primaryCount}
-          label="Primary Supervisors"
-          icon={UserCheck}
-          iconColor="text-indigo-600"
-          bgColor="bg-indigo-50"
-        />
-        <MetricCard
-          value={metrics.coSupervisorCount}
-          label="Co-supervisors"
-          icon={Users}
-          iconColor="text-blue-600"
-          bgColor="bg-blue-50"
-        />
-        <MetricCard
-          value={metrics.meetingsThisMonth}
-          label="Meetings this Month"
-          icon={CalendarClock}
-          iconColor="text-green-600"
-          bgColor="bg-green-50"
-        />
-        <MetricCard
-          value={metrics.pendingTasks}
-          label="Pending Tasks"
-          icon={ClipboardList}
-          iconColor="text-amber-600"
-          bgColor="bg-amber-50"
-        />
-      </div>
-
       {/* Relationship Cards - 2 per row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         {activeRelationships.map((relationship) => (
           <ActiveRelationshipCard
             key={relationship.id}
@@ -182,24 +106,6 @@ export default function ManageSupervisorPanel({ relationships = [], reload, onOp
         />
       )}
     </>
-  );
-}
-
-function MetricCard({ value, label, icon: Icon, iconColor, bgColor }) {
-  return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-3xl font-bold text-slate-900">{value}</p>
-            <p className="text-sm text-slate-600 mt-1">{label}</p>
-          </div>
-          <div className={`${bgColor} p-3 rounded-lg`}>
-            <Icon className={`h-6 w-6 ${iconColor}`} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -273,15 +179,15 @@ function ActiveRelationshipCard({ relationship, onOpenDetail, onOpenMeetings, re
         onClick={() => onOpenDetail?.(relationship, 'overview')}
       >
         {/* Header Section */}
-        <CardHeader className="pb-4">
-          <div className="flex items-start gap-4">
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-3">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <Avatar className="h-14 w-14 border-2 border-slate-200">
+              <Avatar className="h-12 w-12 border-2 border-slate-200">
                 {profilePicture ? (
                   <img src={profilePicture} alt={fullName} className="h-full w-full object-cover" />
                 ) : (
-                  <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold text-sm">
+                  <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold text-xs">
                     {initials}
                   </AvatarFallback>
                 )}
@@ -290,7 +196,7 @@ function ActiveRelationshipCard({ relationship, onOpenDetail, onOpenMeetings, re
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold text-slate-900 truncate mb-1">{fullName}</h3>
+              <h3 className="text-base font-bold text-slate-900 truncate mb-1">{fullName}</h3>
               <p className="text-sm text-slate-600 truncate">
                 {university && department ? `${university} • ${department}` : (university || department || 'University')}
               </p>
@@ -300,48 +206,45 @@ function ActiveRelationshipCard({ relationship, onOpenDetail, onOpenMeetings, re
             </div>
 
             {/* Badges */}
-            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-              <Badge className="bg-slate-900 text-white border-none hover:bg-slate-800 px-3 py-1">
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <Badge className="bg-slate-900 text-white border-none hover:bg-slate-800 px-2 py-0.5 text-xs">
                 {role}
               </Badge>
-              <Badge className="bg-green-50 text-green-700 border-green-200 border px-3 py-1">
+              <Badge className="bg-green-50 text-green-700 border-green-200 border px-2 py-0.5 text-xs">
                 {statusLabel}
               </Badge>
               {cohort && cadence && (
-                <p className="text-xs text-slate-500 mt-1">{cohort} • {cadence}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{cohort} • {cadence}</p>
               )}
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-5 pb-5">
+        <CardContent className="space-y-3 pb-4">
           {/* University Letter Alert - Only show when NOT uploaded (reminder) */}
           {!hasUniversityLetter && (
-            <Alert className="bg-blue-50 border-blue-200">
-              <FileText className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-sm">
-                <div className="space-y-3">
+            <Alert className="bg-blue-50 border-blue-200 py-2.5">
+              <FileText className="h-3.5 w-3.5 text-blue-600" />
+              <AlertDescription className="text-xs">
+                <div className="space-y-2">
                   <div>
-                    <p className="font-semibold mb-1 text-blue-900">
+                    <p className="font-semibold text-blue-900">
                       University Letter
                     </p>
-                    <p className="text-blue-700 text-xs">
-                      Upload your official university offer/appointment letter to complete validation.
-                    </p>
-                    <p className="text-sm text-slate-900 mt-2 font-medium">
-                      No letter uploaded yet
+                    <p className="text-blue-700 text-xs mt-0.5">
+                      Upload official letter to complete validation.
                     </p>
                   </div>
                   <div>
                     <Button 
                       size="sm" 
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className="bg-blue-600 hover:bg-blue-700 h-7 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsUploadModalOpen(true);
                       }}
                     >
-                      <Upload className="mr-1.5 h-3 w-3" />
+                      <Upload className="mr-1 h-3 w-3" />
                       Upload Letter
                     </Button>
                   </div>
@@ -351,65 +254,69 @@ function ActiveRelationshipCard({ relationship, onOpenDetail, onOpenMeetings, re
           )}
 
           {/* Metrics Row */}
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="p-4 rounded-lg bg-slate-50">
-              <div className="text-2xl font-bold text-slate-900">{meetingsCount}</div>
-              <div className="text-xs text-slate-600 mt-1.5">Meetings</div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="p-3 rounded-lg bg-slate-50">
+              <div className="text-xl font-bold text-slate-900">{meetingsCount}</div>
+              <div className="text-xs text-slate-600 mt-1">Meetings</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50">
-              <div className="text-2xl font-bold text-slate-900">{tasksCount}</div>
-              <div className="text-xs text-slate-600 mt-1.5">Tasks</div>
+            <div className="p-3 rounded-lg bg-slate-50">
+              <div className="text-xl font-bold text-slate-900">{tasksCount}</div>
+              <div className="text-xs text-slate-600 mt-1">Tasks</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50">
-              <div className="text-2xl font-bold text-slate-900">{documentsCount}</div>
-              <div className="text-xs text-slate-600 mt-1.5">Documents</div>
+            <div className="p-3 rounded-lg bg-slate-50">
+              <div className="text-xl font-bold text-slate-900">{documentsCount}</div>
+              <div className="text-xs text-slate-600 mt-1">Documents</div>
             </div>
           </div>
 
           {/* Action Buttons Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <Button 
               variant="outline" 
-              className="w-full" 
+              size="sm"
+              className="w-full h-8 text-xs" 
               onClick={(e) => {
                 e.stopPropagation();
                 handleScheduleMeeting();
               }}
             >
-              <CalendarClock className="mr-2 h-4 w-4" />
+              <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
               Schedule Meeting
             </Button>
             <Button 
               variant="outline" 
-              className="w-full" 
+              size="sm"
+              className="w-full h-8 text-xs" 
               onClick={(e) => {
                 e.stopPropagation();
                 handleOpenChat();
               }}
             >
-              <MessageCircle className="mr-2 h-4 w-4" />
+              <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
               Chat
             </Button>
             <Button 
               variant="outline" 
-              className="w-full" 
+              size="sm"
+              className="w-full h-8 text-xs" 
               onClick={(e) => {
                 e.stopPropagation();
                 handleShareDocument();
               }}
             >
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
               Share Document
             </Button>
             <Button 
               variant="outline" 
-              className="w-full" 
+              size="sm"
+              className="w-full h-8 text-xs" 
               onClick={(e) => {
                 e.stopPropagation();
                 handleManage();
               }}
             >
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="mr-1.5 h-3.5 w-3.5" />
               Manage
             </Button>
           </div>

@@ -28,8 +28,7 @@ import UnbindRequestModal from '@/Pages/Supervision/Partials/UnbindRequestModal'
 import ResearchTab from '@/Pages/Supervision/Partials/ResearchTab';
 import DocumentsTab from '@/Pages/Supervision/Partials/DocumentsTab';
 import ThreadPane from '@/Components/Messaging/ThreadPane';
-import SupervisorOverviewTab from '@/Pages/Supervision/Partials/SupervisorOverviewTab';
-import StudentOverviewTab from '@/Pages/Supervision/Partials/StudentOverviewTab';
+import UnifiedOverviewTab from '@/Pages/Supervision/Partials/UnifiedOverviewTab';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { logError } from '@/Utils/logError';
@@ -156,7 +155,7 @@ export default function RelationshipFullPage({ relationship: initialRelationship
     <MainLayout title="Supervision Relationship">
       <Head title={`Supervision: ${fullName}`} />
       
-      <div className="max-w-7xl mx-auto pb-6">
+      <div className="max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-5 lg:px-0 lg:py-0 pb-6">
         {/* Header */}
         <div className="mb-6 bg-white border-b pb-6">
           <div>
@@ -301,19 +300,12 @@ export default function RelationshipFullPage({ relationship: initialRelationship
 
             <div>
               <TabsContent value="overview" className="mt-0 p-2">
-                {isSupervisor ? (
-                  <SupervisorOverviewTab 
-                    relationship={relationship} 
-                    student={relationship?.student ?? {}} 
-                    activeUnbindRequest={activeUnbindRequest} 
-                  />
-                ) : (
-                  <StudentOverviewTab 
-                    relationship={relationship} 
-                    academician={relationship?.academician ?? {}} 
-                    activeUnbindRequest={activeUnbindRequest} 
-                  />
-                )}
+                <UnifiedOverviewTab 
+                  relationship={relationship} 
+                  person={person}
+                  userRole={userRole}
+                  activeUnbindRequest={activeUnbindRequest} 
+                />
               </TabsContent>
 
               <TabsContent value="research" className="mt-0 p-2">

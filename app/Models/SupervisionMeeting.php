@@ -11,6 +11,7 @@ class SupervisionMeeting extends Model
 
     protected $fillable = [
         'supervision_relationship_id',
+        'supervision_request_id',
         'title',
         'scheduled_for',
         'location_link',
@@ -29,6 +30,11 @@ class SupervisionMeeting extends Model
     public function relationship()
     {
         return $this->belongsTo(SupervisionRelationship::class, 'supervision_relationship_id');
+    }
+
+    public function request()
+    {
+        return $this->belongsTo(SupervisionRequest::class, 'supervision_request_id');
     }
 
     public function creator()

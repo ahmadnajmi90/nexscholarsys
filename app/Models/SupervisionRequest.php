@@ -25,11 +25,17 @@ class SupervisionRequest extends Model
         'decision_at',
         'cancel_reason',
         'conversation_id',
+        'rejection_acknowledged_at',
+        'offer_acknowledged_at',
+        'student_response_acknowledged_at',
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
         'decision_at' => 'datetime',
+        'rejection_acknowledged_at' => 'datetime',
+        'offer_acknowledged_at' => 'datetime',
+        'student_response_acknowledged_at' => 'datetime',
         'offer_details' => 'array',
         'recommended_supervisors' => 'array',
     ];
@@ -81,6 +87,11 @@ class SupervisionRequest extends Model
     public function notes()
     {
         return $this->hasMany(SupervisionRequestNote::class)->orderByDesc('created_at');
+    }
+
+    public function meetings()
+    {
+        return $this->hasMany(SupervisionMeeting::class, 'supervision_request_id')->orderBy('scheduled_for');
     }
 
     public function scopePending($query)

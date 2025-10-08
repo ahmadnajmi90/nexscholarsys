@@ -16,6 +16,9 @@ Schedule::command('app:update-post-views-count')->daily();
 // Schedule the academician views sync command to run daily at midnight
 Schedule::command('app:sync-academician-views')->dailyAt('00:00');
 
+// Schedule meeting reminders to run every 10 minutes
+Schedule::command('supervision:send-meeting-reminders')->everyTenMinutes();
+
 // Google Scholar scraping is now handled by user-initiated actions
 // The scheduled commands have been removed
 

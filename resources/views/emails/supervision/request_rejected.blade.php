@@ -6,7 +6,19 @@
 {{ __('We regret to inform you that your supervision request for ":title" was not accepted at this time.', ['title' => $request->proposal_title ?? 'your research proposal']) }}
 
 @if(!empty($request->cancel_reason))
-**{{ __('Reason:') }}** {{ $request->cancel_reason }}
+@php
+$reasonLabels = [
+    'expertise_outside' => 'Research topic is outside my expertise',
+    'capacity_full' => 'I have reached my supervision capacity',
+    'methodology_mismatch' => 'Methodology does not align with my research',
+    'language_communication' => 'Language or communication concerns',
+    'timing_conflicts' => 'Timing or schedule conflicts',
+    'additional_qualifications' => 'Student needs additional qualifications',
+    'other' => 'Other reason',
+];
+$reasonLabel = $reasonLabels[$request->cancel_reason] ?? $request->cancel_reason;
+@endphp
+**{{ __('Reason:') }}** {{ $reasonLabel }}
 @endif
 
 @if(!empty($request->rejection_feedback))

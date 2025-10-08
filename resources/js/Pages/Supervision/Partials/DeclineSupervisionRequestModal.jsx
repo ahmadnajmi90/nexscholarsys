@@ -15,16 +15,7 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { logError } from '@/Utils/logError';
 import { usePage } from '@inertiajs/react';
-
-const REJECTION_REASONS = [
-  { value: 'expertise_outside', label: 'Research topic is outside my expertise' },
-  { value: 'capacity_full', label: 'I have reached my supervision capacity' },
-  { value: 'methodology_mismatch', label: 'Methodology does not align with my research' },
-  { value: 'language_communication', label: 'Language or communication concerns' },
-  { value: 'timing_conflicts', label: 'Timing or schedule conflicts' },
-  { value: 'additional_qualifications', label: 'Student needs additional qualifications' },
-  { value: 'other', label: 'Other reason' },
-];
+import { REJECTION_REASONS } from '@/Utils/supervisionConstants';
 
 export default function DeclineSupervisionRequestModal({ isOpen, request, onClose, onRejected }) {
   const { auth } = usePage().props;

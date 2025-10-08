@@ -35,6 +35,8 @@ import {
     MessageSquare,
     ClipboardList,
     Map,
+    School,
+    FolderKanban 
 } from 'lucide-react';
 import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
@@ -146,23 +148,25 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">My Bookmarks</span>
                             </Link>
                         </motion.div>
-                        <motion.div variants={itemVariants}>
-                            <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Sparkles className="w-5 h-5 text-gray-600 mb-2" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">My Supervisor</span>
-                            </Link>
-                        </motion.div>
+                        {(isPostgraduate || isUndergraduate) && (
+                            <motion.div variants={itemVariants}>
+                                <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                    <School className="w-5 h-5 text-gray-600 mb-2" />
+                                    <span className="text-sm font-medium text-gray-700 truncate w-full">My Supervisor</span>
+                                </Link>
+                            </motion.div>
+                        )}
                         {auth.user?.academician && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('supervision.supervisor.index')} className="bg-indigo-600 bg-opacity-90 border border-white border-opacity-40 shadow-lg p-3 rounded-lg cursor-pointer text-white hover:bg-indigo-500 transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col items-center justify-center text-center">
-                                    <Calendar className="w-5 h-5 text-indigo-100 mb-2" />
-                                    <span className="text-sm font-medium text-white truncate w-full">Supervisor Dashboard</span>
+                                <Link href={route('supervision.supervisor.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                    <LayoutDashboard className="w-5 h-5 text-gray-600 mb-2" />
+                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Supervisor Dashboard</span>
                                 </Link>
                             </motion.div>
                         )}
                         <motion.div variants={itemVariants}>
                             <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <LayoutGrid className="w-5 h-5 text-gray-600 mb-2" />
+                                <FolderKanban  className="w-5 h-5 text-gray-600 mb-2" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">Scholar Lab</span>
                             </Link>
                         </motion.div>

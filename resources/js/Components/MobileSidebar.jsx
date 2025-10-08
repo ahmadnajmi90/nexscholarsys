@@ -5,7 +5,7 @@ import {
     Home, Sparkles, Users, FolderOpen, Settings, ChevronLeft,
     GraduationCap, LayoutGrid, Shield, Calendar,
     FileText, ClipboardList, LogOut, Bookmark, Building2, Database, User2, BookUser, Library, Building, DollarSign,
-    MessageSquare
+    MessageSquare, UserCheck, School, FolderKanban, LayoutDashboard
 } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 
@@ -52,7 +52,9 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                 { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles },
                 { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap },
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
-                { label: 'Scholar Lab', href: route('project-hub.index'), icon: LayoutGrid },
+                ...(isPostgraduate || isUndergraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School }] : []),
+                ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard }] : []),
+                { label: 'Scholar Lab', href: route('project-hub.index'), icon: FolderKanban  },
                 { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare },
             ]
         },
