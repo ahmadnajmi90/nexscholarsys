@@ -61,10 +61,15 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isDeletingNoteId, setIsDeletingNoteId] = useState(null);
+  
+  // Supervisors state
+  const [supervisors, setSupervisors] = useState([]);
+  const [loadingSupervisors, setLoadingSupervisors] = useState(true);
 
   useEffect(() => {
     if (relationship?.id) {
       loadNotes();
+      loadSupervisors();
     }
   }, [relationship?.id]);
 
@@ -75,6 +80,34 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
       setNotesList(response.data.data?.notes || []);
     } catch (error) {
       logError(error, 'SupervisorRelationshipDetailModal loadNotes');
+    }
+  };
+
+  const loadSupervisors = async () => {
+    if (!relationship?.student_id) return;
+    setLoadingSupervisors(true);
+    try {
+      // Get all relationships for this student
+      const response = await axios.get('/api/v1/app/supervision/relationships', {
+        params: { student_id: relationship.student_id }
+      });
+      const allRelationships = response.data.data || [];
+      
+      // Separate main and co-supervisors
+      const mainSupervisor = allRelationships.find(rel => rel.role === 'main' && rel.status === 'active');
+      const coSupervisors = allRelationships.filter(rel => rel.role === 'co' && rel.status === 'active');
+      
+      // Combine with main first
+      const combined = [];
+      if (mainSupervisor) combined.push(mainSupervisor);
+      combined.push(...coSupervisors);
+      
+      setSupervisors(combined);
+    } catch (error) {
+      logError(error, 'SupervisorRelationshipDetailModal loadSupervisors');
+      setSupervisors([]);
+    } finally {
+      setLoadingSupervisors(false);
     }
   };
 
@@ -114,6 +147,7 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
   if (!relationship) return null;
 
   const student = relationship?.student ?? {};
+  // console.log('Student with group conversation:', student?.supervision_group_conversation_id);
   const fullName = student.full_name ?? 'Student';
   const avatarUrl = student.profile_picture ? `/storage/${student.profile_picture}` : null;
   const baseStatus = relationship.status ?? 'active';
@@ -261,6 +295,12 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="supervisors"
+                  className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
+                >
+                  Supervisors
+                </TabsTrigger>
+                <TabsTrigger 
                   value="research"
                   className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
                 >
@@ -304,6 +344,15 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
                   </ScrollArea>
                 </TabsContent>
 
+                <TabsContent value="supervisors" className="mt-0 h-full">
+                  <ScrollArea className="h-full">
+                    <SupervisorsTab 
+                      supervisors={supervisors}
+                      loading={loadingSupervisors}
+                    />
+                  </ScrollArea>
+                </TabsContent>
+
                 <TabsContent value="research" className="mt-0 h-full">
                   <ResearchTab relationship={relationship} onUpdated={onUpdated} isReadOnly={!isInteractive} />
                 </TabsContent>
@@ -313,25 +362,67 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
                 </TabsContent>
 
                 <TabsContent value="chat" className="mt-0 h-full">
-                  {relationship?.conversation_id ? (
-                    <div className="p-6 h-full">
-                      <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-full overflow-hidden">
-                        <ThreadPane
-                          conversationId={relationship.conversation_id}
-                          auth={auth}
-                          onConversationRead={() => {}}
-                          onConversationIncrementUnread={() => {}}
-                          onAfterSend={() => onUpdated?.()}
-                        />
-                      </div>
+                  <Tabs defaultValue="direct" className="h-full flex flex-col">
+                    <div className="px-6 py-2 border-b bg-slate-50">
+                      <TabsList className="bg-white border border-slate-200">
+                        <TabsTrigger value="direct" className="flex-1">
+                          Direct Message
+                        </TabsTrigger>
+                        <TabsTrigger value="group" className="flex-1" disabled={!student?.supervision_group_conversation_id}>
+                          Team Chat
+                        </TabsTrigger>
+                      </TabsList>
                     </div>
-                  ) : (
-                    <div className="p-6">
-                      <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
-                        <p className="text-sm text-slate-500">No conversation available yet.</p>
-                      </div>
+
+                    <div className="flex-1 overflow-hidden">
+                      <TabsContent value="direct" className="mt-0 h-full">
+                        {relationship?.conversation_id ? (
+                          <div className="p-6 h-full">
+                            <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-full overflow-hidden">
+                              <ThreadPane
+                                conversationId={relationship.conversation_id}
+                                auth={auth}
+                                onConversationRead={() => {}}
+                                onConversationIncrementUnread={() => {}}
+                                onAfterSend={() => onUpdated?.()}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-6">
+                            <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+                              <p className="text-sm text-slate-500">No direct conversation available yet.</p>
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="group" className="mt-0 h-full">
+                        {student?.supervision_group_conversation_id ? (
+                          <div className="p-6 h-full">
+                            <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-full overflow-hidden">
+                              <ThreadPane
+                                conversationId={student.supervision_group_conversation_id}
+                                auth={auth}
+                                onConversationRead={() => {}}
+                                onConversationIncrementUnread={() => {}}
+                                onAfterSend={() => onUpdated?.()}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-6">
+                            <div className="border border-slate-200 rounded-lg p-6 bg-slate-50 text-center">
+                              <p className="text-sm text-slate-600 font-medium mb-2">No Team Chat Yet</p>
+                              <p className="text-xs text-slate-500">
+                                Team chat will be created when the first co-supervisor joins
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
                     </div>
-                  )}
+                  </Tabs>
                 </TabsContent>
 
                 <TabsContent value="notes" className="mt-0 h-full">
@@ -385,6 +476,110 @@ export default function SupervisorRelationshipDetailModal({ relationship, onClos
         userRole="supervisor"
       />
     </>
+  );
+}
+
+function SupervisorsTab({ supervisors, loading }) {
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        </div>
+      </div>
+    );
+  }
+
+  if (supervisors.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="border border-slate-200 rounded-lg p-8 bg-slate-50 text-center">
+          <User2 className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">No Supervisors</h3>
+          <p className="text-sm text-slate-500">No supervisors assigned to this student yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-slate-900">
+          All Supervisors ({supervisors.length})
+        </h3>
+      </div>
+
+      <div className="grid gap-4">
+        {supervisors.map((rel) => {
+          const academician = rel.academician || {};
+          const fullName = academician.full_name || 'Supervisor';
+          const avatarUrl = academician.profile_picture ? `/storage/${academician.profile_picture}` : null;
+          const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          const role = rel.role === 'main' ? 'Main Supervisor' : 'Co-Supervisor';
+          const university = academician.university?.name || academician.university?.full_name || '';
+          const department = academician.department || '';
+          const position = academician.current_position || '';
+
+          return (
+            <div 
+              key={rel.id}
+              className="border border-slate-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start gap-4">
+                <Avatar className="h-14 w-14 flex-shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-indigo-100 text-indigo-700 text-sm font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base font-semibold text-slate-900 truncate">{fullName}</h4>
+                      <Badge className={rel.role === 'main' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-slate-100 text-slate-700 border-slate-200'}>
+                        {role}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-sm">
+                    {position && (
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <GraduationCap className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        <span className="truncate">{position}</span>
+                      </div>
+                    )}
+                    {university && (
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <Globe className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        <span className="truncate">{university}</span>
+                      </div>
+                    )}
+                    {department && (
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <User2 className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                        <span className="truncate">{department}</span>
+                      </div>
+                    )}
+                    {rel.accepted_at && (
+                      <div className="flex items-center gap-2 text-slate-500 text-xs mt-2">
+                        <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>Since {format(new Date(rel.accepted_at), 'dd MMM yyyy')}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

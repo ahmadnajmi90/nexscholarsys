@@ -17,7 +17,7 @@ class ResearchController extends Controller
     }
 
     /**
-     * Get research details for a relationship
+     * Get research details for a relationship (now student-centric)
      */
     public function show(Request $request, SupervisionRelationship $relationship)
     {
@@ -28,12 +28,16 @@ class ResearchController extends Controller
             abort(403, 'You do not have access to this supervision relationship.');
         }
 
-        $researchDetail = $relationship->researchDetail()->with(['milestones.creator'])->first();
+        $student = $relationship->student;
+        
+        // Get research detail by student_id (shared across all supervisors)
+        $researchDetail = $student->researchDetail()->with(['milestones.creator'])->first();
 
         // Create research detail if doesn't exist
         if (!$researchDetail) {
             $researchDetail = SupervisionResearchDetail::create([
-                'relationship_id' => $relationship->id,
+                'student_id' => $student->postgraduate_id,
+                'relationship_id' => $relationship->id, // Keep for reference
                 'title' => null,
                 'objectives' => [],
                 'progress_percentage' => 0,
@@ -41,9 +45,14 @@ class ResearchController extends Controller
             $researchDetail->load(['milestones.creator']);
         }
 
+        // Check if main supervisor is active (determines read-only status)
+        $mainRelationship = $student->mainSupervisionRelationship;
+        $isReadOnly = !$mainRelationship || $mainRelationship->status !== SupervisionRelationship::STATUS_ACTIVE;
+
         return response()->json([
             'success' => true,
             'data' => $researchDetail,
+            'is_read_only' => $isReadOnly,
         ]);
     }
 
@@ -59,6 +68,14 @@ class ResearchController extends Controller
             abort(403, 'You do not have access to this supervision relationship.');
         }
 
+        $student = $relationship->student;
+
+        // Check if main supervisor is active - if not, research is read-only
+        $mainRelationship = $student->mainSupervisionRelationship;
+        if (!$mainRelationship || $mainRelationship->status !== SupervisionRelationship::STATUS_ACTIVE) {
+            abort(403, 'Research details are read-only when main supervisor relationship is not active.');
+        }
+
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:500'],
             'objectives' => ['nullable', 'array'],
@@ -70,9 +87,9 @@ class ResearchController extends Controller
             'free_form_content' => ['nullable', 'string', 'max:50000'],
         ]);
 
-        $researchDetail = $relationship->researchDetail()->firstOrCreate(
-            ['relationship_id' => $relationship->id],
-            ['title' => null, 'objectives' => [], 'progress_percentage' => 0]
+        $researchDetail = $student->researchDetail()->firstOrCreate(
+            ['student_id' => $student->postgraduate_id],
+            ['relationship_id' => $relationship->id, 'title' => null, 'objectives' => [], 'progress_percentage' => 0]
         );
 
         $researchDetail->update($data);
@@ -96,6 +113,14 @@ class ResearchController extends Controller
             abort(403, 'You do not have access to this supervision relationship.');
         }
 
+        $student = $relationship->student;
+
+        // Check if main supervisor is active - if not, research is read-only
+        $mainRelationship = $student->mainSupervisionRelationship;
+        if (!$mainRelationship || $mainRelationship->status !== SupervisionRelationship::STATUS_ACTIVE) {
+            abort(403, 'Cannot add milestones when main supervisor relationship is not active.');
+        }
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
@@ -104,9 +129,10 @@ class ResearchController extends Controller
         ]);
 
         return DB::transaction(function () use ($relationship, $data, $user) {
-            $researchDetail = $relationship->researchDetail()->firstOrCreate(
-                ['relationship_id' => $relationship->id],
-                ['title' => null, 'objectives' => [], 'progress_percentage' => 0]
+            $student = $relationship->student;
+            $researchDetail = $student->researchDetail()->firstOrCreate(
+                ['student_id' => $student->postgraduate_id],
+                ['relationship_id' => $relationship->id, 'title' => null, 'objectives' => [], 'progress_percentage' => 0]
             );
 
             // If order not provided, put at end
@@ -191,14 +217,29 @@ class ResearchController extends Controller
     }
 
     /**
-     * Helper to check if user can access relationship (as supervisor or student)
+     * Helper to check if user can access relationship (as any supervisor or student)
+     * Now checks all supervisors (main + co-supervisors) for the student
      */
     protected function canAccessRelationship($user, SupervisionRelationship $relationship): bool
     {
-        $isSupervisor = $user->academician && $user->academician->academician_id === $relationship->academician_id;
-        $isStudent = $user->postgraduate && $user->postgraduate->postgraduate_id === $relationship->student_id;
+        $student = $relationship->student;
         
-        return $isSupervisor || $isStudent;
+        // Check if user is the student
+        if ($user->postgraduate && $user->postgraduate->postgraduate_id === $student->postgraduate_id) {
+            return true;
+        }
+
+        // Check if user is any supervisor (main or co-supervisor) for this student
+        if ($user->academician) {
+            $isAnySupervisor = SupervisionRelationship::where('student_id', $student->postgraduate_id)
+                ->where('academician_id', $user->academician->academician_id)
+                ->where('status', SupervisionRelationship::STATUS_ACTIVE)
+                ->exists();
+            
+            return $isAnySupervisor;
+        }
+        
+        return false;
     }
 }
 

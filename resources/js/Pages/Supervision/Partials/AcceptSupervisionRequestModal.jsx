@@ -11,20 +11,14 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { logError } from '@/Utils/logError';
 
-const COHORT_OPTIONS = [
-  'January 2025',
-  'February 2025',
-  'March 2025',
-  'April 2025',
-  'May 2025',
-  'June 2025',
-  'July 2025',
-  'August 2025',
-  'September 2025',
-  'October 2025',
-  'November 2025',
-  'December 2025',
+const COHORT_MONTHS = [
+  { value: 'March', label: 'March' },
+  { value: 'September', label: 'September' },
 ];
+
+// Generate year options (10 years before to 10 years after current year = 21 years total)
+const currentYear = new Date().getFullYear();
+const COHORT_YEARS = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
 
 const MEETING_CADENCE_OPTIONS = [
   { value: 'weekly', label: 'Weekly meetings' },
@@ -43,7 +37,8 @@ const DEFAULT_ONBOARDING_CHECKLIST = [
 ];
 
 export default function AcceptSupervisionRequestModal({ isOpen, request, onClose, onAccepted }) {
-  const [cohort, setCohort] = useState('');
+  const [cohortMonth, setCohortMonth] = useState('');
+  const [cohortYear, setCohortYear] = useState(currentYear.toString());
   const [meetingCadence, setMeetingCadence] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [createScholarLab, setCreateScholarLab] = useState(true);
@@ -55,7 +50,10 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
   const program = request?.postgraduate_program?.name || 'PhD Computer Science Program';
   const researchTopic = request?.proposal_title || 'Research Topic';
 
-  const canSubmit = cohort && meetingCadence;
+  const canSubmit = cohortMonth && cohortYear && meetingCadence;
+  
+  // Combine month and year for cohort
+  const cohort = cohortMonth && cohortYear ? `${cohortMonth} ${cohortYear}` : '';
 
   const handleChecklistToggle = (id) => {
     setChecklistItems(prev =>
@@ -99,7 +97,8 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
   const handleClose = () => {
     if (!isSubmitting) {
       // Reset form
-      setCohort('');
+      setCohortMonth('');
+      setCohortYear(currentYear.toString()); // Reset to current year
       setMeetingCadence('');
       setWelcomeMessage('');
       setCreateScholarLab(true);
@@ -159,23 +158,47 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
             <section className="space-y-4">
               <h3 className="text-base font-semibold text-slate-900">Supervision Setup</h3>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cohort">
+              <div className="space-y-4">
+                {/* Cohort/Start Term - Split into Month and Year */}
+                <div>
+                  <Label className="mb-2 block">
                     Cohort/Start Term <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={cohort} onValueChange={setCohort}>
-                    <SelectTrigger id="cohort">
-                      <SelectValue placeholder="Select cohort" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COHORT_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Select value={cohortMonth} onValueChange={setCohortMonth}>
+                        <SelectTrigger id="cohortMonth">
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COHORT_MONTHS.map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Select value={cohortYear} onValueChange={setCohortYear}>
+                        <SelectTrigger id="cohortYear">
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COHORT_YEARS.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {cohortMonth && cohortYear && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Selected: <span className="font-medium">{cohort}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

@@ -10,7 +10,10 @@ import {
   UserPlus, 
   Lightbulb,
   FileText,
-  Loader2
+  Loader2,
+  UserMinus,
+  AlertCircle,
+  Users
 } from 'lucide-react';
 import axios from 'axios';
 import { logError } from '@/Utils/logError';
@@ -24,6 +27,12 @@ const ACTIVITY_ICONS = {
   message_received: MessageCircle,
   document_uploaded: FileText,
   recommendations_available: Lightbulb,
+  unbind_approved: UserMinus,
+  unbind_pending: AlertCircle,
+  cosupervisor_added: Users,
+  cosupervisor_pending_approval: AlertCircle,
+  cosupervisor_invited: UserPlus,
+  cosupervisor_invitation_received: Users,
 };
 
 const ACTIVITY_COLORS = {
@@ -35,6 +44,12 @@ const ACTIVITY_COLORS = {
   message_received: 'text-purple-500',
   document_uploaded: 'text-amber-500',
   recommendations_available: 'text-indigo-500',
+  unbind_approved: 'text-red-600',
+  unbind_pending: 'text-orange-500',
+  cosupervisor_added: 'text-emerald-500',
+  cosupervisor_pending_approval: 'text-yellow-500',
+  cosupervisor_invited: 'text-indigo-500',
+  cosupervisor_invitation_received: 'text-purple-500',
 };
 
 export default function RecentActivityPanel({ userRole, triggerReload = 0 }) {

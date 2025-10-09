@@ -10,6 +10,7 @@ class SupervisionResearchDetail extends Model
     use HasFactory;
 
     protected $fillable = [
+        'student_id',
         'relationship_id',
         'title',
         'objectives',
@@ -24,6 +25,11 @@ class SupervisionResearchDetail extends Model
         'objectives' => 'array',
         'progress_percentage' => 'integer',
     ];
+
+    public function student()
+    {
+        return $this->belongsTo(Postgraduate::class, 'student_id', 'postgraduate_id');
+    }
 
     public function relationship()
     {

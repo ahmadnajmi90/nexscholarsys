@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\SupervisionMeeting;
 use App\Models\SupervisionRequest;
 use App\Models\SupervisionTimeline;
+use App\Models\SupervisionRelationshipUnbindRequest;
+use App\Models\CoSupervisorInvitation;
+use App\Models\SupervisionRelationship;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -86,6 +89,77 @@ class ActivityFeedController extends Controller
                     ]);
                 }
             }
+
+            // Get recent unbind requests
+            $unbindRequests = SupervisionRelationshipUnbindRequest::whereHas('relationship', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            })
+                ->with(['relationship.academician', 'initiator'])
+                ->where('created_at', '>=', now()->subDays(7))
+                ->orderByDesc('created_at')
+                ->limit(3)
+                ->get();
+
+            foreach ($unbindRequests as $unbind) {
+                $supervisor = $unbind->relationship->academician;
+                if ($unbind->status === 'approved') {
+                    $activities->push([
+                        'id' => "unbind_approved_{$unbind->id}",
+                        'type' => 'unbind_approved',
+                        'description' => "Relationship with {$supervisor->full_name} terminated",
+                        'actor_name' => $supervisor->full_name,
+                        'related_id' => $unbind->id,
+                        'related_type' => 'unbind_request',
+                        'created_at' => $unbind->responded_at ?? $unbind->created_at,
+                    ]);
+                } elseif ($unbind->status === 'pending' && $unbind->initiated_by === 'supervisor') {
+                    $activities->push([
+                        'id' => "unbind_pending_{$unbind->id}",
+                        'type' => 'unbind_pending',
+                        'description' => "{$supervisor->full_name} requested termination",
+                        'actor_name' => $supervisor->full_name,
+                        'related_id' => $unbind->id,
+                        'related_type' => 'unbind_request',
+                        'created_at' => $unbind->created_at,
+                    ]);
+                }
+            }
+
+            // Get recent co-supervisor invitations
+            $coSupervisorInvitations = CoSupervisorInvitation::whereHas('relationship', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            })
+                ->with(['cosupervisor', 'relationship.academician'])
+                ->whereNull('cancelled_at')
+                ->where('created_at', '>=', now()->subDays(7))
+                ->orderByDesc('created_at')
+                ->limit(3)
+                ->get();
+
+            foreach ($coSupervisorInvitations as $invitation) {
+                $cosupervisor = $invitation->cosupervisor;
+                if ($invitation->completed_at) {
+                    $activities->push([
+                        'id' => "cosupervisor_added_{$invitation->id}",
+                        'type' => 'cosupervisor_added',
+                        'description' => "{$cosupervisor->full_name} added as co-supervisor",
+                        'actor_name' => $cosupervisor->full_name,
+                        'related_id' => $invitation->id,
+                        'related_type' => 'cosupervisor_invitation',
+                        'created_at' => $invitation->completed_at,
+                    ]);
+                } elseif ($invitation->cosupervisor_status === 'accepted' && $invitation->approver_status === 'pending') {
+                    $activities->push([
+                        'id' => "cosupervisor_pending_approval_{$invitation->id}",
+                        'type' => 'cosupervisor_pending_approval',
+                        'description' => "{$cosupervisor->full_name} accepted co-supervisor invitation",
+                        'actor_name' => $cosupervisor->full_name,
+                        'related_id' => $invitation->id,
+                        'related_type' => 'cosupervisor_invitation',
+                        'created_at' => $invitation->cosupervisor_responded_at,
+                    ]);
+                }
+            }
         }
 
         // For supervisors
@@ -146,6 +220,107 @@ class ActivityFeedController extends Controller
                         'related_id' => $meeting->id,
                         'related_type' => 'supervision_meeting',
                         'created_at' => $meeting->created_at,
+                    ]);
+                }
+            }
+
+            // Get recent unbind requests
+            $unbindRequests = SupervisionRelationshipUnbindRequest::whereHas('relationship', function ($q) use ($academicianId) {
+                $q->where('academician_id', $academicianId);
+            })
+                ->with(['relationship.student', 'initiator'])
+                ->where('created_at', '>=', now()->subDays(7))
+                ->orderByDesc('created_at')
+                ->limit(3)
+                ->get();
+
+            foreach ($unbindRequests as $unbind) {
+                $student = $unbind->relationship->student;
+                if ($unbind->status === 'approved') {
+                    $activities->push([
+                        'id' => "unbind_approved_{$unbind->id}",
+                        'type' => 'unbind_approved',
+                        'description' => "Relationship with {$student->full_name} terminated",
+                        'actor_name' => $student->full_name,
+                        'related_id' => $unbind->id,
+                        'related_type' => 'unbind_request',
+                        'created_at' => $unbind->responded_at ?? $unbind->created_at,
+                    ]);
+                } elseif ($unbind->status === 'pending' && $unbind->initiated_by === 'student') {
+                    $activities->push([
+                        'id' => "unbind_pending_{$unbind->id}",
+                        'type' => 'unbind_pending',
+                        'description' => "{$student->full_name} requested termination",
+                        'actor_name' => $student->full_name,
+                        'related_id' => $unbind->id,
+                        'related_type' => 'unbind_request',
+                        'created_at' => $unbind->created_at,
+                    ]);
+                }
+            }
+
+            // Get recent co-supervisor invitations (both as main supervisor and as co-supervisor)
+            $coSupervisorInvitations = CoSupervisorInvitation::where(function ($q) use ($academicianId) {
+                // As main supervisor
+                $q->whereHas('relationship', function ($rel) use ($academicianId) {
+                    $rel->where('academician_id', $academicianId);
+                })
+                // Or as invited co-supervisor
+                ->orWhere('cosupervisor_academician_id', $academicianId);
+            })
+                ->with(['cosupervisor', 'relationship.student', 'relationship.academician'])
+                ->whereNull('cancelled_at')
+                ->where('created_at', '>=', now()->subDays(7))
+                ->orderByDesc('created_at')
+                ->limit(3)
+                ->get();
+
+            foreach ($coSupervisorInvitations as $invitation) {
+                $student = $invitation->relationship->student;
+                $cosupervisor = $invitation->cosupervisor;
+                $isCoSupervisor = $invitation->cosupervisor_academician_id === $academicianId;
+
+                if ($invitation->completed_at) {
+                    if ($isCoSupervisor) {
+                        $activities->push([
+                            'id' => "cosupervisor_added_{$invitation->id}",
+                            'type' => 'cosupervisor_added',
+                            'description' => "Added as co-supervisor for {$student->full_name}",
+                            'actor_name' => $student->full_name,
+                            'related_id' => $invitation->id,
+                            'related_type' => 'cosupervisor_invitation',
+                            'created_at' => $invitation->completed_at,
+                        ]);
+                    } else {
+                        $activities->push([
+                            'id' => "cosupervisor_added_{$invitation->id}",
+                            'type' => 'cosupervisor_added',
+                            'description' => "{$cosupervisor->full_name} added as co-supervisor for {$student->full_name}",
+                            'actor_name' => $cosupervisor->full_name,
+                            'related_id' => $invitation->id,
+                            'related_type' => 'cosupervisor_invitation',
+                            'created_at' => $invitation->completed_at,
+                        ]);
+                    }
+                } elseif (!$isCoSupervisor && $invitation->cosupervisor_status === 'pending') {
+                    $activities->push([
+                        'id' => "cosupervisor_invited_{$invitation->id}",
+                        'type' => 'cosupervisor_invited',
+                        'description' => "Invited {$cosupervisor->full_name} as co-supervisor for {$student->full_name}",
+                        'actor_name' => $cosupervisor->full_name,
+                        'related_id' => $invitation->id,
+                        'related_type' => 'cosupervisor_invitation',
+                        'created_at' => $invitation->created_at,
+                    ]);
+                } elseif ($isCoSupervisor && $invitation->cosupervisor_status === 'pending') {
+                    $activities->push([
+                        'id' => "cosupervisor_invitation_received_{$invitation->id}",
+                        'type' => 'cosupervisor_invitation_received',
+                        'description' => "Invited to be co-supervisor for {$student->full_name}",
+                        'actor_name' => $student->full_name,
+                        'related_id' => $invitation->id,
+                        'related_type' => 'cosupervisor_invitation',
+                        'created_at' => $invitation->created_at,
                     ]);
                 }
             }

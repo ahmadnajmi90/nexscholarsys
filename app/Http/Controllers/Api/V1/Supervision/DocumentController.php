@@ -18,7 +18,7 @@ class DocumentController extends Controller
     }
 
     /**
-     * Get all documents for a relationship
+     * Get all documents for a relationship (now student-centric)
      */
     public function index(Request $request, SupervisionRelationship $relationship)
     {
@@ -28,16 +28,24 @@ class DocumentController extends Controller
             abort(403, 'You do not have access to this supervision relationship.');
         }
 
-        $documents = $relationship->documents()
+        $student = $relationship->student;
+
+        // Get documents by student_id (shared across all supervisors)
+        $documents = $student->supervisionDocuments()
             ->with(['currentVersion.uploader', 'versions.uploader'])
             ->get()
             ->groupBy('folder_category');
+
+        // Check if main supervisor is active (determines read-only status)
+        $mainRelationship = $student->mainSupervisionRelationship;
+        $isReadOnly = !$mainRelationship || $mainRelationship->status !== SupervisionRelationship::STATUS_ACTIVE;
 
         return response()->json([
             'success' => true,
             'data' => [
                 'documents_by_folder' => $documents,
                 'available_folders' => SupervisionDocument::getAvailableFolders(),
+                'is_read_only' => $isReadOnly,
             ],
         ]);
     }
@@ -53,6 +61,14 @@ class DocumentController extends Controller
             abort(403, 'You do not have access to this supervision relationship.');
         }
 
+        $student = $relationship->student;
+
+        // Check if main supervisor is active - if not, documents are read-only
+        $mainRelationship = $student->mainSupervisionRelationship;
+        if (!$mainRelationship || $mainRelationship->status !== SupervisionRelationship::STATUS_ACTIVE) {
+            abort(403, 'Documents are read-only when main supervisor relationship is not active.');
+        }
+
         $data = $request->validate([
             'file' => ['required', 'file', 'max:51200'], // Max 50MB
             'document_id' => ['nullable', 'exists:supervision_documents,id'], // If provided, new version
@@ -63,6 +79,7 @@ class DocumentController extends Controller
 
         return DB::transaction(function () use ($request, $relationship, $data, $user) {
             $file = $request->file('file');
+            $student = $relationship->student;
             
             // Store file
             $path = $file->store('supervision/documents', 'public');
@@ -71,9 +88,9 @@ class DocumentController extends Controller
                 // New version of existing document
                 $document = SupervisionDocument::findOrFail($data['document_id']);
                 
-                // Verify document belongs to this relationship
-                if ($document->relationship_id !== $relationship->id) {
-                    abort(403, 'This document does not belong to this relationship.');
+                // Verify document belongs to this student
+                if ($document->student_id !== $student->postgraduate_id) {
+                    abort(403, 'This document does not belong to this student.');
                 }
 
                 $latestVersion = $document->versions()->max('version_number') ?? 0;
@@ -81,7 +98,8 @@ class DocumentController extends Controller
             } else {
                 // New document
                 $document = SupervisionDocument::create([
-                    'relationship_id' => $relationship->id,
+                    'student_id' => $student->postgraduate_id,
+                    'relationship_id' => $relationship->id, // Keep for reference
                     'folder_category' => $data['folder_category'],
                     'name' => $data['document_name'],
                     'current_version_id' => null, // Will be set after creating version
@@ -247,14 +265,29 @@ class DocumentController extends Controller
     }
 
     /**
-     * Helper to check if user can access relationship
+     * Helper to check if user can access relationship (as any supervisor or student)
+     * Now checks all supervisors (main + co-supervisors) for the student
      */
     protected function canAccessRelationship($user, SupervisionRelationship $relationship): bool
     {
-        $isSupervisor = $user->academician && $user->academician->academician_id === $relationship->academician_id;
-        $isStudent = $user->postgraduate && $user->postgraduate->postgraduate_id === $relationship->student_id;
+        $student = $relationship->student;
         
-        return $isSupervisor || $isStudent;
+        // Check if user is the student
+        if ($user->postgraduate && $user->postgraduate->postgraduate_id === $student->postgraduate_id) {
+            return true;
+        }
+
+        // Check if user is any supervisor (main or co-supervisor) for this student
+        if ($user->academician) {
+            $isAnySupervisor = SupervisionRelationship::where('student_id', $student->postgraduate_id)
+                ->where('academician_id', $user->academician->academician_id)
+                ->where('status', SupervisionRelationship::STATUS_ACTIVE)
+                ->exists();
+            
+            return $isAnySupervisor;
+        }
+        
+        return false;
     }
 }
 

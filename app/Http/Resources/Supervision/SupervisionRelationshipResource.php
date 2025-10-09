@@ -72,12 +72,14 @@ class SupervisionRelationshipResource extends JsonResource
             'terminated_at' => $this->terminated_at,
             'university_letter_path' => $this->university_letter_path,
             'student' => $this->whenLoaded('student', fn () => [
+                'postgraduate_id' => $this->student->postgraduate_id,
                 'full_name' => $this->student->full_name,
                 'profile_picture' => $this->student->profile_picture,
                 'email' => $this->student->user?->email,
                 'phone_number' => $this->student->phone_number,
                 'bio' => $this->student->bio,
                 'nationality' => $this->student->nationality,
+                'supervision_group_conversation_id' => $this->student->supervision_group_conversation_id,
                 'university' => $this->student->universityDetails ? [
                     'id' => $this->student->universityDetails->id,
                     'name' => $this->student->universityDetails->name,
@@ -124,6 +126,15 @@ class SupervisionRelationshipResource extends JsonResource
             'notes' => $this->whenLoaded('notes', fn () => $this->notes),
             'unbindRequests' => $this->whenLoaded('unbindRequests', fn () => $this->unbindRequests),
             'activeUnbindRequest' => $this->whenLoaded('activeUnbindRequest', fn () => $this->activeUnbindRequest),
+            'cosupervisors' => $this->whenLoaded('cosupervisors', fn () => 
+                $this->cosupervisors->map(fn ($cosup) => [
+                    'academician_id' => $cosup->academician_id,
+                    'full_name' => $cosup->full_name,
+                    'profile_picture' => $cosup->profile_picture,
+                    'current_position' => $cosup->current_position,
+                    'department' => $cosup->department,
+                ])
+            ),
         ];
     }
 }

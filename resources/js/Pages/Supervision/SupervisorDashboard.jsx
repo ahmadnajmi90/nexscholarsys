@@ -19,6 +19,9 @@ import ForceUnbindRequestModal from '@/Pages/Supervision/Partials/ForceUnbindReq
 import UnifiedNotificationModal from '@/Pages/Supervision/Partials/UnifiedNotificationModal';
 import RecentActivityPanel from '@/Pages/Supervision/Partials/RecentActivityPanel';
 import UpcomingMeetingsPanel from '@/Pages/Supervision/Partials/UpcomingMeetingsPanel';
+import CoSupervisorSearchModal from '@/Pages/Supervision/Partials/CoSupervisorSearchModal';
+import CoSupervisorInvitationCard from '@/Pages/Supervision/Partials/CoSupervisorInvitationCard';
+import CoSupervisorInvitationDetailPanel from '@/Pages/Supervision/Partials/CoSupervisorInvitationDetailPanel';
 import { logError } from '@/Utils/logError';
 import {
   BookOpenCheck,
@@ -58,6 +61,14 @@ export default function SupervisorDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [requestFilter, setRequestFilter] = useState('pending');
+  const [isCoSupervisorModalOpen, setIsCoSupervisorModalOpen] = useState(false);
+  const [selectedMainRelationship, setSelectedMainRelationship] = useState(null);
+  
+  // Co-supervisor invitations
+  const [coSupervisorInvitations, setCoSupervisorInvitations] = useState([]);
+  const [approvalInvitations, setApprovalInvitations] = useState([]);
+  const [myInitiatedInvitations, setMyInitiatedInvitations] = useState([]);
+  const [selectedCoSupervisorInvitation, setSelectedCoSupervisorInvitation] = useState(null);
 
   // Notification modals state
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -74,9 +85,10 @@ export default function SupervisorDashboard() {
     try {
       setError(null);
       setIsLoading(true);
-      const [requestResp, relationshipResp] = await Promise.all([
+      const [requestResp, relationshipResp, coSupervisorResp] = await Promise.all([
         axios.get(route('supervision.requests.index')),
         axios.get(route('supervision.relationships.index')),
+        axios.get('/api/v1/app/supervision/cosupervisor-invitations/my-invitations'),
       ]);
       setRequests(requestResp.data.data || []);
       const allRelationships = relationshipResp.data.data || [];
@@ -85,6 +97,11 @@ export default function SupervisorDashboard() {
       
       setStudents(activeRelationships);
       setTerminatedRelationships(terminated);
+      
+      // Set co-supervisor invitations
+      setCoSupervisorInvitations(coSupervisorResp.data.as_cosupervisor || []);
+      setApprovalInvitations(coSupervisorResp.data.to_approve || []);
+      setMyInitiatedInvitations(coSupervisorResp.data.as_initiator || []);
 
       // Trigger activity sidebar reload
       setActivityTrigger(prev => prev + 1);
@@ -196,15 +213,59 @@ export default function SupervisorDashboard() {
     });
   }, [requests, requestFilter]);
 
+  // Filter co-supervisor invitations based on current tab
+  const filteredCoSupervisorInvitations = useMemo(() => {
+    if (requestFilter === 'pending') {
+      // Show invitations that are still pending (co-supervisor hasn't responded OR pending approval)
+      const pendingAsCoSupervisor = coSupervisorInvitations.filter(inv => 
+        inv.cosupervisor_status === 'pending' || 
+        (inv.cosupervisor_status === 'accepted' && inv.approver_status === 'pending')
+      );
+      const pendingInitiated = myInitiatedInvitations.filter(inv => 
+        !inv.completed_at && !inv.cancelled_at && 
+        inv.cosupervisor_status !== 'rejected' && inv.approver_status !== 'rejected'
+      );
+      return [...pendingAsCoSupervisor, ...approvalInvitations, ...pendingInitiated];
+    } else if (requestFilter === 'accepted') {
+      // Show completed co-supervisor invitations (as co-supervisor OR as initiator)
+      const acceptedAsCoSupervisor = coSupervisorInvitations.filter(inv => inv.completed_at);
+      const acceptedInitiated = myInitiatedInvitations.filter(inv => inv.completed_at);
+      return [...acceptedAsCoSupervisor, ...acceptedInitiated];
+    } else if (requestFilter === 'rejected') {
+      // Show rejected invitations (as co-supervisor OR as initiator)
+      const rejectedAsCoSupervisor = coSupervisorInvitations.filter(inv => 
+        inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+      );
+      const rejectedInitiated = myInitiatedInvitations.filter(inv => 
+        inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+      );
+      return [...rejectedAsCoSupervisor, ...rejectedInitiated];
+    } else if (requestFilter === 'cancelled') {
+      // Show cancelled invitations (as co-supervisor OR as initiator)
+      const cancelledAsCoSupervisor = coSupervisorInvitations.filter(inv => inv.cancelled_at);
+      const cancelledInitiated = myInitiatedInvitations.filter(inv => inv.cancelled_at);
+      return [...cancelledAsCoSupervisor, ...cancelledInitiated];
+    }
+    return [];
+  }, [requestFilter, coSupervisorInvitations, approvalInvitations, myInitiatedInvitations]);
+
   // Calculate metrics for dashboard cards
   const metrics = useMemo(() => {
     // Total active students
     const totalStudents = students.length;
     
-    // Pending requests (pending + pending_student_acceptance)
+    // Pending requests (pending + pending_student_acceptance + co-supervisor invitations)
+    const pendingCoSupervisorCount = coSupervisorInvitations.filter(inv => 
+      inv.cosupervisor_status === 'pending' || 
+      (inv.cosupervisor_status === 'accepted' && inv.approver_status === 'pending')
+    ).length;
+    const pendingInitiatedCount = myInitiatedInvitations.filter(inv => 
+      !inv.completed_at && !inv.cancelled_at && 
+      inv.cosupervisor_status !== 'rejected' && inv.approver_status !== 'rejected'
+    ).length;
     const pendingRequests = requests.filter(req => 
       req.status === 'pending' || req.status === 'pending_student_acceptance'
-    ).length;
+    ).length + pendingCoSupervisorCount + approvalInvitations.length + pendingInitiatedCount;
     
     // Meetings this month across all students
     const now = new Date();
@@ -232,7 +293,7 @@ export default function SupervisorDashboard() {
       meetingsThisMonth,
       activeWorkspaces
     };
-  }, [students, requests]);
+  }, [students, requests, coSupervisorInvitations, approvalInvitations, myInitiatedInvitations]);
 
   return (
     <MainLayout title="Supervisor Dashboard">
@@ -322,21 +383,67 @@ export default function SupervisorDashboard() {
               onChange={setRequestFilter} 
               onCancelledClick={handleCancelledTabClick}
               requests={requests}
+              coSupervisorInvitations={coSupervisorInvitations}
+              approvalInvitations={approvalInvitations}
+              myInitiatedInvitations={myInitiatedInvitations}
               cancelledBadgeCount={cancelledBadgeCount}
             />
             {isLoading ? (
               <RequestSkeleton />
-            ) : filteredRequests.length === 0 ? (
-              <EmptyRequestState status={requestFilter} />
             ) : (
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                {filteredRequests.map(request => (
-                  <SupervisorRequestCard
-                    key={request.id}
-                    request={request}
-                    onOpenDetail={(req) => setDetailRequest(req)}
-                  />
-                ))}
+              <div className="space-y-6">
+                {/* Co-Supervisor Invitations - Show in all tabs based on status */}
+                {filteredCoSupervisorInvitations.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="w-5 h-5 text-indigo-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {requestFilter === 'pending' && 'Co-Supervisor Invitations'}
+                        {requestFilter === 'accepted' && 'Accepted Co-Supervisor Invitations'}
+                        {requestFilter === 'rejected' && 'Rejected Co-Supervisor Invitations'}
+                        {requestFilter === 'cancelled' && 'Cancelled Co-Supervisor Invitations'}
+                      </h3>
+                      <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
+                        {filteredCoSupervisorInvitations.length}
+                      </Badge>
+                    </div>
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      {filteredCoSupervisorInvitations.map((invitation) => (
+                        <CoSupervisorInvitationCard
+                          key={invitation.id}
+                          invitation={invitation}
+                          onClick={() => setSelectedCoSupervisorInvitation(invitation)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Regular Supervision Requests */}
+                {filteredRequests.length === 0 && filteredCoSupervisorInvitations.length === 0 ? (
+                  <EmptyRequestState status={requestFilter} />
+                ) : filteredRequests.length > 0 ? (
+                  <div>
+                    {filteredCoSupervisorInvitations.length > 0 && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <ClipboardList className="w-5 h-5 text-gray-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Supervision Requests</h3>
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          {filteredRequests.length}
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      {filteredRequests.map(request => (
+                        <SupervisorRequestCard
+                          key={request.id}
+                          request={request}
+                          onOpenDetail={(req) => setDetailRequest(req)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
           </TabsContent>
@@ -361,6 +468,10 @@ export default function SupervisorDashboard() {
                       setSelectedRequest(null);
                     }}
                     onScheduleMeeting={(rel) => setMeetingRelationship(rel)}
+                    onAddCoSupervisor={(rel) => {
+                      setSelectedMainRelationship(rel);
+                      setIsCoSupervisorModalOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -458,17 +569,72 @@ export default function SupervisorDashboard() {
             setShowResponseModal(false);
           }}
         />
+
+        {/* Co-Supervisor Search Modal */}
+        {isCoSupervisorModalOpen && selectedMainRelationship && (
+          <CoSupervisorSearchModal
+            isOpen={isCoSupervisorModalOpen}
+            onClose={() => setIsCoSupervisorModalOpen(false)}
+            relationship={selectedMainRelationship}
+            onInvite={() => {
+              setIsCoSupervisorModalOpen(false);
+              toast.success('Co-supervisor invitation sent!');
+              refresh();
+            }}
+          />
+        )}
+
+        {/* Co-Supervisor Invitation Detail Panel */}
+        {selectedCoSupervisorInvitation && (
+          <CoSupervisorInvitationDetailPanel
+            invitation={selectedCoSupervisorInvitation}
+            onClose={() => setSelectedCoSupervisorInvitation(null)}
+            onUpdated={() => {
+              fetchData();
+            }}
+          />
+        )}
       </div>
     </MainLayout>
   );
 }
 
-function RequestFilters({ filter, onChange, onCancelledClick, requests, cancelledBadgeCount }) {
+function RequestFilters({ filter, onChange, onCancelledClick, requests, coSupervisorInvitations, approvalInvitations, myInitiatedInvitations, cancelledBadgeCount }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {REQUEST_TABS.map(tab => {
         const badges = Array.isArray(tab.badge) ? tab.badge : [tab.badge];
-        const count = requests.filter(req => badges.includes(req.status)).length;
+        let count = requests.filter(req => badges.includes(req.status)).length;
+        
+        // Add co-supervisor invitation counts based on tab
+        if (tab.key === 'pending') {
+          const pendingAsCoSupervisor = coSupervisorInvitations?.filter(inv => 
+            inv.cosupervisor_status === 'pending' || 
+            (inv.cosupervisor_status === 'accepted' && inv.approver_status === 'pending')
+          ).length || 0;
+          const pendingInitiated = myInitiatedInvitations?.filter(inv => 
+            !inv.completed_at && !inv.cancelled_at && 
+            inv.cosupervisor_status !== 'rejected' && inv.approver_status !== 'rejected'
+          ).length || 0;
+          count += pendingAsCoSupervisor + (approvalInvitations?.length || 0) + pendingInitiated;
+        } else if (tab.key === 'accepted') {
+          const acceptedAsCoSupervisor = coSupervisorInvitations?.filter(inv => inv.completed_at).length || 0;
+          const acceptedInitiated = myInitiatedInvitations?.filter(inv => inv.completed_at).length || 0;
+          count += acceptedAsCoSupervisor + acceptedInitiated;
+        } else if (tab.key === 'rejected') {
+          const rejectedAsCoSupervisor = coSupervisorInvitations?.filter(inv => 
+            inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+          ).length || 0;
+          const rejectedInitiated = myInitiatedInvitations?.filter(inv => 
+            inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+          ).length || 0;
+          count += rejectedAsCoSupervisor + rejectedInitiated;
+        } else if (tab.key === 'cancelled') {
+          const cancelledAsCoSupervisor = coSupervisorInvitations?.filter(inv => inv.cancelled_at).length || 0;
+          const cancelledInitiated = myInitiatedInvitations?.filter(inv => inv.cancelled_at).length || 0;
+          count += cancelledAsCoSupervisor + cancelledInitiated;
+        }
+        
         const isCancelledTab = tab.key === 'cancelled';
         const showNotificationBadge = isCancelledTab && cancelledBadgeCount > 0;
         
@@ -625,7 +791,7 @@ function truncate(text, limit) {
   return `${text.slice(0, limit)}…`;
 }
 
-function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }) {
+function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting, onAddCoSupervisor }) {
   const student = relationship?.student ?? {};
   const profilePicture = student.profile_picture ? `/storage/${student.profile_picture}` : null;
   const fullName = student.full_name ?? 'Student';
@@ -794,6 +960,22 @@ function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }
             Manage
           </Button>
         </div>
+
+        {/* Add Co-Supervisor Button (Only for Main Supervisor) */}
+        {relationship?.role === 'main' && onAddCoSupervisor && (
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full h-8 text-xs bg-indigo-600 hover:bg-indigo-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddCoSupervisor(relationship);
+            }}
+          >
+            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+            Add Co-Supervisor
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

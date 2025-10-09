@@ -29,6 +29,7 @@ import ResearchTab from '@/Pages/Supervision/Partials/ResearchTab';
 import DocumentsTab from '@/Pages/Supervision/Partials/DocumentsTab';
 import ThreadPane from '@/Components/Messaging/ThreadPane';
 import UnifiedOverviewTab from '@/Pages/Supervision/Partials/UnifiedOverviewTab';
+import RelationshipHistoryTab from '@/Pages/Supervision/Partials/RelationshipHistoryTab';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { logError } from '@/Utils/logError';
@@ -264,18 +265,22 @@ export default function RelationshipFullPage({ relationship: initialRelationship
               >
                 Overview
               </TabsTrigger>
-              <TabsTrigger 
-                value="research"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none px-6 py-3"
-              >
-                Research
-              </TabsTrigger>
-              <TabsTrigger 
-                value="documents"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none px-6 py-3"
-              >
-                Documents
-              </TabsTrigger>
+              {isSupervisor && (
+                <>
+                  <TabsTrigger 
+                    value="research"
+                    className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none px-6 py-3"
+                  >
+                    Research
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="documents"
+                    className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none px-6 py-3"
+                  >
+                    Documents
+                  </TabsTrigger>
+                </>
+              )}
               <TabsTrigger 
                 value="chat"
                 className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 rounded-none px-6 py-3"
@@ -308,33 +313,89 @@ export default function RelationshipFullPage({ relationship: initialRelationship
                 />
               </TabsContent>
 
-              <TabsContent value="research" className="mt-0 p-2">
-                <div className="max-h-[calc(100vh-350px)] overflow-auto">
-                  <ResearchTab relationship={relationship} onUpdated={handleUpdated} isReadOnly={!isInteractive} />
-                </div>
-              </TabsContent>
+              {isSupervisor && (
+                <>
+                  <TabsContent value="research" className="mt-0 p-2">
+                    <div className="max-h-[calc(100vh-350px)] overflow-auto">
+                      <ResearchTab relationship={relationship} onUpdated={handleUpdated} isReadOnly={!isInteractive} />
+                    </div>
+                  </TabsContent>
 
-              <TabsContent value="documents" className="mt-0 p-2">
-                <div className="max-h-[calc(100vh-350px)] overflow-auto">
-                  <DocumentsTab relationship={relationship} onUpdated={handleUpdated} isReadOnly={!isInteractive} />
-                </div>
-              </TabsContent>
+                  <TabsContent value="documents" className="mt-0 p-2">
+                    <div className="max-h-[calc(100vh-350px)] overflow-auto">
+                      <DocumentsTab relationship={relationship} onUpdated={handleUpdated} isReadOnly={!isInteractive} />
+                    </div>
+                  </TabsContent>
+                </>
+              )}
 
               <TabsContent value="chat" className="mt-0 p-6">
-                {relationship?.conversation_id ? (
-                  <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-[calc(100vh-400px)] overflow-hidden">
-                    <ThreadPane
-                      conversationId={relationship.conversation_id}
-                      auth={auth}
-                      onConversationRead={() => {}}
-                      onConversationIncrementUnread={() => {}}
-                      onAfterSend={() => handleUpdated()}
-                    />
-                  </div>
+                {isSupervisor ? (
+                  // Supervisor view: Toggle between Direct Message and Team Chat
+                  <Tabs defaultValue="direct" className="w-full">
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="direct">Direct Message</TabsTrigger>
+                      <TabsTrigger 
+                        value="group"
+                        disabled={!person?.supervision_group_conversation_id}
+                      >
+                        Team Chat
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="direct" className="mt-0">
+                      {relationship?.conversation_id ? (
+                        <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-[calc(100vh-400px)] overflow-hidden">
+                          <ThreadPane
+                            conversationId={relationship.conversation_id}
+                            auth={auth}
+                            onConversationRead={() => {}}
+                            onConversationIncrementUnread={() => {}}
+                            onAfterSend={() => handleUpdated()}
+                          />
+                        </div>
+                      ) : (
+                        <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+                          <p className="text-sm text-slate-500">No conversation available yet.</p>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="group" className="mt-0">
+                      {person?.supervision_group_conversation_id ? (
+                        <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-[calc(100vh-400px)] overflow-hidden">
+                          <ThreadPane
+                            conversationId={person.supervision_group_conversation_id}
+                            auth={auth}
+                            onConversationRead={() => {}}
+                            onConversationIncrementUnread={() => {}}
+                            onAfterSend={() => handleUpdated()}
+                          />
+                        </div>
+                      ) : (
+                        <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm text-center">
+                          <p className="text-sm text-slate-500">Team chat will be available when a co-supervisor joins.</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 ) : (
-                  <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
-                    <p className="text-sm text-slate-500">No conversation available yet.</p>
-                  </div>
+                  // Student view: Just direct message (team chat is in ManageSupervisorPanel)
+                  relationship?.conversation_id ? (
+                    <div className="border border-slate-200 rounded-lg bg-white shadow-sm h-[calc(100vh-400px)] overflow-hidden">
+                      <ThreadPane
+                        conversationId={relationship.conversation_id}
+                        auth={auth}
+                        onConversationRead={() => {}}
+                        onConversationIncrementUnread={() => {}}
+                        onAfterSend={() => handleUpdated()}
+                      />
+                    </div>
+                  ) : (
+                    <div className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+                      <p className="text-sm text-slate-500">No conversation available yet.</p>
+                    </div>
+                  )
                 )}
               </TabsContent>
 
@@ -355,8 +416,10 @@ export default function RelationshipFullPage({ relationship: initialRelationship
                 </TabsContent>
               )}
 
-              <TabsContent value="history" className="mt-0 p-6">
-                <HistoryTab relationship={relationship} />
+              <TabsContent value="history" className="mt-0 p-0">
+                <ScrollArea className="h-[calc(100vh-350px)]">
+                  <RelationshipHistoryTab relationship={relationship} />
+                </ScrollArea>
               </TabsContent>
             </div>
           </Tabs>
@@ -460,68 +523,3 @@ function NotesTab({ notesList, newNote, setNewNote, isAddingNote, isDeletingNote
     </div>
   );
 }
-
-function HistoryTab({ relationship }) {
-  const timeline = [
-    {
-      id: 1,
-      title: 'Relationship Started',
-      date: relationship?.accepted_at,
-      status: 'completed',
-    },
-    {
-      id: 2,
-      title: 'Active Supervision',
-      date: relationship?.accepted_at,
-      status: relationship?.status === 'active' ? 'current' : 'completed',
-    },
-  ];
-
-  if (relationship?.terminated_at) {
-    timeline.push({
-      id: 3,
-      title: 'Relationship Terminated',
-      date: relationship.terminated_at,
-      status: 'completed',
-    });
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-500';
-      case 'current':
-        return 'bg-blue-500';
-      case 'pending':
-        return 'bg-slate-300';
-      default:
-        return 'bg-slate-300';
-    }
-  };
-
-  return (
-    <div className="max-w-2xl">
-      <h3 className="text-lg font-semibold text-slate-900 mb-6">Timeline</h3>
-
-      <div className="space-y-4">
-        {timeline.map((event, index) => (
-          <div key={event.id} className="flex gap-4">
-            <div className="flex flex-col items-center">
-              <div className={`w-3 h-3 rounded-full ${getStatusColor(event.status)}`} />
-              {index < timeline.length - 1 && (
-                <div className="w-0.5 h-full bg-slate-200 mt-2" />
-              )}
-            </div>
-            <div className="flex-1 pb-8">
-              <h4 className="font-medium text-slate-900">{event.title}</h4>
-              <p className="text-sm text-slate-500 mt-1">
-                {event.date ? format(new Date(event.date), 'dd/MM/yyyy HH:mm') : 'TBD'}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-

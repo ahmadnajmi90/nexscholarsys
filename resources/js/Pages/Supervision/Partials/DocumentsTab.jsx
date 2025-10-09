@@ -70,6 +70,7 @@ export default function DocumentsTab({ relationship, onUpdated, isReadOnly = fal
       const response = await axios.get(route('supervision.relationships.documents.index', relationship.id));
       setDocuments(response.data.data.documents_by_folder || {});
       setAvailableFolders(response.data.data.available_folders || []);
+      const backendReadOnly = response.data.data.is_read_only || false;
       
       // Expand all folders by default
       const expanded = {};
@@ -77,6 +78,12 @@ export default function DocumentsTab({ relationship, onUpdated, isReadOnly = fal
         expanded[folder] = true;
       });
       setExpandedFolders(expanded);
+      
+      // Override isReadOnly if backend says so (main supervisor not active)
+      if (backendReadOnly && !isReadOnly) {
+        // This means main supervisor is not active, force read-only
+        console.log('Documents are read-only: main supervisor relationship not active');
+      }
     } catch (error) {
       logError(error, 'DocumentsTab loadDocuments');
       toast.error('Failed to load documents');
@@ -530,7 +537,7 @@ function DocumentCard({ document, onPreview, onDelete, onUploadVersion, onViewVe
           <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
             <span>v{currentVersion?.version_number || 1}</span>
             <span>•</span>
-            <span>{currentVersion?.uploader?.name || currentVersion?.uploader?.full_name || 'Unknown'}</span>
+            <span>{currentVersion?.uploader?.full_name || currentVersion?.uploader?.name || 'Unknown'}</span>
             <span>•</span>
             <span>{currentVersion?.created_at ? format(new Date(currentVersion.created_at), 'dd/MM/yyyy') : '—'}</span>
           </div>

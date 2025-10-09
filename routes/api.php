@@ -407,6 +407,21 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::post('/acknowledge/student-responses', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeStudentResponse'])
             ->name('acknowledge.student-responses');
 
+        // Co-Supervisor Routes
+        // Specific routes MUST come before parameterized routes
+        Route::get('/cosupervisor-invitations/my-invitations', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'myInvitations'])
+            ->name('cosupervisor.my-invitations');
+        Route::post('/relationships/{relationship}/cosupervisor/invite', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'invite'])
+            ->name('cosupervisor.invite');
+        Route::post('/cosupervisor-invitations/{invitation}/respond', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'respond'])
+            ->name('cosupervisor.respond');
+        Route::post('/cosupervisor-invitations/{invitation}/approve', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'approve'])
+            ->name('cosupervisor.approve');
+        Route::delete('/cosupervisor-invitations/{invitation}/cancel', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'cancel'])
+            ->name('cosupervisor.cancel');
+        Route::delete('/relationships/{relationship}/cosupervisor/{cosupervisorId}', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'remove'])
+            ->name('cosupervisor.remove');
+
         // Activity Feed Routes
         Route::get('/activity/recent', [\App\Http\Controllers\Api\V1\Supervision\ActivityFeedController::class, 'recentActivity'])
             ->name('activity.recent');

@@ -24,8 +24,6 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { ScrollArea } from '@/Components/ui/scroll-area';
-import ResearchTab from '@/Pages/Supervision/Partials/ResearchTab';
-import DocumentsTab from '@/Pages/Supervision/Partials/DocumentsTab';
 import ThreadPane from '@/Components/Messaging/ThreadPane';
 import ScheduleMeetingDialog from '@/Pages/Supervision/Partials/ScheduleMeetingDialog';
 import UnifiedOverviewTab from '@/Pages/Supervision/Partials/UnifiedOverviewTab';
@@ -212,18 +210,6 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
                 Overview
               </TabsTrigger>
               <TabsTrigger 
-                value="research"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-              >
-                Research
-              </TabsTrigger>
-              <TabsTrigger 
-                value="documents"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-              >
-                Documents
-              </TabsTrigger>
-              <TabsTrigger 
                 value="chat"
                 className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
               >
@@ -247,14 +233,6 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
                     activeUnbindRequest={activeUnbindRequest}
                   />
                 </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="research" className="mt-0 h-full">
-                <ResearchTab relationship={relationship} onUpdated={onUpdated} isReadOnly={!isInteractive} />
-              </TabsContent>
-
-              <TabsContent value="documents" className="mt-0 h-full">
-                <DocumentsTab relationship={relationship} onUpdated={onUpdated} isReadOnly={!isInteractive} />
               </TabsContent>
 
               <TabsContent value="chat" className="mt-0 h-full">

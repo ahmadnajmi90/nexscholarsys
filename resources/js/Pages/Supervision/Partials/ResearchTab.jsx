@@ -52,6 +52,7 @@ export default function ResearchTab({ relationship, onUpdated, isReadOnly = fals
     try {
       const response = await axios.get(route('supervision.relationships.research.show', relationship.id));
       const data = response.data.data;
+      const backendReadOnly = response.data.is_read_only || false;
       
       setResearch(data);
       setTitle(data.title || '');
@@ -62,6 +63,12 @@ export default function ResearchTab({ relationship, onUpdated, isReadOnly = fals
       setMethodologyNotes(data.methodology_notes || '');
       setFreeFormContent(data.free_form_content || '');
       setMilestones(data.milestones || []);
+      
+      // Override isReadOnly if backend says so (main supervisor not active)
+      if (backendReadOnly && !isReadOnly) {
+        // This means main supervisor is not active, force read-only
+        console.log('Research is read-only: main supervisor relationship not active');
+      }
     } catch (error) {
       logError(error, 'ResearchTab loadResearch');
       toast.error('Failed to load research details');

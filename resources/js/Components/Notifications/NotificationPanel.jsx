@@ -3,11 +3,12 @@ import {
   FaBell, FaCheck, FaSpinner, FaUserPlus, FaCheckCircle, 
   FaEnvelopeOpenText, FaTimesCircle, FaUserGraduate, FaChalkboardTeacher,
   FaCalendarAlt, FaClock, FaCalendarTimes, FaCalendarCheck,
-  FaExclamationTriangle, FaUnlink, FaBan, FaInfoCircle
+  FaExclamationTriangle, FaUnlink, FaBan, FaInfoCircle, FaUsers
 } from 'react-icons/fa';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
 import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
+import { Button } from '@/Components/ui/button';
 
 const NotificationPanel = ({ isOpen, onClose }) => {
   const [notifications, setNotifications] = useState({ unread: [], read: [], unread_count: 0 });
@@ -523,6 +524,238 @@ const NotificationPanel = ({ isOpen, onClose }) => {
                 <p className="text-xs text-gray-500 mt-1">
                   Was scheduled for: {new Date(data.was_scheduled_for).toLocaleString('en-GB')}
                 </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      // ========== CO-SUPERVISOR NOTIFICATIONS ==========
+      case 'cosupervisor_invitation_sent':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-indigo-100 rounded-full p-2 mr-3">
+                <FaUserPlus className="text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Invitation</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                {data.invitation_message && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
+                    <p className="text-xs text-blue-900 italic">"{data.invitation_message}"</p>
+                  </div>
+                )}
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.visit(route('supervision.supervisor.index'))}
+                    className="h-7 text-xs"
+                  >
+                    View Invitation
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_accepted':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-green-100 rounded-full p-2 mr-3">
+                <FaCheckCircle className="text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Accepted</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Co-supervisor: {data.cosupervisor_name}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_rejected':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaTimesCircle className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Declined</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                {data.rejection_reason && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
+                    <p className="text-xs text-red-900">Reason: {data.rejection_reason}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_invitation_initiated':
+        return (
+          <div className="py-2">
+            <div className="flex items-start gap-3">
+              <div className="bg-indigo-100 rounded-full p-2 flex-shrink-0">
+                <FaUserPlus className="text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-semibold text-sm text-gray-900">Co-Supervisor Invitation</p>
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded-full">
+                    Pending
+                  </span>
+                </div>
+                
+                {/* Main Message */}
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  <span className="font-semibold">{data.initiated_by === 'student' ? data.student_name : data.main_supervisor_name}</span>
+                  {' wants to add '}
+                  <span className="font-semibold">{data.cosupervisor_name}</span>
+                  {' as co-supervisor'}
+                  {data.initiated_by === 'main_supervisor' && ` for ${data.student_name}`}
+                </p>
+
+                {/* Personal Message Preview */}
+                {data.invitation_message && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
+                    <p className="text-[10px] font-medium text-blue-900 mb-0.5">Personal Message:</p>
+                    <p className="text-xs text-blue-800 italic line-clamp-2">
+                      "{data.invitation_message}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Next Steps Info */}
+                <div className="mt-2 bg-gray-50 border border-gray-200 rounded-md p-2">
+                  <p className="text-[10px] font-medium text-gray-700 mb-1">Next Steps:</p>
+                  <ul className="text-[10px] text-gray-600 space-y-0.5 list-disc list-inside">
+                    <li>Co-supervisor will be notified to review</li>
+                    <li>You'll approve after they accept</li>
+                  </ul>
+                </div>
+
+                {/* Timestamp & Action */}
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-[10px] text-gray-500">
+                    {new Date(notification.created_at).toLocaleString('en-GB')}
+                  </p>
+                  {!notification.read_at && (
+                    <Button
+                      size="sm"
+                      onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'student' ? 'supervisor' : 'student') + '.index'))}
+                      className="h-6 text-[10px] px-2"
+                      variant="outline"
+                    >
+                      View Dashboard
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_approval_needed':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-yellow-100 rounded-full p-2 mr-3">
+                <FaExclamationTriangle className="text-yellow-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Approval Required</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Co-supervisor: {data.cosupervisor_name}</p>
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'student' ? 'supervisor' : 'student') + '.index'))}
+                    className="h-7 text-xs"
+                  >
+                    Review & Approve
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_approved':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-green-100 rounded-full p-2 mr-3">
+                <FaCheckCircle className="text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Approved</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Approved by: {data.approver}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_rejected_by_approver':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaTimesCircle className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Not Approved</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                {data.rejection_reason && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
+                    <p className="text-xs text-red-900">Reason: {data.rejection_reason}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_added':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                <FaUsers className="text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">🎉 Co-Supervisor Added!</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Student: {data.student_name}</p>
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.visit(route('supervision.' + (data.cosupervisor_id ? 'supervisor' : 'student') + '.index'))}
+                    className="h-7 text-xs"
+                  >
+                    View Supervision
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_invitation_cancelled':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-gray-100 rounded-full p-2 mr-3">
+                <FaBan className="text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Invitation Cancelled</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Cancelled by: {data.initiator}</p>
               </div>
             </div>
           </div>

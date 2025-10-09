@@ -10,6 +10,7 @@ class SupervisionDocument extends Model
     use HasFactory;
 
     protected $fillable = [
+        'student_id',
         'relationship_id',
         'folder_category',
         'name',
@@ -33,6 +34,11 @@ class SupervisionDocument extends Model
             self::FOLDER_DATA,
             self::FOLDER_GENERAL,
         ];
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Postgraduate::class, 'student_id', 'postgraduate_id');
     }
 
     public function relationship()

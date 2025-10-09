@@ -51,8 +51,9 @@ class RecommendationController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->academician) {
-            abort(403, 'Only academicians can access this resource.');
+        // Both students and academicians can access this (for co-supervisor search)
+        if (!$user->academician && !$user->postgraduate) {
+            abort(403, 'Only students and academicians can access this resource.');
         }
 
         // Get all accepted connections who are academicians
@@ -98,8 +99,9 @@ class RecommendationController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->academician) {
-            abort(403, 'Only academicians can access this resource.');
+        // Both students and academicians can access this (for co-supervisor search)
+        if (!$user->academician && !$user->postgraduate) {
+            abort(403, 'Only students and academicians can access this resource.');
         }
 
         $query = $request->input('q', '');
@@ -108,7 +110,10 @@ class RecommendationController extends Controller
 
         $academicians = Academician::query()
             ->with(['universityDetails', 'faculty'])
-            ->where('academician_id', '!=', $user->academician->academician_id) // Exclude self
+            ->when($user->academician, function ($q) use ($user) {
+                // Exclude self if user is an academician
+                $q->where('academician_id', '!=', $user->academician->academician_id);
+            })
             ->when($onlyVerified, function ($q) {
                 $q->where('verified', true); // Only apply if explicitly requested
             })

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, GraduationCap, Search, FolderOpen, MessageSquare, CheckCircle } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, GraduationCap, Search, FolderOpen, MessageSquare, CheckCircle, Users } from 'lucide-react';
 
 const SupervisionTutorialModal = ({ show, onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -148,6 +148,86 @@ const SupervisionTutorialModal = ({ show, onClose }) => {
       ),
     },
     {
+      title: 'Adding Co-Supervisors',
+      subtitle: 'Expand your supervision team with additional expertise',
+      icon: Users,
+      content: (
+        <div className="space-y-4">
+          <p className="text-gray-700 leading-relaxed">
+            Once you have an active main supervisor, you can add up to <span className="font-semibold text-indigo-600">2 co-supervisors</span> to strengthen your research team.
+          </p>
+
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-100">
+            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+              Who Can Initiate?
+            </h4>
+            <ul className="space-y-2 text-sm text-gray-700 ml-8">
+              <li className="flex items-start">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-2 flex-shrink-0"></span>
+                <span><span className="font-semibold">Students:</span> Can invite co-supervisors with main supervisor approval</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-2 flex-shrink-0"></span>
+                <span><span className="font-semibold">Main Supervisors:</span> Can invite co-supervisors with student approval</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-100">
+            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">2</span>
+              Three-Way Approval Process
+            </h4>
+            <div className="space-y-2 text-sm text-gray-700 ml-8">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">✓</div>
+                <span>Initiator sends invitation</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs">✓</div>
+                <span>Co-supervisor accepts/rejects</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">✓</div>
+                <span>Third party (student/main supervisor) approves</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
+            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">3</span>
+              Finding Co-Supervisors
+            </h4>
+            <div className="space-y-2 text-xs text-gray-700 ml-8">
+              <p className="font-medium text-gray-900">Search from three sources:</p>
+              <div className="pl-3 space-y-1.5">
+                <div className="flex items-start">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 mr-2 flex-shrink-0"></span>
+                  <span><span className="font-semibold">Shortlist:</span> Your saved potential supervisors</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 mr-2 flex-shrink-0"></span>
+                  <span><span className="font-semibold">Connections:</span> Academicians in your network</span>
+                </div>
+                <div className="flex items-start">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 mr-2 flex-shrink-0"></span>
+                  <span><span className="font-semibold">All Academicians:</span> Search the entire database</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+            <p className="text-xs text-gray-700">
+              <span className="font-semibold">Note:</span> Once a co-supervisor is accepted, they gain access to your shared workspace, documents, and team group chat!
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
       title: 'Active Supervision',
       subtitle: 'Manage your ongoing supervision relationship',
       icon: CheckCircle,
@@ -159,23 +239,23 @@ const SupervisionTutorialModal = ({ show, onClose }) => {
 
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3">
             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg p-3 sm:p-4 border border-indigo-100">
-              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Meetings</h5>
-              <p className="text-[10px] sm:text-xs text-gray-600">Schedule and track supervision meetings with your supervisor</p>
+              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Research & Documents</h5>
+              <p className="text-[10px] sm:text-xs text-gray-600">Shared workspace accessible by all supervisors</p>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 border border-purple-100">
-              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Onboarding</h5>
-              <p className="text-[10px] sm:text-xs text-gray-600">Complete your onboarding checklist and track progress</p>
+              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Team Chat</h5>
+              <p className="text-[10px] sm:text-xs text-gray-600">Group discussion with all your supervisors</p>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-3 sm:p-4 border border-green-100">
-              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Documents</h5>
-              <p className="text-[10px] sm:text-xs text-gray-600">Share and manage research documents collaboratively</p>
+              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Meetings</h5>
+              <p className="text-[10px] sm:text-xs text-gray-600">Schedule and track supervision meetings</p>
             </div>
 
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-3 sm:p-4 border border-amber-100">
-              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Communication</h5>
-              <p className="text-[10px] sm:text-xs text-gray-600">Stay connected with direct messaging</p>
+              <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 sm:mb-2">Direct Messages</h5>
+              <p className="text-[10px] sm:text-xs text-gray-600">One-on-one chat with each supervisor</p>
             </div>
           </div>
 
