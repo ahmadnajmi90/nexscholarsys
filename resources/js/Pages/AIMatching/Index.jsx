@@ -65,6 +65,11 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [selectedUniversity, setSelectedUniversity] = useState([]);
   const [selectedAvailability, setSelectedAvailability] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
+  
+  // Supervision-related state (for postgraduate users searching supervisors)
+  const [supervisionRequests, setSupervisionRequests] = useState([]);
+  const [activeRelationship, setActiveRelationship] = useState(null);
+  const [loadingSupervisionData, setLoadingSupervisionData] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   
   // Save state to sessionStorage when navigating away (with context)
@@ -121,6 +126,59 @@ export default function Index({ auth, universities, faculties, users, researchOp
     } else {
       console.log('✅ Showing search interface');
       setCurrentView('search'); // Show search interface if no results
+    }
+  };
+  
+  // Fetch supervision data for postgraduate users searching supervisors
+  useEffect(() => {
+    const fetchSupervisionData = async () => {
+      // Only fetch if user is postgraduate and searching for supervisors
+      if (!isPostgraduate || searchType !== 'supervisor') {
+        setSupervisionRequests([]);
+        setActiveRelationship(null);
+        return;
+      }
+      
+      setLoadingSupervisionData(true);
+      try {
+        // Fetch supervision requests
+        const requestsResponse = await axios.get(route('supervision.requests.index'));
+        setSupervisionRequests(requestsResponse.data?.data || []);
+        
+        // Fetch active relationship
+        const relationshipResponse = await axios.get(route('supervision.relationships.index'));
+        const relationships = relationshipResponse.data?.data || [];
+        const active = relationships.find(r => r.status === 'active' && r.role === 'main');
+        setActiveRelationship(active || null);
+      } catch (error) {
+        console.error('Error fetching supervision data:', error);
+        // Silent fail - supervision features will be disabled
+      } finally {
+        setLoadingSupervisionData(false);
+      }
+    };
+    
+    fetchSupervisionData();
+  }, [isPostgraduate, searchType]);
+  
+  // Callback to refresh supervision data after request submission
+  const handleRequestSubmitted = () => {
+    // Refetch supervision data
+    if (isPostgraduate && searchType === 'supervisor') {
+      const fetchSupervisionData = async () => {
+        try {
+          const requestsResponse = await axios.get(route('supervision.requests.index'));
+          setSupervisionRequests(requestsResponse.data?.data || []);
+          
+          const relationshipResponse = await axios.get(route('supervision.relationships.index'));
+          const relationships = relationshipResponse.data?.data || [];
+          const active = relationships.find(r => r.status === 'active' && r.role === 'main');
+          setActiveRelationship(active || null);
+        } catch (error) {
+          console.error('Error refreshing supervision data:', error);
+        }
+      };
+      fetchSupervisionData();
     }
   };
   
@@ -447,6 +505,10 @@ export default function Index({ auth, universities, faculties, users, researchOp
                 universitiesList={universities}
                 researchOptions={researchOptions}
                 users={users}
+                searchType={searchType}
+                supervisionRequests={supervisionRequests}
+                activeRelationship={activeRelationship}
+                onRequestSubmitted={handleRequestSubmitted}
                 onViewAllResults={handleViewAllResults}
                 onQuickInfoClick={() => {}} // Handled in ResultsGrid modal
                 onRecommendClick={() => {}} // Handled in ResultsGrid modal
@@ -541,6 +603,9 @@ export default function Index({ auth, universities, faculties, users, researchOp
                   researchOptions={researchOptions}
                   users={users}
                   skills={skills}
+                  supervisionRequests={supervisionRequests}
+                  activeRelationship={activeRelationship}
+                  onRequestSubmitted={handleRequestSubmitted}
                   onShowInsight={(insight) => {
                     setCurrentInsight(insight);
                     setIsInsightModalOpen(true);

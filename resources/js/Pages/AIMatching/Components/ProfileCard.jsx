@@ -1,15 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { MdVerified } from 'react-icons/md';
-import { MoreVertical, Bookmark, UserPlus, Mail, Star } from 'lucide-react';
+import { MoreVertical, Bookmark, UserPlus, Mail, Star, BookmarkPlus, Send, Eye, CheckCircle2, ChevronDown, User, Info } from 'lucide-react';
 import BookmarkButton from "@/Components/BookmarkButton";
 import ConnectionButton from "@/Components/ConnectionButton";
+import ProposalModal from '@/Pages/Supervision/Partials/ProposalModal';
+import { toast } from 'react-hot-toast';
+import axios from 'axios';
+import { logError } from '@/Utils/logError';
+import useRoles from '@/Hooks/useRoles';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 export default function ProfileCard({
   match,
   universitiesList,
   researchOptions,
   users,
+  searchType,
+  supervisionRequests = [],
+  activeRelationship = null,
+  onRequestSubmitted,
   onQuickInfoClick,
   onRecommendClick,
   onShowInsight
@@ -25,10 +47,47 @@ export default function ProfileCard({
   const aiInsights = match.ai_insights || '';
   profile.ai_insights = aiInsights;
   
+  // Get current authenticated user role using useRoles hook
+  const { isPostgraduate: isCurrentUserPostgraduate } = useRoles();
+  
+  // Check if supervision features should be shown (3 conditions)
+  const showSupervisionFeatures = isAcademician && isCurrentUserPostgraduate && searchType === 'supervisor';
+  
   // Card state management
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  
+  // Supervision-related state
+  const [isShortlistLoading, setIsShortlistLoading] = useState(true);
+  const [isInShortlist, setIsInShortlist] = useState(false);
+  const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
+  
+  // Get academician identifier for supervision requests
+  const academicianIdentifier = useMemo(() => {
+    if (!showSupervisionFeatures) return null;
+    return profile?.academician_id || profile?.id || null;
+  }, [showSupervisionFeatures, profile]);
+  
+  // Check for existing supervision request (exclude cancelled, auto_cancelled, and rejected)
+  const existingRequest = useMemo(() => {
+    if (!showSupervisionFeatures || !Array.isArray(supervisionRequests) || !academicianIdentifier) return null;
+    
+    return supervisionRequests.find(request => {
+      if (['cancelled', 'auto_cancelled', 'rejected'].includes(request.status)) return false;
+      const requestAcademicianId = String(request.academician_id ?? '');
+      return requestAcademicianId === String(academicianIdentifier);
+    });
+  }, [showSupervisionFeatures, supervisionRequests, academicianIdentifier]);
+  
+  // Check if this supervisor is the student's current/bound supervisor
+  const isCurrentSupervisor = useMemo(() => {
+    if (!showSupervisionFeatures || !activeRelationship || !academicianIdentifier) return false;
+    return String(activeRelationship.academician_id) === String(academicianIdentifier);
+  }, [showSupervisionFeatures, activeRelationship, academicianIdentifier]);
+  
+  // Check if student has any active relationship (to disable actions for other supervisors)
+  const hasActiveRelationship = Boolean(activeRelationship);
   
   // Ref for actions menu
   const actionsMenuRef = useRef(null);
@@ -188,6 +247,122 @@ export default function ProfileCard({
     setShowActionsMenu(false);
   };
   
+  // Supervision Functions
+  // Check if already in shortlist
+  useEffect(() => {
+    if (!showSupervisionFeatures) {
+      setIsShortlistLoading(false);
+      return;
+    }
+    
+    let mounted = true;
+    async function checkShortlist() {
+      if (!academicianIdentifier) {
+        setIsShortlistLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await axios.get(route('supervision.shortlist.index'));
+        if (mounted) {
+          const shortlist = response.data?.data || [];
+          const exists = shortlist.some(item => 
+            String(item.academician_id) === String(academicianIdentifier)
+          );
+          setIsInShortlist(exists);
+        }
+      } catch (e) {
+        // silent fail
+      } finally {
+        if (mounted) setIsShortlistLoading(false);
+      }
+    }
+    checkShortlist();
+    return () => {
+      mounted = false;
+    };
+  }, [showSupervisionFeatures, academicianIdentifier]);
+  
+  const addToPotentialSupervisors = async () => {
+    if (isShortlistLoading || isInShortlist || hasActiveRelationship) return;
+    setIsShortlistLoading(true);
+    try {
+      if (!academicianIdentifier) {
+        logError(new Error('Missing academician identifier'), 'ProfileCard shortlist');
+        toast.error('Cannot save supervisor right now. Please try again later.');
+        return;
+      }
+
+      await axios.post(route('supervision.shortlist.store'), {
+        academician_id: String(academicianIdentifier),
+        postgraduate_program_id: profile.postgraduate_program_id ?? null,
+      });
+      setIsInShortlist(true);
+      toast.success('Added to Potential Supervisors');
+    } catch (error) {
+      logError(error, 'ProfileCard shortlist');
+      toast.error(error.response?.data?.message || 'Failed to save');
+    } finally {
+      setIsShortlistLoading(false);
+    }
+  };
+  
+  const handleProposalSubmitted = () => {
+    setIsProposalModalOpen(false);
+    onRequestSubmitted?.();
+  };
+  
+  const handleRequestClick = (e) => {
+    e.stopPropagation();
+    if (hasActiveRelationship && !isCurrentSupervisor) {
+      // Student already has a supervisor, prevent action
+      toast.error('You already have an active supervision relationship.');
+      return;
+    }
+
+    if (existingRequest || isCurrentSupervisor) {
+      // Store the request ID in session storage to open the detail modal after navigation
+      sessionStorage.setItem('openRequestId', existingRequest?.id || '');
+      
+      // Navigate to the supervision page where RequestStatusList is located
+      router.visit(route('supervision.student.index'), {
+        preserveState: false,
+        preserveScroll: false
+      });
+    } else {
+      setIsProposalModalOpen(true);
+    }
+  };
+  
+  // Transform supervisor data for ProposalModal
+  const transformedSupervisor = useMemo(() => {
+    if (!showSupervisionFeatures) return null;
+    
+    const universityName = universitiesList.find((u) => u.id === profile.university)?.name || 
+                          profile.university_name || '';
+    const universityFullName = universitiesList.find((u) => u.id === profile.university)?.full_name || 
+                               profile.university_full_name || universityName;
+    
+    return {
+      ...match,
+      academician: {
+        full_name: profile.full_name || 'Supervisor',
+        current_position: profile.current_position || '',
+        university: {
+          name: universityName
+        },
+        universityDetails: {
+          full_name: universityFullName
+        },
+        research_domains: profile.research_expertise || [],
+        academician_id: academicianIdentifier,
+        url: profile.url || null
+      },
+      user: users.find(u => u.unique_id === profile.academician_id || u.unique_id === profile.id) || null,
+      postgraduate_program_id: profile.postgraduate_program_id || null
+    };
+  }, [showSupervisionFeatures, match, profile, academicianIdentifier, users, universitiesList]);
+  
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -288,68 +463,127 @@ export default function ProfileCard({
                   
                   {/* Actions Dropdown Menu - Bubble Buttons */}
                   {showActionsMenu && (
-                    <div className="absolute right-0 mt-2 flex flex-col gap-2 z-50">
-                      {/* Bookmark */}
-                      <div 
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg flex items-center justify-center"
-                        title="Bookmark"
-                      >
-                        <div className="flex items-center justify-center w-5 h-5">
-                          <BookmarkButton 
-                            bookmarkableType={isAcademician ? "academician" : match.result_type} 
-                            bookmarkableId={profileId}
-                            category={isAcademician ? "Academicians" : "Students"} 
-                          />
+                    <TooltipProvider delayDuration={0}>
+                      <div className="absolute right-0 mt-2 flex flex-col gap-2 z-[100]">
+                        {/* Bookmark */}
+                        <div 
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg flex items-center justify-center"
+                        >
+                          <div className="flex items-center justify-center w-5 h-5">
+                            <BookmarkButton 
+                              bookmarkableType={isAcademician ? "academician" : match.result_type} 
+                              bookmarkableId={profileId}
+                              category={isAcademician ? "Academicians" : "Students"} 
+                            />
+                          </div>
                         </div>
-                      </div>
-                      
-                      {/* Add Connection */}
-                      <div 
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg flex items-center justify-center"
-                        title="Add Connection"
-                      >
-                        <div className="flex items-center justify-center w-5 h-5">
-                          <ConnectionButton user={users.find(
-                            (user) =>
-                              user.unique_id === 
-                              (isAcademician ? profile.academician_id || profile.id : 
-                               profile.postgraduate_id || profile.undergraduate_id || profile.id)
-                          )} />
+                        
+                        {/* Add Connection */}
+                        <div 
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg flex items-center justify-center"
+                        >
+                          <div className="flex items-center justify-center w-5 h-5">
+                            <ConnectionButton user={users.find(
+                              (user) =>
+                                user.unique_id === 
+                                (isAcademician ? profile.academician_id || profile.id : 
+                                 profile.postgraduate_id || profile.undergraduate_id || profile.id)
+                            )} />
+                          </div>
                         </div>
-                      </div>
-                      
-                      {/* Compose Email */}
-                      <Link
-                        href={route('email.compose', { 
-                          to: users.find(
-                            (user) =>
-                              user.unique_id === 
-                              (isAcademician ? profile.academician_id || profile.id : 
-                               profile.postgraduate_id || profile.undergraduate_id || profile.id)
-                          )?.email || profile.email || ''
-                        })}
-                        onClick={(e) => e.stopPropagation()}
-                        className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg"
-                        title="Send Email"
-                      >
-                        <Mail className="w-5 h-5 text-gray-700" />
-                      </Link>
+                        
+                        {/* Compose Email */}
+                        <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={route('email.compose', { 
+                              to: users.find(
+                                (user) =>
+                                  user.unique_id === 
+                                  (isAcademician ? profile.academician_id || profile.id : 
+                                   profile.postgraduate_id || profile.undergraduate_id || profile.id)
+                              )?.email || profile.email || ''
+                            })}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg"
+                          >
+                            <Mail className="w-5 h-5 text-gray-700" />
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Send Email</p>
+                        </TooltipContent>
+                      </Tooltip>
                       
                       {/* Recommend */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowActionsMenu(false);
-                          onRecommendClick(profile, e);
-                        }}
-                        className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg"
-                        title="Recommend"
-                      >
-                        <Star className="w-5 h-5 text-gray-700" />
-                      </button>
-                    </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowActionsMenu(false);
+                              onRecommendClick(profile, e);
+                            }}
+                            className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg"
+                          >
+                            <Star className="w-5 h-5 text-gray-700" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Recommend</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      
+                      {/* Add to Potential Supervisors (Only for supervision search) */}
+                      {showSupervisionFeatures && !hasActiveRelationship && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowActionsMenu(false);
+                                addToPotentialSupervisors();
+                              }}
+                              disabled={isShortlistLoading || isInShortlist}
+                              className={`bg-white/90 backdrop-blur-sm p-2 rounded-full transition-all shadow-lg ${
+                                isInShortlist
+                                  ? 'bg-indigo-50'
+                                  : 'hover:bg-white'
+                              } disabled:opacity-50`}
+                            >
+                              {isInShortlist ? (
+                                <Bookmark className="w-5 h-5 text-indigo-600 fill-current" />
+                              ) : (
+                                <BookmarkPlus className="w-5 h-5 text-gray-700" />
+                              )}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{isInShortlist ? 'Already in Potential Supervisors' : 'Add to Potential Supervisors'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      {/* Current Supervisor Badge (Only for supervision search) */}
+                      {showSupervisionFeatures && isCurrentSupervisor && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled
+                              className="bg-indigo-50 backdrop-blur-sm p-2 rounded-full shadow-lg"
+                            >
+                              <Bookmark className="w-5 h-5 text-indigo-600 fill-current" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Your Current Supervisor</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      </div>
+                    </TooltipProvider>
                   )}
                 </div>
               </div>
@@ -401,25 +635,124 @@ export default function ProfileCard({
                   ))}
                 </div>
                 
-                {/* (d) Action Bar */}
+                {/* (d) Action Bar - Single Row with Split Button */}
                 <div>
-                  {/* Single Action Row - View Full Profile + Quick Info Eye Icon */}
-                  <div className="flex gap-3 items-center">
-                    <Link
-                      href={
-                        isAcademician 
-                          ? route('academicians.show', profile.url || profile.academician_id || profile.id) 
-                          : isPostgraduate
-                            ? route('postgraduates.show', profile.url || profile.postgraduate_id || profile.id)
-                            : route('undergraduates.show', profile.url || profile.undergraduate_id || profile.id)
-                      }
-                      className="flex-1 flex items-center justify-center bg-white text-gray-900 font-semibold text-sm py-3 px-6 rounded-xl hover:bg-gray-100 transition-all duration-300 hover:-translate-y-0.5 shadow-md hover:shadow-lg"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View Full Profile
-                    </Link>
+                  <div className="flex gap-3 items-stretch">
+                    {/* Main Button Area */}
+                    {showSupervisionFeatures && isCurrentSupervisor ? (
+                      // Case 1: Current Supervisor - Premium Split Button with Dropdown
+                      <DropdownMenu>
+                        <div className="flex-1 flex items-stretch gap-0 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+                          <button
+                            onClick={handleRequestClick}
+                            className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-green-500 text-white transition-all duration-300 hover:from-emerald-600 hover:to-green-600"
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-2 drop-shadow-sm" />
+                            <span className="drop-shadow-sm">Your Supervisor</span>
+                          </button>
+                          
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-3 border-l border-emerald-400/30 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white transition-all duration-300"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                        </div>
+                        
+                        <DropdownMenuContent 
+                          align="end" 
+                          className="w-48 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={route('academicians.show', profile.url || profile.academician_id || profile.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center cursor-pointer text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 transition-colors"
+                            >
+                              <User className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <span className="text-sm font-medium">View Profile</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : showSupervisionFeatures && !hasActiveRelationship ? (
+                      // Case 2: Can Request Supervision - Split Button with Dropdown
+                      <DropdownMenu>
+                        <div className="flex-1 flex items-stretch gap-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                          <button
+                            onClick={handleRequestClick}
+                            className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-all duration-300"
+                          >
+                            {existingRequest ? (
+                              <>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Request
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-4 h-4 mr-2" />
+                                Request Supervision
+                              </>
+                            )}
+                          </button>
+                          
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-3 border-l border-indigo-500 bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                        </div>
+                        
+                        <DropdownMenuContent 
+                          align="end" 
+                          className="w-48 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={route('academicians.show', profile.url || profile.academician_id || profile.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center cursor-pointer text-gray-700 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 transition-colors"
+                            >
+                              <User className="w-4 h-4 mr-2 flex-shrink-0" />
+                              <span className="text-sm font-medium">View Profile</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : showSupervisionFeatures && hasActiveRelationship ? (
+                      // Case 3: Has Supervisor, Viewing Others - Simple Button, No Dropdown
+                      <Link
+                        href={route('academicians.show', profile.url || profile.academician_id || profile.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-gray-100 transition-all duration-300 hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                      >
+                        View Full Profile
+                      </Link>
+                    ) : (
+                      // Case 4: Regular Search - Simple Button, No Dropdown
+                      <Link
+                        href={
+                          isAcademician 
+                            ? route('academicians.show', profile.url || profile.academician_id || profile.id) 
+                            : isPostgraduate
+                              ? route('postgraduates.show', profile.url || profile.postgraduate_id || profile.id)
+                              : route('undergraduates.show', profile.url || profile.undergraduate_id || profile.id)
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold bg-white text-gray-900 hover:bg-gray-100 transition-all duration-300 hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                      >
+                        View Full Profile
+                      </Link>
+                    )}
                     
-                    {/* Quick Info Eye Icon */}
+                    {/* Quick Info Eye Icon - Always Visible */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -656,6 +989,16 @@ export default function ProfileCard({
           </div>
         </div>
       </div>
+      
+      {/* Proposal Modal - Only for supervision features */}
+      {showSupervisionFeatures && transformedSupervisor && (
+        <ProposalModal
+          isOpen={isProposalModalOpen}
+          supervisor={transformedSupervisor}
+          onClose={() => setIsProposalModalOpen(false)}
+          onSubmitted={handleProposalSubmitted}
+        />
+      )}
     </>
   );
 }

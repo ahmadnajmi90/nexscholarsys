@@ -23,7 +23,10 @@ export default function ResultsGrid({
   selectedSkills, // Add selectedSkills prop
   onLoadMore,
   isLoadingMore,
-  onShowInsight
+  onShowInsight,
+  supervisionRequests = [],
+  activeRelationship = null,
+  onRequestSubmitted
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingProfileData, setLoadingProfileData] = useState(false);
@@ -376,6 +379,10 @@ export default function ResultsGrid({
                     universitiesList={universitiesList}
                     researchOptions={researchOptions}
                     users={users}
+                    searchType={searchType}
+                    supervisionRequests={supervisionRequests}
+                    activeRelationship={activeRelationship}
+                    onRequestSubmitted={onRequestSubmitted}
                     onQuickInfoClick={handleQuickInfoClick}
                     onRecommendClick={handleRecommendClick}
                     onShowInsight={onShowInsight}

@@ -14,6 +14,10 @@ export default function TopMatchesPreview({
   universitiesList, 
   researchOptions,
   users,
+  searchType,
+  supervisionRequests = [],
+  activeRelationship = null,
+  onRequestSubmitted,
   onViewAllResults,
   onQuickInfoClick,
   onRecommendClick,
@@ -215,6 +219,10 @@ export default function TopMatchesPreview({
                 universitiesList={universitiesList}
                 researchOptions={researchOptions}
                 users={users}
+                searchType={searchType}
+                supervisionRequests={supervisionRequests}
+                activeRelationship={activeRelationship}
+                onRequestSubmitted={onRequestSubmitted}
                 onQuickInfoClick={handleQuickInfoClick}
                 onRecommendClick={handleRecommendClick}
                 onShowInsight={onShowInsight}
