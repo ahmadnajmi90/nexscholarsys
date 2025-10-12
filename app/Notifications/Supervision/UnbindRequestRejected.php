@@ -4,10 +4,11 @@ namespace App\Notifications\Supervision;
 
 use App\Models\SupervisionRelationshipUnbindRequest;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UnbindRequestRejected extends Notification
+class UnbindRequestRejected extends Notification implements ShouldQueue
 {
     use Queueable;
 

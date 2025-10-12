@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CoSupervisorInvitation;
 use App\Models\SupervisionRelationship;
 use App\Services\Supervision\CoSupervisorService;
+use App\Http\Requests\Supervision\InviteCoSupervisorRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -21,20 +22,17 @@ class CoSupervisorController extends Controller
     /**
      * Initiate a co-supervisor invitation
      */
-    public function invite(Request $request, SupervisionRelationship $relationship)
+    public function invite(InviteCoSupervisorRequest $request, SupervisionRelationship $relationship)
     {
         try {
-            $request->validate([
-                'cosupervisor_academician_id' => 'required|string|exists:academicians,academician_id',
-                'invitation_message' => 'nullable|string|max:1000',
-            ]);
+            $data = $request->validated();
 
             $user = $request->user();
 
             // Determine who is initiating
-            if ($relationship->student->postgraduate_id === $user->unique_id) {
+            if ($user->postgraduate && $relationship->student_id === $user->postgraduate->postgraduate_id) {
                 $initiatedBy = 'student';
-            } elseif ($relationship->academician->academician_id === $user->unique_id) {
+            } elseif ($user->academician && $relationship->academician_id === $user->academician->academician_id) {
                 $initiatedBy = 'main_supervisor';
             } else {
                 return response()->json(['message' => 'Unauthorized'], 403);
@@ -42,9 +40,9 @@ class CoSupervisorController extends Controller
 
             $invitation = $this->coSupervisorService->initiateInvitation(
                 $relationship,
-                $request->cosupervisor_academician_id,
+                $data['cosupervisor_academician_id'],
                 $initiatedBy,
-                $request->invitation_message
+                $data['invitation_message'] ?? null
             );
 
             return response()->json([
@@ -71,7 +69,7 @@ class CoSupervisorController extends Controller
             $user = $request->user();
 
             // Check if user is the co-supervisor
-            if ($invitation->cosupervisor->academician_id !== $user->unique_id) {
+            if (!$user->academician || $invitation->cosupervisor->academician_id !== $user->academician->academician_id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
 
@@ -117,9 +115,9 @@ class CoSupervisorController extends Controller
 
             // Determine if user is the approver
             $isApprover = false;
-            if ($invitation->initiated_by === 'student' && $relationship->academician->academician_id === $user->unique_id) {
+            if ($invitation->initiated_by === 'student' && $user->academician && $relationship->academician_id === $user->academician->academician_id) {
                 $isApprover = true; // Main supervisor approves
-            } elseif ($invitation->initiated_by === 'main_supervisor' && $relationship->student->postgraduate_id === $user->unique_id) {
+            } elseif ($invitation->initiated_by === 'main_supervisor' && $user->postgraduate && $relationship->student_id === $user->postgraduate->postgraduate_id) {
                 $isApprover = true; // Student approves
             }
 
@@ -164,9 +162,9 @@ class CoSupervisorController extends Controller
 
             // Only initiator can cancel
             $canCancel = false;
-            if ($invitation->initiated_by === 'student' && $relationship->student->postgraduate_id === $user->unique_id) {
+            if ($invitation->initiated_by === 'student' && $user->postgraduate && $relationship->student_id === $user->postgraduate->postgraduate_id) {
                 $canCancel = true;
-            } elseif ($invitation->initiated_by === 'main_supervisor' && $relationship->academician->academician_id === $user->unique_id) {
+            } elseif ($invitation->initiated_by === 'main_supervisor' && $user->academician && $relationship->academician_id === $user->academician->academician_id) {
                 $canCancel = true;
             }
 
@@ -196,7 +194,7 @@ class CoSupervisorController extends Controller
 
             // Get invitations where user is the co-supervisor
             $asCoSupervisor = CoSupervisorInvitation::whereHas('cosupervisor', function ($query) use ($user) {
-                $query->where('academician_id', $user->unique_id);
+                $query->where('academician_id', $user->academician?->academician_id);
             })
                 ->with([
                     'relationship.student.user',
@@ -220,14 +218,14 @@ class CoSupervisorController extends Controller
                 $query->where(function ($q) use ($user) {
                     $q->where('initiated_by', 'main_supervisor')
                         ->whereHas('relationship.student', function ($studentQuery) use ($user) {
-                            $studentQuery->where('postgraduate_id', $user->unique_id);
+                            $studentQuery->where('postgraduate_id', $user->postgraduate?->postgraduate_id);
                         });
                 })
                 // Main supervisor needs to approve (student initiated)
                 ->orWhere(function ($q) use ($user) {
                     $q->where('initiated_by', 'student')
                         ->whereHas('relationship.academician', function ($acadQuery) use ($user) {
-                            $acadQuery->where('academician_id', $user->unique_id);
+                            $acadQuery->where('academician_id', $user->academician?->academician_id);
                         });
                 });
             })
@@ -255,14 +253,14 @@ class CoSupervisorController extends Controller
                 $query->where(function ($q) use ($user) {
                     $q->where('initiated_by', 'student')
                         ->whereHas('relationship.student', function ($studentQuery) use ($user) {
-                            $studentQuery->where('postgraduate_id', $user->unique_id);
+                            $studentQuery->where('postgraduate_id', $user->postgraduate?->postgraduate_id);
                         });
                 })
                 // Main supervisor initiated
                 ->orWhere(function ($q) use ($user) {
                     $q->where('initiated_by', 'main_supervisor')
                         ->whereHas('relationship.academician', function ($acadQuery) use ($user) {
-                            $acadQuery->where('academician_id', $user->unique_id);
+                            $acadQuery->where('academician_id', $user->academician?->academician_id);
                         });
                 });
             })
@@ -310,7 +308,8 @@ class CoSupervisorController extends Controller
 
             // Check authorization (student or main supervisor can remove)
             $canRemove = false;
-            if ($relationship->student->postgraduate_id === $user->unique_id || $relationship->academician->academician_id === $user->unique_id) {
+            if (($user->postgraduate && $relationship->student_id === $user->postgraduate->postgraduate_id) || 
+                ($user->academician && $relationship->academician_id === $user->academician->academician_id)) {
                 $canRemove = true;
             }
 

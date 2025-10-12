@@ -13,7 +13,9 @@ import {
   Loader2,
   UserMinus,
   AlertCircle,
-  Users
+  Users,
+  CalendarX,
+  CalendarClock
 } from 'lucide-react';
 import axios from 'axios';
 import { logError } from '@/Utils/logError';
@@ -22,6 +24,8 @@ const ACTIVITY_ICONS = {
   request_rejected: XCircle,
   request_accepted: CheckCircle,
   meeting_scheduled: Calendar,
+  meeting_rescheduled: CalendarClock,
+  meeting_cancelled: CalendarX,
   request_submitted: UserPlus,
   offer_accepted: CheckCircle,
   message_received: MessageCircle,
@@ -39,6 +43,8 @@ const ACTIVITY_COLORS = {
   request_rejected: 'text-red-500',
   request_accepted: 'text-green-500',
   meeting_scheduled: 'text-blue-500',
+  meeting_rescheduled: 'text-amber-500',
+  meeting_cancelled: 'text-red-500',
   request_submitted: 'text-indigo-500',
   offer_accepted: 'text-green-500',
   message_received: 'text-purple-500',
@@ -55,6 +61,7 @@ const ACTIVITY_COLORS = {
 export default function RecentActivityPanel({ userRole, triggerReload = 0 }) {
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const loadActivities = async () => {
     try {
@@ -70,6 +77,11 @@ export default function RecentActivityPanel({ userRole, triggerReload = 0 }) {
   useEffect(() => {
     loadActivities();
   }, [triggerReload]);
+
+  // Show 3 by default, 8 when expanded
+  const displayedActivities = isExpanded ? activities.slice(0, 8) : activities.slice(0, 3);
+  const hasMore = activities.length > 3;
+  const hasHidden = activities.length > 8;
 
   return (
     <Card className="shadow-sm">
@@ -92,11 +104,29 @@ export default function RecentActivityPanel({ userRole, triggerReload = 0 }) {
             </p>
           </div>
         ) : (
-          <div className="space-y-0 divide-y divide-slate-100">
-            {activities.map((activity) => (
-              <ActivityItem key={activity.id} activity={activity} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-0 divide-y divide-slate-100">
+              {displayedActivities.map((activity) => (
+                <ActivityItem key={activity.id} activity={activity} />
+              ))}
+            </div>
+            
+            {hasMore && (
+              <div className="pt-3 mt-3 border-t border-slate-100">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="w-full text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+                >
+                  {isExpanded ? 'Show Less' : `View More (${Math.min(activities.length - 3, 5)} more)`}
+                </button>
+                {isExpanded && hasHidden && (
+                  <p className="text-xs text-slate-400 text-center mt-1">
+                    Showing latest 8 activities
+                  </p>
+                )}
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

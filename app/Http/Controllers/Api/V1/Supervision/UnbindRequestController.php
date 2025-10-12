@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SupervisionRelationship;
 use App\Models\SupervisionRelationshipUnbindRequest;
 use App\Services\Supervision\UnbindRequestService;
+use App\Http\Requests\Supervision\InitiateUnbindRequest;
 use Illuminate\Http\Request;
 
 class UnbindRequestController extends Controller
@@ -18,25 +19,16 @@ class UnbindRequestController extends Controller
     /**
      * Supervisor or Student initiates unbind request
      */
-    public function initiate(Request $request, SupervisionRelationship $relationship)
+    public function initiate(InitiateUnbindRequest $request, SupervisionRelationship $relationship)
     {
         $user = $request->user();
 
-        // Authorization: Either supervisor or student of this relationship can initiate unbind
-        $isSupervisor = $user->academician && $user->academician->academician_id === $relationship->academician_id;
-        $isStudent = $user->postgraduate && $user->postgraduate->postgraduate_id === $relationship->student_id;
-
-        if (!$isSupervisor && !$isStudent) {
-            abort(403, 'You can only unbind your own supervision relationships.');
-        }
-
-        $data = $request->validate([
-            'reason' => ['required', 'string', 'min:10', 'max:1000'],
-        ]);
+        $data = $request->validated();
 
         try {
             $unbindRequest = $this->unbindService->initiateUnbindRequest($relationship, $user, $data['reason']);
 
+            $isSupervisor = $user->academician && $user->academician->academician_id === $relationship->academician_id;
             $approverRole = $isSupervisor ? 'student' : 'supervisor';
             
             return response()->json([
@@ -187,6 +179,7 @@ class UnbindRequestController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $perPage = $request->input('per_page', 20);
         $unbindRequests = collect();
 
         // Get unbind requests where user is the supervisor

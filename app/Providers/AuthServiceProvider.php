@@ -19,6 +19,12 @@ use App\Models\Messaging\Conversation;
 use App\Policies\Messaging\ConversationPolicy;
 use App\Models\Messaging\Message;
 use App\Policies\Messaging\MessagePolicy;
+use App\Models\SupervisionRequest;
+use App\Policies\SupervisionPolicy;
+use App\Models\SupervisionRelationship;
+use App\Policies\SupervisionRelationshipPolicy;
+use App\Models\SupervisionMeeting;
+use App\Policies\SupervisionMeetingPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
@@ -39,6 +45,9 @@ class AuthServiceProvider extends ServiceProvider
         Project::class => ProjectPolicy::class,
         Conversation::class => ConversationPolicy::class,
         Message::class => MessagePolicy::class,
+        SupervisionRequest::class => SupervisionPolicy::class,
+        SupervisionRelationship::class => SupervisionRelationshipPolicy::class,
+        SupervisionMeeting::class => SupervisionMeetingPolicy::class,
     ];
 
     /**

@@ -4,10 +4,11 @@ namespace App\Notifications\Supervision;
 
 use App\Models\SupervisionRequest;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupervisionOfferReceived extends Notification
+class SupervisionOfferReceived extends Notification implements ShouldQueue
 {
     use Queueable;
 

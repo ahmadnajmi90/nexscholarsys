@@ -305,6 +305,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::get('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'index'])
             ->name('requests.index');
         Route::post('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'store'])
+            ->middleware('throttle:5,1440') // 5 requests per day (1440 minutes)
             ->name('requests.store');
         Route::post('/requests/{request}/cancel', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'cancel'])
             ->name('requests.cancel');
@@ -327,11 +328,16 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('meetings.store');
         Route::post('/requests/{supervisionRequest}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'storeForRequest'])
             ->name('requests.meetings.store');
+        Route::put('/meetings/{meeting}', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'update'])
+            ->name('meetings.update');
+        Route::delete('/meetings/{meeting}', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'destroy'])
+            ->name('meetings.destroy');
 
         // Unbind Request Routes
         Route::get('/unbind-requests', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'index'])
             ->name('unbind-requests.index');
         Route::post('/relationships/{relationship}/unbind', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'initiate'])
+            ->middleware('throttle:3,60') // 3 requests per hour
             ->name('relationships.unbind.initiate');
         // Student approves/rejects supervisor-initiated unbind
         Route::post('/unbind-requests/{unbindRequest}/approve', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'approve'])
@@ -360,6 +366,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::get('/relationships/{relationship}/documents', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'index'])
             ->name('relationships.documents.index');
         Route::post('/relationships/{relationship}/documents', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'upload'])
+            ->middleware('throttle:20,60') // 20 uploads per hour
             ->name('relationships.documents.upload');
         Route::put('/documents/{document}', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'update'])
             ->name('documents.update');
@@ -412,6 +419,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::get('/cosupervisor-invitations/my-invitations', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'myInvitations'])
             ->name('cosupervisor.my-invitations');
         Route::post('/relationships/{relationship}/cosupervisor/invite', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'invite'])
+            ->middleware('throttle:10,60') // 10 invitations per hour
             ->name('cosupervisor.invite');
         Route::post('/cosupervisor-invitations/{invitation}/respond', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'respond'])
             ->name('cosupervisor.respond');

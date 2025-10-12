@@ -9,6 +9,7 @@ use App\Models\SupervisionRequest;
 use App\Models\Postgraduate;
 use App\Services\Supervision\SupervisionRequestService;
 use App\Notifications\Supervision\SupervisionRequestCancelled;
+use App\Http\Requests\Supervision\SubmitSupervisionRequestRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\ValidationException;
@@ -24,6 +25,8 @@ class RequestController extends Controller
     {
         $user = $request->user();
 
+        $perPage = $request->input('per_page', 20);
+
         if ($user->postgraduate) {
             $requests = SupervisionRequest::with([
                 'academician.user',
@@ -34,7 +37,7 @@ class RequestController extends Controller
             ])
                 ->where('student_id', $user->postgraduate->postgraduate_id)
                 ->orderByDesc('submitted_at')
-                ->get();
+                ->paginate($perPage);
         } elseif ($user->academician) {
             $requests = SupervisionRequest::with([
                 'student.user',
@@ -46,7 +49,7 @@ class RequestController extends Controller
             ])
                 ->where('academician_id', $user->academician->academician_id)
                 ->orderByDesc('submitted_at')
-                ->get();
+                ->paginate($perPage);
         } else {
             throw ValidationException::withMessages([
                 'user' => __('Only postgraduates and academicians can access supervision requests.'),
@@ -56,20 +59,11 @@ class RequestController extends Controller
         return SupervisionRequestResource::collection($requests);
     }
 
-    public function store(Request $request)
+    public function store(SubmitSupervisionRequestRequest $request)
     {
-        $data = $request->validate([
-            'academician_id' => ['required', 'string'],
-            'postgraduate_program_id' => ['nullable', 'exists:postgraduate_programs,id'],
-            'proposal_title' => ['required', 'string', 'max:255'],
-            'motivation' => ['required', 'string'],
-            'attachments.proposal' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
-            'attachments.transcript' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'attachments.background' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
-            'attachments.portfolio' => ['nullable', 'file', 'max:10240'],
-        ]);
+        $data = $request->validated();
 
-        $student = $this->resolveStudent($request);
+        $student = $request->user()->postgraduate;
         $academician = Academician::where('academician_id', $data['academician_id'])->firstOrFail();
 
         $supervisionRequest = $this->requestService->submitRequest($student, $academician, $data);
@@ -79,13 +73,10 @@ class RequestController extends Controller
 
     public function cancel(Request $request, $requestId)
     {
-        $student = $this->resolveStudent($request);
-
         $supervisionRequest = SupervisionRequest::findOrFail($requestId);
 
-        if ($supervisionRequest->student_id !== $student->postgraduate_id) {
-            abort(403, 'You do not have permission to cancel this request.');
-        }
+        // Use policy for authorization
+        $this->authorize('cancel', $supervisionRequest);
 
         if (!in_array($supervisionRequest->status, [SupervisionRequest::STATUS_PENDING])) {
             return response()->json([
@@ -99,8 +90,8 @@ class RequestController extends Controller
             'cancel_reason' => 'student_cancelled',
         ]);
 
-        // Load student for notification
-        $supervisionRequest->load('student', 'academician');
+        // Eager load relationships for notification (prevent N+1)
+        $supervisionRequest->load(['student.user', 'academician.user']);
 
         // Notify supervisor about the cancellation
         $supervisionRequest->academician?->user?->notify(new SupervisionRequestCancelled($supervisionRequest));

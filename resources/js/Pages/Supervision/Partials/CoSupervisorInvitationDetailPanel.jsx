@@ -869,7 +869,7 @@ function ReadOnlyDocumentCard({ document, onPreview, onViewVersions }) {
 function MessageTab({ invitation }) {
     return (
         <div className="p-6 space-y-6">
-            <section className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+            <section className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm w-[720px]">
                 <div className="flex items-center gap-2 mb-4">
                     <MessageSquare className="w-5 h-5 text-indigo-600" />
                     <h3 className="text-lg font-semibold text-slate-900">Personal Invitation Message</h3>
@@ -877,7 +877,7 @@ function MessageTab({ invitation }) {
 
                 {invitation.invitation_message ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <p className="text-sm text-blue-900 leading-relaxed whitespace-pre-line italic">
+                        <p className="text-sm text-blue-900 leading-relaxed whitespace-pre-line italic break-words max-w-full">
                             "{invitation.invitation_message}"
                         </p>
                     </div>
@@ -889,7 +889,7 @@ function MessageTab({ invitation }) {
                     <div className="mt-4">
                         <h4 className="text-sm font-semibold text-slate-700 mb-2">Rejection Reason</h4>
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <p className="text-sm text-red-900 leading-relaxed whitespace-pre-line">
+                            <p className="text-sm text-red-900 leading-relaxed whitespace-pre-line break-words max-w-full">
                                 "{invitation.rejection_reason}"
                             </p>
                         </div>

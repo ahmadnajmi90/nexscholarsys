@@ -18,6 +18,7 @@ class RelationshipController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $user = $request->user();
+        $perPage = $request->input('per_page', 20);
 
         // Allow supervisors to query by student_id (to see all supervisors of their student)
         if ($request->has('student_id') && $user->academician) {
@@ -44,7 +45,7 @@ class RelationshipController extends Controller
                 'activeUnbindRequest'
             ])
                 ->where('student_id', $request->student_id)
-                ->get();
+                ->paginate($perPage);
 
             return SupervisionRelationshipResource::collection($relationships);
         }
@@ -63,7 +64,7 @@ class RelationshipController extends Controller
                 'activeUnbindRequest'
             ])
                 ->where('student_id', $user->postgraduate->postgraduate_id)
-                ->get();
+                ->paginate($perPage);
         } elseif ($user->academician) {
             $relationships = SupervisionRelationship::with([
                 'student.user',
@@ -78,7 +79,7 @@ class RelationshipController extends Controller
                 'activeUnbindRequest'
             ])
                 ->where('academician_id', $user->academician->academician_id)
-                ->get();
+                ->paginate($perPage);
         } else {
             $relationships = collect();
         }

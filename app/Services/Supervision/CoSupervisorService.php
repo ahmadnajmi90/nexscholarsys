@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\Log;
 
 class CoSupervisorService
 {
-    public const MAX_COSUPERVISORS = 2;
 
     protected ConversationService $conversationService;
 
@@ -52,6 +51,16 @@ class CoSupervisorService
             throw new \Exception('Main supervisor cannot be added as co-supervisor.');
         }
 
+        // Check if academician is already ANY supervisor for this student
+        $existingRelationship = SupervisionRelationship::where('student_id', $relationship->student_id)
+            ->where('academician_id', $cosupervisorAcademicianId)
+            ->where('status', SupervisionRelationship::STATUS_ACTIVE)
+            ->exists();
+
+        if ($existingRelationship) {
+            throw new \Exception(__('This academician is already a supervisor for this student.'));
+        }
+
         // Check max co-supervisors limit
         $existingCosupervisorsCount = SupervisionRelationship::where('student_id', $relationship->student_id)
             ->where('role', SupervisionRelationship::ROLE_CO)
@@ -69,8 +78,9 @@ class CoSupervisorService
             ->whereNull('cancelled_at')
             ->count();
 
-        if (($existingCosupervisorsCount + $pendingInvitationsCount) >= self::MAX_COSUPERVISORS) {
-            throw new \Exception('Maximum of ' . self::MAX_COSUPERVISORS . ' co-supervisors allowed.');
+        $maxCosupervisors = config('supervision.max_cosupervisors', 2);
+        if (($existingCosupervisorsCount + $pendingInvitationsCount) >= $maxCosupervisors) {
+            throw new \Exception('Maximum of ' . $maxCosupervisors . ' co-supervisors allowed.');
         }
 
         // Check for duplicate invitation
@@ -90,16 +100,6 @@ class CoSupervisorService
             throw new \Exception('An invitation to this co-supervisor is already pending.');
         }
 
-        // Check if already a co-supervisor
-        $alreadyCosupervisor = SupervisionRelationship::where('student_id', $relationship->student_id)
-            ->where('academician_id', $cosupervisorAcademicianId)
-            ->where('role', SupervisionRelationship::ROLE_CO)
-            ->where('status', SupervisionRelationship::STATUS_ACTIVE)
-            ->exists();
-
-        if ($alreadyCosupervisor) {
-            throw new \Exception('This academician is already a co-supervisor.');
-        }
 
         // Create invitation
         $invitation = CoSupervisorInvitation::create([
@@ -457,6 +457,27 @@ class CoSupervisorService
         $invitation->update([
             'completed_at' => now(),
         ]);
+
+        // Create timeline event for co-supervisor addition
+        try {
+            \App\Models\SupervisionTimeline::create([
+                'entity_type' => SupervisionRelationship::class,
+                'entity_id' => $cosupervisorRelationship->id,
+                'user_id' => $cosupervisorRelationship->academician->user_id ?? null,
+                'event_type' => 'cosupervisor_added',
+                'description' => 'Co-supervisor added to supervision team',
+                'metadata' => [
+                    'invitation_id' => $invitation->id,
+                    'initiated_by' => $invitation->initiated_by,
+                    'main_relationship_id' => $mainRelationship->id,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create timeline event for co-supervisor addition', [
+                'relationship_id' => $cosupervisorRelationship->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Notify all parties
         $this->notifyCoSupervisorAdded($invitation, $cosupervisorRelationship);

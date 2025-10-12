@@ -6,10 +6,13 @@ import { format, isToday, isTomorrow, isThisWeek } from 'date-fns';
 import { Calendar, CalendarClock, Video, MapPin, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { logError } from '@/Utils/logError';
+import MeetingActionMenu from './MeetingActionMenu';
+import RescheduleMeetingDialog from './RescheduleMeetingDialog';
 
 export default function UpcomingMeetingsPanel({ userRole, triggerReload = 0 }) {
   const [meetings, setMeetings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [meetingToReschedule, setMeetingToReschedule] = useState(null);
 
   const loadMeetings = async () => {
     try {
@@ -27,41 +30,57 @@ export default function UpcomingMeetingsPanel({ userRole, triggerReload = 0 }) {
   }, [triggerReload]);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
-          <CalendarClock className="h-5 w-5 text-slate-700" />
-          <CardTitle className="text-base font-semibold text-slate-900">
-            Upcoming Meetings
-          </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+    <>
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-slate-700" />
+            <CardTitle className="text-base font-semibold text-slate-900">
+              Upcoming Meetings
+            </CardTitle>
           </div>
-        ) : meetings.length === 0 ? (
-          <div className="py-8 text-center">
-            <Calendar className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm text-slate-500">No upcoming meetings</p>
-            <p className="text-xs text-slate-400 mt-1">
-              Schedule your first meeting to get started
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {meetings.map((meeting) => (
-              <MeetingCard key={meeting.id} meeting={meeting} />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+            </div>
+          ) : meetings.length === 0 ? (
+            <div className="py-8 text-center">
+              <Calendar className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No upcoming meetings</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Schedule your first meeting to get started
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {meetings.map((meeting) => (
+                <MeetingCard 
+                  key={meeting.id} 
+                  meeting={meeting}
+                  onUpdate={setMeetingToReschedule}
+                  onRefresh={loadMeetings}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <RescheduleMeetingDialog
+        meeting={meetingToReschedule}
+        onClose={() => setMeetingToReschedule(null)}
+        onRescheduled={() => {
+          setMeetingToReschedule(null);
+          loadMeetings();
+        }}
+      />
+    </>
   );
 }
 
-function MeetingCard({ meeting }) {
+function MeetingCard({ meeting, onUpdate, onRefresh }) {
   const otherPerson = meeting.other_person?.name || 'Unknown';
   const profilePicture = meeting.other_person?.profile_picture;
   const scheduledDate = new Date(meeting.scheduled_for);
@@ -90,18 +109,9 @@ function MeetingCard({ meeting }) {
   const dateLabel = getDateLabel();
   const hasJoinLink = Boolean(meeting.location_link);
 
-  const handleClick = () => {
-    if (hasJoinLink) {
-      window.open(meeting.location_link, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   return (
     <div 
-      className={`p-3 bg-slate-50 rounded-lg transition-all ${
-        hasJoinLink ? 'hover:bg-indigo-50 hover:border-indigo-200 cursor-pointer' : ''
-      } border border-transparent`}
-      onClick={handleClick}
+      className="p-3 bg-slate-50 rounded-lg transition-all hover:bg-slate-100 border border-transparent"
     >
       <div className="flex items-start gap-3">
         <Avatar className="h-9 w-9">
@@ -143,6 +153,11 @@ function MeetingCard({ meeting }) {
             )}
           </div>
         </div>
+        <MeetingActionMenu 
+          meeting={meeting}
+          onUpdate={onUpdate}
+          onCancel={onRefresh}
+        />
       </div>
     </div>
   );

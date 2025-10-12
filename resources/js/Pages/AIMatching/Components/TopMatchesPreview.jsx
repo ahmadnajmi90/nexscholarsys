@@ -226,6 +226,7 @@ export default function TopMatchesPreview({
                 onQuickInfoClick={handleQuickInfoClick}
                 onRecommendClick={handleRecommendClick}
                 onShowInsight={onShowInsight}
+                isCompactView={true}
               />
             </motion.div>
           ))}

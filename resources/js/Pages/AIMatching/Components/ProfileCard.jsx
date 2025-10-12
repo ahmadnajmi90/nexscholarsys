@@ -34,7 +34,8 @@ export default function ProfileCard({
   onRequestSubmitted,
   onQuickInfoClick,
   onRecommendClick,
-  onShowInsight
+  onShowInsight,
+  isCompactView = false // true for TopMatchesPreview, false for ResultsGrid
 }) {
   // Get profile data from match
   const profile = match.academician || match.student || {};
@@ -334,6 +335,22 @@ export default function ProfileCard({
     }
   };
   
+  // Helper function to resolve research expertise IDs to domain names
+  const resolveResearchDomains = (expertiseIds) => {
+    if (!Array.isArray(expertiseIds)) return [];
+    
+    const domains = [];
+    expertiseIds.forEach(id => {
+      const matchedOption = researchOptions.find(
+        option => `${option.field_of_research_id}-${option.research_area_id}-${option.niche_domain_id}` === id
+      );
+      if (matchedOption) {
+        domains.push(matchedOption.niche_domain_name);
+      }
+    });
+    return domains;
+  };
+  
   // Transform supervisor data for ProposalModal
   const transformedSupervisor = useMemo(() => {
     if (!showSupervisionFeatures) return null;
@@ -342,6 +359,9 @@ export default function ProfileCard({
                           profile.university_name || '';
     const universityFullName = universitiesList.find((u) => u.id === profile.university)?.full_name || 
                                profile.university_full_name || universityName;
+    
+    // Resolve research expertise IDs to readable domain names
+    const researchDomainNames = resolveResearchDomains(profile.research_expertise || []);
     
     return {
       ...match,
@@ -354,14 +374,14 @@ export default function ProfileCard({
         universityDetails: {
           full_name: universityFullName
         },
-        research_domains: profile.research_expertise || [],
+        research_domains: researchDomainNames,
         academician_id: academicianIdentifier,
         url: profile.url || null
       },
       user: users.find(u => u.unique_id === profile.academician_id || u.unique_id === profile.id) || null,
       postgraduate_program_id: profile.postgraduate_program_id || null
     };
-  }, [showSupervisionFeatures, match, profile, academicianIdentifier, users, universitiesList]);
+  }, [showSupervisionFeatures, match, profile, academicianIdentifier, users, universitiesList, researchOptions]);
   
   // Close menu when clicking outside
   useEffect(() => {
@@ -679,12 +699,12 @@ export default function ProfileCard({
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : showSupervisionFeatures && !hasActiveRelationship ? (
-                      // Case 2: Can Request Supervision - Split Button with Dropdown
+                      // Case 2: Can Request Supervision - Split Button with Dropdown (White bg, black text)
                       <DropdownMenu>
                         <div className="flex-1 flex items-stretch gap-0 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
                           <button
                             onClick={handleRequestClick}
-                            className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-all duration-300"
+                            className="flex-1 flex items-center justify-center px-4 py-3 text-sm font-semibold bg-white text-gray-900 hover:bg-gray-50 transition-all duration-300"
                           >
                             {existingRequest ? (
                               <>
@@ -694,7 +714,7 @@ export default function ProfileCard({
                             ) : (
                               <>
                                 <Send className="w-4 h-4 mr-2" />
-                                Request Supervision
+                                {isCompactView ? 'Request' : 'Request Supervision'}
                               </>
                             )}
                           </button>
@@ -702,7 +722,7 @@ export default function ProfileCard({
                           <DropdownMenuTrigger asChild>
                             <button
                               onClick={(e) => e.stopPropagation()}
-                              className="px-3 border-l border-indigo-500 bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-300"
+                              className="px-3 border-l border-gray-200 bg-white hover:bg-gray-50 text-gray-900 transition-all duration-300"
                             >
                               <ChevronDown className="w-4 h-4" />
                             </button>

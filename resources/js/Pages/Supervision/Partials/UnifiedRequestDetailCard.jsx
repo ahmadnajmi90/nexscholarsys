@@ -603,7 +603,7 @@ function OverviewTab({ request, person, userRole, currentPosition }) {
           {userRole === 'student' && person.bio && (
             <div className="pt-4 border-t">
               <h4 className="text-sm font-semibold text-slate-700 mb-2">Bio</h4>
-              <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{person.bio}</p>
+              <p className="text-sm text-slate-600 leading-relaxed line-clamp-3 break-words max-w-full">{person.bio}</p>
             </div>
           )}
 
@@ -625,7 +625,7 @@ function OverviewTab({ request, person, userRole, currentPosition }) {
         <div className="space-y-4">
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-400">Proposal Title</div>
-            <div className="text-sm text-slate-700 font-medium">{request.proposal_title || '—'}</div>
+            <div className="text-sm text-slate-700 font-medium break-words max-w-full">{request.proposal_title || '—'}</div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -646,18 +646,18 @@ function ProposalTab({ request, onAttachmentClick }) {
 
   return (
     <div className="p-6 space-y-6">
-      <section className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm">
+      <section className="border border-slate-200 rounded-lg p-6 bg-white shadow-sm w-[720px]">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Research Proposal</h3>
 
         <div className="space-y-4">
           <div>
             <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Title</h4>
-            <p className="text-base text-slate-900">{request.proposal_title ?? 'Untitled'}</p>
+            <p className="text-base text-slate-900 break-words max-w-full">{request.proposal_title ?? 'Untitled'}</p>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Motivation</h4>
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
               {request.motivation ?? 'No motivation provided.'}
             </p>
           </div>
@@ -665,14 +665,14 @@ function ProposalTab({ request, onAttachmentClick }) {
           {request.research_area && (
             <div>
               <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Research Area</h4>
-              <p className="text-sm text-slate-600">{request.research_area}</p>
+              <p className="text-sm text-slate-600 break-words max-w-full">{request.research_area}</p>
             </div>
           )}
 
           {request.proposal_summary && (
             <div>
               <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Summary</h4>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
                 {request.proposal_summary}
               </p>
             </div>
@@ -681,7 +681,7 @@ function ProposalTab({ request, onAttachmentClick }) {
           {request.methodology && (
             <div>
               <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Methodology</h4>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
                 {request.methodology}
               </p>
             </div>
@@ -690,7 +690,7 @@ function ProposalTab({ request, onAttachmentClick }) {
           {request.expected_outcomes && (
             <div>
               <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Expected Outcomes</h4>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words max-w-full overflow-hidden">
                 {request.expected_outcomes}
               </p>
             </div>
@@ -848,7 +848,7 @@ function NotesTab({ notesList, newNote, setNewNote, isAddingNote, isDeletingNote
                     </Button>
                   )}
                 </div>
-                <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{note.note}</p>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed break-words max-w-full overflow-hidden">{note.note}</p>
               </div>
             ))}
           </div>
@@ -938,7 +938,7 @@ function InfoItem({ icon: Icon, label, value }) {
       {Icon && <Icon className="mt-0.5 h-4 w-4 text-slate-400 flex-shrink-0" />}
       <div className="min-w-0 flex-1">
         <div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
-        <div className="text-sm text-slate-700 break-words">{value || '—'}</div>
+        <div className="text-sm text-slate-700 break-words max-w-full">{value || '—'}</div>
       </div>
     </div>
   );

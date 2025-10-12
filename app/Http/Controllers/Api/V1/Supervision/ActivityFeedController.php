@@ -64,15 +64,16 @@ class ActivityFeedController extends Controller
                 }
             }
 
-            // Get recent meetings
-            $recentMeetings = SupervisionMeeting::with(['relationship.academician', 'request.academician'])
+            // Get recent meetings (scheduled) - show all including soft-deleted (cancelled)
+            $recentMeetings = SupervisionMeeting::withTrashed()
+                ->with(['relationship.academician', 'request.academician'])
                 ->where(function ($q) use ($studentId) {
                     $q->whereHas('relationship', fn($rel) => $rel->where('student_id', $studentId))
                       ->orWhereHas('request', fn($req) => $req->where('student_id', $studentId));
                 })
                 ->where('created_at', '>=', now()->subDays(7))
                 ->orderByDesc('created_at')
-                ->limit(3)
+                ->limit(5)
                 ->get();
 
             foreach ($recentMeetings as $meeting) {
@@ -86,6 +87,61 @@ class ActivityFeedController extends Controller
                         'related_id' => $meeting->id,
                         'related_type' => 'supervision_meeting',
                         'created_at' => $meeting->created_at,
+                    ]);
+                }
+            }
+
+            // Get recently updated meetings (rescheduled) - show all including soft-deleted (cancelled)
+            $rescheduledMeetings = SupervisionMeeting::withTrashed()
+                ->with(['relationship.academician', 'request.academician'])
+                ->where(function ($q) use ($studentId) {
+                    $q->whereHas('relationship', fn($rel) => $rel->where('student_id', $studentId))
+                      ->orWhereHas('request', fn($req) => $req->where('student_id', $studentId));
+                })
+                ->where('updated_at', '>=', now()->subDays(7))
+                ->whereColumn('updated_at', '>', 'created_at')
+                ->orderByDesc('updated_at')
+                ->limit(5)
+                ->get();
+
+            foreach ($rescheduledMeetings as $meeting) {
+                $supervisor = $meeting->relationship?->academician ?? $meeting->request?->academician;
+                if ($supervisor) {
+                    $activities->push([
+                        'id' => "meeting_rescheduled_{$meeting->id}",
+                        'type' => 'meeting_rescheduled',
+                        'description' => "Meeting rescheduled with {$supervisor->full_name}",
+                        'actor_name' => $supervisor->full_name,
+                        'related_id' => $meeting->id,
+                        'related_type' => 'supervision_meeting',
+                        'created_at' => $meeting->updated_at,
+                    ]);
+                }
+            }
+
+            // Get recently cancelled meetings (soft-deleted)
+            $cancelledMeetings = SupervisionMeeting::onlyTrashed()
+                ->with(['relationship.academician', 'request.academician'])
+                ->where(function ($q) use ($studentId) {
+                    $q->whereHas('relationship', fn($rel) => $rel->where('student_id', $studentId))
+                      ->orWhereHas('request', fn($req) => $req->where('student_id', $studentId));
+                })
+                ->where('deleted_at', '>=', now()->subDays(7))
+                ->orderByDesc('deleted_at')
+                ->limit(5)
+                ->get();
+
+            foreach ($cancelledMeetings as $meeting) {
+                $supervisor = $meeting->relationship?->academician ?? $meeting->request?->academician;
+                if ($supervisor) {
+                    $activities->push([
+                        'id' => "meeting_cancelled_{$meeting->id}",
+                        'type' => 'meeting_cancelled',
+                        'description' => "Meeting cancelled with {$supervisor->full_name}",
+                        'actor_name' => $supervisor->full_name,
+                        'related_id' => $meeting->id,
+                        'related_type' => 'supervision_meeting',
+                        'created_at' => $meeting->deleted_at, // Use deleted_at for soft deletes
                     ]);
                 }
             }
@@ -198,15 +254,16 @@ class ActivityFeedController extends Controller
                 }
             }
 
-            // Get recent meetings
-            $recentMeetings = SupervisionMeeting::with(['relationship.student', 'request.student'])
+            // Get recent meetings (scheduled) - show all including soft-deleted (cancelled)
+            $recentMeetings = SupervisionMeeting::withTrashed()
+                ->with(['relationship.student', 'request.student'])
                 ->where(function ($q) use ($academicianId) {
                     $q->whereHas('relationship', fn($rel) => $rel->where('academician_id', $academicianId))
                       ->orWhereHas('request', fn($req) => $req->where('academician_id', $academicianId));
                 })
                 ->where('created_at', '>=', now()->subDays(7))
                 ->orderByDesc('created_at')
-                ->limit(3)
+                ->limit(5)
                 ->get();
 
             foreach ($recentMeetings as $meeting) {
@@ -220,6 +277,61 @@ class ActivityFeedController extends Controller
                         'related_id' => $meeting->id,
                         'related_type' => 'supervision_meeting',
                         'created_at' => $meeting->created_at,
+                    ]);
+                }
+            }
+
+            // Get recently updated meetings (rescheduled) - show all including soft-deleted (cancelled)
+            $rescheduledMeetings = SupervisionMeeting::withTrashed()
+                ->with(['relationship.student', 'request.student'])
+                ->where(function ($q) use ($academicianId) {
+                    $q->whereHas('relationship', fn($rel) => $rel->where('academician_id', $academicianId))
+                      ->orWhereHas('request', fn($req) => $req->where('academician_id', $academicianId));
+                })
+                ->where('updated_at', '>=', now()->subDays(7))
+                ->whereColumn('updated_at', '>', 'created_at')
+                ->orderByDesc('updated_at')
+                ->limit(5)
+                ->get();
+
+            foreach ($rescheduledMeetings as $meeting) {
+                $student = $meeting->relationship?->student ?? $meeting->request?->student;
+                if ($student) {
+                    $activities->push([
+                        'id' => "meeting_rescheduled_{$meeting->id}",
+                        'type' => 'meeting_rescheduled',
+                        'description' => "Meeting rescheduled with {$student->full_name}",
+                        'actor_name' => $student->full_name,
+                        'related_id' => $meeting->id,
+                        'related_type' => 'supervision_meeting',
+                        'created_at' => $meeting->updated_at,
+                    ]);
+                }
+            }
+
+            // Get recently cancelled meetings (soft-deleted)
+            $cancelledMeetings = SupervisionMeeting::onlyTrashed()
+                ->with(['relationship.student', 'request.student'])
+                ->where(function ($q) use ($academicianId) {
+                    $q->whereHas('relationship', fn($rel) => $rel->where('academician_id', $academicianId))
+                      ->orWhereHas('request', fn($req) => $req->where('academician_id', $academicianId));
+                })
+                ->where('deleted_at', '>=', now()->subDays(7))
+                ->orderByDesc('deleted_at')
+                ->limit(5)
+                ->get();
+
+            foreach ($cancelledMeetings as $meeting) {
+                $student = $meeting->relationship?->student ?? $meeting->request?->student;
+                if ($student) {
+                    $activities->push([
+                        'id' => "meeting_cancelled_{$meeting->id}",
+                        'type' => 'meeting_cancelled',
+                        'description' => "Meeting cancelled with {$student->full_name}",
+                        'actor_name' => $student->full_name,
+                        'related_id' => $meeting->id,
+                        'related_type' => 'supervision_meeting',
+                        'created_at' => $meeting->deleted_at, // Use deleted_at for soft deletes
                     ]);
                 }
             }
@@ -346,6 +458,7 @@ class ActivityFeedController extends Controller
 
         $query = SupervisionMeeting::query()
             ->with(['relationship.student', 'relationship.academician', 'request.student', 'request.academician'])
+            ->whereNull('cancelled_at')
             ->where('scheduled_for', '>', now())
             ->orderBy('scheduled_for', 'asc')
             ->limit(5);
