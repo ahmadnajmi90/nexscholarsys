@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-import { MoreVertical, Edit, Trash2, Loader2, Video } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Loader2, Video, Calendar, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/Components/ui/dropdown-menu';
 import { Button } from '@/Components/ui/button';
 import {
@@ -19,16 +20,47 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/Components/ui/alert-dialog';
+import { useGoogleCalendar } from '@/Hooks/useGoogleCalendar';
 
 export default function MeetingActionMenu({ meeting, onUpdate, onCancel }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isAddingToCalendar, setIsAddingToCalendar] = useState(false);
+
+  const { isConnected, addMeetingToCalendar } = useGoogleCalendar();
 
   const hasJoinLink = Boolean(meeting.location_link);
+  const isInGoogleCalendar = meeting.external_event_id && meeting.external_provider === 'google';
 
   const handleJoinMeeting = () => {
     if (hasJoinLink) {
       window.open(meeting.location_link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleAddToGoogleCalendar = async () => {
+    if (!isConnected) {
+      toast.error('Please connect Google Calendar in your profile settings first');
+      return;
+    }
+
+    if (isInGoogleCalendar) {
+      toast('This meeting is already in your Google Calendar', {
+        icon: 'ℹ️',
+        duration: 3000,
+      });
+      return;
+    }
+
+    setIsAddingToCalendar(true);
+    try {
+      const result = await addMeetingToCalendar(meeting.id);
+      if (result.success || result.alreadyExists) {
+        // Refresh the meeting list to show updated external_event_id
+        onCancel?.();
+      }
+    } finally {
+      setIsAddingToCalendar(false);
     }
   };
 
@@ -64,6 +96,21 @@ export default function MeetingActionMenu({ meeting, onUpdate, onCancel }) {
             <Edit className="mr-2 h-4 w-4" />
             Reschedule
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={handleAddToGoogleCalendar}
+            disabled={isAddingToCalendar || isInGoogleCalendar}
+          >
+            {isAddingToCalendar ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : isInGoogleCalendar ? (
+              <Check className="mr-2 h-4 w-4 text-green-600" />
+            ) : (
+              <Calendar className="mr-2 h-4 w-4" />
+            )}
+            {isInGoogleCalendar ? 'Added to Google Calendar' : 'Add to Google Calendar'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => setShowCancelDialog(true)}
             className="text-red-600"

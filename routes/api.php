@@ -333,6 +333,20 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::delete('/meetings/{meeting}', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'destroy'])
             ->name('meetings.destroy');
 
+        // Google Calendar Integration
+        Route::prefix('google-calendar')->name('google-calendar.')->group(function () {
+            Route::get('/auth-url', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'getAuthUrl'])
+                ->name('auth-url');
+            Route::get('/status', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'getStatus'])
+                ->name('status');
+            Route::post('/disconnect', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'disconnect'])
+                ->name('disconnect');
+            Route::post('/meetings/{meeting}/add', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'addMeetingToCalendar'])
+                ->name('add-meeting');
+            Route::post('/sync', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'syncFromGoogle'])
+                ->name('sync');
+        });
+
         // Unbind Request Routes
         Route::get('/unbind-requests', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'index'])
             ->name('unbind-requests.index');

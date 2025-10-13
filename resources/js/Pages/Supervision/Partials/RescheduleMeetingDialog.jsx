@@ -21,9 +21,15 @@ export default function RescheduleMeetingDialog({ meeting, onClose, onReschedule
   useEffect(() => {
     if (meeting) {
       setTitle(meeting.title || '');
+      // Format the datetime properly for datetime-local input
+      // meeting.scheduled_for is in Malaysia time, format it as-is
       const date = new Date(meeting.scheduled_for);
-      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-      setScheduledFor(local.toISOString().slice(0, 16));
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      setScheduledFor(`${year}-${month}-${day}T${hours}:${minutes}`);
       setLocation(meeting.location_link || '');
       setAgenda(meeting.agenda || '');
       setError(null);
@@ -38,9 +44,14 @@ export default function RescheduleMeetingDialog({ meeting, onClose, onReschedule
     setError(null);
 
     try {
+      // Format the datetime properly for backend
+      // The backend expects datetime in app timezone (Asia/Kuala_Lumpur)
+      // Send as YYYY-MM-DD HH:mm:ss format without timezone conversion
+      const formattedDateTime = scheduledFor.replace('T', ' ') + ':00';
+      
       await axios.put(route('supervision.meetings.update', meeting.id), {
         title,
-        scheduled_for: new Date(scheduledFor).toISOString(),
+        scheduled_for: formattedDateTime,
         location_link: location,
         agenda,
       });
@@ -67,8 +78,13 @@ export default function RescheduleMeetingDialog({ meeting, onClose, onReschedule
 
   const minDateTime = () => {
     const now = new Date();
-    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 16);
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   return (

@@ -9,12 +9,19 @@ import { Label } from '@/Components/ui/label';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import { Loader2, X } from 'lucide-react';
 import { logError } from '@/Utils/logError';
+import { useGoogleCalendar } from '@/Hooks/useGoogleCalendar';
+import GoogleCalendarToast from '@/Components/GoogleCalendarToast';
 
 const defaultDateTime = () => {
   const now = new Date();
   now.setHours(now.getHours() + 24);
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
+  // Format as YYYY-MM-DDTHH:mm for datetime-local input
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 export default function ScheduleMeetingDialog({ relationship = null, request = null, onClose, onScheduled, userRole = 'supervisor' }) {
@@ -24,6 +31,9 @@ export default function ScheduleMeetingDialog({ relationship = null, request = n
   const [agenda, setAgenda] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Google Calendar hook
+  const { addMeetingToCalendar } = useGoogleCalendar();
 
   // Determine which entity we're working with
   const isRequestPhase = request && !relationship;
@@ -44,6 +54,27 @@ export default function ScheduleMeetingDialog({ relationship = null, request = n
       setError(null);
     }
   }, [targetEntity, otherPerson, relationship?.meeting_cadence]);
+
+  /**
+   * Show Google Calendar prompt toast
+   */
+  const showGoogleCalendarPrompt = (meeting, promptData) => {
+    const customToast = toast.custom((t) => (
+      <GoogleCalendarToast
+        meeting={meeting}
+        promptData={promptData}
+        onYes={async () => {
+          toast.dismiss(t.id);
+          await addMeetingToCalendar(meeting.id);
+        }}
+        onNo={() => toast.dismiss(t.id)}
+        visible={t.visible}
+      />
+    ), {
+      duration: 10000, // 10 seconds
+      position: 'top-center',
+    });
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -70,14 +101,27 @@ export default function ScheduleMeetingDialog({ relationship = null, request = n
         ? route('supervision.requests.meetings.store', request.id)
         : route('supervision.meetings.store', relationship.id);
 
-      await axios.post(endpoint, {
+      // Format the datetime properly for backend
+      // The backend expects datetime in app timezone (Asia/Kuala_Lumpur)
+      // Send as YYYY-MM-DD HH:mm:ss format without timezone conversion
+      const formattedDateTime = scheduledFor.replace('T', ' ') + ':00';
+      
+      const response = await axios.post(endpoint, {
         title,
-        scheduled_for: new Date(scheduledFor).toISOString(),
+        scheduled_for: formattedDateTime,
         location_link: location,
         agenda,
       });
 
+      const { meeting, google_calendar_prompt } = response.data;
+
       toast.success('Meeting scheduled');
+
+      // Show Google Calendar prompt if enabled
+      if (google_calendar_prompt?.show_prompt) {
+        showGoogleCalendarPrompt(meeting, google_calendar_prompt);
+      }
+
       onScheduled?.();
       onClose?.();
     } catch (err) {

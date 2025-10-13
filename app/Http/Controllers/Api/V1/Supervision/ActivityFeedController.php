@@ -521,11 +521,13 @@ class ActivityFeedController extends Controller
                 'title' => $meeting->title,
                 'scheduled_for' => $meeting->scheduled_for,
                 'location_link' => $meeting->location_link,
-                'location_type' => $meeting->external_provider ?? 'Online',
+                'location_type' => $meeting->location_link ? 'Online' : 'Physical',
                 'agenda' => $meeting->agenda,
                 'other_person' => $otherPerson,
                 'relationship_id' => $meeting->supervision_relationship_id,
                 'request_id' => $meeting->supervision_request_id,
+                'external_event_id' => $meeting->external_event_id,
+                'external_provider' => $meeting->external_provider,
             ];
         });
 

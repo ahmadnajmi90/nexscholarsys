@@ -9,11 +9,16 @@ use App\Models\User;
 use App\Notifications\Supervision\MeetingScheduled;
 use App\Notifications\Supervision\MeetingUpdated;
 use App\Notifications\Supervision\MeetingCancelled;
+use App\Services\GoogleCalendarService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SupervisionMeetingService
 {
+    public function __construct(
+        protected GoogleCalendarService $googleCalendarService
+    ) {
+    }
     public function schedule(SupervisionRelationship $relationship, User $user, array $data): SupervisionMeeting
     {
         // Check if user is either the supervisor or the student in this relationship
@@ -157,6 +162,19 @@ class SupervisionMeetingService
                 'agenda' => $data['agenda'] ?? $meeting->agenda,
             ]);
 
+            // Sync to Google Calendar if event exists
+            if ($meeting->external_event_id && $meeting->external_provider === 'google') {
+                try {
+                    $this->googleCalendarService->updateEvent($meeting);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the meeting update
+                    \Log::error('Failed to update Google Calendar event', [
+                        'meeting_id' => $meeting->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             // Notify the other party if there are changes
             if (!empty($changes)) {
                 $meeting->load('relationship.student', 'relationship.academician', 'request.student', 'request.academician');
@@ -222,6 +240,19 @@ class SupervisionMeetingService
                 'relationship' => $meeting->relationship,
                 'request' => $meeting->request,
             ];
+
+            // Delete from Google Calendar if event exists
+            if ($meeting->external_event_id && $meeting->external_provider === 'google') {
+                try {
+                    $this->googleCalendarService->deleteEvent($meeting);
+                } catch (\Exception $e) {
+                    // Log error but don't fail the meeting deletion
+                    \Log::error('Failed to delete Google Calendar event', [
+                        'meeting_id' => $meeting->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             // Delete meeting
             $meeting->delete();

@@ -24,9 +24,19 @@ class MeetingController extends Controller
 
         $meeting = $this->meetingService->schedule($relationship, $request->user(), $data);
 
+        // Get supervisor and student for Google Calendar prompt
+        $supervisor = $relationship->academician->user;
+        $student = $relationship->student->user;
+
         return response()->json([
             'success' => true,
             'meeting' => $meeting,
+            'google_calendar_prompt' => [
+                'show_prompt' => true,
+                'supervisor_connected' => $supervisor->hasGoogleCalendarConnected(),
+                'student_connected' => $student->hasGoogleCalendarConnected(),
+                'meeting_id' => $meeting->id,
+            ],
         ], 201);
     }
 
@@ -45,10 +55,20 @@ class MeetingController extends Controller
 
         $meeting = $this->meetingService->scheduleForRequest($supervisionRequest, $request->user(), $data);
 
+        // Get supervisor and student for Google Calendar prompt
+        $supervisor = $supervisionRequest->academician->user;
+        $student = $supervisionRequest->student->user;
+
         return response()->json([
             'success' => true,
             'message' => 'Meeting scheduled successfully',
             'meeting' => $meeting,
+            'google_calendar_prompt' => [
+                'show_prompt' => true,
+                'supervisor_connected' => $supervisor->hasGoogleCalendarConnected(),
+                'student_connected' => $student->hasGoogleCalendarConnected(),
+                'meeting_id' => $meeting->id,
+            ],
         ], 201);
     }
 

@@ -75,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+Route::get('auth/google/calendar/callback', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'handleCallback'])
+    ->middleware('auth')
+    ->name('google-calendar.callback');
 
 Route::bind('post', function ($value) {
     return CreatePost::where('url', $value)->firstOrFail();
