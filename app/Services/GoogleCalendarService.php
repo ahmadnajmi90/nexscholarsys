@@ -33,7 +33,16 @@ class GoogleCalendarService
      */
     public function getAuthUrl(User $user): string
     {
-        $this->client->setState($user->id); // Store user ID in state for callback
+        // Create signed state token with user ID and expiration
+        $stateData = [
+            'user_id' => $user->id,
+            'expires' => now()->addMinutes(15)->timestamp,
+            'nonce' => bin2hex(random_bytes(16)),
+        ];
+        
+        $state = Crypt::encryptString(json_encode($stateData));
+        $this->client->setState($state);
+        
         return $this->client->createAuthUrl();
     }
 

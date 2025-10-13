@@ -24,7 +24,7 @@ use App\Policies\SupervisionPolicy;
 use App\Models\SupervisionRelationship;
 use App\Policies\SupervisionRelationshipPolicy;
 use App\Models\SupervisionMeeting;
-use App\Policies\SupervisionMeetingPolicy;
+use App\Policies\MeetingPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
@@ -47,7 +47,7 @@ class AuthServiceProvider extends ServiceProvider
         Message::class => MessagePolicy::class,
         SupervisionRequest::class => SupervisionPolicy::class,
         SupervisionRelationship::class => SupervisionRelationshipPolicy::class,
-        SupervisionMeeting::class => SupervisionMeetingPolicy::class,
+        SupervisionMeeting::class => MeetingPolicy::class,
     ];
 
     /**
@@ -70,9 +70,6 @@ class AuthServiceProvider extends ServiceProvider
         // ✅ Belt-and-suspenders explicit mapping
         Gate::policy(Conversation::class, ConversationPolicy::class);
         Gate::policy(Message::class, MessagePolicy::class);
-
-        // Log policy mappings for debugging
-        $convPolicy = Gate::getPolicyFor(Conversation::class);
-        $messagePolicy = Gate::getPolicyFor(Message::class);
+        Gate::policy(SupervisionMeeting::class, MeetingPolicy::class);
     }
 } 

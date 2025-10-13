@@ -391,7 +391,7 @@ export default function UnifiedRequestDetailCard({ request, onClose, onUpdated, 
                   {/* Proposal Tab */}
                   <TabsContent value="proposal" className="mt-0 h-full">
                     <ScrollArea className="h-full">
-                      <ProposalTab request={request} onAttachmentClick={handleAttachmentClickLocal} />
+                      <ProposalTab request={request} onAttachmentClick={handleAttachmentClickLocal} userRole={userRole} />
                     </ScrollArea>
                   </TabsContent>
 
@@ -641,8 +641,56 @@ function OverviewTab({ request, person, userRole, currentPosition }) {
 /**
  * Proposal Tab Component
  */
-function ProposalTab({ request, onAttachmentClick }) {
+function ProposalTab({ request, onAttachmentClick, userRole }) {
   const attachments = request?.attachments ?? [];
+  
+  // Abstract state
+  const [abstract, setAbstract] = useState(null);
+  const [isEditingAbstract, setIsEditingAbstract] = useState(false);
+  const [abstractText, setAbstractText] = useState('');
+  const [isLoadingAbstract, setIsLoadingAbstract] = useState(true);
+  const [isSavingAbstract, setIsSavingAbstract] = useState(false);
+
+  // Load abstract on mount
+  useEffect(() => {
+    loadAbstract();
+  }, [request.id]);
+
+  const loadAbstract = async () => {
+    try {
+      const response = await axios.get(route('supervision.requests.abstract.show', request.id));
+      setAbstract(response.data.data);
+      setAbstractText(response.data.data?.abstract || '');
+    } catch (error) {
+      logError(error, 'ProposalTab loadAbstract');
+    } finally {
+      setIsLoadingAbstract(false);
+    }
+  };
+
+  const handleSaveAbstract = async () => {
+    setIsSavingAbstract(true);
+    try {
+      await axios.put(route('supervision.requests.abstract.update', request.id), {
+        abstract: abstractText
+      });
+      toast.success('Abstract saved successfully');
+      setIsEditingAbstract(false);
+      await loadAbstract();
+    } catch (error) {
+      logError(error, 'ProposalTab handleSaveAbstract');
+      toast.error(error.response?.data?.message || 'Failed to save abstract');
+    } finally {
+      setIsSavingAbstract(false);
+    }
+  };
+
+  const handleEditAbstract = () => {
+    setIsEditingAbstract(!isEditingAbstract);
+    if (!isEditingAbstract) {
+      setAbstractText(abstract?.abstract || '');
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -653,6 +701,87 @@ function ProposalTab({ request, onAttachmentClick }) {
           <div>
             <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Title</h4>
             <p className="text-base text-slate-900 break-words max-w-full">{request.proposal_title ?? 'Untitled'}</p>
+          </div>
+
+          {/* Abstract Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+                Abstract
+              </h4>
+              {userRole === 'student' && request.status === 'pending' && !isLoadingAbstract && (
+                <Button size="sm" variant="outline" onClick={handleEditAbstract}>
+                  {isEditingAbstract ? 'Cancel' : 'Edit'}
+                </Button>
+              )}
+            </div>
+            
+            {isLoadingAbstract ? (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Loading abstract...</span>
+              </div>
+            ) : abstract?.extraction_status === 'failed' ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 mb-2">
+                  Could not extract abstract automatically. Please enter it manually.
+                </p>
+                {abstract.extraction_error && (
+                  <p className="text-xs text-yellow-600 mb-3">{abstract.extraction_error}</p>
+                )}
+                {userRole === 'student' && request.status === 'pending' && (
+                  <>
+                    <Textarea 
+                      value={abstractText}
+                      onChange={(e) => setAbstractText(e.target.value)}
+                      placeholder="Enter your abstract here (minimum 50 characters)..."
+                      rows={6}
+                      className="mb-2"
+                    />
+                    <Button 
+                      onClick={handleSaveAbstract} 
+                      disabled={isSavingAbstract || abstractText.length < 50}
+                      size="sm"
+                    >
+                      {isSavingAbstract && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Abstract
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : isEditingAbstract ? (
+              <div>
+                <Textarea 
+                  value={abstractText}
+                  onChange={(e) => setAbstractText(e.target.value)}
+                  rows={8}
+                  className="mb-2"
+                  placeholder="Enter your abstract here (minimum 50 characters)..."
+                />
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSaveAbstract} 
+                    disabled={isSavingAbstract || abstractText.length < 50}
+                    size="sm"
+                  >
+                    {isSavingAbstract && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingAbstract(false)}>
+                    Cancel
+                  </Button>
+                </div>
+                {abstractText.length < 50 && abstractText.length > 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Abstract must be at least 50 characters ({abstractText.length}/50)
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line break-words">
+                {abstract?.abstract?.trim() || 'No abstract available'}
+              </p>
+            )}
           </div>
 
           <div>

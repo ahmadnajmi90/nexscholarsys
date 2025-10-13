@@ -95,6 +95,11 @@ class SupervisionRequest extends Model
         return $this->hasMany(SupervisionMeeting::class, 'supervision_request_id')->orderBy('scheduled_for');
     }
 
+    public function abstract()
+    {
+        return $this->hasOne(SupervisionRequestAbstract::class, 'supervision_request_id');
+    }
+
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);

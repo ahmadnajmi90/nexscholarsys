@@ -10,8 +10,10 @@ use App\Models\PotentialSupervisor;
 use App\Models\Messaging\Conversation;
 use App\Notifications\Supervision\SupervisionRequestSubmitted;
 use App\Services\Messaging\ConversationService;
+use App\Services\Supervision\AbstractService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +21,7 @@ class SupervisionRequestService
 {
     public function __construct(
         protected ConversationService $conversationService,
+        protected AbstractService $abstractService,
     ) {}
 
     public function submitRequest(Postgraduate $student, Academician $academician, array $data): SupervisionRequest
@@ -77,6 +80,20 @@ class SupervisionRequestService
             ]);
 
             $this->syncAttachments($request, Arr::get($data, 'attachments', []));
+
+            // Extract abstract from proposal attachment
+            try {
+                $proposalAttachment = $request->attachments()->where('type', 'proposal')->first();
+                if ($proposalAttachment) {
+                    $this->abstractService->extractAndStore($request, $proposalAttachment->id);
+                }
+            } catch (\Exception $e) {
+                // Log error but don't fail the request submission
+                Log::warning('Abstract extraction failed during request submission', [
+                    'request_id' => $request->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             // Auto-add supervisor to potential supervisors list when request is submitted
             PotentialSupervisor::updateOrCreate(

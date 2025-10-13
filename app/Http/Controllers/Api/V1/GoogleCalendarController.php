@@ -27,16 +27,9 @@ class GoogleCalendarController extends Controller
         try {
             $url = $this->googleCalendarService->getAuthUrl($request->user());
             
-            // Debug: Include redirect URI in response
-            $redirectUri = config('services.google.calendar_redirect');
-            
             return response()->json([
                 'success' => true,
                 'auth_url' => $url,
-                'debug' => [
-                    'redirect_uri' => $redirectUri,
-                    'app_url' => config('app.url'),
-                ],
             ]);
         } catch (Exception $e) {
             Log::error('Failed to generate Google Calendar auth URL', [
@@ -60,13 +53,31 @@ class GoogleCalendarController extends Controller
             $code = $request->input('code');
             $state = $request->input('state');
 
-            if (!$code) {
-                // Return HTML that closes popup and shows error
-                return $this->renderPopupClose('error', 'Authorization code not received from Google');
+            if (!$code || !$state) {
+                return $this->renderPopupClose('error', 'Invalid authorization response from Google');
             }
 
-            // Get user from state
-            $user = \App\Models\User::findOrFail($state);
+            // Decrypt and validate state token
+            try {
+                $stateData = json_decode(\Illuminate\Support\Facades\Crypt::decryptString($state), true);
+                
+                // Validate state token
+                if (!isset($stateData['user_id']) || !isset($stateData['expires'])) {
+                    throw new \Exception('Invalid state token structure');
+                }
+                
+                // Check expiration
+                if (now()->timestamp > $stateData['expires']) {
+                    return $this->renderPopupClose('error', 'Authorization session expired. Please try again.');
+                }
+                
+                // Get user from validated state
+                $user = \App\Models\User::findOrFail($stateData['user_id']);
+                
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                Log::warning('Invalid OAuth state token', ['error' => $e->getMessage()]);
+                return $this->renderPopupClose('error', 'Invalid authorization state. Please try again.');
+            }
 
             $this->googleCalendarService->handleCallback($code, $user);
 
@@ -140,7 +151,7 @@ class GoogleCalendarController extends Controller
         try {
             $user = $request->user();
 
-            // Eager load relationships with their users
+            // Eager load relationships with their users for policy check
             $meeting->load([
                 'relationship.academician.user',
                 'relationship.student.user',
@@ -149,83 +160,8 @@ class GoogleCalendarController extends Controller
                 'creator'
             ]);
 
-            // Verify user has permission to access this meeting
-            $isAuthorized = false;
-            
-            // Check if user is the meeting creator
-            if ($meeting->created_by === $user->id) {
-                $isAuthorized = true;
-            }
-            
-            // Also check relationship participants
-            if (!$isAuthorized && $meeting->supervision_relationship_id && $meeting->relationship) {
-                $relationship = $meeting->relationship;
-                
-                // Check academician
-                if ($relationship->academician) {
-                    if ($relationship->academician->user_id === $user->id) {
-                        $isAuthorized = true;
-                    }
-                }
-
-                Log::info('isAuthorized', ['isAuthorized' => $isAuthorized]);
-                Log::info('academician->user_id', ['academician->user_id' => $relationship->academician->user_id]);
-                Log::info('user->id', ['user->id' => $user->id]);
-                
-                // Check student
-                if (!$isAuthorized && $relationship->student) {
-                    if ($relationship->student->user_id === $user->id) {
-                        $isAuthorized = true;
-                    }
-                }
-
-                Log::info('isAuthorized', ['isAuthorized' => $isAuthorized]);
-                Log::info('student->user_id', ['student->user_id' => $relationship->student->user_id]);
-                Log::info('user->id', ['user->id' => $user->id]);
-            } 
-            
-            // Check request participants
-            if (!$isAuthorized && $meeting->supervision_request_id && $meeting->request) {
-                $requestModel = $meeting->request;
-                
-                // Check academician
-                if ($requestModel->academician) {
-                    if ($requestModel->academician->user_id === $user->id) {
-                        $isAuthorized = true;
-                    }
-                }
-                
-                // Check student
-                if (!$isAuthorized && $requestModel->student) {
-                    if ($requestModel->student->user_id === $user->id) {
-                        $isAuthorized = true;
-                    }
-                }
-            }
-
-            if (!$isAuthorized) {
-                // Detailed logging for debugging
-                $debugInfo = [
-                    'user_id' => $user->id,
-                    'meeting_id' => $meeting->id,
-                    'created_by' => $meeting->created_by,
-                    'has_relationship' => !is_null($meeting->relationship),
-                    'has_request' => !is_null($meeting->request),
-                ];
-                
-                if ($meeting->relationship) {
-                    $debugInfo['relationship_id'] = $meeting->relationship->id;
-                    $debugInfo['academician_user_id'] = $meeting->relationship->academician?->user_id;
-                    $debugInfo['student_user_id'] = $meeting->relationship->student?->user_id;
-                }
-                
-                Log::warning('User unauthorized to add meeting to calendar', $debugInfo);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have permission to add this meeting',
-                ], 403);
-            }
+            // Check authorization using policy
+            $this->authorize('addToCalendar', $meeting);
 
             if (!$user->hasGoogleCalendarConnected()) {
                 return response()->json([

@@ -77,6 +77,14 @@ class MeetingController extends Controller
      */
     public function update(Request $request, SupervisionMeeting $meeting)
     {
+        // Eager load relationships for policy check
+        $meeting->load([
+            'relationship.academician.user',
+            'relationship.student.user',
+            'request.academician.user',
+            'request.student.user',
+        ]);
+
         // Authorize
         $this->authorize('update', $meeting);
 
@@ -103,6 +111,14 @@ class MeetingController extends Controller
      */
     public function destroy(Request $request, SupervisionMeeting $meeting)
     {
+        // Eager load relationships for policy check
+        $meeting->load([
+            'relationship.academician.user',
+            'relationship.student.user',
+            'request.academician.user',
+            'request.student.user',
+        ]);
+
         // Authorize
         $this->authorize('delete', $meeting);
 
