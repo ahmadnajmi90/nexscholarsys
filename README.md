@@ -52,6 +52,7 @@
     -   Hierarchical organization: Workspaces → Boards → Lists → Tasks.
     -   Real-time collaboration with WebSocket updates.
     -   Specialized task types for academic paper writing.
+-   **Supervision Management**: A complete postgraduate supervision system enabling students to find and request supervisors, manage proposals, schedule meetings, and collaborate throughout their academic journey. Features automated workflows, co-supervisor support, and integrated ScholarLab workspaces. See [detailed supervision documentation](docs/supervision/INDEX.md).
 -   **Faculty Admin System**: A dedicated role for faculty members to manage and verify academicians within their faculty.
 -   **Messaging System**: Real-time direct and group messaging with file attachments, typing indicators, and read receipts.
 

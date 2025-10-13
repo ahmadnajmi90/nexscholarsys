@@ -15,6 +15,7 @@ This document provides a detailed breakdown of the major features implemented in
   - [ScholarLab (ProjectHub)](#scholarlab-projecthub)
   - [My Network (Connections)](#my-network-connections)
   - [Messaging](#messaging)
+  - [Supervision Management](#supervision-management)
 - [4. AI-Powered Services](#4-ai-powered-services)
   - [Semantic Search & AI Matching](#semantic-search--ai-matching)
   - [Postgraduate Program Recommendations](#postgraduate-program-recommendations)
@@ -162,6 +163,55 @@ A real-time, one-on-one and group messaging system designed for seamless communi
     -   Read receipts (via `last_read_message_id`).
     -   Search and filtering of conversations.
 -   **Database Models**: `Conversation`, `Message`, `ConversationParticipant`, `MessageAttachment`.
+
+### Supervision Management
+
+A comprehensive system for managing postgraduate supervision relationships from initial request to ongoing collaboration.
+
+-   **Purpose**: To streamline the supervision workflow, enabling students to find and request supervisors while providing supervisors with tools to manage their supervisees effectively.
+-   **User Roles**: Postgraduate students (initiators) and Academicians (supervisors).
+-   **UI**: Dedicated pages at `resources/js/Pages/Supervision/` including `MySupervisor.jsx` (student view) and `SupervisorDashboard.jsx` (supervisor view), with a unified modal interface for detailed request/relationship management.
+-   **Backend Logic**: Controllers under `app/Http/Controllers/Api/V1/Supervision/` manage the complete supervision lifecycle through specialized services in `app/Services/Supervision/`.
+-   **Key Features**:
+    -   **Request Lifecycle**:
+        -   Students can submit supervision requests (max 5 pending) with proposal details, research abstract extraction, and attachments.
+        -   Supervisors review requests, schedule meetings, and make accept/reject decisions.
+        -   Acceptance auto-creates active relationships, sets up ScholarLab workspaces, and cancels competing proposals.
+        -   Rejection workflow includes feedback and optional alternative supervisor recommendations.
+    -   **Active Supervision**:
+        -   Main supervisor designation with support for up to 2 co-supervisors.
+        -   Co-supervisor invitation system with accept/reject workflow.
+        -   Meeting management (supervisor-scheduled) with agenda, attachments, and automated reminders.
+        -   Shared document repository for proposals, progress reports, and research materials.
+        -   Private supervisor notes for tracking student progress.
+    -   **Unbind Workflow**:
+        -   Structured process for terminating supervision relationships.
+        -   Requires reason selection and detailed explanation.
+        -   Archival of relationship data with status tracking.
+        -   Automated notifications to all parties.
+    -   **Activity Feed**:
+        -   Real-time timeline of supervision events (requests, meetings, decisions, notes).
+        -   Filterable by event type and date range.
+        -   Provides audit trail for supervision history.
+    -   **Integration**:
+        -   **Messaging**: Auto-creates conversation threads on request submission, bypassing connection requirements.
+        -   **ScholarLab**: Creates dedicated supervision workspace with pre-configured boards for research collaboration.
+        -   **Notifications**: Comprehensive email and in-app notifications for all lifecycle events (submitted, accepted, rejected, meetings, etc.).
+        -   **AI Matching**: Integrates with semantic search to help students find suitable supervisors.
+    -   **Automated Workflows**:
+        -   Auto-adds supervisor to student's shortlist on request submission.
+        -   Auto-cancellation of competing requests upon acceptance.
+        -   Meeting reminder system via scheduled artisan command (`supervision:send-meeting-reminders`).
+        -   Request limit enforcement (max 5 pending per student).
+        -   Timeline event logging for all significant actions.
+    -   **Access Control**:
+        -   Granular policy system (`SupervisionPolicy`) controlling request/relationship access.
+        -   Students can only view/modify their own requests and relationships.
+        -   Supervisors can only access requests where they are the target academician.
+        -   Meeting and note creation restricted to supervisors.
+-   **Database Models**: `SupervisionRequest`, `SupervisionRelationship`, `SupervisionRequestNote`, `SupervisionMeeting`, `CoSupervisorInvitation`, `SupervisionRequestAttachment`.
+-   **API Resources**: Comprehensive resources under `app/Http/Resources/Supervision/` for consistent data formatting.
+-   **Notifications**: Complete notification system under `app/Notifications/Supervision/` covering all supervision events.
 
 ## 4. AI-Powered Services
 
