@@ -101,6 +101,101 @@ class ConversationService
             return $conversation;
         });
     }
+
+    /**
+     * Create a group conversation with multiple participants.
+     *
+     * @param User $creator
+     * @param array $users Array of User objects
+     * @param string|null $title
+     * @return Conversation
+     */
+    public function createGroupConversation(User $creator, array $users, ?string $title = null): Conversation
+    {
+        return DB::transaction(function () use ($creator, $users, $title) {
+            $conversation = Conversation::create([
+                'type' => 'group',
+                'title' => $title,
+                'created_by' => $creator->id,
+            ]);
+
+            // Add creator as owner
+            ConversationParticipant::create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $creator->id,
+                'role' => 'owner',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Add other participants as members
+            foreach ($users as $user) {
+                if ($user->id !== $creator->id) {
+                    ConversationParticipant::create([
+                        'conversation_id' => $conversation->id,
+                        'user_id' => $user->id,
+                        'role' => 'member',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            return $conversation;
+        });
+    }
+
+    /**
+     * Add a participant to an existing conversation.
+     *
+     * @param Conversation $conversation
+     * @param User $user
+     * @param string $role
+     * @return ConversationParticipant
+     */
+    public function addParticipant(Conversation $conversation, User $user, string $role = 'member'): ConversationParticipant
+    {
+        // Check if user is already a participant
+        $existing = $conversation->participants()
+            ->where('user_id', $user->id)
+            ->whereNull('left_at')
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return ConversationParticipant::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'role' => $role,
+        ]);
+    }
+
+    /**
+     * Remove a participant from a conversation (soft removal, marks left_at).
+     *
+     * @param Conversation $conversation
+     * @param User $user
+     * @return bool
+     */
+    public function removeParticipant(Conversation $conversation, User $user): bool
+    {
+        $participant = $conversation->participants()
+            ->where('user_id', $user->id)
+            ->whereNull('left_at')
+            ->first();
+
+        if (!$participant) {
+            return false;
+        }
+
+        $participant->update([
+            'left_at' => now(),
+        ]);
+
+        return true;
+    }
     
     /**
      * Find an existing direct conversation between two users.

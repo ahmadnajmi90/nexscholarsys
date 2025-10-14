@@ -6,7 +6,7 @@ This document illustrates the primary end-to-end user journeys and workflows wit
 
 - [1. New User Onboarding Workflow](#1-new-user-onboarding-workflow)
 - [2. AI-Powered Supervisor Search Workflow](#2-ai-powered-supervisor-search-workflow)
-- [3. ScholarLab (ProjectHub): Task Creation and Real-Time Update Workflow](#3-scholarlab-projecthub-task-creation-and-real-time-update-workflow)
+- [3. NexLab (ProjectHub): Task Creation and Real-Time Update Workflow](#3-nexlab-projecthub-task-creation-and-real-time-update-workflow)
 - [4. Faculty Admin: Academician Verification Workflow](#4-faculty-admin-academician-verification-workflow)
 - [5. AI Profile Generation from CV Workflow](#5-ai-profile-generation-from-cv-workflow)
 - [6. Messaging: Real-Time Conversation & Sidebar Update Workflow](#6-messaging-real-time-conversation-sidebar-update-workflow)
@@ -96,9 +96,9 @@ sequenceDiagram
     end
 ```
 
-## 3. ScholarLab (ProjectHub): Task Creation and Real-Time Update Workflow
+## 3. NexLab (ProjectHub): Task Creation and Real-Time Update Workflow
 
-This workflow demonstrates the real-time collaboration feature in ScholarLab, showing how an action by one user is instantly reflected for another.
+This workflow demonstrates the real-time collaboration feature in NexLab, showing how an action by one user is instantly reflected for another.
 
 ```mermaid
 sequenceDiagram

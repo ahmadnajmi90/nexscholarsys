@@ -74,6 +74,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
+                'google_calendar_prompt' => session('google_calendar_prompt'),
+                'task_for_calendar' => session('task_for_calendar'),
             ],
         ]);
     }

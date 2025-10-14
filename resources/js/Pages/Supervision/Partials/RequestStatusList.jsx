@@ -4,13 +4,14 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { format, formatDistanceToNow } from 'date-fns';
 import { logError } from '@/Utils/logError';
+import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
 import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { User2 } from 'lucide-react';
 import { Separator } from '@/Components/ui/separator';
-import RequestDetailCard from './RequestDetailCard';
+import UnifiedRequestDetailCard from './UnifiedRequestDetailCard';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import {
   Clock3,
@@ -18,7 +19,8 @@ import {
   MessageCircle,
   XCircle,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Lightbulb
 } from 'lucide-react';
 
 const STATUS_BADGE_VARIANTS = {
@@ -95,7 +97,7 @@ export default function RequestStatusList({ requests = [], reload, onOpenDetail 
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         {sortedRequests.map((request) => (
           <RequestCard
             key={request.id}
@@ -109,10 +111,11 @@ export default function RequestStatusList({ requests = [], reload, onOpenDetail 
 
       {/* Request Detail Card Modal */}
       {selectedRequest && (
-        <RequestDetailCard
+        <UnifiedRequestDetailCard
           request={selectedRequest}
           onClose={() => setSelectedRequest(null)}
           onUpdated={reload}
+          userRole="student"
         />
       )}
 
@@ -147,99 +150,195 @@ function RequestCard({ request, onCancel, onOpenDetail, isCancelling }) {
 
   return (
     <div 
-      className="border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="border rounded-xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer min-h-[300px] sm:min-h-[320px] flex flex-col"
       onClick={() => onOpenDetail(request)}
     >
-      {/* Header: Supervisor Info + Status Badge */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          {profileUrl ? (
-            <Link 
-              href={route('academicians.show', profileUrl)} 
-              className="flex-shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all cursor-pointer">
+      {/* Card Content - Grows to fill space */}
+      <div className="flex-1">
+        {/* Header: Supervisor Info + Status Badge */}
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            {profileUrl ? (
+              <Link 
+                href={route('academicians.show', profileUrl)} 
+                className="flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all cursor-pointer">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <User2 className="w-5 h-5 text-indigo-600" />
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
                 ) : (
                   <User2 className="w-5 h-5 text-indigo-600" />
                 )}
               </div>
-            </Link>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
+            )}
+            <div className="min-w-0 flex-1">
+              {profileUrl ? (
+                <Link 
+                  href={route('academicians.show', profileUrl)}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-sm sm:text-[1.05rem] font-semibold text-gray-900 leading-snug truncate hover:text-indigo-600 transition-colors cursor-pointer">{fullName}</h3>
+                </Link>
               ) : (
-                <User2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-sm sm:text-[1.05rem] font-semibold text-gray-900 leading-snug truncate">{fullName}</h3>
               )}
+              {university && <p className="text-xs sm:text-sm text-gray-600 truncate font-normal">{university}</p>}
+              {submittedAgo && <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5">{submittedAgo}</p>}
+            </div>
+          </div>
+          <Badge className={`${statusVariant.className} flex-shrink-0 text-[10px] sm:text-xs`}>
+            {(request?.status ?? 'pending').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+          </Badge>
+        </div>
+
+        {/* Proposal Title - More Prominent */}
+        <div className="mt-3 sm:mt-4">
+          <h4 className="text-sm sm:text-base font-semibold text-slate-900 line-clamp-2 leading-snug">{request?.proposal_title ?? 'Supervision request'}</h4>
+        </div>
+
+        {/* Status-specific Information Section - Always present for consistent height */}
+        <div className="mt-2 min-h-[60px] sm:min-h-[72px] space-y-2">
+          {/* REJECTED Status */}
+          {request?.status === 'rejected' && (
+            <>
+              {request?.cancel_reason && (
+                <div className="p-2 rounded-md bg-red-50 border border-red-100">
+                  <div className="text-xs text-red-900">
+                    <span className="font-semibold">Reason:</span> {getRejectionReasonLabel(request.cancel_reason)}
+                  </div>
+                </div>
+              )}
+              {request?.recommended_supervisors && request.recommended_supervisors.length > 0 && (
+                <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200">
+                  <Lightbulb className="h-3 w-3 mr-1" />
+                  {request.recommended_supervisors.length} supervisor(s) recommended
+                </Badge>
+              )}
+            </>
+          )}
+
+          {/* PENDING Status - Two elements for balance */}
+          {request?.status === 'pending' && (
+            <>
+              <div className="p-2 rounded-md bg-amber-50 border border-amber-100">
+                <div className="text-xs text-amber-900 flex items-center gap-1.5">
+                  <Clock3 className="w-3.5 h-3.5" />
+                  <span>{statusCopy}</span>
+                </div>
+              </div>
+              <Badge className="bg-blue-50 text-blue-700 border-blue-200">
+                <MessageCircle className="h-3 w-3 mr-1" />
+                You can message the supervisor while waiting
+              </Badge>
+            </>
+          )}
+
+          {/* PENDING STUDENT ACCEPTANCE - Two elements for balance */}
+          {request?.status === 'pending_student_acceptance' && (
+            <>
+              <div className="p-2 rounded-md bg-blue-50 border border-blue-100">
+                <div className="text-xs text-blue-900 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="font-medium">Offer received! Review and respond to this supervisor&apos;s offer.</span>
+                </div>
+              </div>
+              <Badge className="bg-amber-50 text-amber-700 border-amber-200">
+                <Clock3 className="h-3 w-3 mr-1" />
+                Action required - respond to offer
+              </Badge>
+            </>
+          )}
+
+          {/* ACCEPTED Status - Two elements for balance */}
+          {request?.status === 'accepted' && (
+            <>
+              <div className="p-2 rounded-md bg-green-50 border border-green-100">
+                <div className="text-xs text-green-900 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{statusCopy}</span>
+                </div>
+              </div>
+              <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200">
+                <FileText className="h-3 w-3 mr-1" />
+                View full supervision details
+              </Badge>
+            </>
+          )}
+
+          {/* CANCELLED Status - Two elements for balance */}
+          {request?.status === 'cancelled' && (
+            <>
+              <div className="p-2 rounded-md bg-slate-50 border border-slate-100">
+                <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>{statusCopy}</span>
+                </div>
+              </div>
+              <Badge className="bg-slate-100 text-slate-600 border-slate-200">
+                You can submit a new request to this supervisor
+              </Badge>
+            </>
+          )}
+
+          {/* AUTO-CANCELLED Status - Two elements for balance */}
+          {request?.status === 'auto_cancelled' && (
+            <>
+              <div className="p-2 rounded-md bg-slate-50 border border-slate-100">
+                <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>{statusCopy}</span>
+                </div>
+              </div>
+              <Badge className="bg-slate-100 text-slate-600 border-slate-200">
+                Cancelled when you accepted another supervisor
+              </Badge>
+            </>
+          )}
+        </div>
+
+        {/* Quick Info Bar - Clean Inline Display */}
+        <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <Clock3 className="w-3.5 h-3.5" />
+            <span>{submittedAt}</span>
+          </div>
+          {request?.attachments && request.attachments.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5" />
+              <span>{request.attachments.length} file{request.attachments.length !== 1 ? 's' : ''}</span>
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            {profileUrl ? (
-              <Link 
-                href={route('academicians.show', profileUrl)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate hover:text-indigo-600 transition-colors cursor-pointer">{fullName}</h3>
-              </Link>
-            ) : (
-              <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate">{fullName}</h3>
-            )}
-            {university && <p className="text-sm text-gray-600 truncate font-normal">{university}</p>}
-            {submittedAgo && <p className="text-xs text-slate-500 mt-0.5">{submittedAgo}</p>}
-          </div>
+          {request?.conversation_id && (
+            <div className="flex items-center gap-1.5">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>Conversation active</span>
+            </div>
+          )}
         </div>
-        <Badge className={`${statusVariant.className} flex-shrink-0`}>
-          {(request?.status ?? 'pending').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-        </Badge>
       </div>
 
-      {/* Proposal Title - More Prominent */}
-      <div className="mt-4">
-        <h4 className="text-base font-semibold text-slate-900 line-clamp-2 leading-snug">{request?.proposal_title ?? 'Supervision request'}</h4>
-      </div>
-
-      {/* Status Message with Context */}
-      {statusCopy && (
-        <div className="mt-2 flex items-start gap-1.5">
-          <span className="text-sm text-slate-600">{statusCopy}</span>
-        </div>
-      )}
-
-      {/* Quick Info Bar - Clean Inline Display */}
-      <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
-        <div className="flex items-center gap-1.5">
-          <Clock3 className="w-3.5 h-3.5" />
-          <span>{submittedAt}</span>
-        </div>
-        {request?.attachments && request.attachments.length > 0 && (
-          <div className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5" />
-            <span>{request.attachments.length} file{request.attachments.length !== 1 ? 's' : ''}</span>
-          </div>
-        )}
-        {request?.conversation_id && (
-          <div className="flex items-center gap-1.5">
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>Conversation active</span>
-          </div>
-        )}
-      </div>
-
-      {/* Actions - Simplified */}
-      <div className="mt-4 flex items-center gap-2 pt-4 border-t">
+      {/* Actions - Always at bottom */}
+      <div className="mt-3 sm:mt-4 flex items-center gap-2 pt-3 sm:pt-4 border-t">
         <Button
           variant="outline"
           size="sm"
-          className="flex-1"
+          className="flex-1 text-xs sm:text-sm"
           onClick={(e) => {
             e.stopPropagation();
             onOpenDetail(request);
           }}
         >
-          <CheckCircle2 className="mr-2 h-4 w-4" />
+          <CheckCircle2 className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
           View Details
         </Button>
         {request?.status === 'pending' && (
@@ -254,9 +353,9 @@ function RequestCard({ request, onCancel, onOpenDetail, isCancelling }) {
             className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
           >
             {isCancelling ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
             ) : (
-              <XCircle className="h-4 w-4" />
+              <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             )}
           </Button>
         )}

@@ -305,6 +305,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::get('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'index'])
             ->name('requests.index');
         Route::post('/requests', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'store'])
+            ->middleware('throttle:5,1440') // 5 requests per day (1440 minutes)
             ->name('requests.store');
         Route::post('/requests/{request}/cancel', [\App\Http\Controllers\Api\V1\Supervision\RequestController::class, 'cancel'])
             ->name('requests.cancel');
@@ -315,6 +316,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('requests.reject');
         Route::post('/requests/{supervisionRequest}/student-accept', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'studentAccept'])
             ->name('requests.student-accept');
+        Route::post('/requests/{supervisionRequest}/student-reject', [\App\Http\Controllers\Api\V1\Supervision\DecisionController::class, 'studentReject'])
+            ->name('requests.student-reject');
 
         Route::get('/relationships', [\App\Http\Controllers\Api\V1\Supervision\RelationshipController::class, 'index'])
             ->name('relationships.index');
@@ -323,11 +326,42 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
 
         Route::post('/relationships/{relationship}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'store'])
             ->name('meetings.store');
+        Route::post('/requests/{supervisionRequest}/meetings', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'storeForRequest'])
+            ->name('requests.meetings.store');
+        Route::put('/meetings/{meeting}', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'update'])
+            ->name('meetings.update');
+        Route::delete('/meetings/{meeting}', [\App\Http\Controllers\Api\V1\Supervision\MeetingController::class, 'destroy'])
+            ->name('meetings.destroy');
+
+        // Google Calendar Integration
+        Route::prefix('google-calendar')->name('google-calendar.')->group(function () {
+            Route::get('/auth-url', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'getAuthUrl'])
+                ->name('auth-url');
+            Route::get('/status', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'getStatus'])
+                ->name('status');
+            Route::post('/disconnect', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'disconnect'])
+                ->name('disconnect');
+            Route::post('/meetings/{meeting}/add', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'addMeetingToCalendar'])
+                ->name('add-meeting');
+            Route::post('/sync', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'syncFromGoogle'])
+                ->name('sync');
+        });
+
+        // Task Google Calendar routes
+        Route::prefix('tasks')->name('tasks.google-calendar.')->group(function () {
+            Route::get('/google-calendar/status', [\App\Http\Controllers\Api\V1\TaskGoogleCalendarController::class, 'status'])
+                ->name('status');
+            Route::post('/{task}/google-calendar/add', [\App\Http\Controllers\Api\V1\TaskGoogleCalendarController::class, 'addTask'])
+                ->name('add');
+            Route::delete('/{task}/google-calendar/remove', [\App\Http\Controllers\Api\V1\TaskGoogleCalendarController::class, 'removeTask'])
+                ->name('remove');
+        });
 
         // Unbind Request Routes
         Route::get('/unbind-requests', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'index'])
             ->name('unbind-requests.index');
         Route::post('/relationships/{relationship}/unbind', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'initiate'])
+            ->middleware('throttle:3,60') // 3 requests per hour
             ->name('relationships.unbind.initiate');
         // Student approves/rejects supervisor-initiated unbind
         Route::post('/unbind-requests/{unbindRequest}/approve', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'approve'])
@@ -356,6 +390,7 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::get('/relationships/{relationship}/documents', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'index'])
             ->name('relationships.documents.index');
         Route::post('/relationships/{relationship}/documents', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'upload'])
+            ->middleware('throttle:20,60') // 20 uploads per hour
             ->name('relationships.documents.upload');
         Route::put('/documents/{document}', [\App\Http\Controllers\Api\V1\Supervision\DocumentController::class, 'update'])
             ->name('documents.update');
@@ -385,6 +420,14 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
         Route::delete('/requests/{request}/notes/{note}', [\App\Http\Controllers\Api\V1\Supervision\RequestNoteController::class, 'destroy'])
             ->name('requests.notes.destroy');
 
+        // Abstract Routes
+        Route::get('/requests/{supervisionRequest}/abstract', [\App\Http\Controllers\Api\V1\Supervision\AbstractController::class, 'show'])
+            ->name('requests.abstract.show');
+        Route::put('/requests/{supervisionRequest}/abstract', [\App\Http\Controllers\Api\V1\Supervision\AbstractController::class, 'update'])
+            ->name('requests.abstract.update');
+        Route::post('/requests/{supervisionRequest}/abstract/retry', [\App\Http\Controllers\Api\V1\Supervision\AbstractController::class, 'retry'])
+            ->name('requests.abstract.retry');
+
         // Recommendation Routes
         Route::get('/recommendations/supervisor-connections', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'getSupervisorConnections'])
             ->name('recommendations.supervisor-connections');
@@ -394,6 +437,36 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('recommendations.add-to-shortlist');
         Route::get('/requests/{supervisionRequest}/recommendations', [\App\Http\Controllers\Api\V1\Supervision\RecommendationController::class, 'getRecommendedSupervisors'])
             ->name('requests.recommendations');
+
+        // Acknowledgment Routes
+        Route::post('/acknowledge/rejections', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeRejection'])
+            ->name('acknowledge.rejections');
+        Route::post('/acknowledge/offers', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeOffer'])
+            ->name('acknowledge.offers');
+        Route::post('/acknowledge/student-responses', [\App\Http\Controllers\Api\V1\Supervision\AcknowledgmentController::class, 'acknowledgeStudentResponse'])
+            ->name('acknowledge.student-responses');
+
+        // Co-Supervisor Routes
+        // Specific routes MUST come before parameterized routes
+        Route::get('/cosupervisor-invitations/my-invitations', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'myInvitations'])
+            ->name('cosupervisor.my-invitations');
+        Route::post('/relationships/{relationship}/cosupervisor/invite', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'invite'])
+            ->middleware('throttle:10,60') // 10 invitations per hour
+            ->name('cosupervisor.invite');
+        Route::post('/cosupervisor-invitations/{invitation}/respond', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'respond'])
+            ->name('cosupervisor.respond');
+        Route::post('/cosupervisor-invitations/{invitation}/approve', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'approve'])
+            ->name('cosupervisor.approve');
+        Route::delete('/cosupervisor-invitations/{invitation}/cancel', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'cancel'])
+            ->name('cosupervisor.cancel');
+        Route::delete('/relationships/{relationship}/cosupervisor/{cosupervisorId}', [\App\Http\Controllers\Api\V1\Supervision\CoSupervisorController::class, 'remove'])
+            ->name('cosupervisor.remove');
+
+        // Activity Feed Routes
+        Route::get('/activity/recent', [\App\Http\Controllers\Api\V1\Supervision\ActivityFeedController::class, 'recentActivity'])
+            ->name('activity.recent');
+        Route::get('/activity/upcoming-meetings', [\App\Http\Controllers\Api\V1\Supervision\ActivityFeedController::class, 'upcomingMeetings'])
+            ->name('activity.upcoming-meetings');
     });
 });
 

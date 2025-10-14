@@ -193,7 +193,7 @@ const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, ta
                                 <Info size={16} className="text-gray-400 hover:text-gray-600 cursor-help" />
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
-                                Use tags to manually organize your connections. Tags are not assigned automatically based on a user's role. For example, you can tag someone as a 'Collaborator' to easily add them to your ScholarLab projects later.
+                                Use tags to manually organize your connections. Tags are not assigned automatically based on a user's role. For example, you can tag someone as a 'Collaborator' to easily add them to your NexLab projects later.
                             </TooltipContent>
                         </Tooltip>
                     </div>

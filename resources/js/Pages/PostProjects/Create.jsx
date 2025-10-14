@@ -670,7 +670,7 @@ export default function Create() {
           </div>
 
 
-          {/* ScholarLab Project Creation Option */}
+          {/* NexLab Project Creation Option */}
           {!data.purpose.includes("For Showcase") && (
             <div className="mt-4 border-t pt-4">
               <div className="flex items-center">
@@ -682,11 +682,11 @@ export default function Create() {
                   className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="create_scholarlab_project" className="ml-2 block text-sm text-gray-900">
-                  Also create a collaborative project for this publication in ScholarLab
+                  Also create a collaborative project for this publication in NexLab
                 </label>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                This will create a project in ScholarLab where you can collaborate with others on tasks related to this research.
+                This will create a project in NexLab where you can collaborate with others on tasks related to this research.
               </p>
             </div>
           )}

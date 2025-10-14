@@ -1,0 +1,453 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - paragraph: Messaging features are now available! Feel free to try them out. Any feedback or bugs can be reported through the provided feedback form.
+            - button:
+              - img
+      - generic:
+        - generic:
+          - link:
+            - /url: http://localhost:8000
+            - img
+          - button:
+            - img
+            - generic: Dashboard
+          - button:
+            - img
+            - generic: Features
+          - button:
+            - img
+            - generic: Networking
+          - button:
+            - img
+            - generic: Content
+          - button:
+            - img
+            - generic: Settings
+      - generic:
+        - generic:
+          - generic:
+            - link:
+              - /url: http://localhost:8000
+              - text: Nexscholar
+            - button:
+              - img
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - generic:
+                - paragraph: WONG YIT KHEE
+                - paragraph: yitkhee0117@gmail.com
+                - paragraph: Postgraduate
+          - generic:
+            - heading [level=3]: Features
+            - generic:
+              - generic:
+                - link:
+                  - /url: http://localhost:8000/ai-matching
+                  - img
+                  - generic: AI Matching
+              - generic:
+                - link:
+                  - /url: http://localhost:8000/network-map
+                  - img
+                  - generic: Network Map
+              - generic:
+                - link:
+                  - /url: http://localhost:8000/postgraduate-recommendations
+                  - img
+                  - generic: Postgraduate Recommendations
+              - generic:
+                - link:
+                  - /url: http://localhost:8000/bookmarks
+                  - img
+                  - generic: My Bookmarks
+              - generic:
+                - link:
+                  - /url: http://localhost:8000/my-supervisor
+                  - img
+                  - generic: My Supervisor
+              - generic:
+                - link:
+                  - /url: http://localhost:8000/project-hub
+                  - img
+                  - generic: Scholar Lab
+          - generic:
+            - generic:
+              - paragraph: Explore AI-powered features and academic tools.
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=1]: My Supervisor
+                - button:
+                  - img
+                  - generic: How supervisor selection works
+              - generic:
+                - generic:
+                  - button:
+                    - generic: View notifications
+                    - img
+                - generic:
+                  - generic:
+                    - img
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: "0"
+                      - paragraph: Total Requests
+                    - generic:
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: "0"
+                      - paragraph: Pending Requests
+                    - generic:
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: "0"
+                      - paragraph: Upcoming Meetings
+                    - generic:
+                      - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: "5"
+                      - paragraph: Shortlisted
+                    - generic:
+                      - img
+            - generic:
+              - generic:
+                - generic:
+                  - tablist:
+                    - tab [selected]:
+                      - generic: Potential Supervisors
+                    - tab:
+                      - generic: Proposal Status
+                    - tab [disabled]:
+                      - generic: Manage Supervisor
+                  - tabpanel:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link:
+                                - /url: http://localhost:8000/academicians/muhammad-aliif-bin-ahmad
+                                - generic:
+                                  - img
+                              - generic:
+                                - link:
+                                  - /url: http://localhost:8000/academicians/muhammad-aliif-bin-ahmad
+                                  - heading [level=3]: MUHAMMAD ALIIF BIN AHMAD
+                                - paragraph: Universiti Teknologi Malaysia
+                            - generic: Saved 3 days ago
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Accepting Students
+                            - generic:
+                              - img
+                              - generic: 25 Publications
+                            - generic:
+                              - img
+                              - generic: 0 Projects
+                          - generic:
+                            - paragraph: "Research Areas:"
+                            - generic:
+                              - generic: Computer Science - Information Systems - Technology Adoption and Diffusion
+                            - generic:
+                              - button: +4 more
+                        - generic:
+                          - button:
+                            - img
+                            - text: Connect
+                          - button:
+                            - img
+                            - text: Request
+                          - button:
+                            - img
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link:
+                                - /url: http://localhost:8000/academicians/choon-sen-seah
+                                - generic:
+                                  - img
+                              - generic:
+                                - link:
+                                  - /url: http://localhost:8000/academicians/choon-sen-seah
+                                  - heading [level=3]: CHOON SEN SEAH
+                                - paragraph: Universiti Teknologi Malaysia
+                            - generic: Saved 3 days ago
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Accepting Students
+                            - generic:
+                              - img
+                              - generic: 20 Publications
+                            - generic:
+                              - img
+                              - generic: 1 Projects
+                          - generic:
+                            - paragraph: "Research Areas:"
+                            - generic:
+                              - generic: Computer Science - Bioinformatics - Computational Genomics
+                            - generic:
+                              - button: +3 more
+                        - generic:
+                          - button [disabled]:
+                            - img
+                            - text: Connected
+                          - button:
+                            - img
+                            - text: Request
+                          - button:
+                            - img
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link:
+                                - /url: http://localhost:8000/academicians/asfdsfgjhgfdsf
+                                - generic:
+                                  - img
+                              - generic:
+                                - link:
+                                  - /url: http://localhost:8000/academicians/asfdsfgjhgfdsf
+                                  - heading [level=3]: ASFDSFGJHGFDSF
+                                - paragraph: Universiti Putra Malaysia
+                            - generic: Saved 8 days ago
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Accepting Students
+                            - generic:
+                              - img
+                              - generic: 0 Publications
+                            - generic:
+                              - img
+                              - generic: 0 Projects
+                          - generic:
+                            - paragraph: "Research Areas:"
+                            - generic:
+                              - generic: Agricultural Sciences - Soil Science - Soil fertility and nutrient management
+                            - generic: 1 area
+                        - generic:
+                          - button:
+                            - img
+                            - text: Connect
+                          - button:
+                            - img
+                            - text: Request
+                          - button:
+                            - img
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link:
+                                - /url: http://localhost:8000/academicians/ndasjknlkfdadafda
+                                - generic:
+                                  - img
+                              - generic:
+                                - link:
+                                  - /url: http://localhost:8000/academicians/ndasjknlkfdadafda
+                                  - heading [level=3]: NDASJKNLKFDADAFDA
+                                - paragraph: Universiti Putra Malaysia
+                            - generic: Saved 8 days ago
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Accepting Students
+                            - generic:
+                              - img
+                              - generic: 0 Publications
+                            - generic:
+                              - img
+                              - generic: 0 Projects
+                          - generic:
+                            - paragraph: "Research Areas:"
+                            - generic:
+                              - generic: Computer Science - Information Systems - Healthcare Information Systems
+                            - generic: 1 area
+                        - generic:
+                          - button [disabled]:
+                            - img
+                            - text: Connected
+                          - button:
+                            - img
+                            - text: Request
+                          - button:
+                            - img
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - link:
+                                - /url: http://localhost:8000/academicians/ahmad-najmi-bin-amerhaider-nuar
+                                - generic:
+                                  - img
+                              - generic:
+                                - link:
+                                  - /url: http://localhost:8000/academicians/ahmad-najmi-bin-amerhaider-nuar
+                                  - heading [level=3]: Ahmad Najmi Bin Amerhaider Nuar
+                                - paragraph: Universiti Teknologi Malaysia
+                            - generic: Saved 3 days ago
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Accepting Students
+                            - generic:
+                              - img
+                              - generic: 11 Publications
+                            - generic:
+                              - img
+                              - generic: 3 Projects
+                          - generic:
+                            - paragraph: "Research Areas:"
+                            - generic:
+                              - generic: Computer Science - Information Systems - Design Science Research
+                            - generic:
+                              - button: +1 more
+                        - generic:
+                          - button [disabled]:
+                            - img
+                            - text: Connected
+                          - button:
+                            - img
+                            - text: Request
+                          - button:
+                            - img
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=3]: Recent Activity
+                    - generic:
+                      - generic:
+                        - img
+                        - paragraph: No recent activity
+                        - paragraph: Your supervision updates will appear here
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                        - heading [level=3]: Upcoming Meetings
+                    - generic:
+                      - generic:
+                        - img
+                        - paragraph: No upcoming meetings
+                        - paragraph: Schedule your first meeting to get started
+      - generic:
+        - link:
+          - /url: https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform
+          - generic: Feedback Form
+          - generic:
+            - img
+            - button:
+              - img
+  - dialog "Submit supervision request" [active] [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Submit supervision request" [level=2] [ref=e4]
+      - paragraph [ref=e5]: Provide a strong proposal and supporting documents to help your prospective supervisor understand your research direction and readiness.
+    - generic [ref=e7]:
+      - img [ref=e9]
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - heading "MUHAMMAD ALIIF BIN AHMAD" [level=3] [ref=e14]
+          - generic [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e19]: Senior Lecturer
+          - generic [ref=e20]:
+            - img [ref=e21]
+            - generic [ref=e25]: Universiti Teknologi Malaysia
+        - generic [ref=e26]:
+          - img [ref=e27]
+          - generic [ref=e29]: "Focus: Technology Adoption and Diffusion, Digital Transformation, Social Media and Digital Communities, Human-Computer Interaction (HCI) and User Experience (UX), Education and IS"
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - text: Proposal title
+          - textbox "Proposal title" [ref=e33]:
+            - /placeholder: e.g. Exploring AI-driven multimodal learning analytics
+        - generic [ref=e34]:
+          - text: Motivation
+          - textbox "Motivation" [ref=e35]:
+            - /placeholder: Describe your research goals, why you want to work with this supervisor, and how your background supports the project.
+            - text: I am passionate about leveraging AI to enhance educational outcomes and personalize learning experiences.
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - text: Attachments
+          - paragraph [ref=e38]: Upload the required proposal and any supporting documents. PDFs are preferred for readability.
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - generic [ref=e42]: Research proposal (PDF/DOC/DOCX)*
+              - generic [ref=e44] [cursor=pointer]:
+                - img [ref=e45]
+                - text: Replace file
+                - button "Research proposal (PDF/DOC/DOCX)* Replace file" [ref=e48]
+            - generic [ref=e49]:
+              - img [ref=e50]
+              - generic "test-proposal.txt" [ref=e53]
+              - generic [ref=e54]: (482 B)
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: Academic transcript (PDF)
+              - generic [ref=e59] [cursor=pointer]:
+                - img [ref=e60]
+                - text: Upload file
+                - button "Academic transcript (PDF) Upload file" [ref=e63]
+            - paragraph [ref=e64]: Optional — add if it strengthens your proposal.
+          - generic [ref=e65]:
+            - generic [ref=e66]:
+              - generic [ref=e67]: Research background (PDF/DOC/DOCX)
+              - generic [ref=e69] [cursor=pointer]:
+                - img [ref=e70]
+                - text: Upload file
+                - button "Research background (PDF/DOC/DOCX) Upload file" [ref=e73]
+            - paragraph [ref=e74]: Optional — add if it strengthens your proposal.
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - generic [ref=e77]: Portfolio or supplementary materials
+              - generic [ref=e79] [cursor=pointer]:
+                - img [ref=e80]
+                - text: Upload file
+                - button "Portfolio or supplementary materials Upload file" [ref=e83]
+            - paragraph [ref=e84]: Optional — add if it strengthens your proposal.
+      - generic [ref=e86]:
+        - checkbox "I confirm that this proposal is original and written by me.*" [checked] [ref=e87] [cursor=pointer]:
+          - generic:
+            - img
+        - checkbox [checked]
+        - generic [ref=e88]:
+          - generic [ref=e89] [cursor=pointer]: I confirm that this proposal is original and written by me.*
+          - paragraph [ref=e90]: By checking this box, you affirm that the proposal content and attached documents represent your own work and ideas.
+      - generic [ref=e91]:
+        - button "Cancel" [ref=e92] [cursor=pointer]
+        - button "Submit request" [disabled]
+    - button "Close" [ref=e93] [cursor=pointer]:
+      - img [ref=e94]
+      - generic [ref=e97]: Close
+```

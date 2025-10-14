@@ -23,45 +23,45 @@ export default {
                     ...defaultTheme.fontFamily.sans
                 ]
     		},
-    		keyframes: {
-    			gradient: {
-    				'0%': {
-    					backgroundPosition: '0% 50%'
-    				},
-    				'50%': {
-    					backgroundPosition: '100% 50%'
-    				},
-    				'100%': {
-    					backgroundPosition: '0% 50%'
-    				}
-    			},
-    			slideInRight: {
-    				'0%': {
-    					transform: 'translateX(100%)',
-    					opacity: '0'
-    				},
-    				'100%': {
-    					transform: 'translateX(0)',
-    					opacity: '1'
-    				}
-    			},
-    			fadeIn: {
-    				'0%': {
-    					opacity: '0'
-    				},
-    				'100%': {
-    					opacity: '1'
-    				}
-    			}
-    		},
-    		animation: {
-    			gradient: 'gradient 8s linear infinite',
-    			slideInRight: 'slideInRight 0.3s ease-out',
-    			fadeIn: 'fadeIn 0.3s ease-out'
-    		},
-    		scale: {
-    			'98': '0.98'
-    		},
+		keyframes: {
+			gradient: {
+				'0%': {
+					backgroundPosition: '0% 50%'
+				},
+				'50%': {
+					backgroundPosition: '100% 50%'
+				},
+				'100%': {
+					backgroundPosition: '0% 50%'
+				}
+			},
+			slideInRight: {
+				'0%': {
+					transform: 'translateX(100%)',
+					opacity: '0'
+				},
+				'100%': {
+					transform: 'translateX(0)',
+					opacity: '1'
+				}
+			},
+			fadeIn: {
+				'0%': {
+					opacity: '0'
+				},
+				'100%': {
+					opacity: '1'
+				}
+			}
+		},
+		animation: {
+			gradient: 'gradient 8s linear infinite',
+			slideInRight: 'slideInRight 0.3s ease-out',
+			fadeIn: 'fadeIn 0.3s ease-out'
+		},
+		scale: {
+			'98': '0.98'
+		},
     		borderRadius: {
     			lg: 'var(--radius)',
     			md: 'calc(var(--radius) - 2px)',

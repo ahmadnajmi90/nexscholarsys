@@ -83,7 +83,7 @@ end
 ### Backend
 
 -   **Framework**: Laravel 11 (PHP 8.2)
--   **Real-time Communication**: Dual approach using Laravel Reverb (for ScholarLab) and Pusher (for Messaging).
+-   **Real-time Communication**: Dual approach using Laravel Reverb (for NexLab) and Pusher (for Messaging).
 -   **Authentication**: Laravel Sanctum (for API and web sessions)
 -   **Authorization**: Bouncer (Role-based permissions)
 -   **API Specification**: `darkaonline/l5-swagger` for OpenAPI documentation.
@@ -149,7 +149,7 @@ The application exposes a RESTful API, primarily for administrative data managem
 
 The platform uses a hybrid approach for real-time features, leveraging different technologies for specific modules.
 
--   **ScholarLab (ProjectHub)**: This feature uses **Laravel Reverb**, a first-party WebSocket server, for handling real-time task management updates (e.g., moving tasks on a Kanban board).
+-   **NexLab (ProjectHub)**: This feature uses **Laravel Reverb**, a first-party WebSocket server, for handling real-time task management updates (e.g., moving tasks on a Kanban board).
 -   **Messaging**: The real-time chat feature is powered by **Pusher**. It uses WebSockets to deliver new messages and conversation updates instantly.
 -   **Frontend Client**: The React application uses the `pusher-js` library to connect to both services, as it is compatible with the Pusher protocol that Reverb uses.
 

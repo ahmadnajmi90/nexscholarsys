@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { router } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { OVERLAY_ANIMATION, SLIDE_PANEL_ANIMATION } from '@/Utils/modalAnimations';
+import { getStatusColor, formatStatus, getInitials } from '@/Utils/supervisionHelpers';
 import { 
   X, 
   Calendar, 
@@ -21,12 +24,11 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { ScrollArea } from '@/Components/ui/scroll-area';
-import ResearchTab from '@/Pages/Supervision/Partials/ResearchTab';
-import DocumentsTab from '@/Pages/Supervision/Partials/DocumentsTab';
 import ThreadPane from '@/Components/Messaging/ThreadPane';
 import ScheduleMeetingDialog from '@/Pages/Supervision/Partials/ScheduleMeetingDialog';
-import StudentOverviewTab from '@/Pages/Supervision/Partials/StudentOverviewTab';
+import UnifiedOverviewTab from '@/Pages/Supervision/Partials/UnifiedOverviewTab';
 import UnbindRequestModal from '@/Pages/Supervision/Partials/UnbindRequestModal';
+import RelationshipHistoryTab from '@/Pages/Supervision/Partials/RelationshipHistoryTab';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
 import { usePage } from '@inertiajs/react';
 
@@ -75,43 +77,26 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
   const isInteractive = !isReadOnly && baseStatus === 'active' && !activeUnbindRequest;
 
   // Get initials for avatar
-  const initials = fullName
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 3);
+  const initials = getInitials(fullName);
 
   // Format status for display
   const formattedStatus = status === 'pending_unbind' 
     ? 'Pending Unbind' 
-    : status
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-
-  // Status badge color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'pending_unbind':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'completed':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'terminated':
-        return 'bg-red-50 text-red-700 border-red-200';
-      default:
-        return 'bg-slate-50 text-slate-700 border-slate-200';
-    }
-  };
+    : formatStatus(status);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-end bg-black/50" onClick={onClose}>
-      <div 
-        className="w-full max-w-3xl h-full bg-white shadow-xl overflow-hidden flex flex-col animate-slide-in-right"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <>
+      <AnimatePresence>
+        <motion.div 
+          {...OVERLAY_ANIMATION}
+          className="fixed inset-0 z-40 flex items-center justify-end bg-black/50" 
+          onClick={onClose}
+        >
+          <motion.div 
+            {...SLIDE_PANEL_ANIMATION}
+            className="w-full max-w-3xl h-full bg-white shadow-xl overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Header Section */}
         <div className="p-6 border-b">
           <div className="flex items-start justify-between">
@@ -225,18 +210,6 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
                 Overview
               </TabsTrigger>
               <TabsTrigger 
-                value="research"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-              >
-                Research
-              </TabsTrigger>
-              <TabsTrigger 
-                value="documents"
-                className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
-              >
-                Documents
-              </TabsTrigger>
-              <TabsTrigger 
                 value="chat"
                 className="data-[state=active]:bg-white data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=inactive]:bg-transparent rounded-none px-6 py-3"
               >
@@ -253,20 +226,13 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
             <div className="flex-1 overflow-auto">
               <TabsContent value="overview" className="mt-0 h-full">
                 <ScrollArea className="h-full">
-                  <StudentOverviewTab 
+                  <UnifiedOverviewTab 
                     relationship={relationship} 
-                    academician={academician}
+                    person={academician}
+                    userRole="student"
                     activeUnbindRequest={activeUnbindRequest}
                   />
                 </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="research" className="mt-0 h-full">
-                <ResearchTab relationship={relationship} onUpdated={onUpdated} isReadOnly={!isInteractive} />
-              </TabsContent>
-
-              <TabsContent value="documents" className="mt-0 h-full">
-                <DocumentsTab relationship={relationship} onUpdated={onUpdated} isReadOnly={!isInteractive} />
               </TabsContent>
 
               <TabsContent value="chat" className="mt-0 h-full">
@@ -293,13 +259,15 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
 
               <TabsContent value="history" className="mt-0 h-full">
                 <ScrollArea className="h-full">
-                  <HistoryTab relationship={relationship} />
+                  <RelationshipHistoryTab relationship={relationship} />
                 </ScrollArea>
               </TabsContent>
             </div>
           </Tabs>
         </div>
-      </div>
+        </motion.div>
+      </motion.div>
+      </AnimatePresence>
 
       {/* Schedule Meeting Dialog */}
       <ScheduleMeetingDialog
@@ -324,73 +292,6 @@ export default function StudentRelationshipDetailModal({ relationship, onClose, 
         }}
         userRole="student"
       />
-    </div>
+    </>
   );
 }
-
-function HistoryTab({ relationship }) {
-  const timeline = [
-    {
-      id: 1,
-      title: 'Relationship Started',
-      date: relationship?.accepted_at,
-      status: 'completed',
-    },
-    {
-      id: 2,
-      title: 'Active Supervision',
-      date: relationship?.accepted_at,
-      status: relationship?.status === 'active' ? 'current' : 'completed',
-    },
-  ];
-
-  if (relationship?.terminated_at) {
-    timeline.push({
-      id: 3,
-      title: 'Relationship Terminated',
-      date: relationship.terminated_at,
-      status: 'completed',
-    });
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-500';
-      case 'current':
-        return 'bg-blue-500';
-      case 'pending':
-        return 'bg-slate-300';
-      default:
-        return 'bg-slate-300';
-    }
-  };
-
-  return (
-    <div className="p-6">
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900">Timeline</h3>
-
-        <div className="space-y-4">
-          {timeline.map((event, index) => (
-            <div key={event.id} className="flex gap-4">
-              <div className="flex flex-col items-center">
-                <div className={`w-2 h-2 rounded-full ${getStatusColor(event.status)}`} />
-                {index < timeline.length - 1 && (
-                  <div className="w-0.5 h-full bg-slate-200 mt-2" />
-                )}
-              </div>
-              <div className="flex-1 pb-8">
-                <h4 className="font-medium text-slate-900">{event.title}</h4>
-                <p className="text-sm text-slate-500">
-                  {event.date ? format(new Date(event.date), 'dd/MM/yyyy HH:mm') : 'TBD'}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-

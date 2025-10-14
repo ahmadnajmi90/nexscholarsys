@@ -12,6 +12,9 @@ import { parseISO, format } from 'date-fns';
 import axios from 'axios';
 import { PAPER_PROGRESS_OPTIONS } from './constants';
 import { getUserFullName, getUserProfilePicture } from '@/Utils/userHelpers';
+import GoogleCalendarTaskToast from '@/Components/GoogleCalendarTaskToast';
+import { useTaskGoogleCalendar } from '@/Hooks/useTaskGoogleCalendar';
+import { usePage } from '@inertiajs/react';
 
 export default function TaskDetailsModal({ task, show, onClose, workspaceMembers, researchOptions = [] }) {
     const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
@@ -21,6 +24,13 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     // Local comments state for real-time updates
     const [comments, setComments] = useState([]);
     const isNewTask = task && !task.id; // Check if we're creating a new task
+    
+    // Google Calendar integration
+    const { addTaskToCalendar } = useTaskGoogleCalendar();
+    const [showGoogleCalendarToast, setShowGoogleCalendarToast] = useState(false);
+    const [calendarPromptData, setCalendarPromptData] = useState(null);
+    const [currentTaskForCalendar, setCurrentTaskForCalendar] = useState(null);
+    const { props } = usePage();
     
     // Maximum size for previewing files (15MB)
     const MAX_PREVIEW_SIZE = 15 * 1024 * 1024;
@@ -53,6 +63,18 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
     });
     
     // Reset the form when the task changes - Enhanced to handle paper writing tasks
+    // Check for Google Calendar prompt from flash data
+    useEffect(() => {
+        const flashPrompt = props?.flash?.google_calendar_prompt;
+        const taskId = props?.flash?.task_for_calendar;
+        
+        if (flashPrompt?.show_prompt && taskId && task?.id === taskId) {
+            setCurrentTaskForCalendar(task);
+            setCalendarPromptData(flashPrompt);
+            setShowGoogleCalendarToast(true);
+        }
+    }, [props?.flash]);
+    
     useEffect(() => {
         if (task) {
             // Initialize comments from task when task changes
@@ -144,17 +166,17 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
         } else {
             // Updating an existing task
             form.put(`/project-hub/tasks/${task.id}`, {
-            onSuccess: () => {
-                // Show success toast notification
-                toast.success('Task updated successfully!');
-                // Do not close the modal on success to allow for multiple edits
-            },
-            onError: (errors) => {
-                // Show error toast notification
+                onSuccess: () => {
+                    // Show success toast notification
+                    toast.success('Task updated successfully!');
+                    // Do not close the modal on success to allow for multiple edits
+                },
+                onError: (errors) => {
+                    // Show error toast notification
                     console.error("Update Errors:", errors); // Log errors to the console
                     toast.error('Failed to update task. Please check the form for errors.');
-            }
-        });
+                }
+            });
         }
     };
     
@@ -954,6 +976,27 @@ export default function TaskDetailsModal({ task, show, onClose, workspaceMembers
                 file={previewFile} 
                 onClose={() => setPreviewFile(null)} 
             />
+
+            {/* Google Calendar Toast */}
+            {showGoogleCalendarToast && currentTaskForCalendar && calendarPromptData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+                    <GoogleCalendarTaskToast
+                        task={currentTaskForCalendar}
+                        promptData={calendarPromptData}
+                        onYes={async () => {
+                            const result = await addTaskToCalendar(currentTaskForCalendar.id);
+                            if (result.success) {
+                                setCurrentTaskForCalendar(result.task);
+                            }
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        onNo={() => {
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        visible={showGoogleCalendarToast}
+                    />
+                </div>
+            )}
         </>
     );
 } 

@@ -14,8 +14,14 @@ import { Alert, AlertDescription } from '@/Components/ui/alert';
 import RelationshipDetailModal from '@/Pages/Supervision/Partials/RelationshipDetailModal';
 import SupervisorRelationshipDetailModal from '@/Pages/Supervision/Partials/SupervisorRelationshipDetailModal';
 import ScheduleMeetingDialog from '@/Pages/Supervision/Partials/ScheduleMeetingDialog';
-import SupervisorRequestDetailCard from '@/Pages/Supervision/Partials/SupervisorRequestDetailCard';
+import UnifiedRequestDetailCard from '@/Pages/Supervision/Partials/UnifiedRequestDetailCard';
 import ForceUnbindRequestModal from '@/Pages/Supervision/Partials/ForceUnbindRequestModal';
+import UnifiedNotificationModal from '@/Pages/Supervision/Partials/UnifiedNotificationModal';
+import RecentActivityPanel from '@/Pages/Supervision/Partials/RecentActivityPanel';
+import UpcomingMeetingsPanel from '@/Pages/Supervision/Partials/UpcomingMeetingsPanel';
+import CoSupervisorSearchModal from '@/Pages/Supervision/Partials/CoSupervisorSearchModal';
+import CoSupervisorInvitationCard from '@/Pages/Supervision/Partials/CoSupervisorInvitationCard';
+import CoSupervisorInvitationDetailPanel from '@/Pages/Supervision/Partials/CoSupervisorInvitationDetailPanel';
 import { logError } from '@/Utils/logError';
 import {
   BookOpenCheck,
@@ -55,14 +61,34 @@ export default function SupervisorDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [requestFilter, setRequestFilter] = useState('pending');
+  const [isCoSupervisorModalOpen, setIsCoSupervisorModalOpen] = useState(false);
+  const [selectedMainRelationship, setSelectedMainRelationship] = useState(null);
+  
+  // Co-supervisor invitations
+  const [coSupervisorInvitations, setCoSupervisorInvitations] = useState([]);
+  const [approvalInvitations, setApprovalInvitations] = useState([]);
+  const [myInitiatedInvitations, setMyInitiatedInvitations] = useState([]);
+  const [selectedCoSupervisorInvitation, setSelectedCoSupervisorInvitation] = useState(null);
+
+  // Notification modals state
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [acceptedRequests, setAcceptedRequests] = useState([]);
+  const [declinedRequests, setDeclinedRequests] = useState([]);
+
+  // Cancellation badge state (localStorage)
+  const [cancelledBadgeCount, setCancelledBadgeCount] = useState(0);
+
+  // Activity sidebar refresh trigger
+  const [activityTrigger, setActivityTrigger] = useState(0);
 
   const fetchData = async () => {
     try {
       setError(null);
       setIsLoading(true);
-      const [requestResp, relationshipResp] = await Promise.all([
+      const [requestResp, relationshipResp, coSupervisorResp] = await Promise.all([
         axios.get(route('supervision.requests.index')),
         axios.get(route('supervision.relationships.index')),
+        axios.get('/api/v1/app/supervision/cosupervisor-invitations/my-invitations'),
       ]);
       setRequests(requestResp.data.data || []);
       const allRelationships = relationshipResp.data.data || [];
@@ -71,6 +97,14 @@ export default function SupervisorDashboard() {
       
       setStudents(activeRelationships);
       setTerminatedRelationships(terminated);
+      
+      // Set co-supervisor invitations
+      setCoSupervisorInvitations(coSupervisorResp.data.as_cosupervisor || []);
+      setApprovalInvitations(coSupervisorResp.data.to_approve || []);
+      setMyInitiatedInvitations(coSupervisorResp.data.as_initiator || []);
+
+      // Trigger activity sidebar reload
+      setActivityTrigger(prev => prev + 1);
       
       // Update selectedRelationship with fresh data if modal is open
       if (selectedRelationship) {
@@ -105,6 +139,54 @@ export default function SupervisorDashboard() {
     fetchData();
   }, []);
 
+  // Check for unacknowledged student responses after requests load
+  useEffect(() => {
+    if (isLoading || requests.length === 0) return;
+
+    // Check for students who accepted offers
+    const accepted = requests.filter(req =>
+      req.status === 'accepted' && 
+      !req.student_response_acknowledged_at
+    );
+
+    // Check for students who auto-cancelled (rejected our offer implicitly by accepting another)
+    const declined = requests.filter(req =>
+      req.status === 'auto_cancelled' && 
+      !req.student_response_acknowledged_at
+    );
+
+    // Show modal if there are any responses
+    if (accepted.length > 0 || declined.length > 0) {
+      setAcceptedRequests(accepted);
+      setDeclinedRequests(declined);
+      setShowResponseModal(true);
+    }
+
+    // Calculate cancellation badge count (localStorage-based)
+    const lastViewedCancelledTab = localStorage.getItem('supervisor_last_viewed_cancelled_tab');
+    const cancelledRequests = requests.filter(req => 
+      req.status === 'cancelled' || req.status === 'auto_cancelled'
+    );
+
+    if (lastViewedCancelledTab) {
+      const lastViewedDate = new Date(lastViewedCancelledTab);
+      const newCancellations = cancelledRequests.filter(req => 
+        new Date(req.decision_at || req.updated_at) > lastViewedDate
+      );
+      setCancelledBadgeCount(newCancellations.length);
+    } else {
+      // First time - show all
+      setCancelledBadgeCount(cancelledRequests.length);
+    }
+  }, [requests, isLoading]);
+
+  // Handle viewing cancelled tab - clear badge
+  const handleCancelledTabClick = () => {
+    setRequestFilter('cancelled');
+    localStorage.setItem('supervisor_last_viewed_cancelled_tab', new Date().toISOString());
+    setCancelledBadgeCount(0);
+  };
+
   // Check for student-initiated unbind requests that need supervisor approval
   const pendingUnbindRequest = useMemo(() => {
     for (const student of students) {
@@ -131,15 +213,59 @@ export default function SupervisorDashboard() {
     });
   }, [requests, requestFilter]);
 
+  // Filter co-supervisor invitations based on current tab
+  const filteredCoSupervisorInvitations = useMemo(() => {
+    if (requestFilter === 'pending') {
+      // Show invitations that are still pending (co-supervisor hasn't responded OR pending approval)
+      const pendingAsCoSupervisor = coSupervisorInvitations.filter(inv => 
+        inv.cosupervisor_status === 'pending' || 
+        (inv.cosupervisor_status === 'accepted' && inv.approver_status === 'pending')
+      );
+      const pendingInitiated = myInitiatedInvitations.filter(inv => 
+        !inv.completed_at && !inv.cancelled_at && 
+        inv.cosupervisor_status !== 'rejected' && inv.approver_status !== 'rejected'
+      );
+      return [...pendingAsCoSupervisor, ...approvalInvitations, ...pendingInitiated];
+    } else if (requestFilter === 'accepted') {
+      // Show completed co-supervisor invitations (as co-supervisor OR as initiator)
+      const acceptedAsCoSupervisor = coSupervisorInvitations.filter(inv => inv.completed_at);
+      const acceptedInitiated = myInitiatedInvitations.filter(inv => inv.completed_at);
+      return [...acceptedAsCoSupervisor, ...acceptedInitiated];
+    } else if (requestFilter === 'rejected') {
+      // Show rejected invitations (as co-supervisor OR as initiator)
+      const rejectedAsCoSupervisor = coSupervisorInvitations.filter(inv => 
+        inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+      );
+      const rejectedInitiated = myInitiatedInvitations.filter(inv => 
+        inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+      );
+      return [...rejectedAsCoSupervisor, ...rejectedInitiated];
+    } else if (requestFilter === 'cancelled') {
+      // Show cancelled invitations (as co-supervisor OR as initiator)
+      const cancelledAsCoSupervisor = coSupervisorInvitations.filter(inv => inv.cancelled_at);
+      const cancelledInitiated = myInitiatedInvitations.filter(inv => inv.cancelled_at);
+      return [...cancelledAsCoSupervisor, ...cancelledInitiated];
+    }
+    return [];
+  }, [requestFilter, coSupervisorInvitations, approvalInvitations, myInitiatedInvitations]);
+
   // Calculate metrics for dashboard cards
   const metrics = useMemo(() => {
     // Total active students
     const totalStudents = students.length;
     
-    // Pending requests (pending + pending_student_acceptance)
+    // Pending requests (pending + pending_student_acceptance + co-supervisor invitations)
+    const pendingCoSupervisorCount = coSupervisorInvitations.filter(inv => 
+      inv.cosupervisor_status === 'pending' || 
+      (inv.cosupervisor_status === 'accepted' && inv.approver_status === 'pending')
+    ).length;
+    const pendingInitiatedCount = myInitiatedInvitations.filter(inv => 
+      !inv.completed_at && !inv.cancelled_at && 
+      inv.cosupervisor_status !== 'rejected' && inv.approver_status !== 'rejected'
+    ).length;
     const pendingRequests = requests.filter(req => 
       req.status === 'pending' || req.status === 'pending_student_acceptance'
-    ).length;
+    ).length + pendingCoSupervisorCount + approvalInvitations.length + pendingInitiatedCount;
     
     // Meetings this month across all students
     const now = new Date();
@@ -167,12 +293,12 @@ export default function SupervisorDashboard() {
       meetingsThisMonth,
       activeWorkspaces
     };
-  }, [students, requests]);
+  }, [students, requests, coSupervisorInvitations, approvalInvitations, myInitiatedInvitations]);
 
   return (
     <MainLayout title="Supervisor Dashboard">
       <Head title="Supervisor Dashboard" />
-      <div className="max-w-7xl mx-auto pb-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-4 md:px-5 md:py-5 lg:px-0 lg:py-0 pb-6 space-y-6">
         {/* <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Supervisor Dashboard</h1>
@@ -194,7 +320,7 @@ export default function SupervisorDashboard() {
 
         {/* Metrics Cards */}
         {!isLoading && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-6 border-b border-slate-200">
             <MetricCard
               value={metrics.totalStudents}
               label="Total Students"
@@ -226,7 +352,10 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+          {/* Main Content */}
+          <div className="lg:col-span-9 lg:pr-6 lg:border-r border-slate-200">
+            <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg h-12">
             <TabsTrigger 
               value="requests"
@@ -249,20 +378,72 @@ export default function SupervisorDashboard() {
           </TabsList>
 
           <TabsContent value="requests" className="space-y-4">
-            <RequestFilters filter={requestFilter} onChange={setRequestFilter} requests={requests} />
+            <RequestFilters 
+              filter={requestFilter} 
+              onChange={setRequestFilter} 
+              onCancelledClick={handleCancelledTabClick}
+              requests={requests}
+              coSupervisorInvitations={coSupervisorInvitations}
+              approvalInvitations={approvalInvitations}
+              myInitiatedInvitations={myInitiatedInvitations}
+              cancelledBadgeCount={cancelledBadgeCount}
+            />
             {isLoading ? (
               <RequestSkeleton />
-            ) : filteredRequests.length === 0 ? (
-              <EmptyRequestState status={requestFilter} />
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {filteredRequests.map(request => (
-                  <SupervisorRequestCard
-                    key={request.id}
-                    request={request}
-                    onOpenDetail={(req) => setDetailRequest(req)}
-                  />
-                ))}
+              <div className="space-y-6">
+                {/* Co-Supervisor Invitations - Show in all tabs based on status */}
+                {filteredCoSupervisorInvitations.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="w-5 h-5 text-indigo-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {requestFilter === 'pending' && 'Co-Supervisor Invitations'}
+                        {requestFilter === 'accepted' && 'Accepted Co-Supervisor Invitations'}
+                        {requestFilter === 'rejected' && 'Rejected Co-Supervisor Invitations'}
+                        {requestFilter === 'cancelled' && 'Cancelled Co-Supervisor Invitations'}
+                      </h3>
+                      <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
+                        {filteredCoSupervisorInvitations.length}
+                      </Badge>
+                    </div>
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      {filteredCoSupervisorInvitations.map((invitation) => (
+                        <CoSupervisorInvitationCard
+                          key={invitation.id}
+                          invitation={invitation}
+                          onClick={() => setSelectedCoSupervisorInvitation(invitation)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Regular Supervision Requests */}
+                {filteredRequests.length === 0 && filteredCoSupervisorInvitations.length === 0 ? (
+                  <EmptyRequestState status={requestFilter} />
+                ) : filteredRequests.length > 0 ? (
+                  <div>
+                    {filteredCoSupervisorInvitations.length > 0 && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <ClipboardList className="w-5 h-5 text-gray-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Supervision Requests</h3>
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          {filteredRequests.length}
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      {filteredRequests.map(request => (
+                        <SupervisorRequestCard
+                          key={request.id}
+                          request={request}
+                          onOpenDetail={(req) => setDetailRequest(req)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             )}
           </TabsContent>
@@ -273,7 +454,7 @@ export default function SupervisorDashboard() {
             ) : students.length === 0 ? (
               <EmptyStudentState />
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {students.map(student => (
                   <SupervisorStudentCard
                     key={student.id}
@@ -287,6 +468,10 @@ export default function SupervisorDashboard() {
                       setSelectedRequest(null);
                     }}
                     onScheduleMeeting={(rel) => setMeetingRelationship(rel)}
+                    onAddCoSupervisor={(rel) => {
+                      setSelectedMainRelationship(rel);
+                      setIsCoSupervisorModalOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -299,7 +484,7 @@ export default function SupervisorDashboard() {
             ) : terminatedRelationships.length === 0 ? (
               <EmptyTerminatedState />
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {terminatedRelationships.map(relationship => (
                   <TerminatedRelationshipCard
                     key={relationship.id}
@@ -314,6 +499,16 @@ export default function SupervisorDashboard() {
             )}
           </TabsContent>
         </Tabs>
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="lg:col-span-3 lg:pl-6 mt-6 lg:mt-0">
+            <div className="sticky top-6 space-y-6">
+              <RecentActivityPanel userRole="supervisor" triggerReload={activityTrigger} />
+              <UpcomingMeetingsPanel userRole="supervisor" triggerReload={activityTrigger} />
+            </div>
+          </div>
+        </div>
 
         {/* Use SupervisorRelationshipDetailModal for active relationships */}
         {selectedRelationship && !selectedRequest && (
@@ -343,10 +538,11 @@ export default function SupervisorDashboard() {
           userRole="supervisor"
         />
         {detailRequest && (
-          <SupervisorRequestDetailCard
+          <UnifiedRequestDetailCard
             request={detailRequest}
             onClose={() => setDetailRequest(null)}
             onUpdated={refresh}
+            userRole="supervisor"
           />
         )}
 
@@ -359,27 +555,105 @@ export default function SupervisorDashboard() {
             userRole="supervisor"
           />
         )}
+
+        {/* Supervisor Notification Modal */}
+        <UnifiedNotificationModal
+          type="response"
+          data={{ acceptances: acceptedRequests, rejections: declinedRequests }}
+          isOpen={showResponseModal}
+          onClose={() => setShowResponseModal(false)}
+          onNavigate={() => {
+            if (acceptedRequests.length > 0) {
+              setTab('students'); // Navigate to My Students tab
+            }
+            setShowResponseModal(false);
+          }}
+        />
+
+        {/* Co-Supervisor Search Modal */}
+        {isCoSupervisorModalOpen && selectedMainRelationship && (
+          <CoSupervisorSearchModal
+            isOpen={isCoSupervisorModalOpen}
+            onClose={() => setIsCoSupervisorModalOpen(false)}
+            relationship={selectedMainRelationship}
+            onInvite={() => {
+              setIsCoSupervisorModalOpen(false);
+              toast.success('Co-supervisor invitation sent!');
+              refresh();
+            }}
+          />
+        )}
+
+        {/* Co-Supervisor Invitation Detail Panel */}
+        {selectedCoSupervisorInvitation && (
+          <CoSupervisorInvitationDetailPanel
+            invitation={selectedCoSupervisorInvitation}
+            onClose={() => setSelectedCoSupervisorInvitation(null)}
+            onUpdated={() => {
+              fetchData();
+            }}
+          />
+        )}
       </div>
     </MainLayout>
   );
 }
 
-function RequestFilters({ filter, onChange, requests }) {
+function RequestFilters({ filter, onChange, onCancelledClick, requests, coSupervisorInvitations, approvalInvitations, myInitiatedInvitations, cancelledBadgeCount }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       {REQUEST_TABS.map(tab => {
         const badges = Array.isArray(tab.badge) ? tab.badge : [tab.badge];
-        const count = requests.filter(req => badges.includes(req.status)).length;
+        let count = requests.filter(req => badges.includes(req.status)).length;
+        
+        // Add co-supervisor invitation counts based on tab
+        if (tab.key === 'pending') {
+          const pendingAsCoSupervisor = coSupervisorInvitations?.filter(inv => 
+            inv.cosupervisor_status === 'pending' || 
+            (inv.cosupervisor_status === 'accepted' && inv.approver_status === 'pending')
+          ).length || 0;
+          const pendingInitiated = myInitiatedInvitations?.filter(inv => 
+            !inv.completed_at && !inv.cancelled_at && 
+            inv.cosupervisor_status !== 'rejected' && inv.approver_status !== 'rejected'
+          ).length || 0;
+          count += pendingAsCoSupervisor + (approvalInvitations?.length || 0) + pendingInitiated;
+        } else if (tab.key === 'accepted') {
+          const acceptedAsCoSupervisor = coSupervisorInvitations?.filter(inv => inv.completed_at).length || 0;
+          const acceptedInitiated = myInitiatedInvitations?.filter(inv => inv.completed_at).length || 0;
+          count += acceptedAsCoSupervisor + acceptedInitiated;
+        } else if (tab.key === 'rejected') {
+          const rejectedAsCoSupervisor = coSupervisorInvitations?.filter(inv => 
+            inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+          ).length || 0;
+          const rejectedInitiated = myInitiatedInvitations?.filter(inv => 
+            inv.cosupervisor_status === 'rejected' || inv.approver_status === 'rejected'
+          ).length || 0;
+          count += rejectedAsCoSupervisor + rejectedInitiated;
+        } else if (tab.key === 'cancelled') {
+          const cancelledAsCoSupervisor = coSupervisorInvitations?.filter(inv => inv.cancelled_at).length || 0;
+          const cancelledInitiated = myInitiatedInvitations?.filter(inv => inv.cancelled_at).length || 0;
+          count += cancelledAsCoSupervisor + cancelledInitiated;
+        }
+        
+        const isCancelledTab = tab.key === 'cancelled';
+        const showNotificationBadge = isCancelledTab && cancelledBadgeCount > 0;
+        
         return (
-          <Button
-            key={tab.key}
-            variant={filter === tab.key ? 'default' : 'outline'}
-            onClick={() => onChange(tab.key)}
-            className="flex items-center gap-2"
-          >
-            {tab.label}
-            <Badge variant={filter === tab.key ? 'secondary' : 'outline'}>{count}</Badge>
-          </Button>
+          <div key={tab.key} className="relative">
+            <Button
+              variant={filter === tab.key ? 'default' : 'outline'}
+              onClick={() => isCancelledTab && onCancelledClick ? onCancelledClick() : onChange(tab.key)}
+              className="flex items-center gap-2"
+            >
+              {tab.label}
+              <Badge variant={filter === tab.key ? 'secondary' : 'outline'}>{count}</Badge>
+            </Button>
+            {showNotificationBadge && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md">
+                {cancelledBadgeCount}
+              </span>
+            )}
+          </div>
         );
       })}
     </div>
@@ -517,7 +791,7 @@ function truncate(text, limit) {
   return `${text.slice(0, limit)}…`;
 }
 
-function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }) {
+function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting, onAddCoSupervisor }) {
   const student = relationship?.student ?? {};
   const profilePicture = student.profile_picture ? `/storage/${student.profile_picture}` : null;
   const fullName = student.full_name ?? 'Student';
@@ -577,15 +851,15 @@ function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }
       onClick={() => onOpenDetail?.({ ...relationship, preferred_tab: 'overview' })}
     >
       {/* Header Section */}
-      <CardHeader className="pb-4">
-        <div className="flex items-start gap-4">
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-3">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <Avatar className="h-14 w-14 border-2 border-slate-200">
+            <Avatar className="h-12 w-12 border-2 border-slate-200">
               {profilePicture ? (
                 <img src={profilePicture} alt={fullName} className="h-full w-full object-cover" />
               ) : (
-                <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold text-sm">
+                <AvatarFallback className="bg-indigo-100 text-indigo-700 font-semibold text-xs">
                   {initials}
                 </AvatarFallback>
               )}
@@ -594,7 +868,7 @@ function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-slate-900 truncate mb-1">{fullName}</h3>
+            <h3 className="text-base font-bold text-slate-900 truncate mb-1">{fullName}</h3>
             <p className="text-sm text-slate-600 truncate">
               {university && faculty ? `${university} • ${faculty}` : (university || faculty || 'University')}
             </p>
@@ -604,84 +878,104 @@ function SupervisorStudentCard({ relationship, onOpenDetail, onScheduleMeeting }
           </div>
 
           {/* Badges */}
-          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-            <Badge className="bg-slate-900 text-white border-none hover:bg-slate-800 px-3 py-1">
+          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+            <Badge className="bg-slate-900 text-white border-none hover:bg-slate-800 px-2 py-0.5 text-xs">
               {role}
             </Badge>
-            {/* <Badge className="bg-green-50 text-green-700 border-green-200 border px-3 py-1">
+            {/* <Badge className="bg-green-50 text-green-700 border-green-200 border px-2 py-0.5 text-xs">
               {statusLabel}
             </Badge> */}
             {cohort && cadence && (
-              <p className="text-xs text-slate-500 mt-1">{cohort} • {cadence}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{cohort} • {cadence}</p>
             )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5 pb-5">
+      <CardContent className="space-y-3 pb-4">
         {/* Metrics Row */}
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="p-4 rounded-lg bg-slate-50">
-            <div className="text-2xl font-bold text-slate-900">{meetingsCount}</div>
-            <div className="text-xs text-slate-600 mt-1.5">Meetings</div>
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="p-3 rounded-lg bg-slate-50">
+            <div className="text-xl font-bold text-slate-900">{meetingsCount}</div>
+            <div className="text-xs text-slate-600 mt-1">Meetings</div>
           </div>
-          <div className="p-4 rounded-lg bg-slate-50">
-            <div className="text-2xl font-bold text-slate-900">{tasksCount}</div>
-            <div className="text-xs text-slate-600 mt-1.5">Tasks</div>
+          <div className="p-3 rounded-lg bg-slate-50">
+            <div className="text-xl font-bold text-slate-900">{tasksCount}</div>
+            <div className="text-xs text-slate-600 mt-1">Tasks</div>
           </div>
-          <div className="p-4 rounded-lg bg-slate-50">
-            <div className="text-2xl font-bold text-slate-900">{documentsCount}</div>
-            <div className="text-xs text-slate-600 mt-1.5">Documents</div>
+          <div className="p-3 rounded-lg bg-slate-50">
+            <div className="text-xl font-bold text-slate-900">{documentsCount}</div>
+            <div className="text-xs text-slate-600 mt-1">Documents</div>
           </div>
         </div>
 
         {/* Action Buttons Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Button 
             variant="outline" 
-            className="w-full" 
+            size="sm"
+            className="w-full h-8 text-xs" 
             onClick={(e) => {
               e.stopPropagation();
               handleScheduleMeeting();
             }}
           >
-            <CalendarClock className="mr-2 h-4 w-4" />
+            <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
             Schedule Meeting
           </Button>
           <Button 
             variant="outline" 
-            className="w-full" 
+            size="sm"
+            className="w-full h-8 text-xs" 
             onClick={(e) => {
               e.stopPropagation();
               handleOpenChat();
             }}
           >
-            <MessageCircle className="mr-2 h-4 w-4" />
+            <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
             Chat
           </Button>
           <Button 
             variant="outline" 
-            className="w-full" 
+            size="sm"
+            className="w-full h-8 text-xs" 
             onClick={(e) => {
               e.stopPropagation();
               handleShareDocument();
             }}
           >
-            <FileText className="mr-2 h-4 w-4" />
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
             Share Document
           </Button>
           <Button 
             variant="outline" 
-            className="w-full" 
+            size="sm"
+            className="w-full h-8 text-xs" 
             onClick={(e) => {
               e.stopPropagation();
               handleManage();
             }}
           >
-            <Settings className="mr-2 h-4 w-4" />
+            <Settings className="mr-1.5 h-3.5 w-3.5" />
             Manage
           </Button>
         </div>
+
+        {/* Add Co-Supervisor Button (Only for Main Supervisor) */}
+        {relationship?.role === 'main' && onAddCoSupervisor && (
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full h-8 text-xs bg-indigo-600 hover:bg-indigo-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddCoSupervisor(relationship);
+            }}
+          >
+            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+            Add Co-Supervisor
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
@@ -842,28 +1136,46 @@ function TerminatedRelationshipCard({ relationship, onViewHistory }) {
 
 function RequestSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
       {Array.from({ length: 4 }).map((_, index) => (
-        <Card key={`request-skeleton-${index}`} className="border-dashed animate-pulse">
-          <CardHeader className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-slate-200" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-32 rounded bg-slate-200" />
-                <div className="h-3 w-20 rounded bg-slate-100" />
+        <div key={`request-skeleton-${index}`} className="border border-dashed rounded-xl p-4 sm:p-5 bg-white shadow-sm animate-pulse min-h-[300px] sm:min-h-[320px] flex flex-col">
+          {/* Header: Student Info + Status Badge */}
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 rounded-full bg-slate-200 flex-shrink-0" />
+              <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+                <div className="h-3.5 sm:h-4 w-28 sm:w-32 rounded bg-slate-200" />
+                <div className="h-2.5 sm:h-3 w-20 sm:w-24 rounded bg-slate-100" />
+                <div className="h-2 sm:h-2.5 w-24 sm:w-28 rounded bg-slate-100" />
               </div>
             </div>
-            <div className="h-5 w-24 rounded bg-slate-100" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="h-14 w-full rounded bg-slate-100" />
-            <div className="h-10 w-full rounded bg-slate-100" />
-          </CardContent>
-          <CardFooter className="space-y-2">
-            <div className="h-10 w-full rounded bg-slate-200" />
-            <div className="h-10 w-full rounded bg-slate-200" />
-          </CardFooter>
-        </Card>
+            <div className="h-5 sm:h-6 w-16 sm:w-20 rounded-full bg-slate-200 flex-shrink-0" />
+          </div>
+          
+          {/* Proposal Title */}
+          <div className="mt-3 sm:mt-4">
+            <div className="h-4 sm:h-5 w-full rounded bg-slate-100" />
+            <div className="h-4 sm:h-5 w-3/4 rounded bg-slate-100 mt-2" />
+          </div>
+          
+          {/* Status Info Section */}
+          <div className="mt-2 flex-1 space-y-2">
+            <div className="h-12 sm:h-14 w-full rounded-md bg-slate-100" />
+          </div>
+          
+          {/* Quick Info Bar */}
+          <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4">
+            <div className="h-2.5 sm:h-3 w-20 rounded bg-slate-100" />
+            <div className="h-2.5 sm:h-3 w-16 rounded bg-slate-100" />
+            <div className="h-2.5 sm:h-3 w-24 rounded bg-slate-100" />
+          </div>
+          
+          {/* Actions */}
+          <div className="mt-3 sm:mt-4 flex items-center gap-2 pt-3 sm:pt-4 border-t border-slate-200">
+            <div className="h-8 sm:h-9 flex-1 rounded bg-slate-200" />
+            <div className="h-8 sm:h-9 w-8 sm:w-9 rounded bg-slate-200" />
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -871,27 +1183,46 @@ function RequestSkeleton() {
 
 function StudentSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
       {Array.from({ length: 4 }).map((_, index) => (
-        <Card key={`student-skeleton-${index}`} className="border-dashed animate-pulse">
-          <CardHeader className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-slate-200" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-32 rounded bg-slate-200" />
-                <div className="h-3 w-20 rounded bg-slate-100" />
+        <div key={`student-skeleton-${index}`} className="border border-dashed rounded-xl p-4 sm:p-5 bg-white shadow-sm animate-pulse min-h-[280px] sm:min-h-[300px] flex flex-col">
+          {/* Header: Student Info + Status */}
+          <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 rounded-full bg-slate-200 flex-shrink-0" />
+              <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+                <div className="h-3.5 sm:h-4 w-28 sm:w-32 rounded bg-slate-200" />
+                <div className="h-2.5 sm:h-3 w-20 sm:w-24 rounded bg-slate-100" />
+                <div className="h-2 sm:h-2.5 w-24 sm:w-28 rounded bg-slate-100" />
               </div>
             </div>
-            <div className="h-5 w-24 rounded bg-slate-100" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="h-14 w-full rounded bg-slate-100" />
-            <div className="h-10 w-full rounded bg-slate-100" />
-          </CardContent>
-          <CardFooter className="space-y-2">
-            <div className="h-10 w-full rounded bg-slate-200" />
-          </CardFooter>
-        </Card>
+            <div className="h-5 sm:h-6 w-14 sm:w-16 rounded-full bg-slate-100 flex-shrink-0" />
+          </div>
+          
+          {/* Research Title/Info */}
+          <div className="mt-3 sm:mt-4 flex-1">
+            <div className="h-3.5 sm:h-4 w-full rounded bg-slate-100" />
+            <div className="h-3.5 sm:h-4 w-2/3 rounded bg-slate-100 mt-2" />
+          </div>
+          
+          {/* Progress/Status Indicators */}
+          <div className="mt-3 sm:mt-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="h-2.5 sm:h-3 w-20 rounded bg-slate-100" />
+              <div className="h-2.5 sm:h-3 w-16 rounded bg-slate-100" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2.5 sm:h-3 w-24 rounded bg-slate-100" />
+              <div className="h-2.5 sm:h-3 w-20 rounded bg-slate-100" />
+            </div>
+          </div>
+          
+          {/* Actions */}
+          <div className="mt-3 sm:mt-4 flex items-center gap-2 pt-3 sm:pt-4 border-t border-slate-200">
+            <div className="h-8 sm:h-9 flex-1 rounded bg-slate-200" />
+            <div className="h-8 sm:h-9 w-8 sm:w-9 rounded bg-slate-200" />
+          </div>
+        </div>
       ))}
     </div>
   );

@@ -30,7 +30,7 @@ class ResourceController extends Controller
                 'title' => 'Managing Your Research',
                 'guides' => [
                     ['slug' => 'paper-writing-template', 'title' => 'The Ultimate Paper Writing Project Template'],
-                    ['slug' => 'agile-for-academics', 'title' => 'Agile for Academics: Managing Your PhD Using the ScholarLab\'s Kanban Board'],
+                    ['slug' => 'agile-for-academics', 'title' => 'Agile for Academics: Managing Your PhD Using NexLab\'s Kanban Board'],
                     ['slug' => 'choosing-your-view', 'title' => 'Choosing Your View: When to Use a Board, List, Table, Calendar, or Timeline for Your Research Project'],
                 ]
             ],

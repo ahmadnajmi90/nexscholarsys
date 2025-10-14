@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SupervisionDocument extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'student_id',
         'relationship_id',
         'folder_category',
         'name',
@@ -33,6 +35,11 @@ class SupervisionDocument extends Model
             self::FOLDER_DATA,
             self::FOLDER_GENERAL,
         ];
+    }
+
+    public function student()
+    {
+        return $this->belongsTo(Postgraduate::class, 'student_id', 'postgraduate_id');
     }
 
     public function relationship()

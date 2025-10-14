@@ -75,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+Route::get('auth/google/calendar/callback', [\App\Http\Controllers\Api\V1\GoogleCalendarController::class, 'handleCallback'])
+    ->middleware('auth')
+    ->name('google-calendar.callback');
 
 Route::bind('post', function ($value) {
     return CreatePost::where('url', $value)->firstOrFail();
@@ -267,7 +270,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/post-projects/{id}', [PostProjectController::class, 'update'])->name('post-projects.update');
     Route::delete('/post-projects/{id}', [PostProjectController::class, 'destroy'])->name('post-projects.destroy');
 
-    Route::get('/my-supervisor', [\App\Http\Controllers\Supervision\StudentController::class, 'index'])->name('supervision.student.index');
+    Route::get('/my-supervisor', [\App\Http\Controllers\Supervision\StudentController::class, 'index'])->name('supervision.student.index')->middleware('postgraduate');
     Route::get('/supervisor-dashboard', [\App\Http\Controllers\Supervision\SupervisorController::class, 'index'])->name('supervision.supervisor.index');
     Route::get('/supervision/relationships/{relationship}', [\App\Http\Controllers\Supervision\RelationshipViewController::class, 'show'])->name('supervision.relationships.show');
     
@@ -361,10 +364,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ai-matching/diagnostics', [\App\Http\Controllers\AIMatchingController::class, 'diagnostics'])
         ->name('ai.matching.diagnostics');
     
-    // Network Map - Malaysia Research Network Visualization
+    // Network Map - Malaysia Research Network Visualization (Admin Only)
     Route::get('/network-map', function () {
         return Inertia::render('NetworkMap/Index');
-    })->name('network.map');
+    })->name('network.map')->middleware('admin');
 });
 
 // CSRF Token Refresh Route

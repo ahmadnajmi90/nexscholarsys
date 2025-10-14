@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, router, useForm } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
+import GoogleCalendarTaskToast from '@/Components/GoogleCalendarTaskToast';
+import { useTaskGoogleCalendar } from '@/Hooks/useTaskGoogleCalendar';
+import axios from 'axios';
 import BoardColumn from '@/Components/ProjectHub/BoardColumn';
 import CalendarView from '@/Components/ProjectHub/CalendarView';
 import ListView from '@/Components/ProjectHub/ListView';
@@ -16,7 +19,6 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import InlineEdit from '@/Components/ProjectHub/InlineEdit';
 import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal, Archive as ArchiveIcon } from 'lucide-react';
 import ArchivedTasksModal from '@/Components/ProjectHub/ArchivedTasksModal';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 
 export default function Show({ initialBoardData, researchOptions = [] }) {
@@ -46,6 +48,13 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
     const [creatingPaperTask, setCreatingPaperTask] = useState(false);
     // State to track the current list ID for task creation
     const [currentListId, setCurrentListId] = useState(null);
+    
+    // Google Calendar integration
+    const { props } = usePage();
+    const { addTaskToCalendar } = useTaskGoogleCalendar();
+    const [showGoogleCalendarToast, setShowGoogleCalendarToast] = useState(false);
+    const [calendarPromptData, setCalendarPromptData] = useState(null);
+    const [currentTaskForCalendar, setCurrentTaskForCalendar] = useState(null);
 
     // Handle board title renaming
     const handleBoardRename = async (newName) => {
@@ -99,6 +108,23 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
             setIsLoading(true);
         }
     }, [initialBoardData]);
+    
+    // Check for Google Calendar prompt from flash data
+    useEffect(() => {
+        console.log('Flash data:', props?.flash);
+        const flashPrompt = props?.flash?.google_calendar_prompt;
+        const taskData = props?.flash?.task_for_calendar;
+        
+        console.log('Calendar prompt data:', flashPrompt);
+        console.log('Task data:', taskData);
+        
+        if (flashPrompt?.show_prompt && taskData) {
+            setCurrentTaskForCalendar(taskData);
+            setCalendarPromptData(flashPrompt);
+            setShowGoogleCalendarToast(true);
+            console.log('Showing Google Calendar toast');
+        }
+    }, [props?.flash]);
 
     // console.log(initialBoardData);
 
@@ -106,7 +132,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
     const getBackLinkDetails = () => {
         // Check if we have the parent data in the board state
         if (!boardState || !boardState.parent) {
-            return { href: route('project-hub.index'), text: 'ScholarLab' };
+            return { href: route('project-hub.index'), text: 'NexLab' };
         }
 
         // console.log(boardState);
@@ -116,7 +142,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         const parentType = parent.type; // 'Workspace' or 'Project'
 
         if (!parent.id) {
-            return { href: route('project-hub.index'), text: 'ScholarLab' };
+            return { href: route('project-hub.index'), text: 'NexLab' };
         }
 
         if (parentType.toLowerCase() === 'workspace') {
@@ -132,7 +158,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         }
 
         // Default fallback
-        return { href: route('project-hub.index'), text: 'ScholarLab' };
+        return { href: route('project-hub.index'), text: 'NexLab' };
     };
 
     // Set up real-time listening for task moves and board updates
@@ -949,6 +975,27 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                 onClose={() => setShowArchiveModal(false)}
                 boardId={boardState.id}
             />
+            
+            {/* Google Calendar Toast */}
+            {showGoogleCalendarToast && currentTaskForCalendar && calendarPromptData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+                    <GoogleCalendarTaskToast
+                        task={currentTaskForCalendar}
+                        promptData={calendarPromptData}
+                        onYes={async () => {
+                            const result = await addTaskToCalendar(currentTaskForCalendar.id);
+                            if (result.success) {
+                                setCurrentTaskForCalendar(result.task);
+                            }
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        onNo={() => {
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        visible={showGoogleCalendarToast}
+                    />
+                </div>
+            )}
         </div>
     );
 }

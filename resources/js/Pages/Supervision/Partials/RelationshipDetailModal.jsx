@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/Components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs';
 import { Button } from '@/Components/ui/button';
@@ -61,7 +62,12 @@ export default function RelationshipDetailModal({ request, relationship, onClose
         </DialogHeader>
         <Separator />
 
-        <div className="px-6 py-4">
+        <motion.div 
+          className="px-6 py-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+        >
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
             <TabsList className="flex w-full flex-wrap gap-2 bg-transparent p-0">
               {tabs.map((tabKey) => (
@@ -73,19 +79,36 @@ export default function RelationshipDetailModal({ request, relationship, onClose
 
             <TabsContent value="overview" className="m-0">
               <ScrollArea className="max-h-[60vh] pr-4">
-                <OverviewTab request={request} relationship={relationship} />
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <OverviewTab request={request} relationship={relationship} />
+                </motion.div>
               </ScrollArea>
             </TabsContent>
 
             <TabsContent value="proposal" className="m-0">
               <ScrollArea className="max-h-[60vh] pr-4">
-                <ProposalTab request={request} />
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ProposalTab request={request} />
+                </motion.div>
               </ScrollArea>
             </TabsContent>
 
             {conversationId ? (
               <TabsContent value="chat" className="m-0">
-                <div className="max-h-[60vh] rounded-lg border border-slate-200">
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="max-h-[60vh] rounded-lg border border-slate-200"
+                >
                   <ThreadPane
                     conversationId={conversationId}
                     auth={auth}
@@ -93,23 +116,35 @@ export default function RelationshipDetailModal({ request, relationship, onClose
                     onConversationIncrementUnread={() => {}}
                     onAfterSend={() => onUpdated?.()}
                   />
-                </div>
+                </motion.div>
               </TabsContent>
             ) : null}
 
             <TabsContent value="meetings" className="m-0">
               <ScrollArea className="max-h-[60vh] pr-4">
-                <MeetingsTab relationship={relationship} />
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <MeetingsTab relationship={relationship} />
+                </motion.div>
               </ScrollArea>
             </TabsContent>
 
             <TabsContent value="history" className="m-0">
               <ScrollArea className="max-h-[60vh] pr-4">
-                <HistoryTab request={request} relationship={relationship} />
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <HistoryTab request={request} relationship={relationship} />
+                </motion.div>
               </ScrollArea>
             </TabsContent>
           </Tabs>
-        </div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
@@ -143,7 +178,7 @@ function OverviewTab({ request, relationship }) {
     { label: 'Status', value: formatEventType(status) },
     { label: 'Meeting cadence', value: relationship?.meeting_cadence ? (relationship.meeting_cadence.charAt(0).toUpperCase() + relationship.meeting_cadence.slice(1)) : 'Not set' },
     { label: 'Accepted on', value: relationship?.accepted_at ? format(new Date(relationship.accepted_at), 'PPP') : 'Pending acceptance' },
-    { label: 'ScholarLab', value: relationship?.scholarlab_board_id ? 'Workspace ready' : 'Workspace not provisioned' },
+    { label: 'NexLab', value: relationship?.scholarlab_board_id ? 'Workspace ready' : 'Workspace not provisioned' },
   ];
 
   return (

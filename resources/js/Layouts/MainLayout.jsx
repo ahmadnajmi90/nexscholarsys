@@ -6,13 +6,16 @@ import MobileSidebar from '../Components/MobileSidebar';
 import { Head } from '@inertiajs/react';
 import TopMenu from '../Components/TopMenu';
 import Dropdown from '../Components/Dropdown';
-import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign, ClipboardList, X } from 'lucide-react'; // Modern icons
+import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, DollarSign, ClipboardList, X, HelpCircle } from 'lucide-react'; // Modern icons
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
 import ForceTermsModal from '../Components/ForceTermsModal';
 import TutorialModal from '../Components/Tutorial/TutorialModal';
+import SupervisionTutorialModal from '../Components/SupervisionTutorialModal';
 import StickyBanner from '../Components/ui/StickyBanner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Components/ui/tooltip';
+import BetaBadge from '../Components/BetaBadge';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -20,6 +23,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [activeSection, setActiveSection] = useState('dashboard'); // Active section for new sidebar
     const [showTermsModal, setShowTermsModal] = useState(false); // Terms agreement modal
     const [showTutorialModal, setShowTutorialModal] = useState(false); // Tutorial modal
+    const [showSupervisionTutorial, setShowSupervisionTutorial] = useState(false); // Supervision tutorial modal
     const [showFeedbackBubble, setShowFeedbackBubble] = useState(true); // Feedback bubble visibility
     const { url } = usePage(); // Get current URL from Inertia
     const { auth } = usePage().props; // Get current URL and auth from Inertia
@@ -253,6 +257,16 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     const feedbackFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform';
 
+    // Beta feature titles that should display the BETA badge
+    const betaFeatureTitles = [
+        'AI Matching',
+        'Postgraduate Program Recommendations',
+        'My Supervisor',
+        'Supervisor Dashboard',
+        'NexLab',
+        'Messages'
+    ];
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Toast notifications */}
@@ -326,10 +340,27 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                             <div className="mb-4">
                                 {/* Header content with padding */}
                                 <div className="flex justify-between items-center pb-4">
-                                    <h1 className="text-2xl font-semibold">{title}</h1>
+                                    <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3">
+                                        <h1 className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
+                                            {title}
+                                            {betaFeatureTitles.includes(title) && <BetaBadge variant="inline" />}
+                                        </h1>
+                                        
+                                        {/* Show tutorial button only on My Supervisor page */}
+                                        {title === "My Supervisor" && (
+                                            <button
+                                                onClick={() => setShowSupervisionTutorial(true)}
+                                                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors group"
+                                                aria-label="How supervisor selection works"
+                                            >
+                                                <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                                <span className="font-medium whitespace-nowrap">How supervisor selection works</span>
+                                            </button>
+                                        )}
+                                    </div>
 
                                     <div className="flex items-center space-x-4">
-                                        {/* <NotificationBell /> */}
+                                        <NotificationBell />
                                         
                                         {/* Profile Dropdown */}
                                         <Dropdown>
@@ -464,6 +495,12 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             <TutorialModal
                 show={showTutorialModal}
                 onClose={() => setShowTutorialModal(false)}
+            />
+
+            {/* Supervision Tutorial Modal */}
+            <SupervisionTutorialModal
+                show={showSupervisionTutorial}
+                onClose={() => setShowSupervisionTutorial(false)}
             />
         </div>
     );

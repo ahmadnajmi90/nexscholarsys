@@ -42,7 +42,8 @@ class Postgraduate extends Model
         'funding_requirement',
         'current_postgraduate_status',
         'background_image',
-        'url'
+        'url',
+        'supervision_group_conversation_id'
     ];
 
     protected $casts = [
@@ -155,6 +156,40 @@ class Postgraduate extends Model
         return $this->hasOne(SupervisionRelationship::class, 'student_id', 'postgraduate_id')
             ->where('status', SupervisionRelationship::STATUS_ACTIVE)
             ->latest();
+    }
+
+    /**
+     * Get the main active supervision relationship for this postgraduate.
+     */
+    public function mainSupervisionRelationship()
+    {
+        return $this->hasOne(SupervisionRelationship::class, 'student_id', 'postgraduate_id')
+            ->where('status', SupervisionRelationship::STATUS_ACTIVE)
+            ->where('role', SupervisionRelationship::ROLE_MAIN);
+    }
+
+    /**
+     * Get the supervision group conversation (student + all supervisors).
+     */
+    public function supervisionGroupConversation()
+    {
+        return $this->belongsTo(Messaging\Conversation::class, 'supervision_group_conversation_id');
+    }
+
+    /**
+     * Get the research detail for this student (shared across all supervisors).
+     */
+    public function researchDetail()
+    {
+        return $this->hasOne(SupervisionResearchDetail::class, 'student_id', 'postgraduate_id');
+    }
+
+    /**
+     * Get all documents for this student (shared across all supervisors).
+     */
+    public function supervisionDocuments()
+    {
+        return $this->hasMany(SupervisionDocument::class, 'student_id', 'postgraduate_id');
     }
     
     /**

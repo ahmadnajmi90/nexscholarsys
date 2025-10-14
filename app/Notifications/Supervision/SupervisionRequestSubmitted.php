@@ -4,10 +4,11 @@ namespace App\Notifications\Supervision;
 
 use App\Models\SupervisionRequest;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupervisionRequestSubmitted extends Notification
+class SupervisionRequestSubmitted extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -38,7 +39,12 @@ class SupervisionRequestSubmitted extends Notification
             'request_id' => $this->request->id,
             'student_id' => $this->request->student_id,
             'academician_id' => $this->request->academician_id,
+            'student_name' => $this->request->student->full_name ?? 'Student',
             'proposal_title' => $this->request->proposal_title,
+            'message' => __(':student submitted a new supervision request for ":title"', [
+                'student' => $this->request->student->full_name ?? 'A student',
+                'title' => $this->request->proposal_title ?? 'a research proposal',
+            ]),
         ];
     }
 }

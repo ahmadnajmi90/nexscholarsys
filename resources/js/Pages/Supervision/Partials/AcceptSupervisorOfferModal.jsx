@@ -172,7 +172,7 @@ export default function AcceptSupervisorOfferModal({ isOpen, request, onClose, o
                   <p className="mt-1">
                     By clicking "Agree & Accept", you confirm your acceptance of {supervisorName} as your supervisor.
                     Your supervision relationship will be activated, and both you and your supervisor 
-                    will gain access to supervision features including meetings, ScholarLab workspace, and progress tracking.
+                    will gain access to supervision features including meetings, NexLab workspace, and progress tracking.
                   </p>
                 </AlertDescription>
               </Alert>

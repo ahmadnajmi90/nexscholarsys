@@ -1,16 +1,9 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 
-const Button = ({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  children,
-  ...props
-}) => {
-  const Component = asChild ? "span" : "button";
-
+const buttonVariants = (props = {}) => {
+  const { variant = "default", size = "default" } = props;
+  
   const variantStyles = {
     default: "bg-primary text-primary-foreground hover:bg-primary/90",
     destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
@@ -27,12 +20,28 @@ const Button = ({
     icon: "h-10 w-10",
   };
 
+  return cn(
+    "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+    variantStyles[variant],
+    sizeStyles[size]
+  );
+};
+
+const Button = React.forwardRef(({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  children,
+  ...props
+}, ref) => {
+  const Component = asChild ? "span" : "button";
+
   return (
     <Component
+      ref={ref}
       className={cn(
-        "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        variantStyles[variant],
-        sizeStyles[size],
+        buttonVariants({ variant, size }),
         className,
       )}
       {...props}
@@ -40,6 +49,8 @@ const Button = ({
       {children}
     </Component>
   );
-};
+});
 
-export { Button };
+Button.displayName = "Button";
+
+export { Button, buttonVariants };

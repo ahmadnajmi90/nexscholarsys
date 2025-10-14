@@ -7,6 +7,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { FcGoogle } from 'react-icons/fc';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -17,6 +18,8 @@ export default function Register() {
     });
 
     const [isAgreed, setIsAgreed] = useState(false); // State for the checkbox
+    const [showPassword, setShowPassword] = useState(false); // State for password visibility
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false); // State for password confirmation visibility
 
     // --- START: New Modal Logic ---
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,31 +145,59 @@ export default function Register() {
 
                             <div className="col-span-6 sm:col-span-3">
                                 <InputLabel htmlFor="password" value="Password" />
-                                <TextInput
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    value={data.password}
-                                    className="mt-1 w-full rounded-md border-gray-200 shadow-sm"
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    required
-                                />
+                                <div className="relative">
+                                    <TextInput
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        value={data.password}
+                                        className="mt-1 w-full rounded-md border-gray-200 shadow-sm pr-12"
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 transition-colors rounded-md hover:bg-gray-100"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? (
+                                            <Eye className="w-5 h-5" />
+                                        ) : (
+                                            <EyeOff className="w-5 h-5" />
+                                        )}
+                                    </button>
+                                </div>
                                 <InputError message={errors.password} className="mt-2" />
                             </div>
 
                             <div className="col-span-6 sm:col-span-3">
                                 <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
-                                <TextInput
-                                    id="password_confirmation"
-                                    type="password"
-                                    name="password_confirmation"
-                                    value={data.password_confirmation}
-                                    className="mt-1 w-full rounded-md border-gray-200 shadow-sm"
-                                    onChange={(e) =>
-                                        setData('password_confirmation', e.target.value)
-                                    }
-                                    required
-                                />
+                                <div className="relative">
+                                    <TextInput
+                                        id="password_confirmation"
+                                        type={showPasswordConfirmation ? "text" : "password"}
+                                        name="password_confirmation"
+                                        value={data.password_confirmation}
+                                        className="mt-1 w-full rounded-md border-gray-200 shadow-sm pr-12"
+                                        onChange={(e) =>
+                                            setData('password_confirmation', e.target.value)
+                                        }
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-700 transition-colors rounded-md hover:bg-gray-100"
+                                        tabIndex={-1}
+                                    >
+                                        {showPasswordConfirmation ? (
+                                            <Eye className="w-5 h-5" />
+                                        ) : (
+                                            <EyeOff className="w-5 h-5" />
+                                        )}
+                                    </button>
+                                </div>
                                 <InputError message={errors.password_confirmation} className="mt-2" />
                             </div>
 
@@ -223,15 +254,15 @@ export default function Register() {
                                 </p>
                             </div>
 
+                            {/* GOOGLE SIGN-UP SECTION - TEMPORARILY DISABLED FOR GOOGLE VERIFICATION */}
+                            {/* 
                             <div className="col-span-6">
-                                {/* SEPARATOR WITH HORIZONTAL LINES */}
                                 <div className="flex items-center my-4">
                                     <div className="flex-grow border-t border-gray-300"></div>
                                     <span className="mx-2 text-gray-400 text-sm">OR</span>
                                     <div className="flex-grow border-t border-gray-300"></div>
                                 </div>
 
-                                {/* SOCIAL SIGN-IN BUTTON (GOOGLE) */}
                                 <div className="w-full">
                                     <PrimaryButton
                                         type="button"
@@ -244,6 +275,7 @@ export default function Register() {
                                     </PrimaryButton>
                                 </div>
                             </div>
+                            */}
                         </form>
                     </div>
                 </main>

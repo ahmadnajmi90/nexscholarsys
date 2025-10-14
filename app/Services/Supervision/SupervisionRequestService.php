@@ -10,8 +10,10 @@ use App\Models\PotentialSupervisor;
 use App\Models\Messaging\Conversation;
 use App\Notifications\Supervision\SupervisionRequestSubmitted;
 use App\Services\Messaging\ConversationService;
+use App\Services\Supervision\AbstractService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +21,7 @@ class SupervisionRequestService
 {
     public function __construct(
         protected ConversationService $conversationService,
+        protected AbstractService $abstractService,
     ) {}
 
     public function submitRequest(Postgraduate $student, Academician $academician, array $data): SupervisionRequest
@@ -27,12 +30,13 @@ class SupervisionRequestService
             $pendingCount = SupervisionRequest::where('student_id', $student->postgraduate_id)
                 ->whereIn('status', [
                     SupervisionRequest::STATUS_PENDING,
-                    SupervisionRequest::STATUS_ACCEPTED,
+                    SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE,
                 ])->count();
 
-            if ($pendingCount >= 5) {
+            $maxPendingRequests = config('supervision.max_pending_requests', 5);
+            if ($pendingCount >= $maxPendingRequests) {
                 throw ValidationException::withMessages([
-                    'academician_id' => __('You can only have up to five active supervision requests.'),
+                    'academician_id' => __('You can only have up to five pending supervision requests.'),
                 ]);
             }
 
@@ -77,6 +81,20 @@ class SupervisionRequestService
 
             $this->syncAttachments($request, Arr::get($data, 'attachments', []));
 
+            // Extract abstract from proposal attachment
+            try {
+                $proposalAttachment = $request->attachments()->where('type', 'proposal')->first();
+                if ($proposalAttachment) {
+                    $this->abstractService->extractAndStore($request, $proposalAttachment->id);
+                }
+            } catch (\Exception $e) {
+                // Log error but don't fail the request submission
+                Log::warning('Abstract extraction failed during request submission', [
+                    'request_id' => $request->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             // Auto-add supervisor to potential supervisors list when request is submitted
             PotentialSupervisor::updateOrCreate(
                 [
@@ -87,6 +105,30 @@ class SupervisionRequestService
                     'postgraduate_program_id' => $data['postgraduate_program_id'] ?? null,
                 ]
             );
+
+            // Load student relationship for notification
+            $request->load('student');
+
+            // Create timeline event for request submission
+            try {
+                \App\Models\SupervisionTimeline::create([
+                    'entity_type' => SupervisionRequest::class,
+                    'entity_id' => $request->id,
+                    'user_id' => $student->user_id ?? null,
+                    'event_type' => 'request_submitted',
+                    'description' => 'Supervision request submitted',
+                    'metadata' => [
+                        'proposal_title' => $data['proposal_title'],
+                        'academician_id' => $academician->academician_id,
+                        'postgraduate_program_id' => $data['postgraduate_program_id'] ?? null,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to create timeline event for request submission', [
+                    'request_id' => $request->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             $academician->user?->notify(new SupervisionRequestSubmitted($request));
 

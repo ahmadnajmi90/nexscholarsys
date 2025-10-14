@@ -62,7 +62,7 @@ class BoardDeletedNotification extends Notification implements ShouldQueue
                 return (new MailMessage)
                     ->subject('Board Deleted')
                     ->line('A board has been deleted, but some details are missing.')
-                    ->line('Please check your workspaces and projects in ScholarLab.');
+                    ->line('Please check your workspaces and projects in NexLab.');
             }
             
             $boardName = $this->boardName ?? 'Unknown Board';
@@ -99,7 +99,7 @@ class BoardDeletedNotification extends Notification implements ShouldQueue
                 ->line("The board '{$boardName}' in {$parentType} '{$parentName}' has been deleted by {$deletedByName}.")
                 ->line("All tasks within this board have also been deleted.")
                 ->action("Go to {$parentName}", $parentUrl)
-                ->line('Thank you for using ScholarLab!');
+                ->line('Thank you for using NexLab!');
         } catch (\Exception $e) {
             Log::error('BoardDeletedNotification: Exception in toMail', [
                 'exception' => $e->getMessage(),
@@ -109,7 +109,7 @@ class BoardDeletedNotification extends Notification implements ShouldQueue
             return (new MailMessage)
                 ->subject('Board Deleted')
                 ->line('A board has been deleted, but we encountered an error processing the details.')
-                ->line('Please check your workspaces and projects in ScholarLab.');
+                ->line('Please check your workspaces and projects in NexLab.');
         }
     }
 

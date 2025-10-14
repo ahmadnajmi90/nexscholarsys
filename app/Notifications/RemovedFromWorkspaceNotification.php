@@ -45,8 +45,8 @@ class RemovedFromWorkspaceNotification extends Notification implements ShouldQue
             ->greeting("Hello {$notifiable->name}!")
             ->line("You have been removed from the {$this->parentType} '{$this->parentName}' by {$this->removedByName}.")
             ->line("You no longer have access to the boards, lists, and tasks within this {$this->parentType}.")
-            ->action('Go to ScholarLab', route('project-hub.index'))
-            ->line('Thank you for using ScholarLab!');
+            ->action('Go to NexLab', route('project-hub.index'))
+            ->line('Thank you for using NexLab!');
     }
 
     /**
