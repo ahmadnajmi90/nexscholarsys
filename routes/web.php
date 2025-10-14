@@ -364,10 +364,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ai-matching/diagnostics', [\App\Http\Controllers\AIMatchingController::class, 'diagnostics'])
         ->name('ai.matching.diagnostics');
     
-    // Network Map - Malaysia Research Network Visualization
+    // Network Map - Malaysia Research Network Visualization (Admin Only)
     Route::get('/network-map', function () {
         return Inertia::render('NetworkMap/Index');
-    })->name('network.map');
+    })->name('network.map')->middleware('admin');
 });
 
 // CSRF Token Refresh Route

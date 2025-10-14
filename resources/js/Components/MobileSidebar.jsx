@@ -5,7 +5,7 @@ import {
     Home, Sparkles, Users, FolderOpen, Settings, ChevronLeft,
     GraduationCap, LayoutGrid, Shield, Calendar,
     FileText, ClipboardList, LogOut, Bookmark, Building2, Database, User2, BookUser, Library, Building, DollarSign,
-    MessageSquare, UserCheck, School, FolderKanban, LayoutDashboard
+    MessageSquare, UserCheck, School, FolderKanban, LayoutDashboard, Map
 } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
 import BetaBadge from '@/Components/BetaBadge';
@@ -51,18 +51,19 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
             title: 'Features',
             items: [
                 { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles, beta: true },
+                ...(isAdmin ? [{ label: 'Network Map', href: route('network.map'), icon: Map }] : []),
                 { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap, beta: true },
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
                 ...(isPostgraduate || isUndergraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School, beta: true }] : []),
                 ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard, beta: true }] : []),
                 { label: 'NexLab', href: route('project-hub.index'), icon: FolderKanban, beta: true },
-                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare, beta: true },
             ]
         },
         networking: {
             title: 'Networking',
             items: [
                 { label: 'My Network', href: route('connections.index'), icon: Users, badge: pendingRequestCount },
+                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare, beta: true },
                 { label: 'Postgraduate', href: '/postgraduates', icon: GraduationCap },
                 { label: 'Undergraduate', href: '/undergraduates', icon: BookUser },
                 { label: 'Academician', href: '/academicians', icon: Library },
