@@ -1,9 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { User2, MessageSquareMore, Trash2, Loader2, BookOpen, FolderKanban, UserPlus, CheckCircle2, Send, Eye } from 'lucide-react';
+import { User2, MessageSquareMore, Trash2, Loader2, BookOpen, FolderKanban, UserPlus, CheckCircle2, Send, Eye, ChevronDown, Sparkles, GraduationCap } from 'lucide-react';
 import { logError } from '@/Utils/logError';
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -11,6 +11,12 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
 const EMPTY_STATES = {
@@ -150,7 +156,30 @@ export default function PotentialSupervisorList({
           {description}
         </CardContent>
         <CardFooter>
-          <Button variant="outline" onClick={() => onRequestSupervisor?.(null)}>Find supervisors</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                Find supervisors
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem 
+                onSelect={() => router.visit(route('ai.matching.index'))}
+                className="gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4 text-purple-500" />
+                <span>AI Matching</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onSelect={() => router.visit(route('postgraduate-recommendations.index'))}
+                className="gap-2 cursor-pointer"
+              >
+                <GraduationCap className="w-4 h-4 text-blue-500" />
+                <span>Postgraduate Program Recommendations</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardFooter>
       </Card>
     );

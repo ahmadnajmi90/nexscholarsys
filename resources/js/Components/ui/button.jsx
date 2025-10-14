@@ -27,18 +27,19 @@ const buttonVariants = (props = {}) => {
   );
 };
 
-const Button = ({
+const Button = React.forwardRef(({
   className,
   variant = "default",
   size = "default",
   asChild = false,
   children,
   ...props
-}) => {
+}, ref) => {
   const Component = asChild ? "span" : "button";
 
   return (
     <Component
+      ref={ref}
       className={cn(
         buttonVariants({ variant, size }),
         className,
@@ -48,6 +49,8 @@ const Button = ({
       {children}
     </Component>
   );
-};
+});
+
+Button.displayName = "Button";
 
 export { Button, buttonVariants };

@@ -2,9 +2,10 @@ import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FcGoogle } from 'react-icons/fc';
+import { toast, Toaster } from 'react-hot-toast';
+import { useEffect, useRef } from 'react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -12,6 +13,25 @@ export default function Login({ status, canResetPassword }) {
         password: '',
         remember: false,
     });
+
+    const toastShown = useRef(false);
+
+    // Show toast for password reset success (only once)
+    useEffect(() => {
+        if (status && status.includes('reset') && !toastShown.current) {
+            toastShown.current = true;
+            
+            // Dismiss any existing toasts first to prevent duplicates
+            toast.dismiss();
+            
+            // Show the success toast with a unique ID
+            toast.success('Password reset successfully! You can now log in with your new password.', {
+                id: 'password-reset-success',
+                duration: 5000,
+                position: 'top-center',
+            });
+        }
+    }, [status]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -21,8 +41,26 @@ export default function Login({ status, canResetPassword }) {
     };
 
     return (
-        <section className="relative flex flex-col-reverse lg:flex-row lg:h-screen lg:items-center">
+        <>
+            <Toaster 
+                position="top-center"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: '#363636',
+                        color: '#fff',
+                    },
+                    success: {
+                        duration: 5000,
+                        iconTheme: {
+                            primary: '#10B981',
+                            secondary: '#fff',
+                        },
+                    },
+                }}
+            />
             <Head title="Log in" />
+            <section className="relative flex flex-col-reverse lg:flex-row lg:h-screen lg:items-center">
 
             {/* LEFT SIDE (Form Area) */}
             <div className="w-full px-4 py-8 sm:px-6 sm:py-16 lg:w-1/2 lg:px-8 lg:py-24">
@@ -43,7 +81,20 @@ export default function Login({ status, canResetPassword }) {
                         </p>
                     </div>
 
-                    {/* SOCIAL SIGN-IN BUTTON (GOOGLE) */}
+                    {/* Google Login Unavailable Notice */}
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                            <strong>Notice:</strong> Google Sign-In is temporarily unavailable while we complete the verification process. 
+                            If you previously used Google to sign in, please click{' '}
+                            <a href={route('password.request')} className="underline font-medium hover:text-blue-900">
+                                "Forgot Password"
+                            </a>{' '}
+                            to reset your password and use the email login form below.
+                        </p>
+                    </div>
+
+                    {/* SOCIAL SIGN-IN BUTTON (GOOGLE) - TEMPORARILY DISABLED FOR GOOGLE VERIFICATION */}
+                    {/* 
                     <div className="flex flex-col sm:flex-row sm:space-x-2">
                         <a
                             href={route('auth.google')}
@@ -54,12 +105,12 @@ export default function Login({ status, canResetPassword }) {
                         </a>
                     </div>
 
-                    {/* SEPARATOR WITH HORIZONTAL LINES */}
                     <div className="flex items-center my-4">
                         <div className="flex-grow border-t border-gray-300"></div>
                         <span className="mx-2 text-gray-400 text-sm">OR CONTINUE WITH EMAIL</span>
                         <div className="flex-grow border-t border-gray-300"></div>
                     </div>
+                    */}
 
                     {/* LOGIN FORM */}
                     <form onSubmit={submit} className="space-y-4">
@@ -204,6 +255,7 @@ export default function Login({ status, canResetPassword }) {
                     className="absolute inset-0 h-full w-full object-cover"
                 />
             </div>
-        </section>
+            </section>
+        </>
     );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGoogleCalendar } from '@/Hooks/useGoogleCalendar';
-import { Calendar, Check, RefreshCw, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, Check, RefreshCw, ExternalLink, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { Switch } from '@/Components/ui/switch';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -51,37 +51,55 @@ export default function GoogleCalendarSettings({ className = '' }) {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Main Toggle Section */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4 flex-1">
-          <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
-            <Calendar className="w-5 h-5 text-blue-600" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-base font-medium text-gray-900">
-                Google Calendar Sync
-              </h3>
-              {isConnected && (
-                <Badge variant="success" className="text-xs">
-                  <Check className="w-3 h-3 mr-1" />
-                  Connected
-                </Badge>
-              )}
-            </div>
-            <p className="mt-1 text-sm text-gray-500">
-              Automatically sync your supervision meetings to Google Calendar
+      {/* Unavailable Notice */}
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="flex gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-medium text-yellow-900">
+              Temporarily Unavailable
+            </h4>
+            <p className="mt-1 text-sm text-yellow-700">
+              Google Calendar integration is currently unavailable while we complete the Google verification process. 
+              This feature will be restored soon. Thank you for your patience.
             </p>
           </div>
         </div>
-        
-        <Switch
-          checked={isConnected}
-          onCheckedChange={handleToggle}
-          disabled={isLoading}
-          className="flex-shrink-0 ml-4"
-        />
       </div>
+
+      {/* Disabled Content - Grayscale */}
+      <div className="filter grayscale opacity-60 pointer-events-none select-none">
+        {/* Main Toggle Section */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4 flex-1">
+            <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-medium text-gray-900">
+                  Google Calendar Sync
+                </h3>
+                {isConnected && (
+                  <Badge variant="success" className="text-xs">
+                    <Check className="w-3 h-3 mr-1" />
+                    Connected
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Automatically sync your supervision meetings to Google Calendar
+              </p>
+            </div>
+          </div>
+          
+          <Switch
+            checked={isConnected}
+            onCheckedChange={handleToggle}
+            disabled={true}
+            className="flex-shrink-0 ml-4"
+          />
+        </div>
 
       {/* Expandable Details */}
       {isConnected && (
@@ -129,7 +147,7 @@ export default function GoogleCalendarSettings({ className = '' }) {
                 variant="outline"
                 size="sm"
                 onClick={handleSync}
-                disabled={isSyncing}
+                disabled={true}
                 className="flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -143,6 +161,7 @@ export default function GoogleCalendarSettings({ className = '' }) {
                     disconnect();
                   }
                 }}
+                disabled={true}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 Disconnect
@@ -160,34 +179,37 @@ export default function GoogleCalendarSettings({ className = '' }) {
         </Collapsible>
       )}
 
-      {/* Connect Prompt */}
-      {!isConnected && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex gap-3">
-            <div className="flex-shrink-0">
-              <Calendar className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-medium text-blue-900">
-                Connect Google Calendar
-              </h4>
-              <p className="mt-1 text-sm text-blue-700">
-                Meetings will be automatically added to your calendar when scheduled. 
-                Sync your supervision meetings seamlessly across all your devices.
-              </p>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={connect}
-                className="mt-2 text-blue-600 hover:text-blue-700 p-0 h-auto font-medium flex items-center gap-1"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Connect Now
-              </Button>
+        {/* Connect Prompt */}
+        {!isConnected && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex gap-3">
+              <div className="flex-shrink-0">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-blue-900">
+                  Connect Google Calendar
+                </h4>
+                <p className="mt-1 text-sm text-blue-700">
+                  Meetings will be automatically added to your calendar when scheduled. 
+                  Sync your supervision meetings seamlessly across all your devices.
+                </p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={connect}
+                  disabled={true}
+                  className="mt-2 text-blue-600 hover:text-blue-700 p-0 h-auto font-medium flex items-center gap-1"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Connect Now
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      {/* End of Disabled Content */}
     </div>
   );
 }
