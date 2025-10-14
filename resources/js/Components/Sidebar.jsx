@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { LayoutGrid } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
+import BetaBadge from '@/Components/BetaBadge';
 
 const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreatePosts, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
@@ -125,9 +126,10 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                 return (
                     <>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('ai.matching.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                            <Link href={route('ai.matching.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                 <Bot className="text-gray-600 mb-2 w-5 h-5" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">AI Matching</span>
+                                <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
@@ -137,9 +139,10 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('postgraduate-recommendations.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                            <Link href={route('postgraduate-recommendations.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                 <Sparkles className="w-5 h-5 text-gray-600 mb-2" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">Postgraduate Recommendations</span>
+                                <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
@@ -150,24 +153,27 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                         </motion.div>
                         {(isPostgraduate || isUndergraduate) && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                     <School className="w-5 h-5 text-gray-600 mb-2" />
                                     <span className="text-sm font-medium text-gray-700 truncate w-full">My Supervisor</span>
+                                    <BetaBadge variant="sidebar" />
                                 </Link>
                             </motion.div>
                         )}
                         {auth.user?.academician && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('supervision.supervisor.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                                <Link href={route('supervision.supervisor.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                     <LayoutDashboard className="w-5 h-5 text-gray-600 mb-2" />
                                     <span className="text-sm font-medium text-gray-700 truncate w-full">Supervisor Dashboard</span>
+                                    <BetaBadge variant="sidebar" />
                                 </Link>
                             </motion.div>
                         )}
                         <motion.div variants={itemVariants}>
-                            <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                            <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                 <FolderKanban  className="w-5 h-5 text-gray-600 mb-2" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">NexLab</span>
+                                <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                     </>
@@ -188,9 +194,10 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('messaging.inbox')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
+                            <Link href={route('messaging.inbox')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                 <MessageSquare className="w-5 h-5 text-gray-600 mb-2" />
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">Messages</span>
+                                <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>

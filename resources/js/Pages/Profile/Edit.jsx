@@ -8,6 +8,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import SettingsCard from '@/Components/Profile/SettingsCard';
 import SettingsNavigation from '@/Components/Profile/SettingsNavigation';
 import useRoles from '@/Hooks/useRoles';
+import BetaBadge from '@/Components/BetaBadge';
 
 export default function Edit({ mustVerifyEmail, status }) {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -126,7 +127,12 @@ export default function Edit({ mustVerifyEmail, status }) {
                             {/* Calendar Integration Section */}
                             <SettingsCard
                                 id="calendar"
-                                title="Calendar Integration"
+                                title={
+                                    <div className="flex items-center gap-2">
+                                        Calendar Integration
+                                        <BetaBadge variant="inline" />
+                                    </div>
+                                }
                                 description="Connect your Google Calendar to automatically sync supervision meetings."
                             >
                                 <GoogleCalendarSettings />

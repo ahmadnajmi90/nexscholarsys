@@ -15,6 +15,7 @@ import TutorialModal from '../Components/Tutorial/TutorialModal';
 import SupervisionTutorialModal from '../Components/SupervisionTutorialModal';
 import StickyBanner from '../Components/ui/StickyBanner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Components/ui/tooltip';
+import BetaBadge from '../Components/BetaBadge';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -256,6 +257,16 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
     const feedbackFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdPX9CXPOAZLedNsqA9iyMs5ZkAOACol4_wBVN2LPdxbnsJeg/viewform';
 
+    // Beta feature titles that should display the BETA badge
+    const betaFeatureTitles = [
+        'AI Matching',
+        'Postgraduate Program Recommendations',
+        'My Supervisor',
+        'Supervisor Dashboard',
+        'NexLab',
+        'Messages'
+    ];
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             {/* Toast notifications */}
@@ -330,7 +341,10 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                                 {/* Header content with padding */}
                                 <div className="flex justify-between items-center pb-4">
                                     <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3">
-                                        <h1 className="text-xl sm:text-2xl font-semibold">{title}</h1>
+                                        <h1 className="text-xl sm:text-2xl font-semibold flex items-center gap-2">
+                                            {title}
+                                            {betaFeatureTitles.includes(title) && <BetaBadge variant="inline" />}
+                                        </h1>
                                         
                                         {/* Show tutorial button only on My Supervisor page */}
                                         {title === "My Supervisor" && (

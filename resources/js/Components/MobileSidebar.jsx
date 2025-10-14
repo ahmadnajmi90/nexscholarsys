@@ -8,6 +8,7 @@ import {
     MessageSquare, UserCheck, School, FolderKanban, LayoutDashboard
 } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
+import BetaBadge from '@/Components/BetaBadge';
 
 const MobileSidebar = ({ isOpen, toggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreatePosts, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
@@ -49,13 +50,13 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
         features: {
             title: 'Features',
             items: [
-                { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles },
-                { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap },
+                { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles, beta: true },
+                { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap, beta: true },
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
-                ...(isPostgraduate || isUndergraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School }] : []),
-                ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard }] : []),
-                { label: 'NexLab', href: route('project-hub.index'), icon: FolderKanban  },
-                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare },
+                ...(isPostgraduate || isUndergraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School, beta: true }] : []),
+                ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard, beta: true }] : []),
+                { label: 'NexLab', href: route('project-hub.index'), icon: FolderKanban, beta: true },
+                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare, beta: true },
             ]
         },
         networking: {
@@ -178,12 +179,15 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                                                         }`} />}
                                                         {item.label}
                                                     </span>
-                                                    {item.badge > 0 && (
-                                                        <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                                                            {item.badge}
-                                                        </span>
-                                    )}
-                                </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {item.badge > 0 && (
+                                                            <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                        {item.beta && <BetaBadge variant="inline" />}
+                                                    </div>
+                                                </div>
                                             );
 
                                             if (item.external) {
