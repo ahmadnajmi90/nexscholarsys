@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
-import { useForm } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
+import InlineEdit from './InlineEdit';
 import { Plus, X, MoreVertical, Trash2, GripHorizontal } from 'lucide-react';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 
 export default function BoardColumn({ 
     list, 
@@ -53,6 +55,27 @@ export default function BoardColumn({
     
     // Add state for column menu
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Handle list title renaming
+    const handleListRename = async (newName) => {
+        try {
+            await router.put(route('project-hub.lists.update', list.id), {
+                name: newName,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('List renamed successfully.');
+                },
+                onError: (errors) => {
+                    toast.error('Failed to rename list.');
+                    console.error('Error renaming list:', errors);
+                }
+            });
+        } catch (error) {
+            toast.error('An unexpected error occurred.');
+            console.error('Error renaming list:', error);
+        }
+    };
 
     // Create an array of task IDs for SortableContext
     const taskIds = tasks.map(task => `task-${task.id}`);
@@ -108,13 +131,23 @@ export default function BoardColumn({
                 )}
                 {...(isOverlay ? {} : listeners)}
             >
-                <div className="flex items-center">
-                    <GripHorizontal className="w-4 h-4 mr-2 text-gray-400" />
-                    <h2 className="font-semibold text-gray-800 text-base md:text-base">{list.name}</h2>
+                <div className="flex items-center flex-1 min-w-0 mr-2">
+                    <GripHorizontal className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <InlineEdit
+                            value={list.name}
+                            onSave={handleListRename}
+                            canEdit={list.can && list.can.update}
+                            className="font-semibold text-gray-800 text-base md:text-base line-clamp-2"
+                            inputClassName="text-base md:text-base font-semibold"
+                            placeholder="List name"
+                            showPencilOnHover={false}
+                        />
+                    </div>
                 </div>
                 {!isOverlay && (
-                    <div className="relative flex items-center">
-                        <div className="text-xs text-gray-500 mr-2">
+                    <div className="relative flex items-center flex-shrink-0">
+                        <div className="text-xs text-gray-500 mr-2 whitespace-nowrap">
                             {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
                         </div>
                         <button 

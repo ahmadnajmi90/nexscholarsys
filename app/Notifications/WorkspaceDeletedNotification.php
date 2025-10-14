@@ -43,8 +43,8 @@ class WorkspaceDeletedNotification extends Notification implements ShouldQueue
             ->greeting("Hello {$notifiable->name}!")
             ->line("The workspace '{$this->workspaceName}' you were a member of has been deleted by {$this->deletedByName}.")
             ->line("All boards, lists, and tasks within this workspace have also been removed.")
-            ->action('Go to ScholarLab', route('project-hub.index'))
-            ->line('Thank you for using ScholarLab!');
+            ->action('Go to NexLab', route('project-hub.index'))
+            ->line('Thank you for using NexLab!');
     }
 
     /**

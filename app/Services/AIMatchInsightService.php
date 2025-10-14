@@ -32,7 +32,7 @@ class AIMatchInsightService
                 return Cache::get($cacheKey);
             }
 
-            Log::info("AIMatchInsightService: Generating insight for student: {$student->id} and supervisor: {$supervisor->id}");
+            // Log::info("AIMatchInsightService: Generating insight for student: {$student->id} and supervisor: {$supervisor->id}");
 
             // Check if user is an academician and we have provided data
             $isAcademician = $student->academician !== null;
@@ -91,10 +91,10 @@ class AIMatchInsightService
                 'program_name' => $program->name,
                 'program_university' => $program->university->full_name ?? 'Unknown'
             ];
-            Log::info('Data sent for justification prompt:', $promptData);
+            // Log::info('Data sent for justification prompt:', $promptData);
 
             $insightResponse = $this->openaiCompletionService->generateMatchInsight($promptData);
-            Log::info('AIMatchInsightService: Raw insight response received: ' . (string) $insightResponse);
+            // Log::info('AIMatchInsightService: Raw insight response received: ' . (string) $insightResponse);
 
             if (empty($insightResponse)) {
                 Log::warning('AIMatchInsightService: OpenAI service returned an empty or null response.');

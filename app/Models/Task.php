@@ -27,6 +27,8 @@ class Task extends Model
         'order',
         'priority',
         'completed_at',
+        'external_event_id',
+        'external_provider',
     ];
 
     /**
@@ -85,5 +87,38 @@ class Task extends Model
     public function paperWritingTask(): HasOne
     {
         return $this->hasOne(PaperWritingTask::class);
+    }
+
+    /**
+     * Check if this task has an external calendar event
+     */
+    public function hasExternalEvent(): bool
+    {
+        return !is_null($this->external_event_id) && !is_null($this->external_provider);
+    }
+
+    /**
+     * Check if this task has a Google Calendar event
+     */
+    public function hasGoogleCalendarEvent(): bool
+    {
+        return $this->external_provider === 'google' && !is_null($this->external_event_id);
+    }
+
+    /**
+     * Get the board this task belongs to through the list
+     */
+    public function getBoardAttribute()
+    {
+        return $this->list?->board;
+    }
+
+    /**
+     * Get the workspace this task belongs to (if the board belongs to a workspace)
+     */
+    public function getWorkspaceAttribute()
+    {
+        $board = $this->getBoardAttribute();
+        return $board && $board->boardable_type === 'App\\Models\\Workspace' ? $board->boardable : null;
     }
 } 

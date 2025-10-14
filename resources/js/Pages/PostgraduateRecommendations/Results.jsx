@@ -6,7 +6,7 @@ import { CheckCircle2, Search, Filter, GraduationCap, ArrowLeft } from 'lucide-r
 import SupervisorCard from '@/Components/Postgraduate/SupervisorCard';
 import toast from 'react-hot-toast';
 
-export default function Results({ recommendations = [], selectedProgram = null, supervisors = [] }) {
+export default function Results({ recommendations = [], selectedProgram = null, supervisors = [], requests = [], activeRelationship = null }) {
   const [query, setQuery] = useState('');
   const [supervisorQuery, setSupervisorQuery] = useState('');
   const [sortBy, setSortBy] = useState('match_score_desc');
@@ -18,6 +18,11 @@ export default function Results({ recommendations = [], selectedProgram = null, 
   };
   const handleBackToPrograms = () => {
     router.get(route('postgraduate-recommendations.results'));
+  };
+
+  const handleRequestSubmitted = () => {
+    // Reload page to refresh requests list
+    router.reload();
   };
 
   const filtered = useMemo(() => {
@@ -62,7 +67,7 @@ export default function Results({ recommendations = [], selectedProgram = null, 
 
   return (
     <MainLayout title={pageTitle}>
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-6">
         <Head title={pageTitle} />
         {!selectedProgram ? (
           <>
@@ -156,7 +161,13 @@ export default function Results({ recommendations = [], selectedProgram = null, 
             </div>
             <div className="grid md:grid-cols-2 gap-5">
               {filteredSupervisors.map((s) => (
-                <SupervisorCard key={s.id} supervisor={s} />
+                <SupervisorCard 
+                  key={s.id} 
+                  supervisor={s}
+                  requests={requests}
+                  activeRelationship={activeRelationship}
+                  onRequestSubmitted={handleRequestSubmitted}
+                />
               ))}
               {supervisors.length === 0 && (
                 <div className="text-center text-gray-600 py-10 col-span-2">No supervisors found for this program.</div>

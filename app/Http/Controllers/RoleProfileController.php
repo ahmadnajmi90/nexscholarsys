@@ -487,6 +487,35 @@ class RoleProfileController extends Controller
                 unset($validatedData['skills']);
             }
 
+            // *** Handle postgraduate program IDs for academicians ***
+            $programIds = [];
+            if (array_key_exists('postgraduate_program_ids', $validatedData)) {
+                if (is_string($validatedData['postgraduate_program_ids'])) {
+                    $decoded = json_decode($validatedData['postgraduate_program_ids'], true);
+                    $programIds = is_array($decoded) ? array_map('intval', $decoded) : [];
+                } elseif (is_array($validatedData['postgraduate_program_ids'])) {
+                    $programIds = array_map('intval', $validatedData['postgraduate_program_ids']);
+                }
+                
+                // Validate that all program IDs exist in the postgraduate_programs table
+                if (!empty($programIds)) {
+                    $validProgramIds = \App\Models\PostgraduateProgram::whereIn('id', $programIds)->pluck('id')->toArray();
+                    $programIds = array_intersect($programIds, $validProgramIds);
+                    
+                    if (count($programIds) !== count($validatedData['postgraduate_program_ids'])) {
+                        logger()->warning('Some program IDs were invalid and filtered out', [
+                            'original' => $validatedData['postgraduate_program_ids'],
+                            'valid' => $programIds
+                        ]);
+                    }
+                }
+                
+                logger()->info('Processed postgraduate programs:', ['program_ids' => $programIds]);
+                
+                // Remove postgraduate_program_ids from validatedData as we'll handle it separately
+                unset($validatedData['postgraduate_program_ids']);
+            }
+
             // Handle supervisorAvailability for postgraduates
             if ($isPostgraduate && array_key_exists('supervisorAvailability', $validatedData)) {
                 // Use filter_var to properly convert string to boolean
@@ -570,9 +599,18 @@ class RoleProfileController extends Controller
                     $user->skills()->detach();
                 }
 
-                // Sync associated Postgraduate programs if provided
-                if ($request->has('postgraduate_program_ids') && is_array($request->input('postgraduate_program_ids'))) {
-                    $academician->postgraduatePrograms()->sync($request->input('postgraduate_program_ids'));
+                // Sync associated Postgraduate programs
+                if (!empty($programIds)) {
+                    $academician->postgraduatePrograms()->sync($programIds);
+                    logger()->info('Synced postgraduate programs for academician', [
+                        'academician_id' => $academician->academician_id,
+                        'program_ids' => $programIds
+                    ]);
+                } else {
+                    $academician->postgraduatePrograms()->detach();
+                    logger()->info('Detached all postgraduate programs for academician', [
+                        'academician_id' => $academician->academician_id
+                    ]);
                 }
             }
 

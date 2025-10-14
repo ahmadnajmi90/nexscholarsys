@@ -135,7 +135,7 @@ class Academician extends Model
      *
      * @var array
      */
-    protected $appends = ['profile_status'];
+    protected $appends = ['profile_status', 'scholar_profile', 'total_publications'];
 
     /**
      * Get the views for the academician.
@@ -207,6 +207,24 @@ class Academician extends Model
     public function scholarProfile()
     {
         return $this->hasOne(ScholarProfile::class, 'academician_id', 'academician_id');
+    }
+
+    public function getScholarProfileAttribute()
+    {
+        if ($this->relationLoaded('scholarProfile')) {
+            return $this->getRelation('scholarProfile');
+        }
+
+        return $this->scholarProfile()->first();
+    }
+
+    public function getTotalPublicationsAttribute(): int
+    {
+        if ($this->relationLoaded('publications')) {
+            return $this->getRelation('publications')->count();
+        }
+
+        return $this->publications()->count();
     }
     
     /**

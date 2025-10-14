@@ -16,11 +16,15 @@ class RebuildQdrantCollections extends Command
         $this->newLine();
 
         // Check if force flag is set
-        if (!$this->option('force')) {
+        $forceMode = $this->option('force');
+        
+        if (!$forceMode) {
             if (!$this->confirm('This will DELETE ALL existing Qdrant data and rebuild from scratch. Are you sure?')) {
                 $this->info('Operation cancelled.');
                 return 0;
             }
+        } else {
+            $this->warn('⚠️  Force mode enabled - proceeding without confirmation');
         }
 
         $collections = [
@@ -46,14 +50,23 @@ class RebuildQdrantCollections extends Command
         $this->newLine();
         $this->info('📊 Step 3: Generating embeddings...');
         
+        // Prepare command options with --no-interaction flag when force is enabled
+        $commandOptions = [
+            '--force' => true,
+        ];
+        
+        if ($forceMode) {
+            $commandOptions['--no-interaction'] = true;
+        }
+        
         $this->line('Generating academician embeddings...');
-        $this->call('embeddings:generate-academician', ['--force' => true]);
+        $this->call('embeddings:generate-academician', $commandOptions);
         
         $this->line('Generating student embeddings...');
-        $this->call('embeddings:generate-student', ['--force' => true]);
+        $this->call('embeddings:generate-student', $commandOptions);
         
         $this->line('Generating program embeddings...');
-        $this->call('embeddings:generate-postgraduate-programs');
+        $this->call('embeddings:generate-postgraduate-programs', $commandOptions);
 
         $this->newLine();
         $this->info('✅ Qdrant collections rebuild complete!');

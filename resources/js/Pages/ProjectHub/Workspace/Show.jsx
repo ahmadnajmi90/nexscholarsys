@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useForm, router, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
 import ManageBoardMembersModal from '@/Components/ProjectHub/ManageBoardMembersModal';
+import InlineEdit from '@/Components/ProjectHub/InlineEdit';
 import { ChevronLeft, Plus, LayoutGrid, Trash2, UserPlus, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -78,6 +79,57 @@ export default function Show({ workspace, connections }) {
     // Check if the current user is the workspace owner
     const isWorkspaceOwner = auth.user.id === workspace.data.owner_id;
 
+    // Set up real-time listening for workspace updates
+    useEffect(() => {
+        if (!workspace.data.id) return;
+
+        console.log(`Subscribing to workspace channel: workspaces.${workspace.data.id}`);
+
+        // Subscribe to the private channel for this workspace
+        const channel = window.Echo.private(`workspaces.${workspace.data.id}`);
+
+        // Listen for workspace.updated events
+        channel.listen('.workspace.updated', (event) => {
+            console.log('Received workspace.updated event:', event);
+
+            // Update the workspace name in the local state if it's different
+            if (event.workspace.name !== workspace.data.name) {
+                // This will trigger a re-render with the new name
+                workspace.data.name = event.workspace.name;
+                setWorkspace({...workspace}); // Force re-render
+            }
+        });
+
+        // Clean up the listener when the component unmounts or the workspace changes
+        return () => {
+            console.log(`Unsubscribing from workspace channel: workspaces.${workspace.data.id}`);
+            channel.stopListening('.workspace.updated');
+            window.Echo.leave(`workspaces.${workspace.data.id}`);
+        };
+    }, [workspace.data.id]);
+
+    // Handle workspace title renaming
+    const handleWorkspaceRename = async (newName) => {
+        try {
+            await router.put(route('project-hub.workspaces.update', workspace.data.id), {
+                name: newName,
+                description: workspace.data.description // Keep existing description
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Workspace renamed successfully.');
+                },
+                onError: (errors) => {
+                    console.error('Error renaming workspace:', errors);
+                    toast.error('Failed to rename workspace. Please try again.');
+                }
+            });
+        } catch (error) {
+            console.error('Error renaming workspace:', error);
+            toast.error('Failed to rename workspace. Please try again.');
+        }
+    };
+
     return (
         <div className="w-full md:max-w-8xl md:mx-auto px-4 md:px-4 lg:px-2 py-4 md:py-6 lg:mt-2 mt-6">
             {/* Workspace header */}
@@ -87,7 +139,13 @@ export default function Show({ workspace, connections }) {
                     <span className="text-sm">Back to workspaces</span>
                 </Link>
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-gray-900 truncate max-w-3xl">{workspace.data.name}</h1>
+                    <InlineEdit
+                        value={workspace.data.name}
+                        onSave={handleWorkspaceRename}
+                        canEdit={isWorkspaceOwner}
+                        className="text-2xl font-bold text-gray-900 truncate max-w-3xl"
+                        placeholder="Workspace name"
+                    />
                     
                     {/* Manage Collaborators button - only visible to workspace owner */}
                     {isWorkspaceOwner && (

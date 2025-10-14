@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'qdrant.rollout' => \App\Http\Middleware\QdrantRolloutMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'postgraduate' => \App\Http\Middleware\PostgraduateMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

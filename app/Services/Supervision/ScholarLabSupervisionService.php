@@ -52,6 +52,7 @@ class ScholarLabSupervisionService
                 'title' => __('Complete onboarding checklist'),
                 'description' => __('Review program requirements, complete paperwork, and align expectations.'),
                 'creator_id' => $academician->user->id,
+                'order' => 1,
             ]);
 
             $task->assignees()->sync([

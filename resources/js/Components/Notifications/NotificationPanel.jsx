@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaBell, FaCheck, FaSpinner, FaUserPlus, FaCheckCircle } from 'react-icons/fa';
+import { 
+  FaBell, FaCheck, FaSpinner, FaUserPlus, FaCheckCircle, 
+  FaEnvelopeOpenText, FaTimesCircle, FaUserGraduate, FaChalkboardTeacher,
+  FaCalendarAlt, FaClock, FaCalendarTimes, FaCalendarCheck,
+  FaExclamationTriangle, FaUnlink, FaBan, FaInfoCircle, FaUsers
+} from 'react-icons/fa';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
+import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
+import { Button } from '@/Components/ui/button';
 
 const NotificationPanel = ({ isOpen, onClose }) => {
   const [notifications, setNotifications] = useState({ unread: [], read: [], unread_count: 0 });
@@ -121,6 +128,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
     }
 
     switch (data.type) {
+      // ========== CONNECTION NOTIFICATIONS ==========
       case 'connection_request':
         return (
           <div className="py-2">
@@ -130,7 +138,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <p className="text-sm">{data.message}</p>
-                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('en-GB')}</p>
               </div>
             </div>
             {!notification.read_at && (
@@ -161,12 +169,599 @@ const NotificationPanel = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <p className="text-sm">{data.message}</p>
-                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('en-GB')}</p>
               </div>
             </div>
           </div>
         );
 
+      // ========== SUPERVISION REQUEST NOTIFICATIONS ==========
+      case 'request_submitted':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-indigo-100 rounded-full p-2 mr-3">
+                <FaEnvelopeOpenText className="text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">New Supervision Request</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  <span className="font-semibold">{data.student_name || 'Student'}</span> submitted a request
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  <span className="font-medium">Topic:</span> {data.proposal_title || 'No title'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+                {!notification.read_at && (
+                  <button
+                    onClick={() => router.visit(route('supervision.supervisor.index'))}
+                    className="mt-2 px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700"
+                  >
+                    Review Request
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'request_accepted':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                <FaCheckCircle className="text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Request Accepted!</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Your supervision relationship is now active
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+                <button
+                  onClick={() => router.visit(route('supervision.student.index'))}
+                  className="mt-2 px-3 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700"
+                >
+                  View Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'request_rejected':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaTimesCircle className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Request Declined</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.reason ? (
+                    <>
+                      <span className="font-semibold">Reason:</span> {getRejectionReasonLabel(data.reason)}
+                    </>
+                  ) : (
+                    'Your request was not accepted'
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+                <button
+                  onClick={() => router.visit(route('supervision.student.index'))}
+                  className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'offer_received':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-purple-100 rounded-full p-2 mr-3">
+                <FaUserGraduate className="text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">🎉 Supervision Offer Received!</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.supervisor_name} sent you an offer
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+                {!notification.read_at && (
+                  <button
+                    onClick={() => router.visit(route('supervision.student.index'))}
+                    className="mt-2 px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
+                  >
+                    Review Offer
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'student_accepted_offer':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                <FaCheckCircle className="text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Student Accepted Your Offer!</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.student_name} accepted - supervision is active
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+                <button
+                  onClick={() => router.visit(route('supervision.supervisor.index'))}
+                  className="mt-2 px-3 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700"
+                >
+                  View My Students
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'student_rejected_offer':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-amber-100 rounded-full p-2 mr-3">
+                <FaInfoCircle className="text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Offer Declined</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.student_name} declined your offer for "{data.proposal_title}"
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'request_cancelled':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-gray-100 rounded-full p-2 mr-3">
+                <FaBan className="text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Request Cancelled</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.student_name} cancelled their request for "{data.proposal_title}"
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      // ========== UNBIND NOTIFICATIONS ==========
+      case 'unbind_request_initiated':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className={`${data.is_force ? 'bg-red-100' : 'bg-orange-100'} rounded-full p-2 mr-3`}>
+                <FaUnlink className={`${data.is_force ? 'text-red-600' : 'text-orange-600'}`} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {data.is_force ? '⚠️ Relationship Terminated' : 'Termination Request'}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.is_force 
+                    ? `${data.initiator_name} has terminated the relationship (force unbind)`
+                    : `${data.initiator_name} requested to terminate (Attempt ${data.attempt_count}/3)`
+                  }
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+                {!data.is_force && !notification.read_at && (
+                  <button
+                    onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'supervisor' ? 'student' : 'supervisor') + '.index'))}
+                    className="mt-2 px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700"
+                  >
+                    Review Request
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'unbind_request_approved':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaUnlink className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Relationship Terminated</p>
+                <p className="text-xs text-gray-600 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'unbind_request_rejected':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-blue-100 rounded-full p-2 mr-3">
+                <FaInfoCircle className="text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Termination Request Declined</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  {data.message}
+                </p>
+                {data.cooldown_until && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Cooldown until: {new Date(data.cooldown_until).toLocaleDateString('en-GB')}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      // ========== MEETING NOTIFICATIONS ==========
+      case 'meeting_scheduled':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-blue-100 rounded-full p-2 mr-3">
+                <FaCalendarAlt className="text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Meeting Scheduled</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  "{data.title}" with {data.scheduler_name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
+                </p>
+                {data.location_link && (
+                  <a
+                    href={data.location_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                  >
+                    Join Meeting
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'meeting_reminder':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-amber-100 rounded-full p-2 mr-3 animate-pulse">
+                <FaClock className="text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  ⏰ Meeting Reminder ({data.reminder_type === '1h' ? '1 Hour' : '24 Hours'})
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  "{data.title}" with {data.other_party_name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
+                </p>
+                {data.location_link && (
+                  <a
+                    href={data.location_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block px-3 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700"
+                  >
+                    Join Meeting
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'meeting_updated':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-purple-100 rounded-full p-2 mr-3">
+                <FaCalendarCheck className="text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Meeting Updated</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  "{data.title}" updated by {data.updater_name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
+                </p>
+                {data.location_link && (
+                  <a
+                    href={data.location_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
+                  >
+                    Join Meeting
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'meeting_cancelled':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaCalendarTimes className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Meeting Cancelled</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  "{data.title}" cancelled by {data.canceller_name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Was scheduled for: {new Date(data.was_scheduled_for).toLocaleString('en-GB')}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      // ========== CO-SUPERVISOR NOTIFICATIONS ==========
+      case 'cosupervisor_invitation_sent':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-indigo-100 rounded-full p-2 mr-3">
+                <FaUserPlus className="text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Invitation</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                {data.invitation_message && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
+                    <p className="text-xs text-blue-900 italic">"{data.invitation_message}"</p>
+                  </div>
+                )}
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.visit(route('supervision.supervisor.index'))}
+                    className="h-7 text-xs"
+                  >
+                    View Invitation
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_accepted':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-green-100 rounded-full p-2 mr-3">
+                <FaCheckCircle className="text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Accepted</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Co-supervisor: {data.cosupervisor_name}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_rejected':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaTimesCircle className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Declined</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                {data.rejection_reason && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
+                    <p className="text-xs text-red-900">Reason: {data.rejection_reason}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_invitation_initiated':
+        return (
+          <div className="py-2">
+            <div className="flex items-start gap-3">
+              <div className="bg-indigo-100 rounded-full p-2 flex-shrink-0">
+                <FaUserPlus className="text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-semibold text-sm text-gray-900">Co-Supervisor Invitation</p>
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded-full">
+                    Pending
+                  </span>
+                </div>
+                
+                {/* Main Message */}
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  <span className="font-semibold">{data.initiated_by === 'student' ? data.student_name : data.main_supervisor_name}</span>
+                  {' wants to add '}
+                  <span className="font-semibold">{data.cosupervisor_name}</span>
+                  {' as co-supervisor'}
+                  {data.initiated_by === 'main_supervisor' && ` for ${data.student_name}`}
+                </p>
+
+                {/* Personal Message Preview */}
+                {data.invitation_message && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
+                    <p className="text-[10px] font-medium text-blue-900 mb-0.5">Personal Message:</p>
+                    <p className="text-xs text-blue-800 italic line-clamp-2">
+                      "{data.invitation_message}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Next Steps Info */}
+                <div className="mt-2 bg-gray-50 border border-gray-200 rounded-md p-2">
+                  <p className="text-[10px] font-medium text-gray-700 mb-1">Next Steps:</p>
+                  <ul className="text-[10px] text-gray-600 space-y-0.5 list-disc list-inside">
+                    <li>Co-supervisor will be notified to review</li>
+                    <li>You'll approve after they accept</li>
+                  </ul>
+                </div>
+
+                {/* Timestamp & Action */}
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-[10px] text-gray-500">
+                    {new Date(notification.created_at).toLocaleString('en-GB')}
+                  </p>
+                  {!notification.read_at && (
+                    <Button
+                      size="sm"
+                      onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'student' ? 'supervisor' : 'student') + '.index'))}
+                      className="h-6 text-[10px] px-2"
+                      variant="outline"
+                    >
+                      View Dashboard
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_approval_needed':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-yellow-100 rounded-full p-2 mr-3">
+                <FaExclamationTriangle className="text-yellow-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Approval Required</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Co-supervisor: {data.cosupervisor_name}</p>
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'student' ? 'supervisor' : 'student') + '.index'))}
+                    className="h-7 text-xs"
+                  >
+                    Review & Approve
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_approved':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-green-100 rounded-full p-2 mr-3">
+                <FaCheckCircle className="text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Approved</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Approved by: {data.approver}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_rejected_by_approver':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-red-100 rounded-full p-2 mr-3">
+                <FaTimesCircle className="text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Co-Supervisor Not Approved</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                {data.rejection_reason && (
+                  <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
+                    <p className="text-xs text-red-900">Reason: {data.rejection_reason}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_added':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-emerald-100 rounded-full p-2 mr-3">
+                <FaUsers className="text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">🎉 Co-Supervisor Added!</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Student: {data.student_name}</p>
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.visit(route('supervision.' + (data.cosupervisor_id ? 'supervisor' : 'student') + '.index'))}
+                    className="h-7 text-xs"
+                  >
+                    View Supervision
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'cosupervisor_invitation_cancelled':
+        return (
+          <div className="py-2">
+            <div className="flex items-start">
+              <div className="bg-gray-100 rounded-full p-2 mr-3">
+                <FaBan className="text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Invitation Cancelled</p>
+                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
+                <p className="text-xs text-gray-500 mt-1">Cancelled by: {data.initiator}</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      // ========== DEFAULT/FALLBACK ==========
       default:
         return (
           <div className="py-2">

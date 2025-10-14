@@ -5,9 +5,10 @@ import {
     Home, Sparkles, Users, FolderOpen, Settings, ChevronLeft,
     GraduationCap, LayoutGrid, Shield, Calendar,
     FileText, ClipboardList, LogOut, Bookmark, Building2, Database, User2, BookUser, Library, Building, DollarSign,
-    MessageSquare
+    MessageSquare, UserCheck, School, FolderKanban, LayoutDashboard, Map
 } from 'lucide-react';
 import useRoles from '@/Hooks/useRoles';
+import BetaBadge from '@/Components/BetaBadge';
 
 const MobileSidebar = ({ isOpen, toggleSidebar }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician, canPostEvents, canPostProjects, canPostGrants, canCreatePosts, canCreateFacultyAdmin, canAssignAbilities } = useRoles();
@@ -49,17 +50,20 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
         features: {
             title: 'Features',
             items: [
-                { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles },
-                { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap },
+                { label: 'AI Matching', href: route('ai.matching.index'), icon: Sparkles, beta: true },
+                ...(isAdmin ? [{ label: 'Network Map', href: route('network.map'), icon: Map }] : []),
+                { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap, beta: true },
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
-                { label: 'Scholar Lab', href: route('project-hub.index'), icon: LayoutGrid },
-                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare },
+                ...(isPostgraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School, beta: true }] : []),
+                ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard, beta: true }] : []),
+                { label: 'NexLab', href: route('project-hub.index'), icon: FolderKanban, beta: true },
             ]
         },
         networking: {
             title: 'Networking',
             items: [
                 { label: 'My Network', href: route('connections.index'), icon: Users, badge: pendingRequestCount },
+                { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare, beta: true },
                 { label: 'Postgraduate', href: '/postgraduates', icon: GraduationCap },
                 { label: 'Undergraduate', href: '/undergraduates', icon: BookUser },
                 { label: 'Academician', href: '/academicians', icon: Library },
@@ -176,12 +180,15 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                                                         }`} />}
                                                         {item.label}
                                                     </span>
-                                                    {item.badge > 0 && (
-                                                        <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                                                            {item.badge}
-                                                        </span>
-                                    )}
-                                </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {item.badge > 0 && (
+                                                            <span className="bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                        {item.beta && <BetaBadge variant="inline" />}
+                                                    </div>
+                                                </div>
                                             );
 
                                             if (item.external) {

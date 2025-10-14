@@ -24,8 +24,11 @@ class WorkspacePolicy
      */
     public function update(User $user, Workspace $workspace): bool
     {
-        // Only the owner can update the workspace
-        return $user->id === $workspace->owner_id;
+        // Get the member record for the user in this workspace
+        $member = $workspace->members()->where('user_id', $user->id)->first();
+
+        // Allow update if the user is the owner OR has an 'admin' role
+        return $user->id === $workspace->owner_id || ($member && $member->pivot->role === 'admin');
     }
 
     /**

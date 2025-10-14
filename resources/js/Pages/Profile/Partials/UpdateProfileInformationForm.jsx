@@ -25,19 +25,8 @@ export default function UpdateProfileInformation({
     };
 
     return (
-        <div className="w-full bg-white">
-            <section className={className}>
-                <header>
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Account Information
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                        Update your account's information and email address.
-                    </p>
-                </header>
-
-                <form onSubmit={submit} className="mt-6 space-y-6">
+        <section className={className}>
+            <form onSubmit={submit} className="space-y-6">
                     <div>
                         <InputLabel htmlFor="name" value="Name" />
 
@@ -107,8 +96,7 @@ export default function UpdateProfileInformation({
                         </Transition>
                     </div>
                 </form>
-            </section>
-        </div>
+        </section>
     );
 
 }

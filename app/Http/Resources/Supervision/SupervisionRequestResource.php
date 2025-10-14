@@ -3,9 +3,56 @@
 namespace App\Http\Resources\Supervision;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\FieldOfResearch;
+use App\Models\ResearchArea;
+use App\Models\NicheDomain;
 
 class SupervisionRequestResource extends JsonResource
 {
+    protected function resolveResearchExpertiseNames(array $expertiseIds): array
+    {
+        $resolved = [];
+        
+        foreach ($expertiseIds as $id) {
+            // Parse the ID format: "field_id-area_id-domain_id"
+            $parts = explode('-', $id);
+            if (count($parts) === 3) {
+                [$fieldId, $areaId, $domainId] = $parts;
+                
+                $field = FieldOfResearch::find($fieldId);
+                $area = ResearchArea::find($areaId);
+                $domain = NicheDomain::find($domainId);
+                
+                if ($field && $area && $domain) {
+                    $resolved[] = "{$field->name} - {$area->name} - {$domain->name}";
+                }
+            }
+        }
+        
+        return $resolved;
+    }
+
+    protected function resolveDomainNames(array $expertiseIds): array
+    {
+        $domains = [];
+        
+        foreach ($expertiseIds as $id) {
+            // Parse the ID format: "field_id-area_id-domain_id"
+            $parts = explode('-', $id);
+            if (count($parts) === 3) {
+                $domainId = $parts[2];
+                
+                $domain = NicheDomain::find($domainId);
+                
+                if ($domain) {
+                    $domains[] = $domain->name;
+                }
+            }
+        }
+        
+        return $domains;
+    }
+
     public function toArray($request)
     {
         return [
@@ -19,6 +66,12 @@ class SupervisionRequestResource extends JsonResource
             'submitted_at' => $this->submitted_at,
             'decision_at' => $this->decision_at,
             'cancel_reason' => $this->cancel_reason,
+            'rejection_feedback' => $this->rejection_feedback,
+            'recommended_supervisors' => $this->recommended_supervisors,
+            'suggested_keywords' => $this->suggested_keywords,
+            'rejection_acknowledged_at' => $this->rejection_acknowledged_at,
+            'offer_acknowledged_at' => $this->offer_acknowledged_at,
+            'student_response_acknowledged_at' => $this->student_response_acknowledged_at,
             'conversation_id' => $this->conversation_id,
             'academician' => $this->whenLoaded('academician', function () {
                 $facultyRelation = $this->academician->relationLoaded('faculty') ? $this->academician->getRelation('faculty') : null;
@@ -27,12 +80,23 @@ class SupervisionRequestResource extends JsonResource
                     'id' => $this->academician->id,
                     'academician_id' => $this->academician->academician_id,
                     'full_name' => $this->academician->full_name,
+                    'email' => $this->academician->user ? $this->academician->user->email : null,
+                    'phone_number' => $this->academician->phone_number,
                     'profile_picture' => $this->academician->profile_picture,
                     'current_position' => $this->academician->current_position,
                     'department' => $this->academician->department,
+                    'bio' => $this->academician->bio,
+                    'research_areas' => is_array($this->academician->research_expertise) 
+                        ? $this->resolveResearchExpertiseNames(array_slice($this->academician->research_expertise, 0, 5))
+                        : [],
+                    'research_domains' => is_array($this->academician->research_expertise) 
+                        ? $this->resolveDomainNames(array_slice($this->academician->research_expertise, 0, 5))
+                        : [],
+                    'url' => $this->academician->url,
                     'university' => $this->academician->relationLoaded('universityDetails') && $this->academician->universityDetails ? [
                         'id' => $this->academician->universityDetails->id,
                         'name' => $this->academician->universityDetails->full_name,
+                        'full_name' => $this->academician->universityDetails->full_name,
                     ] : null,
                     'faculty' => $facultyRelation && is_object($facultyRelation) ? [
                         'id' => $facultyRelation->id,
@@ -100,28 +164,19 @@ class SupervisionRequestResource extends JsonResource
                 ];
             }),
             'relationship' => $this->getRelationshipData(),
-            'meetings' => function () {
-                // Provide meetings at top level for easier access in frontend
-                $relationship = \App\Models\SupervisionRelationship::where('student_id', $this->student_id)
-                    ->where('academician_id', $this->academician_id)
-                    ->with('meetings')
-                    ->first();
-                
-                if (!$relationship) {
-                    return [];
-                }
-                
-                return $relationship->meetings->map(function ($meeting) {
+            'meetings' => $this->whenLoaded('meetings', function () {
+                // Return meetings directly linked to this request
+                return $this->meetings->map(function ($meeting) {
                     return [
                         'id' => $meeting->id,
                         'title' => $meeting->title,
                         'scheduled_for' => $meeting->scheduled_for,
                         'location_link' => $meeting->location_link,
                         'agenda' => $meeting->agenda,
-                        'type' => $meeting->type ?? 'online',
+                        'type' => $meeting->external_provider ?? 'Online',
                     ];
                 });
-            },
+            }),
         ];
     }
 

@@ -12,7 +12,7 @@ const ChoosingYourView = () => {
                     Different stages of research require different perspectives. Sometimes you need to see the big picture of your entire PhD timeline, and other times you just need a simple to-do list for the day. A single, rigid view can't effectively manage this dynamic process.
                 </p>
                 <p className="text-gray-700 mt-4">
-                    That's why the Nexscholar ScholarLab is built with five distinct, powerful views. Think of it as a toolkit that gives you the right lens for any task at hand.
+                    That's why the Nexscholar NexLab is built with five distinct, powerful views. Think of it as a toolkit that gives you the right lens for any task at hand.
                 </p>
                 <p className="text-gray-700 mt-2">
                     This guide, crafted by our team here in Johor Bahru, will walk you through each of the five views, explaining what they're best for and how you can use them to make your research management more efficient and intuitive.
@@ -220,7 +220,7 @@ const ChoosingYourView = () => {
                 <section className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-4 sm:p-6 lg:p-8 text-white text-center">
                     <h2 className="text-xl sm:text-2xl font-semibold mb-4 leading-tight">Master Your Research Management</h2>
                     <p className="text-blue-100 mb-6 leading-relaxed">
-                        The true power of the ScholarLab lies in its flexibility. Don't stick to just one view. Open your project board today and try switching between the different views to gain a new, powerful perspective on your research.
+                        The true power of NexLab lies in its flexibility. Don't stick to just one view. Open your project board today and try switching between the different views to gain a new, powerful perspective on your research.
                     </p>
                 </section>
             </div>

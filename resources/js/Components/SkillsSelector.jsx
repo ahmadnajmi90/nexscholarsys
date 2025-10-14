@@ -12,7 +12,7 @@ export default function SkillsSelector({
   required = false, 
   label = "Skills",
   placeholder = "Select skills..." 
-}) {
+} = {}) {
   const [domains, setDomains] = useState([]);
   const [subdomains, setSubdomains] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -1076,13 +1076,4 @@ SkillsSelector.propTypes = {
   required: PropTypes.bool,
   label: PropTypes.string,
   placeholder: PropTypes.string
-};
-
-// Default props
-SkillsSelector.defaultProps = {
-  value: [],
-  error: null,
-  required: false,
-  label: 'Skills',
-  placeholder: 'Select skills...'
 };

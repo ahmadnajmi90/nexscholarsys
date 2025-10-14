@@ -104,7 +104,7 @@ class RoleChangedNotification extends Notification implements ShouldQueue
                     return $message->line('As a member, you can create and edit content on boards you have access to.');
                 })
                 ->action("Go to {$parentName}", $parentUrl)
-                ->line('Thank you for using ScholarLab!');
+                ->line('Thank you for using NexLab!');
         } catch (\Exception $e) {
             Log::error('RoleChangedNotification: Exception in toMail', [
                 'exception' => $e->getMessage(),

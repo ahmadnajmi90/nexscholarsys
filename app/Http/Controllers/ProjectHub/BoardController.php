@@ -8,6 +8,7 @@ use App\Models\Board;
 use App\Models\Workspace;
 use App\Models\Project;
 use App\Notifications\BoardDeletedNotification;
+use App\Events\BoardUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -204,7 +205,19 @@ class BoardController extends Controller
         $board->update([
             'name' => $validated['name'],
         ]);
-        
+
+        // Broadcast the update event for real-time updates
+        broadcast(new BoardUpdated($board, $request->user(), 'renamed'))->toOthers();
+
+        // Return JSON response for AJAX calls (Inertia)
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Board updated successfully.',
+                'board' => $board
+            ]);
+        }
+
         return Redirect::back()->with('success', 'Board updated successfully.');
     }
     

@@ -42,6 +42,10 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'calendar_redirect' => env('APP_URL') . '/auth/google/calendar/callback',
+        'scopes' => [
+            'https://www.googleapis.com/auth/calendar.events'
+        ],
         
         'custom_search_api_key' => env('GOOGLE_API_KEY'),
         'custom_search_cx' => env('GOOGLE_CX'),

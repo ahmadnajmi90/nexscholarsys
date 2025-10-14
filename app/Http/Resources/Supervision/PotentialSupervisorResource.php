@@ -68,6 +68,7 @@ class PotentialSupervisorResource extends JsonResource
                 'current_position' => $this->academician?->current_position,
                 'url' => $this->academician?->url,
                 'availability_as_supervisor' => $this->academician?->availability_as_supervisor,
+                'verified' => (bool) $this->academician?->verified,
                 'publications_count' => $this->academician?->publications()->count() ?? 0,
                 'projects_count' => $this->academician?->postProjects()->count() ?? 0,
                 'research_areas' => is_array($this->academician?->research_expertise) 
@@ -93,6 +94,7 @@ class PotentialSupervisorResource extends JsonResource
                 'user' => $this->academician?->user ? [
                     'id' => $this->academician->user->id,
                     'name' => $this->academician->user->name,
+                    'connection_status_with_auth_user' => $this->academician->user->connection_status_with_auth_user,
                     'academician' => [
                         'academician_id' => $this->academician->user->academician?->academician_id,
                     ],

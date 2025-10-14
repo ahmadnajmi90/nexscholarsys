@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Academician;
 use App\Services\EmbeddingService;
 use App\Services\QdrantService;
+use App\Jobs\GenerateAcademicianEmbeddings;
 use Illuminate\Support\Facades\Log;
 
 class AcademicianObserver
@@ -38,7 +39,8 @@ class AcademicianObserver
      */
     public function created(Academician $academician): void
     {
-        $this->generateAndStoreEmbedding($academician);
+        // Dispatch job instead of generating synchronously
+        $this->dispatchEmbeddingJob($academician);
     }
 
     /**
@@ -55,10 +57,31 @@ class AcademicianObserver
             }
         }
         
-        // If any relevant field was updated, regenerate embedding
+        // If any relevant field was updated, dispatch job instead of generating synchronously
         if ($dirty) {
-            $this->generateAndStoreEmbedding($academician);
+            $this->dispatchEmbeddingJob($academician);
         }
+    }
+
+    /**
+     * Dispatch a job to generate embeddings asynchronously
+     */
+    protected function dispatchEmbeddingJob(Academician $academician): void
+    {
+        // Skip if we don't have enough data to generate a meaningful embedding
+        if (!$this->hasMinimumRequiredFields($academician)) {
+            Log::info("Skipping embedding generation for academician {$academician->id}: Insufficient data");
+            return;
+        }
+
+        Log::info("Dispatching async embedding job for academician", [
+            'academician_id' => $academician->id,
+            'academician_unique_id' => $academician->academician_id
+        ]);
+
+        // Dispatch job to queue instead of processing synchronously
+        GenerateAcademicianEmbeddings::dispatch($academician->id)
+            ->onQueue('embeddings'); // Use dedicated queue for embeddings
     }
 
     /**

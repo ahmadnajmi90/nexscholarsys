@@ -6,8 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Supervision\SupervisionRelationshipResource;
 use App\Models\SupervisionRequest;
 use App\Notifications\Supervision\SupervisionRequestRejected;
+use App\Notifications\Supervision\SupervisionOfferReceived;
+use App\Notifications\Supervision\StudentRejectedOffer;
 use App\Services\Supervision\SupervisionRelationshipService;
+use App\Http\Requests\Supervision\AcceptSupervisionRequestRequest;
+use App\Http\Requests\Supervision\RejectSupervisionRequestRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class DecisionController extends Controller
@@ -20,11 +25,10 @@ class DecisionController extends Controller
     /**
      * Supervisor accepts the request - changes status to pending_student_acceptance
      */
-    public function accept(Request $request, SupervisionRequest $supervisionRequest)
+    public function accept(AcceptSupervisionRequestRequest $request, SupervisionRequest $supervisionRequest = null)
     {
-        $user = $request->user();
-        if (!$user->academician || $user->academician->academician_id !== $supervisionRequest->academician_id) {
-            abort(403);
+        if (!$supervisionRequest) {
+            abort(404, 'Supervision request not found.');
         }
 
         if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING) {
@@ -33,16 +37,7 @@ class DecisionController extends Controller
             ]);
         }
 
-        $data = $request->validate([
-            'cohort_start_term' => ['required', 'string', 'max:255'],
-            'supervision_role' => ['required', 'in:main_supervisor,co_supervisor'],
-            'meeting_cadence' => ['required', 'string', 'max:255'],
-            'welcome_message' => ['nullable', 'string', 'max:1000'],
-            'create_scholarlab' => ['nullable', 'boolean'],
-            'onboarding_checklist' => ['nullable', 'array'],
-            'onboarding_checklist.*.task' => ['required', 'string'],
-            'onboarding_checklist.*.completed' => ['boolean'],
-        ]);
+        $data = $request->validated();
 
         // Store offer details for when student accepts
         $supervisionRequest->update([
@@ -57,8 +52,11 @@ class DecisionController extends Controller
             ],
         ]);
 
+        // Eager load relationships for notification (prevent N+1)
+        $supervisionRequest->load(['academician.user', 'student.user']);
+
         // Notify student about the offer
-        $supervisionRequest->student?->user?->notify(new \App\Notifications\Supervision\SupervisionOfferReceived($supervisionRequest));
+        $supervisionRequest->student?->user?->notify(new SupervisionOfferReceived($supervisionRequest));
 
         return response()->json([
             'success' => true,
@@ -70,26 +68,15 @@ class DecisionController extends Controller
     /**
      * Supervisor rejects the request
      */
-    public function reject(Request $request, SupervisionRequest $supervisionRequest)
+    public function reject(RejectSupervisionRequestRequest $request, SupervisionRequest $supervisionRequest)
     {
-        $user = $request->user();
-        if (!$user->academician || $user->academician->academician_id !== $supervisionRequest->academician_id) {
-            abort(403);
-        }
-
         if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING) {
             throw ValidationException::withMessages([
                 'status' => __('This request is no longer pending.'),
             ]);
         }
 
-        $data = $request->validate([
-            'reason' => ['required', 'string'],
-            'feedback' => ['nullable', 'string'],
-            'recommend_alternatives' => ['nullable', 'boolean'],
-            'recommended_supervisors' => ['nullable', 'array'],
-            'suggested_keywords' => ['nullable', 'string'],
-        ]);
+        $data = $request->validated();
 
         $supervisionRequest->update([
             'status' => SupervisionRequest::STATUS_REJECTED,
@@ -99,6 +86,9 @@ class DecisionController extends Controller
             'recommended_supervisors' => $data['recommended_supervisors'] ?? null,
             'suggested_keywords' => $data['suggested_keywords'] ?? null,
         ]);
+
+        // Load academician relationship for email template
+        $supervisionRequest->load('academician');
 
         $supervisionRequest->student?->user?->notify(new SupervisionRequestRejected($supervisionRequest));
 
@@ -113,10 +103,8 @@ class DecisionController extends Controller
      */
     public function studentAccept(Request $request, SupervisionRequest $supervisionRequest)
     {
-        $user = $request->user();
-        if (!$user->postgraduate || $user->postgraduate->postgraduate_id !== $supervisionRequest->student_id) {
-            abort(403);
-        }
+        // Use policy for authorization
+        $this->authorize('acceptOffer', $supervisionRequest);
 
         if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE) {
             throw ValidationException::withMessages([
@@ -133,6 +121,38 @@ class DecisionController extends Controller
         );
 
         return new SupervisionRelationshipResource($relationship->load(['student.user', 'academician.user', 'onboardingChecklistItems']));
+    }
+
+    /**
+     * Student rejects the supervisor's offer
+     */
+    public function studentReject(Request $request, SupervisionRequest $supervisionRequest)
+    {
+        // Use policy for authorization
+        $this->authorize('rejectOffer', $supervisionRequest);
+
+        if ($supervisionRequest->status !== SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE) {
+            throw ValidationException::withMessages([
+                'status' => __('This offer is not available for rejection.'),
+            ]);
+        }
+
+        // Update request status to rejected
+        $supervisionRequest->update([
+            'status' => SupervisionRequest::STATUS_REJECTED,
+            'decision_at' => now(),
+        ]);
+
+        // Load academician for notification
+        $supervisionRequest->load('academician', 'student');
+
+        // Notify supervisor about the rejection
+        $supervisionRequest->academician?->user?->notify(new StudentRejectedOffer($supervisionRequest));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Supervision offer rejected',
+        ]);
     }
 }
 

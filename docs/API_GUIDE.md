@@ -595,6 +595,6 @@ The following events are broadcast using the **Pusher** driver.
 -   **Description**: Fired when a new message is sent. This event contains the full `Message` resource and is intended to update the main thread pane of an open conversation.
 -   **Payload**: A full `MessageResource` JSON object.
 
-### ScholarLab Events (via Reverb)
+### NexLab Events (via Reverb)
 
--   **Note**: Real-time events for the ScholarLab (ProjectHub) feature, such as `TaskMoved`, are broadcast using the **Laravel Reverb** driver. Please refer to the ScholarLab-specific documentation for details on those events.
+-   **Note**: Real-time events for the NexLab (ProjectHub) feature, such as `TaskMoved`, are broadcast using the **Laravel Reverb** driver. Please refer to the NexLab-specific documentation for details on those events.

@@ -1,31 +1,24 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog';
+import Modal from '@/Components/Modal';
 import { Button } from '@/Components/ui/button';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { ScrollArea } from '@/Components/ui/scroll-area';
 import { CheckCircle2, User2, GraduationCap, Lightbulb, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { logError } from '@/Utils/logError';
 
-const COHORT_OPTIONS = [
-  'January 2025',
-  'February 2025',
-  'March 2025',
-  'April 2025',
-  'May 2025',
-  'June 2025',
-  'July 2025',
-  'August 2025',
-  'September 2025',
-  'October 2025',
-  'November 2025',
-  'December 2025',
+const COHORT_MONTHS = [
+  { value: 'March', label: 'March' },
+  { value: 'September', label: 'September' },
 ];
+
+// Generate year options (10 years before to 10 years after current year = 21 years total)
+const currentYear = new Date().getFullYear();
+const COHORT_YEARS = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
 
 const MEETING_CADENCE_OPTIONS = [
   { value: 'weekly', label: 'Weekly meetings' },
@@ -44,7 +37,8 @@ const DEFAULT_ONBOARDING_CHECKLIST = [
 ];
 
 export default function AcceptSupervisionRequestModal({ isOpen, request, onClose, onAccepted }) {
-  const [cohort, setCohort] = useState('');
+  const [cohortMonth, setCohortMonth] = useState('');
+  const [cohortYear, setCohortYear] = useState(currentYear.toString());
   const [meetingCadence, setMeetingCadence] = useState('');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [createScholarLab, setCreateScholarLab] = useState(true);
@@ -56,7 +50,10 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
   const program = request?.postgraduate_program?.name || 'PhD Computer Science Program';
   const researchTopic = request?.proposal_title || 'Research Topic';
 
-  const canSubmit = cohort && meetingCadence;
+  const canSubmit = cohortMonth && cohortYear && meetingCadence;
+  
+  // Combine month and year for cohort
+  const cohort = cohortMonth && cohortYear ? `${cohortMonth} ${cohortYear}` : '';
 
   const handleChecklistToggle = (id) => {
     setChecklistItems(prev =>
@@ -100,7 +97,8 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
   const handleClose = () => {
     if (!isSubmitting) {
       // Reset form
-      setCohort('');
+      setCohortMonth('');
+      setCohortYear(currentYear.toString()); // Reset to current year
       setMeetingCadence('');
       setWelcomeMessage('');
       setCreateScholarLab(true);
@@ -110,20 +108,21 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => (!open ? handleClose() : null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-6 pb-4">
+    <Modal show={isOpen} onClose={handleClose} maxWidth="2xl">
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 className="h-6 w-6 text-green-600" />
-            <DialogTitle className="text-xl font-semibold">Accept Supervision Request</DialogTitle>
+            <h2 className="text-xl font-semibold">Accept Supervision Request</h2>
           </div>
-          <DialogDescription>
+          <p className="text-sm text-slate-600">
             Confirm your decision to supervise {studentName} and set up the supervision parameters.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
-        <ScrollArea className="max-h-[calc(90vh-180px)]">
-          <div className="px-6 pb-6 space-y-6">
+        <div className="max-h-[60vh] overflow-y-auto">
+          <div className="space-y-6">
             {/* Student Details */}
             <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Student Details</h3>
@@ -137,13 +136,13 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-2">
+                {/* <div className="flex items-start gap-2">
                   <GraduationCap className="h-4 w-4 text-slate-500 mt-0.5" />
                   <div>
                     <div className="text-xs text-slate-500">Program</div>
                     <div className="text-sm font-medium text-slate-900">{program}</div>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-3 flex items-start gap-2">
@@ -159,23 +158,47 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
             <section className="space-y-4">
               <h3 className="text-base font-semibold text-slate-900">Supervision Setup</h3>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cohort">
+              <div className="space-y-4">
+                {/* Cohort/Start Term - Split into Month and Year */}
+                <div>
+                  <Label className="mb-2 block">
                     Cohort/Start Term <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={cohort} onValueChange={setCohort}>
-                    <SelectTrigger id="cohort">
-                      <SelectValue placeholder="Select cohort" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COHORT_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Select value={cohortMonth} onValueChange={setCohortMonth}>
+                        <SelectTrigger id="cohortMonth">
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COHORT_MONTHS.map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Select value={cohortYear} onValueChange={setCohortYear}>
+                        <SelectTrigger id="cohortYear">
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COHORT_YEARS.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {cohortMonth && cohortYear && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Selected: <span className="font-medium">{cohort}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -238,10 +261,10 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
                 />
                 <div className="flex-1">
                   <Label htmlFor="scholarlab" className="text-sm font-medium text-slate-900 cursor-pointer">
-                    Create ScholarLab Supervision Board
+                    Create NexLab Supervision Board
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
-                    Automatically create a shared board in ScholarLab with default lists for supervision tasks, deliverables, meetings, and paper workstreams.
+                    Automatically create a shared board in NexLab with default lists for supervision tasks, deliverables, meetings, and paper workstreams.
                   </p>
                 </div>
               </div>
@@ -277,16 +300,16 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
               <AlertDescription className="text-sm text-green-900">
                 <strong className="font-semibold">Ready to Accept</strong>
                 <p className="mt-1">
-                  By accepting, you agree to supervise {studentName} for their {program} degree. 
+                  By accepting, you agree to supervise {studentName}. 
                   The student will be notified immediately, and supervision records will be created after the student accepts your offer.
                 </p>
               </AlertDescription>
             </Alert>
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t bg-slate-50 flex items-center justify-end gap-3">
+        <div className="mt-6 pt-4 border-t flex items-center justify-end gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -303,8 +326,8 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
             Confirm & Notify Student
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </Modal>
   );
 }
 

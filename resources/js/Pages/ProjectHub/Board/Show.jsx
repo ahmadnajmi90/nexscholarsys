@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, router, useForm } from '@inertiajs/react';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
+import GoogleCalendarTaskToast from '@/Components/GoogleCalendarTaskToast';
+import { useTaskGoogleCalendar } from '@/Hooks/useTaskGoogleCalendar';
+import axios from 'axios';
 import BoardColumn from '@/Components/ProjectHub/BoardColumn';
 import CalendarView from '@/Components/ProjectHub/CalendarView';
 import ListView from '@/Components/ProjectHub/ListView';
@@ -13,9 +16,9 @@ import TaskDetailsModal from '@/Components/ProjectHub/TaskDetailsModal';
 import PaperTaskCreateModal from '@/Components/ProjectHub/PaperTaskCreateModal';
 import ChooseTaskTypeModal from '@/Components/ProjectHub/ChooseTaskTypeModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import InlineEdit from '@/Components/ProjectHub/InlineEdit';
 import { ChevronLeft, Plus, Kanban, Calendar, X, List, Table, BarChartHorizontal, Archive as ArchiveIcon } from 'lucide-react';
 import ArchivedTasksModal from '@/Components/ProjectHub/ArchivedTasksModal';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 
 export default function Show({ initialBoardData, researchOptions = [] }) {
@@ -46,6 +49,34 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
     // State to track the current list ID for task creation
     const [currentListId, setCurrentListId] = useState(null);
     
+    // Google Calendar integration
+    const { props } = usePage();
+    const { addTaskToCalendar } = useTaskGoogleCalendar();
+    const [showGoogleCalendarToast, setShowGoogleCalendarToast] = useState(false);
+    const [calendarPromptData, setCalendarPromptData] = useState(null);
+    const [currentTaskForCalendar, setCurrentTaskForCalendar] = useState(null);
+
+    // Handle board title renaming
+    const handleBoardRename = async (newName) => {
+        try {
+            await router.put(route('project-hub.boards.update', boardState.id), {
+                name: newName,
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Board renamed successfully.');
+                },
+                onError: (errors) => {
+                    console.error('Error renaming board:', errors);
+                    toast.error('Failed to rename board. Please try again.');
+                }
+            });
+        } catch (error) {
+            console.error('Error renaming board:', error);
+            toast.error('Failed to rename board. Please try again.');
+        }
+    };
+
     // Form for creating a new list
     const form = useForm({
         name: '',
@@ -77,6 +108,23 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
             setIsLoading(true);
         }
     }, [initialBoardData]);
+    
+    // Check for Google Calendar prompt from flash data
+    useEffect(() => {
+        console.log('Flash data:', props?.flash);
+        const flashPrompt = props?.flash?.google_calendar_prompt;
+        const taskData = props?.flash?.task_for_calendar;
+        
+        console.log('Calendar prompt data:', flashPrompt);
+        console.log('Task data:', taskData);
+        
+        if (flashPrompt?.show_prompt && taskData) {
+            setCurrentTaskForCalendar(taskData);
+            setCalendarPromptData(flashPrompt);
+            setShowGoogleCalendarToast(true);
+            console.log('Showing Google Calendar toast');
+        }
+    }, [props?.flash]);
 
     // console.log(initialBoardData);
 
@@ -84,7 +132,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
     const getBackLinkDetails = () => {
         // Check if we have the parent data in the board state
         if (!boardState || !boardState.parent) {
-            return { href: route('project-hub.index'), text: 'ScholarLab' };
+            return { href: route('project-hub.index'), text: 'NexLab' };
         }
 
         // console.log(boardState);
@@ -94,7 +142,7 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         const parentType = parent.type; // 'Workspace' or 'Project'
 
         if (!parent.id) {
-            return { href: route('project-hub.index'), text: 'ScholarLab' };
+            return { href: route('project-hub.index'), text: 'NexLab' };
         }
 
         if (parentType.toLowerCase() === 'workspace') {
@@ -110,10 +158,10 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         }
 
         // Default fallback
-        return { href: route('project-hub.index'), text: 'ScholarLab' };
+        return { href: route('project-hub.index'), text: 'NexLab' };
     };
 
-    // Set up real-time listening for task moves
+    // Set up real-time listening for task moves and board updates
     useEffect(() => {
         // Only set up the listener if we have a board
         if (!boardState || !boardState.id) {
@@ -121,33 +169,63 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         }
 
         console.log(`Subscribing to board channel: boards.${boardState.id}`);
-        
+
         // Subscribe to the private channel for this board
         const channel = window.Echo.private(`boards.${boardState.id}`);
-        
+
         // Listen for task.moved events
         channel.listen('.task.moved', (event) => {
             console.log('Received task.moved event:', event);
-            
+
             // Extract task data from the event
             const { task, user, timestamp } = event;
-            
+
             // Set the recently updated task for animation purposes
             setRecentlyUpdatedTaskId(task.id);
-            
+
             // Clear the animation highlight after 2 seconds
             setTimeout(() => {
                 setRecentlyUpdatedTaskId(null);
             }, 2000);
-            
+
             // Update our local board state to reflect the change
             updateBoardStateFromEvent(task);
         });
-        
+
+        // Listen for board.updated events
+        channel.listen('.board.updated', (event) => {
+            console.log('Received board.updated event:', event);
+
+            // Update the board name in the local state if it's different
+            if (event.board.name !== boardState.name) {
+                setBoardState(prev => ({
+                    ...prev,
+                    name: event.board.name
+                }));
+            }
+        });
+
+        // Listen for board-list.updated events
+        channel.listen('.board-list.updated', (event) => {
+            console.log('Received board-list.updated event:', event);
+
+            // Update the list name in the local state if it's different
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list =>
+                    list.id === event.board_list.id
+                        ? { ...list, name: event.board_list.name }
+                        : list
+                );
+                return { ...prev, lists: newLists };
+            });
+        });
+
         // Clean up the listener when the component unmounts or the board changes
         return () => {
             console.log(`Unsubscribing from board channel: boards.${boardState.id}`);
             channel.stopListening('.task.moved');
+            channel.stopListening('.board.updated');
+            channel.stopListening('.board-list.updated');
             window.Echo.leave(`boards.${boardState.id}`);
         };
     }, [boardState?.id]); // Only re-run if the board ID changes
@@ -736,7 +814,13 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                 
                 {/* Title and View Switcher */}
                 <div className="flex flex-col space-y-3 md:flex-row md:justify-between md:items-center md:space-y-0">
-                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">{boardState.name}</h1>
+                    <InlineEdit
+                        value={boardState.name}
+                        onSave={handleBoardRename}
+                        canEdit={boardState.can && boardState.can.update}
+                        className="text-xl md:text-2xl font-bold text-gray-900"
+                        placeholder="Board name"
+                    />
                     
                     {/* Mobile-Responsive View Switcher */}
                     <div className="bg-gray-100 rounded-md p-1 overflow-x-auto">
@@ -891,6 +975,27 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
                 onClose={() => setShowArchiveModal(false)}
                 boardId={boardState.id}
             />
+            
+            {/* Google Calendar Toast */}
+            {showGoogleCalendarToast && currentTaskForCalendar && calendarPromptData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+                    <GoogleCalendarTaskToast
+                        task={currentTaskForCalendar}
+                        promptData={calendarPromptData}
+                        onYes={async () => {
+                            const result = await addTaskToCalendar(currentTaskForCalendar.id);
+                            if (result.success) {
+                                setCurrentTaskForCalendar(result.task);
+                            }
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        onNo={() => {
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        visible={showGoogleCalendarToast}
+                    />
+                </div>
+            )}
         </div>
     );
 }

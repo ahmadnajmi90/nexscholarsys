@@ -244,3 +244,43 @@ html {
 .animate-marquee-vertical-reverse {
   animation: marquee-vertical-reverse var(--duration) linear infinite;
 }
+
+/* Custom Leaflet Popup Styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+  background-color: white;
+}
+
+.custom-popup .leaflet-popup-close-button {
+  font-size: 24px;
+  padding: 8px 12px;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.custom-popup .leaflet-popup-close-button:hover {
+  color: #1f2937;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -149,8 +149,8 @@ class GenerateAcademicianEmbeddingsCommand extends Command
         
         $this->info("Found {$count} academicians needing embeddings");
         
-        // Ask for confirmation if it's a large number
-        if ($count > 100 && !$this->confirm("This will process {$count} academicians. Continue?")) {
+        // Ask for confirmation if it's a large number (but skip if in non-interactive mode)
+        if ($count > 100 && $this->input->isInteractive() && !$this->confirm("This will process {$count} academicians. Continue?")) {
             return;
         }
         

@@ -81,15 +81,33 @@ These rules define how the AI agent should create, update, and maintain the **fr
 
 ---
 
-## 8. Accessibility
+## 8. Date & Time Formatting
 
--   All interactive elements must have ARIA labels or descriptive text.
--   Use semantic HTML (`<button>`, `<nav>`, `<section>`) for better screen reader support.
--   Ensure sufficient color contrast (Tailwind’s `dark:` mode must be supported).
+-   **Always use `DD/MM/YYYY` format** for displaying dates across the entire application.
+-   Use `date-fns` library for date formatting:
+    ```jsx
+    import { format } from 'date-fns';
+    
+    // Format date
+    format(new Date(dateString), 'dd/MM/yyyy');
+    
+    // Format date with time
+    format(new Date(dateString), 'dd/MM/yyyy HH:mm');
+    ```
+-   For relative dates (e.g., "2 hours ago"), use `date-fns` `formatDistanceToNow`.
+-   Ensure backend sends dates in ISO 8601 format (Laravel's default) for proper parsing.
 
 ---
 
-## 9. Testing & QA
+## 9. Accessibility
+
+-   All interactive elements must have ARIA labels or descriptive text.
+-   Use semantic HTML (`<button>`, `<nav>`, `<section>`) for better screen reader support.
+-   Ensure sufficient color contrast (Tailwind's `dark:` mode must be supported).
+
+---
+
+## 10. Testing & QA
 
 -   Use **Jest + React Testing Library** for component testing.
 -   Test:
@@ -100,7 +118,7 @@ These rules define how the AI agent should create, update, and maintain the **fr
 
 ---
 
-## 10. Branching & Commits
+## 11. Branching & Commits
 
 -   **Branching**: Place UI changes in a dedicated feature branch: `feat/ui-<short-description>`.
 -   **Commit Messages**: Follow the conventional commit format:

@@ -218,10 +218,28 @@ class PostgraduateRecommendationController extends Controller
         // 2. Load the program's relationships for the header display
         $program->load('university', 'faculty');
 
-        // 3. Render the view, passing the clean data from the service.
+        // 3. Get supervision requests and active relationship for postgraduate users
+        $requests = [];
+        $activeRelationship = null;
+        if ($user->postgraduate) {
+            $requests = \App\Models\SupervisionRequest::where('student_id', $user->postgraduate->postgraduate_id)
+                ->whereNotIn('status', ['cancelled', 'auto_cancelled'])
+                ->with(['academician'])
+                ->get();
+            
+            // Get active supervision relationship
+            $activeRelationship = \App\Models\SupervisionRelationship::where('student_id', $user->postgraduate->postgraduate_id)
+                ->where('status', \App\Models\SupervisionRelationship::STATUS_ACTIVE)
+                ->with(['academician'])
+                ->first();
+        }
+
+        // 4. Render the view, passing the clean data from the service.
         return Inertia::render('PostgraduateRecommendations/Results', [
             'selectedProgram' => $program, 
             'supervisors' => $supervisors,
+            'requests' => $requests,
+            'activeRelationship' => $activeRelationship,
         ]);
     }
 }

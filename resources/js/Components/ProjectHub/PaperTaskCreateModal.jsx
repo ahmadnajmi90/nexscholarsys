@@ -10,11 +10,21 @@ import { parseISO, format } from 'date-fns';
 import axios from 'axios';
 import { PAPER_PROGRESS_OPTIONS } from './constants';
 import { getUserFullName } from '@/Utils/userHelpers';
+import GoogleCalendarTaskToast from '@/Components/GoogleCalendarTaskToast';
+import { useTaskGoogleCalendar } from '@/Hooks/useTaskGoogleCalendar';
+import { usePage } from '@inertiajs/react';
 
 export default function PaperTaskCreateModal({ task = null, show, onClose, listId, workspaceMembers, researchOptions = [] }) {
     const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const isEditMode = !!task;
+    
+    // Google Calendar integration
+    const { addTaskToCalendar } = useTaskGoogleCalendar();
+    const [showGoogleCalendarToast, setShowGoogleCalendarToast] = useState(false);
+    const [calendarPromptData, setCalendarPromptData] = useState(null);
+    const [currentTaskForCalendar, setCurrentTaskForCalendar] = useState(null);
+    const { props } = usePage();
     
     // Main task form
     const form = useForm({
@@ -38,6 +48,18 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
     
     // Use shared progress options
     const progressOptions = PAPER_PROGRESS_OPTIONS;
+    
+    // Check for Google Calendar prompt from flash data
+    useEffect(() => {
+        const flashPrompt = props?.flash?.google_calendar_prompt;
+        const taskId = props?.flash?.task_for_calendar;
+        
+        if (flashPrompt?.show_prompt && taskId && task?.id === taskId) {
+            setCurrentTaskForCalendar(task);
+            setCalendarPromptData(flashPrompt);
+            setShowGoogleCalendarToast(true);
+        }
+    }, [props?.flash]);
     
     // Reset the form when the task changes
     useEffect(() => {
@@ -577,6 +599,27 @@ export default function PaperTaskCreateModal({ task = null, show, onClose, listI
                 title="Delete Task"
                 message="Are you sure you want to delete this task? This action cannot be undone."
             />
+
+            {/* Google Calendar Toast */}
+            {showGoogleCalendarToast && currentTaskForCalendar && calendarPromptData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+                    <GoogleCalendarTaskToast
+                        task={currentTaskForCalendar}
+                        promptData={calendarPromptData}
+                        onYes={async () => {
+                            const result = await addTaskToCalendar(currentTaskForCalendar.id);
+                            if (result.success) {
+                                setCurrentTaskForCalendar(result.task);
+                            }
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        onNo={() => {
+                            setShowGoogleCalendarToast(false);
+                        }}
+                        visible={showGoogleCalendarToast}
+                    />
+                </div>
+            )}
         </>
     );
 }

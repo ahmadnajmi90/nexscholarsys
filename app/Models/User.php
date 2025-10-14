@@ -49,6 +49,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'has_seen_tutorial',
         'email_verified_at',
         'last_seen_at',
+        'google_access_token',
+        'google_refresh_token',
+        'google_token_expires_at',
+        'google_calendar_enabled',
     ];
 
     /**
@@ -59,6 +63,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+        'google_access_token',
+        'google_refresh_token',
     ];
 
     /**
@@ -80,6 +86,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'agreed_to_terms' => 'boolean',
             'last_seen_at' => 'datetime',
+            'google_token_expires_at' => 'datetime',
+            'google_calendar_enabled' => 'boolean',
         ];
     }
 
@@ -426,5 +434,21 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot(['role', 'last_read_message_id', 'joined_at', 'left_at', 'archived_at'])
             ->whereNull('left_at')
             ->withTimestamps();
+    }
+
+    /**
+     * Check if user has connected their Google Calendar.
+     */
+    public function hasGoogleCalendarConnected(): bool
+    {
+        return !empty($this->google_access_token) && $this->google_calendar_enabled;
+    }
+
+    /**
+     * Check if user's Google Calendar token is expired.
+     */
+    public function isGoogleTokenExpired(): bool
+    {
+        return $this->google_token_expires_at && $this->google_token_expires_at->isPast();
     }
 }

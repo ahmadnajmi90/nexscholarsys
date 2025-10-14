@@ -2,6 +2,8 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import PhoneNumberInput from "@/Components/ui/phone-input";
+import { normalizePhoneNumber, getDefaultCountryFromNumber } from "@/Utils/phone";
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
@@ -17,9 +19,10 @@ export default function UndergraduateForm({ universities, faculties, className =
   const generationTriggeredRef = useRef(false);
 
   const undergraduate = usePage().props.undergraduate;
+  const initialPhoneNumber = normalizePhoneNumber(undergraduate?.phone_number);
 
   const { data, setData, post, errors, processing, recentlySuccessful } = useForm({
-    phone_number: undergraduate?.phone_number || '',
+    phone_number: initialPhoneNumber || '',
     full_name: undergraduate?.full_name || '',
     bio: undergraduate?.bio || '',
     bachelor: undergraduate?.bachelor || '',
@@ -280,15 +283,17 @@ export default function UndergraduateForm({ universities, faculties, className =
     e.preventDefault();
     const formData = new FormData();
     Object.keys(data).forEach(key => {
-      // Exclude profile_picture if handled separately
-      if (key !== "profile_picture") {
-        if (Array.isArray(data[key])) {
-          formData.append(key, JSON.stringify(data[key]));
-        } else if (key === "interested_do_research") {
-          formData.append(key, data[key] === true ? 1 : 0);
-        } else {
-          formData.append(key, data[key]);
-        }
+      if (key === "profile_picture") {
+        return;
+      }
+
+      if (Array.isArray(data[key])) {
+        formData.append(key, JSON.stringify(data[key]));
+      } else if (key === "interested_do_research") {
+        formData.append(key, data[key] === true ? 1 : 0);
+      } else {
+        const value = key === "phone_number" ? normalizePhoneNumber(data[key]) : data[key];
+        formData.append(key, value);
       }
     });
     post(route("role.update"), {
@@ -582,12 +587,13 @@ export default function UndergraduateForm({ universities, faculties, className =
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
             <div>
               <InputLabel htmlFor="phone_number" value={<>Phone Number <span className="text-red-600">*</span></>} required/>
-              <TextInput
+              <PhoneNumberInput
                 id="phone_number"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                name="phone_number"
                 value={data.phone_number}
-                onChange={e => setData('phone_number', e.target.value)}
-                autoComplete="tel"
+                defaultCountry={getDefaultCountryFromNumber(data.phone_number)}
+                onChange={(value) => setData('phone_number', value ?? '')}
+                placeholder="Enter phone number"
               />
               <InputError className="mt-2" message={errors.phone_number} />
             </div>

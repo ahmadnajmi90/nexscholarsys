@@ -11,6 +11,8 @@ use App\Models\Connection;
 use App\Services\Messaging\ConversationService;
 use App\Notifications\Supervision\SupervisionRequestAccepted;
 use App\Notifications\Supervision\SupervisionRequestRejected;
+use App\Notifications\Supervision\StudentAcceptedOffer;
+use App\Notifications\Supervision\SupervisionRequestAutoCancelled;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -62,7 +64,10 @@ class SupervisionRelationshipService
             ]);
 
             SupervisionRequest::where('student_id', $student->postgraduate_id)
-                ->where('status', SupervisionRequest::STATUS_PENDING)
+                ->whereIn('status', [
+                    SupervisionRequest::STATUS_PENDING,
+                    SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE,
+                ])
                 ->where('id', '!=', $request->id)
                 ->each(function ($pending) {
                     $pending->update([
@@ -70,7 +75,7 @@ class SupervisionRelationshipService
                         'decision_at' => now(),
                         'cancel_reason' => 'accepted_elsewhere',
                     ]);
-                    $pending->student?->user?->notify(new SupervisionRequestRejected($pending));
+                    $pending->academician?->user?->notify(new SupervisionRequestAutoCancelled($pending));
                 });
 
             $this->ensureConnection($student->user->id, $academician->user->id);
@@ -111,7 +116,8 @@ class SupervisionRelationshipService
      */
     public function createRelationshipFromOffer(SupervisionRequest $request, array $offerDetails): SupervisionRelationship
     {
-        return DB::transaction(function () use ($request, $offerDetails) {
+        // Create core relationship in transaction
+        $relationship = DB::transaction(function () use ($request, $offerDetails) {
             $student = Postgraduate::where('postgraduate_id', $request->student_id)->firstOrFail();
             $academician = Academician::where('academician_id', $request->academician_id)->firstOrFail();
 
@@ -160,9 +166,34 @@ class SupervisionRelationshipService
                 'decision_at' => now(),
             ]);
 
+            // Create timeline event for relationship creation
+            try {
+                \App\Models\SupervisionTimeline::create([
+                    'entity_type' => SupervisionRelationship::class,
+                    'entity_id' => $relationship->id,
+                    'user_id' => $student->user_id ?? null,
+                    'event_type' => 'relationship_created',
+                    'description' => "Supervision relationship created as {$role} supervisor",
+                    'metadata' => [
+                        'request_id' => $request->id,
+                        'role' => $role,
+                        'cohort' => $offerDetails['cohort_start_term'] ?? null,
+                        'meeting_cadence' => $offerDetails['meeting_cadence'] ?? null,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to create timeline event for relationship creation', [
+                    'relationship_id' => $relationship->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             // Auto-cancel other pending requests
             SupervisionRequest::where('student_id', $student->postgraduate_id)
-                ->where('status', SupervisionRequest::STATUS_PENDING)
+                ->whereIn('status', [
+                    SupervisionRequest::STATUS_PENDING,
+                    SupervisionRequest::STATUS_PENDING_STUDENT_ACCEPTANCE,
+                ])
                 ->where('id', '!=', $request->id)
                 ->each(function ($pending) {
                     $pending->update([
@@ -170,23 +201,39 @@ class SupervisionRelationshipService
                         'decision_at' => now(),
                         'cancel_reason' => 'accepted_elsewhere',
                     ]);
-                    $pending->student?->user?->notify(new SupervisionRequestRejected($pending));
+                    $pending->academician?->user?->notify(new SupervisionRequestAutoCancelled($pending));
                 });
 
             // Ensure connection between student and supervisor
             $this->ensureConnection($student->user->id, $academician->user->id);
 
-            // Create ScholarLab board if requested
-            if (!empty($offerDetails['create_scholarlab'])) {
-                $this->scholarLabService->createSupervisionWorkspace($relationship, $student, $academician, $offerDetails);
-            }
-
-            // Notify both parties
-            $student->user?->notify(new SupervisionRequestAccepted($relationship));
-            $academician->user?->notify(new \App\Notifications\Supervision\StudentAcceptedOffer($relationship));
-
             return $relationship;
         });
+
+        // Handle ScholarLab creation outside transaction to prevent rollback of core relationship
+        if (!empty($offerDetails['create_scholarlab'])) {
+            try {
+                $student = $relationship->student;
+                $academician = $relationship->academician;
+                $this->scholarLabService->createSupervisionWorkspace($relationship, $student, $academician, $offerDetails);
+            } catch (\Exception $e) {
+                \Log::error('ScholarLab creation failed but relationship created successfully', [
+                    'relationship_id' => $relationship->id,
+                    'student_id' => $relationship->student_id,
+                    'academician_id' => $relationship->academician_id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                // Could queue a job to retry ScholarLab creation
+                // dispatch(new CreateScholarLabWorkspace($relationship, $offerDetails))->delay(now()->addMinutes(5));
+            }
+        }
+
+        // Send notifications
+        $relationship->student->user?->notify(new SupervisionRequestAccepted($relationship));
+        $relationship->academician->user?->notify(new StudentAcceptedOffer($relationship));
+
+        return $relationship;
     }
 }
 

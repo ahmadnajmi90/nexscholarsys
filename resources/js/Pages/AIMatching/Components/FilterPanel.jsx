@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Select from 'react-select';
-import { FaTimes, FaFilter } from 'react-icons/fa';
+import { FaTimes, FaFilter, FaCheck } from 'react-icons/fa';
 
 export default function FilterPanel({
   searchType,
@@ -8,43 +8,56 @@ export default function FilterPanel({
   universities,
   faculties,
   researchOptions,
-  skills, // Add skills prop
+  skills,
   selectedArea,
   setSelectedArea,
   selectedUniversity,
   setSelectedUniversity,
   selectedAvailability,
   setSelectedAvailability,
-  selectedSkills, // Add selectedSkills prop
-  setSelectedSkills, // Add setSelectedSkills prop
-  onClose = null, // For mobile close button
-  isOpen = true,  // Control visibility on mobile
-  toggleOpen = null // Function to toggle sidebar visibility
+  selectedSkills,
+  setSelectedSkills,
+  isOpen = false,
+  onClose
 }) {
-  const [showFilters, setShowFilters] = useState(isOpen);
   const filterContainerRef = useRef(null);
 
-  // Handle clicks outside the filter panel on mobile
+  // Handle clicks outside the filter panel to close
   useEffect(() => {
     function handleClickOutside(event) {
       if (filterContainerRef.current && 
           !filterContainerRef.current.contains(event.target) &&
-          window.innerWidth < 1024) {
-        setShowFilters(false);
-        if (toggleOpen) toggleOpen(false);
+          isOpen) {
+        if (onClose) onClose();
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.body.style.overflow = 'unset';
     };
-  }, [toggleOpen]);
+  }, [isOpen, onClose]);
 
-  // Update local state when prop changes
+  // Close on Escape key
   useEffect(() => {
-    setShowFilters(isOpen);
-  }, [isOpen]);
+    function handleEscape(event) {
+      if (event.key === 'Escape' && isOpen) {
+        if (onClose) onClose();
+      }
+    }
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
+
+  // Don't render if not open
+  if (!isOpen) return null;
 
   // Extract filter options from search results
   const getFilterOptions = () => {
@@ -156,7 +169,6 @@ export default function FilterPanel({
     } else if (searchType === 'students') {
       return 'Looking for Supervision';
     } else if (searchType === 'collaborators') {
-      // For collaborators, the label depends on the profile types in the results
       const hasAcademicians = searchResults?.matches?.some(match => match.result_type === 'academician');
       const hasStudents = searchResults?.matches?.some(match => match.result_type !== 'academician');
       
@@ -171,67 +183,70 @@ export default function FilterPanel({
     
     return 'Availability';
   };
-  
-  // Get the availability key based on search type
-  const getAvailabilityKey = () => {
-    if (searchType === 'supervisor') {
-      return 'availability_as_supervisor';
-    } else if (searchType === 'students') {
-      return 'supervisorAvailability';
-    } else if (searchType === 'collaborators') {
-      // For simplicity, we'll use the same key for both types in collaborators view
-      return 'availability_as_supervisor';
-    }
-    
-    return 'availability';
-  };
-
-  // Mobile toggle button for filters
-  const filterToggleButton = (
-    <div className="fixed top-20 right-4 z-50 flex items-center space-x-4 lg:hidden">
-      <button
-        onClick={() => {
-          setShowFilters(!showFilters);
-          if (toggleOpen) toggleOpen(!showFilters);
-        }}
-        className="bg-blue-600 text-white p-2 rounded-full shadow-lg"
-      >
-        <FaFilter className="text-xl" />
-      </button>
-    </div>
-  );
 
   return (
     <>
-      {/* Mobile Filter Toggle Button */}
-      {filterToggleButton}
+      {/* Backdrop Overlay with Blur Effect */}
+      <div 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 animate-fadeIn"
+        onClick={onClose}
+        aria-hidden="true"
+      />
       
-      {/* Filter Panel Container */}
+      {/* Filter Modal Panel - Slides from Right */}
       <div
         ref={filterContainerRef}
-        className={`fixed lg:relative top-0 left-0 lg:block lg:w-full w-3/4 h-full bg-white rounded-lg shadow-lg transition-transform duration-300 z-30 ${
-          showFilters ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 overflow-auto pb-20 lg:pb-0`}
+        className="fixed top-0 right-0 h-full w-full sm:w-[420px] md:w-[480px] lg:w-[520px] 
+                   bg-white shadow-2xl z-50 animate-slideInRight flex flex-col
+                   safe-area-inset-right"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="filter-modal-title"
       >
-        <div className="p-5">
-          {/* Mobile Close Button Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Filters</h3>
+        {/* Header - Premium Glass Morphism Style */}
+        <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 px-4 sm:px-6 py-4 sm:py-5 shadow-lg">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 
+                id="filter-modal-title"
+                className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2"
+              >
+                <FaFilter className="text-lg sm:text-xl flex-shrink-0" />
+                <span className="truncate">Filters</span>
+              </h2>
+              <p className="text-blue-100 text-xs sm:text-sm mt-1 truncate">
+                Refine your search results
+              </p>
+            </div>
+            
             <button 
-              onClick={() => {
-                setShowFilters(false);
-                if (toggleOpen) toggleOpen(false);
-                if (onClose) onClose();
-              }}
-              className="text-gray-500 hover:text-gray-700 lg:hidden"
+              onClick={onClose}
+              className="p-2 sm:p-2.5 rounded-lg bg-white/20 hover:bg-white/30 active:bg-white/40 
+                       text-white transition-all duration-200 hover:scale-110 active:scale-95 
+                       flex-shrink-0 touch-manipulation"
+              aria-label="Close filters"
             >
-              <FaTimes />
+              <FaTimes className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
+        </div>
+
+        {/* Scrollable Filter Content */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 sm:space-y-6">
+          {/* Active Filters Count Badge */}
+          {(selectedArea.length > 0 || selectedUniversity.length > 0 || selectedSkills?.length > 0 || selectedAvailability) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 
+                          flex items-center gap-2 shadow-sm">
+              <FaCheck className="text-blue-600 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-blue-900">
+                {(selectedArea.length + selectedUniversity.length + (selectedSkills?.length || 0) + (selectedAvailability ? 1 : 0))} filter(s) active
+              </span>
+            </div>
+          )}
           
           {/* Research Area Filter */}
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-900">
               Research Area
             </label>
             <Select
@@ -242,16 +257,31 @@ export default function FilterPanel({
               onChange={(selected) => 
                 setSelectedArea(selected ? selected.map(option => option.value) : [])
               }
-              placeholder="Filter by research area..."
+              placeholder="Select research areas..."
               className="basic-multi-select"
               classNamePrefix="select"
               isSearchable={true}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: '0.75rem',
+                  borderColor: '#e5e7eb',
+                  '&:hover': { borderColor: '#3b82f6' }
+                })
+              }}
             />
           </div>
           
+          {/* Elegant Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+          </div>
+          
           {/* University Filter */}
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-900">
               University
             </label>
             <Select
@@ -262,60 +292,108 @@ export default function FilterPanel({
               onChange={(selected) => 
                 setSelectedUniversity(selected ? selected.map(option => option.value) : [])
               }
-              placeholder="Filter by university..."
+              placeholder="Select universities..."
               className="basic-multi-select"
               classNamePrefix="select"
               isSearchable={true}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderRadius: '0.75rem',
+                  borderColor: '#e5e7eb',
+                  '&:hover': { borderColor: '#3b82f6' }
+                })
+              }}
             />
+          </div>
+          
+          {/* Elegant Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
           </div>
           
           {/* Skills Filter - Only show for student/collaborator searches */}
           {(searchType === 'students' || searchType === 'collaborators') && (
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Skills
-              </label>
-              <Select
-                isMulti
-                name="skills"
-                options={filterOptions.skills}
-                value={filterOptions.skills.filter(option => selectedSkills?.includes(option.value))}
-                onChange={(selected) => 
-                  setSelectedSkills(selected ? selected.map(option => option.value) : [])
-                }
-                placeholder="Filter by skills..."
-                className="basic-multi-select"
-                classNamePrefix="select"
-                isSearchable={true}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-gray-900">
+                  Skills
+                </label>
+                <Select
+                  isMulti
+                  name="skills"
+                  options={filterOptions.skills}
+                  value={filterOptions.skills.filter(option => selectedSkills?.includes(option.value))}
+                  onChange={(selected) => 
+                    setSelectedSkills(selected ? selected.map(option => option.value) : [])
+                  }
+                  placeholder="Select skills..."
+                  className="basic-multi-select"
+                  classNamePrefix="select"
+                  isSearchable={true}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderRadius: '0.75rem',
+                      borderColor: '#e5e7eb',
+                      '&:hover': { borderColor: '#3b82f6' }
+                    })
+                  }}
+                />
+              </div>
+              
+              {/* Elegant Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+              </div>
+            </>
           )}
           
           {/* Availability Filter - Hide for collaborators */}
           {searchType !== 'collaborators' && (
-            <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {getAvailabilityLabel()}
-              </label>
-              <select
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 
-                          focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm 
-                          rounded-md"
-                value={selectedAvailability}
-                onChange={(e) => setSelectedAvailability(e.target.value)}
-              >
-                <option value="">All</option>
-                <option value="1">Yes</option>
-                <option value="0">No</option>
-              </select>
-            </div>
+            <>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-gray-900">
+                  {getAvailabilityLabel()}
+                </label>
+                <select
+                  className="mt-1 block w-full px-4 py-3 text-base border-gray-300 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                            rounded-xl shadow-sm transition-all duration-200 bg-white hover:border-blue-400"
+                  value={selectedAvailability}
+                  onChange={(e) => setSelectedAvailability(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="1">Yes</option>
+                  <option value="0">No</option>
+                </select>
+              </div>
+              
+              {/* Elegant Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+              </div>
+            </>
           )}
-          
+        </div>
+
+        {/* Footer with Action Buttons - Sticky at Bottom */}
+        <div className="border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 space-y-2.5 sm:space-y-3 
+                      shadow-lg sm:shadow-xl">
           {/* Reset Filters Button */}
           <button
-            className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm 
-                    font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none 
-                    focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full px-4 sm:px-5 py-3 sm:py-3.5 
+                     bg-white border-2 border-gray-300 hover:border-gray-400 active:border-gray-500
+                     rounded-xl text-xs sm:text-sm font-semibold text-gray-700 
+                     transition-all duration-200 hover:shadow-md active:scale-98
+                     flex items-center justify-center gap-2 
+                     touch-manipulation"
             onClick={() => {
               setSelectedArea([]);
               setSelectedUniversity([]);
@@ -323,22 +401,27 @@ export default function FilterPanel({
               setSelectedSkills([]);
             }}
           >
-            Reset All Filters
+            <FaTimes className="text-gray-500 flex-shrink-0" />
+            <span>Reset All Filters</span>
+          </button>
+          
+          {/* Apply/Close Button */}
+          <button
+            className="w-full px-4 sm:px-5 py-3 sm:py-3.5 
+                     bg-gradient-to-r from-blue-600 to-purple-600 
+                     hover:from-blue-700 hover:to-purple-700
+                     active:from-blue-800 active:to-purple-800
+                     rounded-xl text-xs sm:text-sm font-semibold text-white 
+                     transition-all duration-200 hover:shadow-lg active:scale-98
+                     flex items-center justify-center gap-2
+                     touch-manipulation"
+            onClick={onClose}
+          >
+            <FaCheck className="flex-shrink-0" />
+            <span>Apply Filters</span>
           </button>
         </div>
       </div>
-      
-      {/* Overlay for Mobile */}
-      {showFilters && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={() => {
-            setShowFilters(false);
-            if (toggleOpen) toggleOpen(false);
-            if (onClose) onClose();
-          }}
-        ></div>
-      )}
     </>
   );
 }

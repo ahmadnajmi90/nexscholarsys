@@ -3,13 +3,15 @@ import { Link } from '@inertiajs/react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { User2, MessageSquareMore, Trash2, Loader2, BookOpen, FolderKanban, UserPlus } from 'lucide-react';
+import { User2, MessageSquareMore, Trash2, Loader2, BookOpen, FolderKanban, UserPlus, CheckCircle2, Send, Eye } from 'lucide-react';
 import { logError } from '@/Utils/logError';
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/tooltip';
+import ConfirmationModal from '@/Components/ConfirmationModal';
 
 const EMPTY_STATES = {
   default: {
@@ -25,6 +27,7 @@ const EMPTY_STATES = {
 export default function PotentialSupervisorList({
   shortlist = [],
   requests = [],
+  activeRelationship = null,
   isLoading = false,
   reload,
   onRequestSupervisor,
@@ -33,11 +36,14 @@ export default function PotentialSupervisorList({
   emptyState = 'default'
 }) {
   const [removingId, setRemovingId] = useState(null);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
 
   const activeRequestMap = useMemo(() => {
     if (!Array.isArray(requests)) return {};
     return requests.reduce((acc, request) => {
-      if (!['cancelled', 'auto_cancelled'].includes(request.status)) {
+      // Exclude cancelled, auto_cancelled, and rejected requests - allow students to submit new requests
+      if (!['cancelled', 'auto_cancelled', 'rejected'].includes(request.status)) {
         const key = String(request.academician_id ?? '');
         if (key) {
           acc[key] = request;
@@ -47,13 +53,31 @@ export default function PotentialSupervisorList({
     }, {});
   }, [requests]);
 
-  const handleRemove = async (item) => {
-    if (!item?.academician_id) return;
-    setRemovingId(item.academician_id);
+  const handleRemoveClick = (item) => {
+    setItemToRemove(item);
+    setShowRemoveModal(true);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!itemToRemove) return;
+    
+    // Get the actual academician_id (string like "ACAD-XXX") from the nested academician object
+    const academicianId = itemToRemove?.academician?.academician_id;
+    
+    if (!academicianId) {
+      toast.error('Unable to identify supervisor to remove');
+      setShowRemoveModal(false);
+      setItemToRemove(null);
+      return;
+    }
+    
+    setRemovingId(academicianId);
+    setShowRemoveModal(false);
+    
     try {
-      await axios.delete(route('supervision.shortlist.destroy', item.academician_id));
+      await axios.delete(route('supervision.shortlist.destroy', academicianId));
       toast.success('Removed from your potential supervisor list');
-      onRemoveSuccess?.(item);
+      onRemoveSuccess?.(itemToRemove);
       reload?.();
     } catch (error) {
       logError(error, 'Supervision handleRemove');
@@ -61,6 +85,7 @@ export default function PotentialSupervisorList({
       toast.error(message);
     } finally {
       setRemovingId(null);
+      setItemToRemove(null);
     }
   };
 
@@ -69,35 +94,45 @@ export default function PotentialSupervisorList({
 
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={`potential-skeleton-${index}`} className="border border-dashed rounded-xl p-5 bg-white shadow-sm animate-pulse">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-full bg-slate-200" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-32 rounded bg-slate-200" />
-                  <div className="h-3 w-24 rounded bg-slate-100" />
+          <div key={`potential-skeleton-${index}`} className="border border-dashed rounded-xl p-4 sm:p-5 bg-white shadow-sm animate-pulse min-h-[320px] sm:min-h-[340px] flex flex-col">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-full bg-slate-200 flex-shrink-0" />
+                <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+                  <div className="h-3.5 sm:h-4 w-28 sm:w-32 rounded bg-slate-200" />
+                  <div className="h-2.5 sm:h-3 w-20 sm:w-24 rounded bg-slate-100" />
                 </div>
               </div>
-              <div className="h-3 w-20 rounded bg-slate-100" />
+              <div className="h-2.5 sm:h-3 w-16 sm:w-20 rounded bg-slate-100 flex-shrink-0" />
             </div>
-            <div className="mt-4 flex items-center gap-4">
-              <div className="h-3 w-24 rounded bg-slate-100" />
-              <div className="h-3 w-28 rounded bg-slate-100" />
-              <div className="h-3 w-20 rounded bg-slate-100" />
+            
+            {/* Metadata */}
+            <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4 flex-wrap">
+              <div className="h-2.5 sm:h-3 w-20 sm:w-24 rounded bg-slate-100" />
+              <div className="h-2.5 sm:h-3 w-24 sm:w-28 rounded bg-slate-100" />
+              <div className="h-2.5 sm:h-3 w-16 sm:w-20 rounded bg-slate-100" />
             </div>
-            <div className="mt-3 space-y-2">
-              <div className="h-3 w-32 rounded bg-slate-100" />
-              <div className="flex gap-2">
-                <div className="h-6 w-24 rounded-full bg-slate-100" />
-                <div className="h-6 w-20 rounded-full bg-slate-100" />
+            
+            {/* Research Areas */}
+            <div className="mt-3 flex-1">
+              <div className="h-2.5 sm:h-3 w-24 sm:w-32 rounded bg-slate-100 mb-2" />
+              <div className="flex flex-wrap gap-2">
+                <div className="h-5 sm:h-6 w-28 sm:w-32 rounded-full bg-slate-100" />
+                <div className="h-5 sm:h-6 w-16 sm:w-20 rounded-full bg-slate-100" />
+              </div>
+              <div className="mt-2">
+                <div className="h-5 sm:h-6 w-12 sm:w-16 rounded-full bg-slate-100" />
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 pt-4 border-t">
-              <div className="h-10 flex-1 rounded bg-slate-200" />
-              <div className="h-10 flex-1 rounded bg-slate-200" />
-              <div className="h-10 w-10 rounded bg-slate-200" />
+            
+            {/* Actions */}
+            <div className="mt-3 sm:mt-4 flex flex-col xs:flex-row items-stretch xs:items-center gap-2 pt-3 sm:pt-4 border-t border-slate-200">
+              <div className="h-9 sm:h-10 flex-1 rounded bg-slate-200" />
+              <div className="h-9 sm:h-10 flex-1 rounded bg-slate-200" />
+              <div className="h-9 sm:h-10 w-full xs:w-10 rounded bg-slate-200" />
             </div>
           </div>
         ))}
@@ -122,35 +157,49 @@ export default function PotentialSupervisorList({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {shortlist.map((item) => {
-        const identifier = item?.academician_id
-          ?? item?.academician?.user?.academician?.academician_id
-          ?? item?.academician?.academician_id
-          ?? item?.academician?.user?.academician_id;
-        const existingRequest = identifier ? activeRequestMap[String(identifier)] : null;
+    <>
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        {shortlist.map((item) => {
+          const identifier = item?.academician_id
+            ?? item?.academician?.user?.academician?.academician_id
+            ?? item?.academician?.academician_id
+            ?? item?.academician?.user?.academician_id;
+          const existingRequest = identifier ? activeRequestMap[String(identifier)] : null;
+          const academicianId = item?.academician?.academician_id;
 
-        return (
-          <PotentialSupervisorCard
-            key={item.id}
-            item={item}
-            existingRequest={existingRequest}
-            onRemove={handleRemove}
-            onRequest={onRequestSupervisor}
-            onViewRequest={onViewRequest}
-            isRemoving={removingId === item.academician_id}
-          />
-        );
-      })}
-    </div>
+          return (
+            <PotentialSupervisorCard
+              key={item.id}
+              item={item}
+              existingRequest={existingRequest}
+              activeRelationship={activeRelationship}
+              onRemove={handleRemoveClick}
+              onRequest={onRequestSupervisor}
+              onViewRequest={onViewRequest}
+              isRemoving={removingId === academicianId}
+            />
+          );
+        })}
+      </div>
+
+      {/* Remove Confirmation Modal */}
+      <ConfirmationModal
+        show={showRemoveModal}
+        onClose={() => {
+          setShowRemoveModal(false);
+          setItemToRemove(null);
+        }}
+        onConfirm={handleConfirmRemove}
+        title="Remove from Potential Supervisors"
+        message={`Are you sure you want to remove ${itemToRemove?.academician?.full_name || 'this supervisor'} from your potential supervisor list? You can always add them back later.`}
+        confirmButtonText="Yes, Remove"
+      />
+    </>
   );
 }
 
-function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isRemoving, existingRequest }) {
+function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isRemoving, existingRequest, activeRelationship = null }) {
   const [showAllAreas, setShowAllAreas] = useState(false);
-  const [isConnLoading, setIsConnLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('not_connected');
-  const [connectionId, setConnectionId] = useState(null);
   
   const academician = item?.academician ?? {};
   const fullName = academician.full_name ?? 'Supervisor';
@@ -166,13 +215,24 @@ function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isR
   const user = academician?.user;
   const displayedAreas = showAllAreas ? researchAreas : researchAreas.slice(0, 1);
 
-  // Initialize connection status from user data
-  useEffect(() => {
-    if (user?.connection_status_with_auth_user) {
-      setConnectionStatus(user.connection_status_with_auth_user.status || 'not_connected');
-      setConnectionId(user.connection_status_with_auth_user.connection_id || null);
-    }
-  }, [user]);
+  // Check if this supervisor is the student's current/bound supervisor
+  const academicianIdentifier = item?.academician_id;
+  const isCurrentSupervisor = useMemo(() => {
+    if (!activeRelationship || !academicianIdentifier) return false;
+    return String(activeRelationship.academician_id) === String(academicianIdentifier);
+  }, [activeRelationship, academicianIdentifier]);
+
+  // Check if student has any active relationship
+  const hasActiveRelationship = Boolean(activeRelationship);
+
+  // Connection state - initialize directly from user data (like SupervisorCard.jsx)
+  const [isConnLoading, setIsConnLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(
+    user?.connection_status_with_auth_user?.status || 'not_connected'
+  );
+  const [connectionId, setConnectionId] = useState(
+    user?.connection_status_with_auth_user?.connection_id || null
+  );
 
   const connect = async () => {
     if (!user?.id) return;
@@ -224,94 +284,108 @@ function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isR
   };
 
   return (
-    <div className="border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3 min-w-0">
-          {profileUrl ? (
-            <Link href={route('academicians.show', profileUrl)} className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all cursor-pointer">
+    <div className="border rounded-xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-md transition-shadow min-h-[320px] sm:min-h-[340px] flex flex-col">
+      {/* Card Content - Grows to fill space */}
+      <div className="flex-1">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+            {profileUrl ? (
+              <Link href={route('academicians.show', profileUrl)} className="flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-indigo-300 transition-all cursor-pointer">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <User2 className="w-5 h-5 text-indigo-600" />
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
                 ) : (
                   <User2 className="w-5 h-5 text-indigo-600" />
                 )}
               </div>
-            </Link>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover rounded-full" />
+            )}
+            <div className="min-w-0 flex-1">
+              {profileUrl ? (
+                <Link href={route('academicians.show', profileUrl)}>
+                  <h3 className="text-sm sm:text-[1.05rem] font-semibold text-gray-900 leading-snug truncate hover:text-indigo-600 transition-colors cursor-pointer">{fullName}</h3>
+                </Link>
               ) : (
-                <User2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-sm sm:text-[1.05rem] font-semibold text-gray-900 leading-snug truncate">{fullName}</h3>
               )}
+              {university && <p className="text-xs sm:text-sm text-gray-600 truncate font-normal">{university}</p>}
+            </div>
+          </div>
+          {savedAt && (
+            <div className="text-[10px] sm:text-xs text-slate-500 flex-shrink-0">
+              Saved {savedAt}
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            {profileUrl ? (
-              <Link href={route('academicians.show', profileUrl)}>
-                <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate hover:text-indigo-600 transition-colors cursor-pointer">{fullName}</h3>
-              </Link>
-            ) : (
-              <h3 className="text-[1.05rem] font-semibold text-gray-900 leading-snug truncate">{fullName}</h3>
-            )}
-            {university && <p className="text-sm text-gray-600 truncate font-normal">{university}</p>}
+        </div>
+
+        {/* Metadata */}
+        <div className="mt-3 sm:mt-4 flex items-center flex-wrap gap-x-3 sm:gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-600">
+          {availability && (
+            <div className="inline-flex items-center gap-1.5 text-green-700">
+              <MessageSquareMore className="w-4 h-4" />
+              <span>Accepting Students</span>
+            </div>
+          )}
+          <div className="flex items-center">
+            <BookOpen className="w-4 h-4 mr-1.5 text-gray-400" />
+            <span>{publications} Publications</span>
+          </div>
+          <div className="flex items-center">
+            <FolderKanban className="w-4 h-4 mr-1.5 text-gray-400" />
+            <span>{projects} Projects</span>
           </div>
         </div>
-        {savedAt && (
-          <div className="text-xs text-slate-500 flex-shrink-0">
-            Saved {savedAt}
+
+        {/* Research Areas */}
+        {Array.isArray(researchAreas) && researchAreas.length > 0 && (
+          <div className="mt-3">
+            <p className="text-gray-800 text-sm font-medium mb-2">Research Areas:</p>
+            <TooltipProvider delayDuration={300}>
+              <div className="flex flex-wrap gap-2">
+                {displayedAreas.map((area, i) => (
+                  <Tooltip key={i}>
+                    <TooltipTrigger asChild>
+                      <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200 line-clamp-1 truncate max-w-[350px] cursor-help">
+                        {area}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">{area}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
+            {/* Count badge on separate line below research areas */}
+            <div className="mt-2">
+              {researchAreas.length > 1 ? (
+                <button
+                  onClick={() => setShowAllAreas(!showAllAreas)}
+                  className="px-2.5 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                >
+                  {showAllAreas ? 'Show less' : `+${researchAreas.length - 1} more`}
+                </button>
+              ) : (
+                <span className="px-2.5 py-1 text-xs rounded-full bg-slate-50 text-slate-500 border border-slate-200">
+                  1 area
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Metadata */}
-      <div className="mt-4 flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600">
-        {availability && (
-          <div className="inline-flex items-center gap-1.5 text-green-700">
-            <MessageSquareMore className="w-4 h-4" />
-            <span>Accepting Students</span>
-          </div>
-        )}
-        <div className="flex items-center">
-          <BookOpen className="w-4 h-4 mr-1.5 text-gray-400" />
-          <span>{publications} Publications</span>
-        </div>
-        <div className="flex items-center">
-          <FolderKanban className="w-4 h-4 mr-1.5 text-gray-400" />
-          <span>{projects} Projects</span>
-        </div>
-      </div>
-
-      {/* Research Areas */}
-      {Array.isArray(researchAreas) && researchAreas.length > 0 && (
-        <div className="mt-3">
-          <p className="text-gray-800 text-sm font-medium mb-2">Research Areas:</p>
-          <div className="flex flex-wrap gap-2">
-            {displayedAreas.map((area, i) => (
-              <span key={i} className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-                {area}
-              </span>
-            ))}
-            {researchAreas.length > 1 && (
-              <button
-                onClick={() => setShowAllAreas(!showAllAreas)}
-                className="px-2.5 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors"
-              >
-                {showAllAreas ? 'Show less' : `+${researchAreas.length - 1} more`}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Info Note */}
-      {/* <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-900">
-        Your proposal and documents will be included when you submit a supervision request.
-      </div> */}
-
-      {/* Actions */}
-      <div className="mt-4 flex items-center gap-2 pt-4 border-t">
+      {/* Actions - Always at bottom */}
+      <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 pt-3 sm:pt-4 border-t">
         {/* Primary Actions */}
         {(() => {
           if (isConnLoading) {
@@ -354,14 +428,42 @@ function PotentialSupervisorCard({ item, onRemove, onRequest, onViewRequest, isR
           }
         })()}
 
-        <Button
-          className="flex-1"
-          variant={existingRequest ? 'outline' : 'default'}
-          onClick={() => (existingRequest ? onViewRequest?.(existingRequest) : onRequest?.(item))}
-        >
-          <MessageSquareMore className="mr-2 h-4 w-4" />
-          {existingRequest ? 'View Request' : 'Request Supervision'}
-        </Button>
+        {!hasActiveRelationship ? (
+          <Button
+            className="flex-1 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            variant="ghost"
+            onClick={() => (existingRequest ? onViewRequest?.(existingRequest) : onRequest?.(item))}
+          >
+            {existingRequest ? (
+              <>
+                <Eye className="mr-2 h-4 w-4" />
+                View Request
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Request
+              </>
+            )}
+          </Button>
+        ) : isCurrentSupervisor ? (
+          <Button
+            className="flex-1 border-2 border-green-500 bg-green-50 text-green-700 hover:bg-green-100"
+            onClick={() => onViewRequest?.(existingRequest)}
+          >
+            <CheckCircle2 className="mr-2 h-4 w-4 fill-current" />
+            Your Current Supervisor
+          </Button>
+        ) : (
+          <Button
+            className="flex-1"
+            variant="outline"
+            disabled
+          >
+            <MessageSquareMore className="mr-2 h-4 w-4" />
+            Request
+          </Button>
+        )}
         
         <Button
           type="button"

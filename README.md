@@ -47,11 +47,12 @@
 
 ### Collaboration
 
--   **ScholarLab** (ProjectHub in coding perspective): A comprehensive task management and collaboration platform for research projects, featuring:
+-   **NexLab** (ProjectHub/ScholarLab in coding perspective): A comprehensive task management and collaboration platform for research projects, featuring:
     -   Multiple views: Kanban board, list, table, calendar, and timeline (Gantt chart).
     -   Hierarchical organization: Workspaces → Boards → Lists → Tasks.
     -   Real-time collaboration with WebSocket updates.
     -   Specialized task types for academic paper writing.
+-   **Supervision Management**: A complete postgraduate supervision system enabling students to find and request supervisors, manage proposals, schedule meetings, and collaborate throughout their academic journey. Features automated workflows, co-supervisor support, and integrated NexLab workspaces. See [detailed supervision documentation](docs/supervision/INDEX.md).
 -   **Faculty Admin System**: A dedicated role for faculty members to manage and verify academicians within their faculty.
 -   **Messaging System**: Real-time direct and group messaging with file attachments, typing indicators, and read receipts.
 

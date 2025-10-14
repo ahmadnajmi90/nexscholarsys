@@ -18,6 +18,9 @@ use Inertia\Inertia;
 use Silber\Bouncer\BouncerFacade;
 use App\Mail\ProfileUpdateReminder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Services\QdrantService;
 
 class ProfileReminderController extends Controller
 {
@@ -27,10 +30,17 @@ class ProfileReminderController extends Controller
     const ITEMS_PER_PAGE = 10;
 
     /**
+     * Qdrant service instance
+     */
+    protected $qdrantService;
+
+    /**
      * Construct the controller with admin middleware
      */
-    public function __construct()
+    public function __construct(QdrantService $qdrantService)
     {
+        $this->qdrantService = $qdrantService;
+        
         $this->middleware(function ($request, $next) {
             if (!Auth::check() || !BouncerFacade::is(Auth::user())->an('admin')) {
                 abort(403, 'Unauthorized action.');
@@ -722,6 +732,279 @@ class ProfileReminderController extends Controller
             'success' => true, 
             'message' => 'Batch reminders sent successfully',
             'count' => count($users)
+        ]);
+    }
+    
+    /**
+     * Deactivate a user account
+     * - Deletes role profile from role-based tables
+     * - Sets unique_id to null in users table
+     * - Sets is_profile_complete to false
+     * - Removes embedding from Qdrant database
+     */
+    public function deactivateUser(Request $request)
+    {
+        $request->validate([
+            'userId' => 'required|integer|exists:users,id',
+        ]);
+        
+        DB::beginTransaction();
+        
+        try {
+            $user = User::with(['academician', 'postgraduate', 'undergraduate'])->findOrFail($request->userId);
+            
+            // Store unique_id and role info before deletion
+            $uniqueId = $user->unique_id;
+            $roleType = null;
+            $roleId = null;
+            
+            // Determine user role and delete role profile
+            if ($user->academician) {
+                $roleType = 'academician';
+                $roleId = $user->academician->id;
+                
+                // Delete from Qdrant first (needs unique_id)
+                if ($uniqueId && config('services.qdrant.enabled', false)) {
+                    try {
+                        $this->qdrantService->deleteAcademicianEmbedding($uniqueId);
+                        Log::info("Deleted academician embedding from Qdrant", [
+                            'unique_id' => $uniqueId,
+                            'user_id' => $user->id
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to delete academician embedding from Qdrant", [
+                            'unique_id' => $uniqueId,
+                            'error' => $e->getMessage()
+                        ]);
+                        // Continue with deactivation even if Qdrant deletion fails
+                    }
+                }
+                
+                // Delete academician profile
+                $user->academician()->delete();
+                
+            } elseif ($user->postgraduate) {
+                $roleType = 'postgraduate';
+                $roleId = $user->postgraduate->id;
+                
+                // Delete from Qdrant first
+                if ($roleId && config('services.qdrant.enabled', false)) {
+                    try {
+                        $this->qdrantService->deleteStudentEmbedding('postgraduate', $roleId);
+                        Log::info("Deleted postgraduate embedding from Qdrant", [
+                            'student_type' => 'postgraduate',
+                            'student_id' => $roleId,
+                            'user_id' => $user->id
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to delete postgraduate embedding from Qdrant", [
+                            'student_id' => $roleId,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+                
+                // Delete postgraduate profile
+                $user->postgraduate()->delete();
+                
+            } elseif ($user->undergraduate) {
+                $roleType = 'undergraduate';
+                $roleId = $user->undergraduate->id;
+                
+                // Delete from Qdrant first
+                if ($roleId && config('services.qdrant.enabled', false)) {
+                    try {
+                        $this->qdrantService->deleteStudentEmbedding('undergraduate', $roleId);
+                        Log::info("Deleted undergraduate embedding from Qdrant", [
+                            'student_type' => 'undergraduate',
+                            'student_id' => $roleId,
+                            'user_id' => $user->id
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to delete undergraduate embedding from Qdrant", [
+                            'student_id' => $roleId,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+                
+                // Delete undergraduate profile
+                $user->undergraduate()->delete();
+            }
+            
+            // Update user record
+            $user->unique_id = null;
+            $user->is_profile_complete = false;
+            $user->save();
+            
+            // Remove role from Bouncer
+            if ($roleType) {
+                $user->retract($roleType);
+            }
+            
+            DB::commit();
+            
+            Log::info("User account deactivated successfully", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'role_type' => $roleType,
+                'previous_unique_id' => $uniqueId
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'User account deactivated successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'deactivated_role' => $roleType
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error("Failed to deactivate user account", [
+                'user_id' => $request->userId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate user account: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Batch deactivate multiple user accounts
+     */
+    public function deactivateBatchUsers(Request $request)
+    {
+        $request->validate([
+            'userIds' => 'required|array',
+            'userIds.*' => 'integer|exists:users,id',
+            'role' => 'required|string|in:academician,postgraduate,undergraduate',
+        ]);
+        
+        $successCount = 0;
+        $failedCount = 0;
+        $errors = [];
+        
+        foreach ($request->userIds as $userId) {
+            DB::beginTransaction();
+            
+            try {
+                $user = User::with(['academician', 'postgraduate', 'undergraduate'])->findOrFail($userId);
+                
+                // Store unique_id and role info before deletion
+                $uniqueId = $user->unique_id;
+                $roleType = null;
+                $roleId = null;
+                
+                // Determine user role and delete role profile
+                if ($user->academician) {
+                    $roleType = 'academician';
+                    $roleId = $user->academician->id;
+                    
+                    // Delete from Qdrant first (needs unique_id)
+                    if ($uniqueId && config('services.qdrant.enabled', false)) {
+                        try {
+                            $this->qdrantService->deleteAcademicianEmbedding($uniqueId);
+                        } catch (\Exception $e) {
+                            Log::warning("Failed to delete academician embedding from Qdrant in batch", [
+                                'unique_id' => $uniqueId,
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    // Delete academician profile
+                    $user->academician()->delete();
+                    
+                } elseif ($user->postgraduate) {
+                    $roleType = 'postgraduate';
+                    $roleId = $user->postgraduate->id;
+                    
+                    // Delete from Qdrant first
+                    if ($roleId && config('services.qdrant.enabled', false)) {
+                        try {
+                            $this->qdrantService->deleteStudentEmbedding('postgraduate', $roleId);
+                        } catch (\Exception $e) {
+                            Log::warning("Failed to delete postgraduate embedding from Qdrant in batch", [
+                                'student_id' => $roleId,
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    // Delete postgraduate profile
+                    $user->postgraduate()->delete();
+                    
+                } elseif ($user->undergraduate) {
+                    $roleType = 'undergraduate';
+                    $roleId = $user->undergraduate->id;
+                    
+                    // Delete from Qdrant first
+                    if ($roleId && config('services.qdrant.enabled', false)) {
+                        try {
+                            $this->qdrantService->deleteStudentEmbedding('undergraduate', $roleId);
+                        } catch (\Exception $e) {
+                            Log::warning("Failed to delete undergraduate embedding from Qdrant in batch", [
+                                'student_id' => $roleId,
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage()
+                            ]);
+                        }
+                    }
+                    
+                    // Delete undergraduate profile
+                    $user->undergraduate()->delete();
+                }
+                
+                // Update user record
+                $user->unique_id = null;
+                $user->is_profile_complete = false;
+                $user->save();
+                
+                // Remove role from Bouncer
+                if ($roleType) {
+                    $user->retract($roleType);
+                }
+                
+                DB::commit();
+                $successCount++;
+                
+                Log::info("User account deactivated successfully in batch", [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'role_type' => $roleType
+                ]);
+                
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $failedCount++;
+                $errors[] = [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage()
+                ];
+                
+                Log::error("Failed to deactivate user account in batch", [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Batch deactivation completed: {$successCount} successful, {$failedCount} failed",
+            'success_count' => $successCount,
+            'failed_count' => $failedCount,
+            'errors' => $errors
         ]);
     }
 }
