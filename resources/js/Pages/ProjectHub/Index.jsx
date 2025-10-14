@@ -345,4 +345,4 @@ export default function Index({ workspaces, projects, linkableProjects, connecti
 }
 
 // Set the layout for this page
-Index.layout = page => <MainLayout title="Scholar Lab" children={page} TopMenuOpen={false} />;
+Index.layout = page => <MainLayout title="NexLab" children={page} TopMenuOpen={false} />;

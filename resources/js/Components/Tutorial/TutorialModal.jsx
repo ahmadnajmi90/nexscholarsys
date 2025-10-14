@@ -187,7 +187,7 @@ export default function TutorialModal({ show, onClose }) {
         },
         {
             id: 'projects',
-            title: 'Collaborate in ScholarLab',
+            title: 'Collaborate in NexLab',
             icon: '📋',
             content: (
                 <div className="space-y-3 sm:space-y-4">

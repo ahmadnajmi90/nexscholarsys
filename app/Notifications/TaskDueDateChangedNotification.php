@@ -51,7 +51,7 @@ class TaskDueDateChangedNotification extends Notification implements ShouldQueue
                 return (new MailMessage)
                     ->subject('Task Due Date Changed')
                     ->line('A task due date has been changed, but some details are missing.')
-                    ->line('Please check your tasks in ScholarLab.');
+                    ->line('Please check your tasks in NexLab.');
             }
             
             $taskTitle = $this->task->title ?? 'Unknown Task';
@@ -103,7 +103,7 @@ class TaskDueDateChangedNotification extends Notification implements ShouldQueue
                 ->line("Previous due date: {$formattedOldDate}")
                 ->line("New due date: {$formattedNewDate}")
                 ->action('View Task', $boardUrl)
-                ->line('Thank you for using ScholarLab!');
+                ->line('Thank you for using NexLab!');
         } catch (\Exception $e) {
             Log::error('TaskDueDateChangedNotification: Exception in toMail', [
                 'exception' => $e->getMessage(),
@@ -113,7 +113,7 @@ class TaskDueDateChangedNotification extends Notification implements ShouldQueue
             return (new MailMessage)
                 ->subject('Task Due Date Changed')
                 ->line('A task due date has been changed, but we encountered an error processing the details.')
-                ->line('Please check your tasks in ScholarLab.');
+                ->line('Please check your tasks in NexLab.');
         }
     }
 

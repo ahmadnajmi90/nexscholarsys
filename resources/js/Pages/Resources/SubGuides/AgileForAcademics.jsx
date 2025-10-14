@@ -6,13 +6,13 @@ const AgileForAcademics = () => {
         <div className="space-y-8">
             <div className="border-b border-gray-200 pb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
-                    Agile for Academics: Managing Your PhD Using the ScholarLab's Kanban Board
+                    Agile for Academics: Managing Your PhD Using NexLab's Kanban Board
                 </h1>
                 <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
                     A PhD is not a single project; it's a multi-year marathon composed of countless smaller sprints. It involves coursework, extensive reading, experiments, data analysis, writing, and publishing—all happening at once. It's easy to feel overwhelmed and lose sight of your progress.
                 </p>
                 <p className="text-gray-700 mt-4">
-                    What if you could borrow a proven strategy from the world of software development to bring clarity, focus, and a sense of momentum to your research? Welcome to Agile for Academics. This guide will introduce you to the basics of the Agile methodology and show you how to implement it using the intuitive Kanban Board in your Nexscholar ScholarLab.
+                    What if you could borrow a proven strategy from the world of software development to bring clarity, focus, and a sense of momentum to your research? Welcome to Agile for Academics. This guide will introduce you to the basics of the Agile methodology and show you how to implement it using the intuitive Kanban Board in your Nexscholar NexLab.
                 </p>
             </div>
 
@@ -45,7 +45,7 @@ const AgileForAcademics = () => {
                 <section>
                     <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3 leading-tight">
                         <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        Setting Up Your PhD Kanban Board in the ScholarLab
+                        Setting Up Your PhD Kanban Board in NexLab
                     </h2>
                     <p className="text-gray-700 leading-relaxed mb-8">
                         Let's get practical. Here's how to create your personal PhD command center in just a few minutes.
@@ -77,7 +77,7 @@ const AgileForAcademics = () => {
                                 <div className="flex-1">
                                     <h3 className="text-xl font-semibold text-gray-900 mb-3">Create a New Board</h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        In your ScholarLab, create a new Board and give it a name like "My PhD Journey" or "Thesis Command Center."
+                                        In your NexLab, create a new Board and give it a name like "My PhD Journey" or "Thesis Command Center."
                                     </p>
                                 </div>
                             </div>
@@ -92,7 +92,7 @@ const AgileForAcademics = () => {
                                 <div className="flex-1">
                                     <h3 className="text-xl font-semibold text-gray-900 mb-3">Set Up Your Workflow Lists</h3>
                                     <p className="text-gray-700 leading-relaxed mb-4">
-                                        A Kanban board is all about the columns (we call them "Lists" in the ScholarLab). We recommend starting with a simple, powerful five-list setup for your PhD:
+                                        A Kanban board is all about the columns (we call them "Lists" in NexLab). We recommend starting with a simple, powerful five-list setup for your PhD:
                                     </p>
                                     <div className="bg-gray-50 rounded-lg p-4">
                                         <ul className="space-y-2 text-gray-700 font-medium">
@@ -259,7 +259,7 @@ const AgileForAcademics = () => {
                 <section className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg p-4 sm:p-6 lg:p-8 text-white text-center">
                     <h2 className="text-xl sm:text-2xl font-semibold mb-4 leading-tight">Stop Drowning, Start Doing</h2>
                     <p className="text-green-100 mb-6 leading-relaxed">
-                        Your PhD is a journey, not a single, monolithic task. By adopting an agile mindset and using the ScholarLab's Kanban board, you can transform a source of anxiety into a manageable, motivating, and even enjoyable process.
+                        Your PhD is a journey, not a single, monolithic task. By adopting an agile mindset and using NexLab's Kanban board, you can transform a source of anxiety into a manageable, motivating, and even enjoyable process.
                     </p>
                     <p className="text-green-200 mb-6">
                         Set up your board today and take the first step towards a more organized and productive research journey.

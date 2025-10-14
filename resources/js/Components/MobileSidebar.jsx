@@ -54,7 +54,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
                 ...(isPostgraduate || isUndergraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School }] : []),
                 ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard }] : []),
-                { label: 'Scholar Lab', href: route('project-hub.index'), icon: FolderKanban  },
+                { label: 'NexLab', href: route('project-hub.index'), icon: FolderKanban  },
                 { label: 'Messages', href: route('messaging.inbox'), icon: MessageSquare },
             ]
         },

@@ -1,5 +1,7 @@
 # Inline Editing Feature for Renaming Titles
 
+> **Note on Naming Convention**: This document refers to "ScholarLab" in file paths and technical implementation details. The user-facing brand name for this feature is **NexLab**. See [NAMING_CONVENTIONS.md](../NAMING_CONVENTIONS.md) for more information about the distinction between internal code names (ScholarLab/ProjectHub) and the user-facing brand name (NexLab).
+
 ## **Feature Overview**
 
 The inline editing feature allows users to easily rename workspaces, projects, boards, and lists without navigating away from the page. The feature will be integrated with **permissions** to ensure that only authorized users can rename entities. Changes will be broadcasted in **real-time** to all connected users.

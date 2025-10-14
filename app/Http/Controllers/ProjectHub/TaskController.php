@@ -9,6 +9,7 @@ use App\Models\BoardList;
 use App\Models\Task;
 use App\Models\PaperWritingTask;
 use App\Models\TaskComment;
+use App\Models\User;
 use App\Events\TaskMoved;
 use App\Notifications\TaskAssignedNotification;
 use App\Notifications\TaskDueDateChangedNotification;
@@ -131,6 +132,20 @@ class TaskController extends Controller
             }
         }
         
+        // Check if we need to show Google Calendar prompt and store in session
+        if ($task->due_date) {
+            $calendarPromptData = $this->buildCalendarPromptData($task, $request->user());
+            
+            // Load the task with necessary relationships for the calendar prompt
+            $task->load(['assignees', 'list.board.boardable']);
+            
+            // Flash to session for Inertia to share with frontend
+            return Redirect::back()
+                ->with('success', 'Task created successfully.')
+                ->with('google_calendar_prompt', $calendarPromptData)
+                ->with('task_for_calendar', $task->toArray());
+        }
+        
         return Redirect::back()->with('success', 'Task created successfully.');
     }
     
@@ -178,7 +193,7 @@ class TaskController extends Controller
         ]);
         
         // Check if due date is being changed
-        $oldDueDate = $task->due_date ? $task->due_date->format('Y-m-d') : null;
+        $oldDueDate = $task->due_date ? $task->due_date->format('Y-m-d H:i:s') : null;
         $newDueDate = $validated['due_date'] ?? null;
         $dueDateChanged = $oldDueDate !== $newDueDate && ($oldDueDate !== null || $newDueDate !== null);
         
@@ -189,6 +204,12 @@ class TaskController extends Controller
             'due_date' => $validated['due_date'] ?? null,
             'priority' => $validated['priority'] ?? $task->priority,
         ]);
+
+        // Handle Google Calendar event updates if due date changed
+        if ($dueDateChanged && $task->hasGoogleCalendarEvent()) {
+            $googleCalendarService = app(\App\Services\GoogleCalendarService::class);
+            $googleCalendarService->updateTaskEvent($task);
+        }
         
         // Handle assignees if provided
         if ($request->has('assignees')) {
@@ -271,6 +292,20 @@ class TaskController extends Controller
             'attachments.user',
             'paperWritingTask'
         ]);
+
+        // Check if we need to show Google Calendar prompt for due date changes
+        if ($dueDateChanged && $task->due_date && !$task->hasGoogleCalendarEvent()) {
+            $calendarPromptData = $this->buildCalendarPromptData($task, $request->user());
+            
+            // Reload the task with necessary relationships
+            $task->load(['assignees', 'list.board.boardable']);
+            
+            // Flash to session for Inertia to share with frontend
+            return Redirect::back()
+                ->with('success', 'Task updated successfully.')
+                ->with('google_calendar_prompt', $calendarPromptData)
+                ->with('task_for_calendar', $task->toArray());
+        }
         
         return Redirect::back()->with('success', 'Task updated successfully.');
     }
@@ -443,5 +478,31 @@ class TaskController extends Controller
 
         $message = $task->archived_at ? 'Task archived successfully.' : 'Task restored successfully.';
         return Redirect::back()->with('success', $message);
+    }
+
+    /**
+     * Build Google Calendar prompt data for task
+     */
+    private function buildCalendarPromptData(Task $task, User $user): ?array
+    {
+        if (!$task->due_date) {
+            return null;
+        }
+
+        // Check if user has Google Calendar connected
+        $userConnected = $user->hasGoogleCalendarConnected();
+        
+        // Check if assignees have Google Calendar connected
+        $assigneesConnected = $task->assignees->filter(function ($assignee) {
+            return $assignee->hasGoogleCalendarConnected();
+        })->count();
+
+        return [
+            'show_prompt' => true,
+            'user_connected' => $userConnected,
+            'assignees_connected' => $assigneesConnected > 0,
+            'total_assignees' => $task->assignees->count(),
+            'connected_assignees' => $assigneesConnected,
+        ];
     }
 }

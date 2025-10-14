@@ -127,7 +127,7 @@ const tutorialSections = [
         content: {
             tools: [
                 {
-                    title: 'ScholarLab',
+                    title: 'NexLab',
                     description: 'Organize your research with flexible project management tools.',
                     features: ['Kanban boards', 'List views', 'Calendar integration', 'Timeline tracking']
                 },

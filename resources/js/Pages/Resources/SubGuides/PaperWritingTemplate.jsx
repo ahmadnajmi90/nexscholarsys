@@ -6,13 +6,13 @@ const PaperWritingTemplate = () => {
         <div className="space-y-8">
             <div className="border-b border-gray-200 pb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
-                    The Ultimate Paper Writing Project Template (For the Nexscholar ScholarLab)
+                    The Ultimate Paper Writing Project Template (For the Nexscholar NexLab)
                 </h1>
                 <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
                     Managing the journey of a research paper—from a fleeting idea to a final, published manuscript—can feel chaotic. Scattered notes, endless email chains, and missed deadlines are all too common for researchers here in Johor Bahru and around the world.
                 </p>
                 <p className="text-gray-700 mt-4">
-                    What if you could manage the entire process in one clean, visual, and collaborative space? Welcome to the Ultimate Paper Writing Project Template, a pre-built workflow designed specifically for the Nexscholar ScholarLab. This guide will show you exactly how to set up this template in your own workspace, leveraging our specialized academic features to bring structure, clarity, and efficiency to your research.
+                    What if you could manage the entire process in one clean, visual, and collaborative space? Welcome to the Ultimate Paper Writing Project Template, a pre-built workflow designed specifically for the Nexscholar NexLab. This guide will show you exactly how to set up this template in your own workspace, leveraging our specialized academic features to bring structure, clarity, and efficiency to your research.
                 </p>
             </div>
 
@@ -78,7 +78,7 @@ const PaperWritingTemplate = () => {
                                 <div className="flex-1">
                                     <h3 className="text-xl font-semibold text-gray-900 mb-3">Create a New Board</h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        In your ScholarLab, navigate to the appropriate Workspace and create a new Board. We suggest naming it after your paper, for example: "Paper: The Impact of AI on Malaysian SMEs."
+                                        In your NexLab, navigate to the appropriate Workspace and create a new Board. We suggest naming it after your paper, for example: "Paper: The Impact of AI on Malaysian SMEs."
                                     </p>
                                 </div>
                             </div>
@@ -279,7 +279,7 @@ const PaperWritingTemplate = () => {
                 <section className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg p-4 sm:p-6 lg:p-8 text-white text-center">
                     <h2 className="text-xl sm:text-2xl font-semibold mb-4 leading-tight">Start Writing Today!</h2>
                     <p className="text-green-100 mb-6 leading-relaxed">
-                        Stop managing your research in scattered documents and endless email threads. Set up your Ultimate Paper Writing Template in the ScholarLab today and bring clarity, focus, and powerful collaboration to your next publication.
+                        Stop managing your research in scattered documents and endless email threads. Set up your Ultimate Paper Writing Template in NexLab today and bring clarity, focus, and powerful collaboration to your next publication.
                     </p>
                 </section>
             </div>

@@ -178,7 +178,7 @@ function OverviewTab({ request, relationship }) {
     { label: 'Status', value: formatEventType(status) },
     { label: 'Meeting cadence', value: relationship?.meeting_cadence ? (relationship.meeting_cadence.charAt(0).toUpperCase() + relationship.meeting_cadence.slice(1)) : 'Not set' },
     { label: 'Accepted on', value: relationship?.accepted_at ? format(new Date(relationship.accepted_at), 'PPP') : 'Pending acceptance' },
-    { label: 'ScholarLab', value: relationship?.scholarlab_board_id ? 'Workspace ready' : 'Workspace not provisioned' },
+    { label: 'NexLab', value: relationship?.scholarlab_board_id ? 'Workspace ready' : 'Workspace not provisioned' },
   ];
 
   return (

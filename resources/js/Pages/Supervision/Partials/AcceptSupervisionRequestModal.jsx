@@ -261,10 +261,10 @@ export default function AcceptSupervisionRequestModal({ isOpen, request, onClose
                 />
                 <div className="flex-1">
                   <Label htmlFor="scholarlab" className="text-sm font-medium text-slate-900 cursor-pointer">
-                    Create ScholarLab Supervision Board
+                    Create NexLab Supervision Board
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
-                    Automatically create a shared board in ScholarLab with default lists for supervision tasks, deliverables, meetings, and paper workstreams.
+                    Automatically create a shared board in NexLab with default lists for supervision tasks, deliverables, meetings, and paper workstreams.
                   </p>
                 </div>
               </div>

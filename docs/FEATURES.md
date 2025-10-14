@@ -12,7 +12,7 @@ This document provides a detailed breakdown of the major features implemented in
   - [Posts, Events, & Projects](#posts-events--projects)
   - [Unified Funding System (Grants & Scholarships)](#unified-funding-system-grants--scholarships)
 - [3. Collaboration & Networking](#3-collaboration--networking)
-  - [ScholarLab (ProjectHub)](#scholarlab-projecthub)
+  - [NexLab (ProjectHub)](#nexlab-projecthub)
   - [My Network (Connections)](#my-network-connections)
   - [Messaging](#messaging)
   - [Supervision Management](#supervision-management)
@@ -115,13 +115,13 @@ A cohesive system for managing funding opportunities, combining grants and schol
 
 ## 3. Collaboration & Networking
 
-### ScholarLab (ProjectHub)
+### NexLab (ProjectHub)
 
 A comprehensive, real-time task management platform for academic projects, inspired by tools like Trello and Asana.
 
 -   **Purpose**: To provide a collaborative workspace for research teams to manage tasks, track progress, and communicate effectively.
--   **UI**: A highly interactive SPA located in `resources/js/Pages/ProjectHub/` (ScholarLab interface).
--   **Backend Logic**: A group of controllers under `app/Http/Controllers/ProjectHub/` (ScholarLab backend) manages workspaces, boards, lists, tasks, and members. Real-time updates are powered by Laravel Reverb, broadcasting events like `TaskMoved`.
+-   **UI**: A highly interactive SPA located in `resources/js/Pages/ProjectHub/` (NexLab interface).
+-   **Backend Logic**: A group of controllers under `app/Http/Controllers/ProjectHub/` (NexLab backend) manages workspaces, boards, lists, tasks, and members. Real-time updates are powered by Laravel Reverb, broadcasting events like `TaskMoved`.
 -   **Key Features**:
     -   **Hierarchical Structure**: Workspaces > Boards > Lists > Tasks.
     -   **Multiple Views**:
@@ -176,7 +176,7 @@ A comprehensive system for managing postgraduate supervision relationships from 
     -   **Request Lifecycle**:
         -   Students can submit supervision requests (max 5 pending) with proposal details, research abstract extraction, and attachments.
         -   Supervisors review requests, schedule meetings, and make accept/reject decisions.
-        -   Acceptance auto-creates active relationships, sets up ScholarLab workspaces, and cancels competing proposals.
+        -   Acceptance auto-creates active relationships, sets up NexLab workspaces, and cancels competing proposals.
         -   Rejection workflow includes feedback and optional alternative supervisor recommendations.
     -   **Active Supervision**:
         -   Main supervisor designation with support for up to 2 co-supervisors.
@@ -195,7 +195,7 @@ A comprehensive system for managing postgraduate supervision relationships from 
         -   Provides audit trail for supervision history.
     -   **Integration**:
         -   **Messaging**: Auto-creates conversation threads on request submission, bypassing connection requirements.
-        -   **ScholarLab**: Creates dedicated supervision workspace with pre-configured boards for research collaboration.
+        -   **NexLab**: Creates dedicated supervision workspace with pre-configured boards for research collaboration.
         -   **Notifications**: Comprehensive email and in-app notifications for all lifecycle events (submitted, accepted, rejected, meetings, etc.).
         -   **AI Matching**: Integrates with semantic search to help students find suitable supervisors.
     -   **Automated Workflows**:

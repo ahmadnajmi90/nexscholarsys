@@ -303,7 +303,7 @@ function getConfig(type, items, acceptances, rejections) {
               <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-green-900">
                 <p className="font-semibold mb-1">Supervision Relationships Active</p>
-                <p>Your new supervision relationships are now active. You can manage students, schedule meetings, and collaborate via ScholarLab.</p>
+                <p>Your new supervision relationships are now active. You can manage students, schedule meetings, and collaborate via NexLab.</p>
               </div>
             </div>
           </div>

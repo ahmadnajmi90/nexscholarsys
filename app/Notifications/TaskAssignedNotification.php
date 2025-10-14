@@ -53,7 +53,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
                 return (new MailMessage)
                     ->subject('Task Assignment')
                     ->line('You have been assigned to a task, but some details are missing.')
-                    ->line('Please check your tasks in ScholarLab.');
+                    ->line('Please check your tasks in NexLab.');
             }
             
             $taskTitle = $this->task->title ?? 'Unknown Task';
@@ -99,7 +99,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             
             return $message
                 ->action('View Task', $boardUrl)
-                ->line('Thank you for using ScholarLab!');
+                ->line('Thank you for using NexLab!');
         } catch (\Exception $e) {
             Log::error('TaskAssignedNotification: Exception in toMail', [
                 'exception' => $e->getMessage(),
@@ -109,7 +109,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             return (new MailMessage)
                 ->subject('Task Assignment')
                 ->line('You have been assigned to a task, but we encountered an error processing the details.')
-                ->line('Please check your tasks in ScholarLab.');
+                ->line('Please check your tasks in NexLab.');
         }
     }
 

@@ -167,7 +167,7 @@ export default function UnifiedOverviewTab({ relationship, person, userRole, act
               value={acceptedAt} 
             />
             <InfoItem 
-              label="ScholarLab" 
+              label="NexLab" 
               value={relationship.scholarlab_board_id 
                 ? (userRole === 'student' ? 'Active Workspace' : 'Active')
                 : 'Not provisioned'

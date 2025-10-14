@@ -27,7 +27,7 @@ The Supervision Management System is a comprehensive platform feature that strea
 - **Document Collaboration**: Shared repository for proposals, reports, and research materials
 - **Activity Tracking**: Complete audit trail of all supervision events
 - **Automated Workflows**: Smart automation for request limits, auto-cancellations, and notifications
-- **Integration**: Seamless connection with Messaging, ScholarLab, and AI Matching features
+- **Integration**: Seamless connection with Messaging, NexLab, and AI Matching features
 
 ---
 
@@ -113,7 +113,7 @@ Key tables:
 5. **Decision**: Wait for supervisor to accept or reject
 6. **Activation**: Upon acceptance:
    - Active supervision relationship created
-   - ScholarLab workspace auto-created
+   - NexLab workspace auto-created
    - All other pending requests auto-cancelled
    - Connection established with supervisor
 7. **Collaboration**: Ongoing meetings, document sharing, and research management
@@ -129,7 +129,7 @@ Key tables:
    - Add private notes
    - Communicate via integrated chat
 4. **Decision Making**:
-   - **Accept**: Define role (main/co), meeting cadence, start term, optional ScholarLab workspace
+   - **Accept**: Define role (main/co), meeting cadence, start term, optional NexLab workspace
    - **Reject**: Provide feedback, optional alternative supervisor recommendations
 5. **Active Management**:
    - Schedule regular meetings with reminders
@@ -155,7 +155,7 @@ Key tables:
 - **Bypass**: No "must be connected" gate for supervision-originated conversations
 - **Persistence**: Conversation accessible from modal and global Messages page
 
-### ScholarLab (ProjectHub)
+### NexLab (ProjectHub)
 - **Trigger**: Supervisor acceptance (if opted-in)
 - **Action**: Creates dedicated supervision workspace with pre-configured board
 - **Members**: Supervisor (Owner) + Student (Member) + Co-supervisors (if any)

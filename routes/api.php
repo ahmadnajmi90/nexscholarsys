@@ -347,6 +347,16 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
                 ->name('sync');
         });
 
+        // Task Google Calendar routes
+        Route::prefix('tasks')->name('tasks.google-calendar.')->group(function () {
+            Route::get('/google-calendar/status', [\App\Http\Controllers\Api\V1\TaskGoogleCalendarController::class, 'status'])
+                ->name('status');
+            Route::post('/{task}/google-calendar/add', [\App\Http\Controllers\Api\V1\TaskGoogleCalendarController::class, 'addTask'])
+                ->name('add');
+            Route::delete('/{task}/google-calendar/remove', [\App\Http\Controllers\Api\V1\TaskGoogleCalendarController::class, 'removeTask'])
+                ->name('remove');
+        });
+
         // Unbind Request Routes
         Route::get('/unbind-requests', [\App\Http\Controllers\Api\V1\Supervision\UnbindRequestController::class, 'index'])
             ->name('unbind-requests.index');

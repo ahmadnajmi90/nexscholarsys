@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\SupervisionMeeting;
+use App\Models\Task;
 use Google\Client as GoogleClient;
 use Google\Service\Calendar;
 use Google\Service\Calendar\Event;
@@ -351,6 +352,224 @@ class GoogleCalendarService
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Create a calendar event for a task
+     */
+    public function createTaskEvent(Task $task, User $organizer): ?string
+    {
+        try {
+            // Only proceed if organizer has calendar connected and task has due date
+            if (!$organizer->hasGoogleCalendarConnected() || !$task->due_date) {
+                Log::info('Cannot create task calendar event', [
+                    'task_id' => $task->id,
+                    'organizer_id' => $organizer->id,
+                    'has_calendar' => $organizer->hasGoogleCalendarConnected(),
+                    'has_due_date' => !is_null($task->due_date),
+                ]);
+                return null;
+            }
+
+            $service = $this->getCalendarService($organizer);
+
+            // Build event description with task details
+            $description = $this->buildTaskEventDescription($task);
+            
+            // Build event location with workspace/project context
+            $location = $this->buildTaskEventLocation($task);
+
+            // Create 1-hour event ending at due date
+            $endTime = $task->due_date;
+            $startTime = $task->due_date->copy()->subHour();
+
+            $event = new Event([
+                'summary' => $task->title,
+                'description' => $description,
+                'location' => $location,
+                'start' => new EventDateTime([
+                    'dateTime' => $startTime->toRfc3339String(),
+                    'timeZone' => config('app.timezone'),
+                ]),
+                'end' => new EventDateTime([
+                    'dateTime' => $endTime->toRfc3339String(),
+                    'timeZone' => config('app.timezone'),
+                ]),
+                'reminders' => [
+                    'useDefault' => false,
+                    'overrides' => [
+                        ['method' => 'email', 'minutes' => 24 * 60], // 24 hours before
+                        ['method' => 'popup', 'minutes' => 60], // 1 hour before
+                    ],
+                ],
+            ]);
+
+            // Add assignees as attendees if they have Google Calendar connected
+            $attendees = [];
+            foreach ($task->assignees as $assignee) {
+                if ($assignee->hasGoogleCalendarConnected() && $assignee->email && $assignee->id !== $organizer->id) {
+                    $attendees[] = new EventAttendee(['email' => $assignee->email]);
+                }
+            }
+            
+            if (!empty($attendees)) {
+                $event->setAttendees($attendees);
+            }
+
+            $createdEvent = $service->events->insert('primary', $event);
+            $eventId = $createdEvent->getId();
+
+            Log::info('Google Calendar task event created', [
+                'task_id' => $task->id,
+                'event_id' => $eventId,
+            ]);
+
+            return $eventId;
+        } catch (Exception $e) {
+            Log::error('Failed to create Google Calendar task event', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Update an existing calendar event for a task
+     */
+    public function updateTaskEvent(Task $task): void
+    {
+        try {
+            if (!$task->hasGoogleCalendarEvent() || !$task->due_date) {
+                return;
+            }
+
+            // Find the organizer (creator of the task)
+            $organizer = $task->creator;
+            if (!$organizer || !$organizer->hasGoogleCalendarConnected()) {
+                return;
+            }
+
+            $service = $this->getCalendarService($organizer);
+
+            // Get existing event
+            $event = $service->events->get('primary', $task->external_event_id);
+
+            // Update event details
+            $event->setSummary($task->title);
+            $event->setDescription($this->buildTaskEventDescription($task));
+            $event->setLocation($this->buildTaskEventLocation($task));
+
+            // Update timing - 1-hour event ending at due date
+            $endTime = $task->due_date;
+            $startTime = $task->due_date->copy()->subHour();
+
+            $event->setStart(new EventDateTime([
+                'dateTime' => $startTime->toRfc3339String(),
+                'timeZone' => config('app.timezone'),
+            ]));
+            $event->setEnd(new EventDateTime([
+                'dateTime' => $endTime->toRfc3339String(),
+                'timeZone' => config('app.timezone'),
+            ]));
+
+            // Update attendees
+            $attendees = [];
+            foreach ($task->assignees as $assignee) {
+                if ($assignee->hasGoogleCalendarConnected() && $assignee->email && $assignee->id !== $organizer->id) {
+                    $attendees[] = new EventAttendee(['email' => $assignee->email]);
+                }
+            }
+            $event->setAttendees($attendees);
+
+            $service->events->update('primary', $task->external_event_id, $event);
+
+            Log::info('Google Calendar task event updated', [
+                'task_id' => $task->id,
+                'event_id' => $task->external_event_id,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to update Google Calendar task event', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Delete a calendar event for a task
+     */
+    public function deleteTaskEvent(Task $task): void
+    {
+        try {
+            if (!$task->hasGoogleCalendarEvent()) {
+                return;
+            }
+
+            $organizer = $task->creator;
+            if (!$organizer || !$organizer->hasGoogleCalendarConnected()) {
+                return;
+            }
+
+            $service = $this->getCalendarService($organizer);
+            $service->events->delete('primary', $task->external_event_id);
+
+            Log::info('Google Calendar task event deleted', [
+                'task_id' => $task->id,
+                'event_id' => $task->external_event_id,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to delete Google Calendar task event', [
+                'task_id' => $task->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Build task event description with task details
+     */
+    private function buildTaskEventDescription(Task $task): string
+    {
+        $description = '';
+        
+        if ($task->description) {
+            $description .= $task->description . "\n\n";
+        }
+        
+        $description .= "Priority: {$task->priority}\n";
+        
+        if ($task->assignees->count() > 0) {
+            $assigneeNames = $task->assignees->map(function ($assignee) {
+                return $assignee->full_name ?? $assignee->name ?? $assignee->email;
+            })->join(', ');
+            $description .= "Assignees: {$assigneeNames}\n";
+        }
+        
+        $description .= "\nCreated in NexLab";
+        
+        return $description;
+    }
+
+    /**
+     * Build task event location with workspace/project context
+     */
+    private function buildTaskEventLocation(Task $task): string
+    {
+        $location = '';
+        
+        if ($task->list && $task->list->board) {
+            $board = $task->list->board;
+            $location .= "Board: {$board->name}";
+            
+            if ($board->boardable) {
+                $parent = $board->boardable;
+                $parentType = class_basename($parent);
+                $location .= " ({$parentType}: {$parent->name})";
+            }
+        }
+        
+        return $location ?: 'NexLab';
     }
 
     /**
