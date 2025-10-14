@@ -54,7 +54,7 @@ const MobileSidebar = ({ isOpen, toggleSidebar }) => {
                 ...(isAdmin ? [{ label: 'Network Map', href: route('network.map'), icon: Map }] : []),
                 { label: 'Postgraduate Recommendations', href: route('postgraduate-recommendations.index'), icon: GraduationCap, beta: true },
                 { label: 'My Bookmarks', href: route('bookmarks.index'), icon: Bookmark },
-                ...(isPostgraduate || isUndergraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School, beta: true }] : []),
+                ...(isPostgraduate ? [{ label: 'My Supervisor', href: route('supervision.student.index'), icon: School, beta: true }] : []),
                 ...(isAcademician ? [{ label: 'Supervisor Dashboard', href: route('supervision.supervisor.index'), icon: LayoutDashboard, beta: true }] : []),
                 { label: 'NexLab', href: route('project-hub.index'), icon: FolderKanban, beta: true },
             ]

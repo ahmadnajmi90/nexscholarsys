@@ -153,7 +153,7 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                                 <span className="text-sm font-medium text-gray-700 truncate w-full">My Bookmarks</span>
                             </Link>
                         </motion.div>
-                        {(isPostgraduate || isUndergraduate) && (
+                        {isPostgraduate && (
                             <motion.div variants={itemVariants}>
                                 <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
                                     <School className="w-5 h-5 text-gray-600 mb-2" />
