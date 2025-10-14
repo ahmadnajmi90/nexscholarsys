@@ -252,7 +252,7 @@ const EventCard = ({ events, researchOptions, isLoading }) => {
                 </div>
                 <Link
                   href={route("events.show", event.url)}
-                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
+                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-white"
                 >
                   View Details
                 </Link>

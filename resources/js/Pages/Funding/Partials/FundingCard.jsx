@@ -416,7 +416,7 @@ const FundingCard = ({ fundingItems, isLoading }) => {
                                         href={item.type === 'grant'
                                             ? route("funding.show.grant", { url: item.url })
                                             : route("funding.show.scholarship", { url: item.url })}
-                                        className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-dark"
+                                        className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium transition hover:border-primary hover:bg-primary hover:text-white"
                                     >
                                         View Details
                                     </Link>

@@ -4,6 +4,7 @@ import AcademicianProfileCard from '@/Pages/Networking/partials/AcademicianProfi
 import MainLayout from '@/Layouts/MainLayout';
 import useRoles from '@/Hooks/useRoles';
 import { Link, Head } from '@inertiajs/react';
+import Breadcrumb from "@/Components/Breadcrumb";
 
 const AcademicianList = ({ academicians, faculties, researchOptions, universities, faculty, university, users, searchQuery }) => {
     const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
@@ -35,81 +36,84 @@ const AcademicianList = ({ academicians, faculties, researchOptions, universitie
         );
     }, [faculty.id]);
     
+    const breadcrumbLinks = [
+        { title: "Universities", url: route("universities.index") },
+        { title: university.full_name, url: route("universities.faculties", { university: university.id }) },
+        { title: faculty.name, url: null },
+    ];
+
     return (
         <MainLayout title="">
             <Head title="Academician List" />
 
-             {/* faculty Banner and Details Section */}
-             <div className="relative bg-gray-200">
-                {/* Banner Image */}
-                <div className="w-full h-64 overflow-hidden">
-                <img
-                        src={
-                            university.background_image
-                                ? `/storage/${university.background_image}`
-                                : '/storage/university_background_images/default.jpg'
-                        }
-                        alt="Faculty Banner"
-                        className="w-full h-full object-cover"
-                    />
-                </div>
+            <div className="p-4 md:p-8">
+                <Breadcrumb links={breadcrumbLinks} />
 
-                {/* faculty Logo and Details */}
-                <div className="absolute top-40 left-1/2 transform -translate-x-1/2 w-full max-w-4xl text-center">
-                    <div className="inline-block w-32 h-32 rounded-full overflow-hidden border-4 border-white">
-                        <img
-                            src={`/storage/${university.profile_picture}`
+                {/* faculty Banner and Details Section */}
+                <div className="relative bg-gray-200 mt-4">
+                    {/* Banner Image */}
+                    <div className="w-full h-64 overflow-hidden">
+                    <img
+                            src={
+                                university.background_image
+                                    ? `/storage/${university.background_image}`
+                                    : '/storage/university_background_images/default.jpg'
                             }
-                            alt="Faculty Logo"
+                            alt="Faculty Banner"
                             className="w-full h-full object-cover"
                         />
                     </div>
 
-                    <h1 className="mt-8 text-2xl md:text-3xl sm:text-lg font-bold text-gray-800">
-                        {faculty.name}
-                    </h1>
-                </div>
-            </div>
+                    {/* faculty Logo and Details */}
+                    <div className="absolute top-40 left-1/2 transform -translate-x-1/2 w-full max-w-4xl text-center">
+                        <div className="inline-block w-32 h-32 rounded-full overflow-hidden border-4 border-white">
+                            <img
+                                src={`/storage/${university.profile_picture}`}
+                                alt="Faculty Logo"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
 
-            {/* Navigation Tabs */}
-            <div className="md:mt-40 mt-36 border-b border-gray-300 mb-10">
-                <div className="flex space-x-6 md:ml-0 ml-4">
-                    {/* <Link
-                        href="#"
-                        className="text-lg font-semibold text-gray-600 hover:text-blue-600 pb-2"
-                    >
-                        Top Management
-                    </Link> */}
-                    <Link
-                        href={route('faculties.academicians', faculty.id)}
-                        className="md:text-lg text-normal font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
-                        >
-                        Academician
-                    </Link>
-                    <Link
-                        href={route('faculties.postgraduates', faculty.id)}
-                        className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
-                        >
-                        Postgraduate
-                    </Link>
-                    <Link
-                        href={route('faculties.undergraduates', faculty.id)}
-                        className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
-                        >
-                        Undergraduate
-                    </Link>
+                        <h1 className="mt-8 text-2xl md:text-3xl sm:text-lg font-bold text-gray-800">
+                            {faculty.name}
+                        </h1>
+                    </div>
                 </div>
-            </div>
 
-            <AcademicianProfileCard 
-                profilesData={academicians} 
-                universitiesList={universities} 
-                faculties={faculties}
-                users={users}
-                researchOptions={researchOptions}
-                searchQuery={searchQuery || ""}
-                isLoading={isLoading}
-                onSearch={handleSearch} />
+                {/* Navigation Tabs */}
+                <div className="md:mt-40 mt-36 border-b border-gray-300 mb-10">
+                    <div className="flex space-x-6 md:ml-0 ml-4">
+                        <Link
+                            href={route('faculties.academicians', faculty.id)}
+                            className="md:text-lg text-normal font-semibold text-blue-600 hover:text-blue-800 border-b-2 border-blue-600 pb-2"
+                            >
+                            Academician
+                        </Link>
+                        <Link
+                            href={route('faculties.postgraduates', faculty.id)}
+                            className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                            >
+                            Postgraduate
+                        </Link>
+                        <Link
+                            href={route('faculties.undergraduates', faculty.id)}
+                            className="md:text-lg text-normal font-semibold text-gray-600 hover:text-blue-600 pb-2"
+                            >
+                            Undergraduate
+                        </Link>
+                    </div>
+                </div>
+
+                <AcademicianProfileCard 
+                    profilesData={academicians} 
+                    universitiesList={universities} 
+                    faculties={faculties}
+                    users={users}
+                    researchOptions={researchOptions}
+                    searchQuery={searchQuery || ""}
+                    isLoading={isLoading}
+                    onSearch={handleSearch} />
+            </div>
         </MainLayout>
     );
 };

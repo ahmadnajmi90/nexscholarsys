@@ -138,7 +138,7 @@ const PostCard = ({ posts, isLoading }) => {
                 <div className="px-4">
                   <a 
                     href={route('posts.show', post.url)}
-                    className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
+                    className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-white"
                   >
                     View Details
                   </a>

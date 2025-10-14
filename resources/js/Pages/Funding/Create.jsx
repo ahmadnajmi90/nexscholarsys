@@ -7,6 +7,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useRoles from "../../Hooks/useRoles";
 import InputLabel from '@/Components/InputLabel';
+import BackButton from '@/Components/BackButton'
 import { Head } from '@inertiajs/react';
 
 // Simplified array for scholarship options
@@ -172,22 +173,7 @@ export default function Create() {
       <div className="p-4">
         {/* Back Button */}
         <div className="mb-4">
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              className="w-4 h-4 mr-2"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
+          <BackButton />
         </div>
 
         <form

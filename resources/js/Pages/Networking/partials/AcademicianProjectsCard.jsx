@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import { FaArrowLeft } from "react-icons/fa";
+import BackButton from '@/Components/BackButton';
 
 const AcademicianProjectsCard = ({ academician, university, faculty, user, projects, researchOptions }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,13 +20,8 @@ const AcademicianProjectsCard = ({ academician, university, faculty, user, proje
   return (
     <div className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
       {/* Back Button */}
-      <div className="absolute top-[2rem] left-6 md:top-[3rem] md:left-[20.2rem] z-10">
-        <Link 
-          onClick={() => window.history.back()}
-          className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
-        >
-          <FaArrowLeft className="text-xl" />
-        </Link>
+      <div className="mb-4">
+          <BackButton />
       </div>
 
       {/* Profile Header */}

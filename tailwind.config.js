@@ -35,14 +35,6 @@ export default {
     					backgroundPosition: '0% 50%'
     				}
     			},
-<<<<<<< HEAD
-    			'slide-in-right': {
-    				'0%': {
-    					transform: 'translateX(100%)'
-    				},
-    				'100%': {
-    					transform: 'translateX(0)'
-=======
     			slideInRight: {
     				'0%': {
     					transform: 'translateX(100%)',
@@ -59,21 +51,16 @@ export default {
     				},
     				'100%': {
     					opacity: '1'
->>>>>>> fea/scholarlab-pusher
     				}
     			}
     		},
     		animation: {
     			gradient: 'gradient 8s linear infinite',
-<<<<<<< HEAD
-    			'slide-in-right': 'slide-in-right 0.3s ease-out'
-=======
     			slideInRight: 'slideInRight 0.3s ease-out',
     			fadeIn: 'fadeIn 0.3s ease-out'
     		},
     		scale: {
     			'98': '0.98'
->>>>>>> fea/scholarlab-pusher
     		},
     		borderRadius: {
     			lg: 'var(--radius)',

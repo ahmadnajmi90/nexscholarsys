@@ -244,7 +244,7 @@ const ProjectCard = ({ projects, isLoading }) => {
                 </div>
                 <Link
                   href={route("projects.show", project.url)}
-                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-dark"
+                  className="inline-block rounded-full border border-gray-300 px-7 py-2 text-base font-medium text-body-color transition hover:border-primary hover:bg-primary hover:text-white"
                 >
                   View Details
                 </Link>

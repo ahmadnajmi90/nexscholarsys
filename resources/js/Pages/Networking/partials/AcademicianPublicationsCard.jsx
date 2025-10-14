@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "@inertiajs/react";
 import { FaArrowLeft, FaExternalLinkAlt, FaQuoteLeft, FaListAlt, FaChevronDown, FaChevronUp, FaSync } from "react-icons/fa";
 import axios from "axios";
+import BackButton from '@/Components/BackButton';
 
 const AcademicianPublicationsCard = ({ 
     academician, 
@@ -103,13 +104,8 @@ const AcademicianPublicationsCard = ({
     <div className={`${hideProfile ? '' : 'max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8'}`}>
       {/* Back Button - only shown when not hidden */}
       {!hideNavigation && (
-        <div className="absolute top-[2rem] left-6 md:top-[3rem] md:left-[20.2rem] z-10">
-          <Link 
-            onClick={() => window.history.back()}
-            className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
-          >
-            <FaArrowLeft className="text-xl" />
-          </Link>
+        <div className="mb-4">
+          <BackButton />
         </div>
       )}
 

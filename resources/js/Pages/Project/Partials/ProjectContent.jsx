@@ -14,6 +14,7 @@ import axios from 'axios';
 import { Helmet } from 'react-helmet';
 import { trackEvent, trackPageView } from '@/Utils/analytics';
 import BookmarkButton from '@/Components/BookmarkButton';
+import BackButton from '@/Components/BackButton';
 import DOMPurify from 'dompurify';
 import { toast } from 'react-hot-toast';
 
@@ -222,14 +223,7 @@ export default function ProjectContent({ project, previous, next, academicians, 
         <div className="max-w-8xl mx-auto py-4 lg:pt-4">
         {/* Back Button */}
         <div className="mb-6">
-            <Link 
-                onClick={() => window.history.back()}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                aria-label="Go back to previous page"
-            >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-            </Link>
+            <BackButton />
             </div>
 
         {/* Title */}
