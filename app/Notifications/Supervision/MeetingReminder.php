@@ -51,9 +51,16 @@ class MeetingReminder extends Notification implements ShouldQueue
             $notifiable->academician->academician_id === $this->meeting->request?->academician_id
         );
 
-        $otherPartyName = $isSupervisor
-            ? ($this->meeting->relationship?->student->full_name ?? $this->meeting->request?->student->full_name ?? 'Student')
-            : ($this->meeting->relationship?->academician->full_name ?? $this->meeting->request?->academician->full_name ?? 'Supervisor');
+        // Get other party (opposite of recipient)
+        if ($isSupervisor) {
+            $otherParty = $this->meeting->relationship?->student ?? $this->meeting->request?->student;
+            $otherPartyName = $otherParty?->full_name ?? 'Student';
+            $otherPartyProfilePicture = $otherParty?->postgraduate?->profile_picture ?? $otherParty?->undergraduate?->profile_picture ?? null;
+        } else {
+            $otherParty = $this->meeting->relationship?->academician ?? $this->meeting->request?->academician;
+            $otherPartyName = $otherParty?->full_name ?? 'Supervisor';
+            $otherPartyProfilePicture = $otherParty?->profile_picture ?? null;
+        }
 
         $reminderText = $this->reminderType === '1h' ? 'in 1 hour' : 'in 24 hours';
 
@@ -66,6 +73,7 @@ class MeetingReminder extends Notification implements ShouldQueue
             'scheduled_for' => $this->meeting->scheduled_for->toISOString(),
             'location_link' => $this->meeting->location_link,
             'other_party_name' => $otherPartyName,
+            'other_party_profile_picture' => $otherPartyProfilePicture,
             'reminder_type' => $this->reminderType,
             'message' => __('Reminder: Meeting with :name ":title" starting :when', [
                 'name' => $otherPartyName,

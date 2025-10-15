@@ -34,12 +34,20 @@ class SupervisionOfferReceived extends Notification implements ShouldQueue
 
     public function toArray($notifiable)
     {
+        // Get supervisor profile picture
+        $supervisorProfilePicture = null;
+        $academician = $this->request->academician;
+        if ($academician && $academician->profile_picture) {
+            $supervisorProfilePicture = $academician->profile_picture;
+        }
+
         return [
             'type' => 'offer_received',
             'request_id' => $this->request->id,
             'student_id' => $this->request->student_id,
             'academician_id' => $this->request->academician_id,
             'supervisor_name' => $this->request->academician->full_name ?? 'Your supervisor',
+            'supervisor_profile_picture' => $supervisorProfilePicture,
             'proposal_title' => $this->request->proposal_title,
             'message' => __(':supervisor has accepted your supervision request and sent you an offer!', [
                 'supervisor' => $this->request->academician->full_name ?? 'A supervisor',

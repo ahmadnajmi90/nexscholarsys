@@ -42,9 +42,16 @@ class CoSupervisorApproved extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         $cosupervisor = $this->invitation->cosupervisor;
-        $approver = $this->invitation->getApproverRole() === 'student'
-            ? $this->invitation->relationship->student->user->full_name
-            : $this->invitation->relationship->academician->user->full_name;
+        $relationship = $this->invitation->relationship;
+        
+        // Get approver details
+        if ($this->invitation->getApproverRole() === 'student') {
+            $approver = $relationship->student->user->full_name;
+            $approverProfilePicture = $relationship->student->profile_picture;
+        } else {
+            $approver = $relationship->academician->user->full_name;
+            $approverProfilePicture = $relationship->academician->profile_picture;
+        }
 
         return [
             'type' => 'cosupervisor_approved',
@@ -52,7 +59,9 @@ class CoSupervisorApproved extends Notification implements ShouldQueue
             'relationship_id' => $this->invitation->relationship_id,
             'cosupervisor_name' => $cosupervisor->user->full_name,
             'cosupervisor_id' => $cosupervisor->academician_id,
+            'cosupervisor_profile_picture' => $cosupervisor->profile_picture,
             'approver' => $approver,
+            'approver_profile_picture' => $approverProfilePicture,
             'message' => "The co-supervisor invitation for {$cosupervisor->user->full_name} has been approved by {$approver}.",
         ];
     }

@@ -34,12 +34,24 @@ class StudentAcceptedOffer extends Notification implements ShouldQueue
 
     public function toArray($notifiable)
     {
+        // Get student profile picture
+        $studentProfilePicture = null;
+        $student = $this->relationship->student;
+        if ($student) {
+            if ($student->postgraduate) {
+                $studentProfilePicture = $student->postgraduate->profile_picture;
+            } elseif ($student->undergraduate) {
+                $studentProfilePicture = $student->undergraduate->profile_picture;
+            }
+        }
+
         return [
             'type' => 'student_accepted_offer',
             'relationship_id' => $this->relationship->id,
             'student_id' => $this->relationship->student_id,
             'academician_id' => $this->relationship->academician_id,
             'student_name' => $this->relationship->student->full_name ?? 'Student',
+            'student_profile_picture' => $studentProfilePicture,
             'message' => __(':student has accepted your supervision offer! The relationship is now active.', [
                 'student' => $this->relationship->student->full_name ?? 'A student',
             ]),

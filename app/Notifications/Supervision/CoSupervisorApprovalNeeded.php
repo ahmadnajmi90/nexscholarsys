@@ -45,9 +45,16 @@ class CoSupervisorApprovalNeeded extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         $cosupervisor = $this->invitation->cosupervisor;
-        $initiator = $this->invitation->initiated_by === 'student' 
-            ? $this->invitation->relationship->student->user->full_name
-            : $this->invitation->relationship->academician->user->full_name;
+        $relationship = $this->invitation->relationship;
+        
+        // Get initiator details
+        if ($this->invitation->initiated_by === 'student') {
+            $initiator = $relationship->student->user->full_name;
+            $initiatorProfilePicture = $relationship->student->profile_picture;
+        } else {
+            $initiator = $relationship->academician->user->full_name;
+            $initiatorProfilePicture = $relationship->academician->profile_picture;
+        }
 
         return [
             'type' => 'cosupervisor_approval_needed',
@@ -55,7 +62,9 @@ class CoSupervisorApprovalNeeded extends Notification implements ShouldQueue
             'relationship_id' => $this->invitation->relationship_id,
             'cosupervisor_name' => $cosupervisor->user->full_name,
             'cosupervisor_id' => $cosupervisor->academician_id,
+            'cosupervisor_profile_picture' => $cosupervisor->profile_picture,
             'initiator' => $initiator,
+            'initiator_profile_picture' => $initiatorProfilePicture,
             'initiated_by' => $this->invitation->initiated_by,
             'message' => "{$cosupervisor->user->full_name} accepted the invitation from {$initiator}. Your approval is required.",
         ];

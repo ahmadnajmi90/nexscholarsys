@@ -44,9 +44,16 @@ class CoSupervisorRejectedByApprover extends Notification implements ShouldQueue
     {
         $cosupervisor = $this->invitation->cosupervisor;
         $approverRole = $this->invitation->getApproverRole();
-        $approver = $approverRole === 'student'
-            ? $this->invitation->relationship->student->user->full_name
-            : $this->invitation->relationship->academician->user->full_name;
+        $relationship = $this->invitation->relationship;
+        
+        // Get approver details
+        if ($approverRole === 'student') {
+            $approver = $relationship->student->user->full_name;
+            $approverProfilePicture = $relationship->student->profile_picture;
+        } else {
+            $approver = $relationship->academician->user->full_name;
+            $approverProfilePicture = $relationship->academician->profile_picture;
+        }
 
         return [
             'type' => 'cosupervisor_rejected_by_approver',
@@ -54,7 +61,9 @@ class CoSupervisorRejectedByApprover extends Notification implements ShouldQueue
             'relationship_id' => $this->invitation->relationship_id,
             'cosupervisor_name' => $cosupervisor->user->full_name,
             'cosupervisor_id' => $cosupervisor->academician_id,
+            'cosupervisor_profile_picture' => $cosupervisor->profile_picture,
             'approver' => $approver,
+            'approver_profile_picture' => $approverProfilePicture,
             'approver_role' => $approverRole,
             'rejection_reason' => $this->invitation->rejection_reason,
             'message' => "The co-supervisor invitation for {$cosupervisor->user->full_name} was not approved by {$approver}.",

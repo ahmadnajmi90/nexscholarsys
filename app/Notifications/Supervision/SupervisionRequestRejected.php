@@ -34,12 +34,21 @@ class SupervisionRequestRejected extends Notification implements ShouldQueue
 
     public function toArray($notifiable)
     {
+        // Get supervisor profile picture
+        $supervisorProfilePicture = null;
+        $supervisor = $this->request->supervisor;
+        if ($supervisor && $supervisor->academician) {
+            $supervisorProfilePicture = $supervisor->academician->profile_picture;
+        }
+
         return [
             'type' => 'request_rejected',
             'request_id' => $this->request->id,
             'student_id' => $this->request->student_id,
             'academician_id' => $this->request->academician_id,
             'reason' => $this->request->cancel_reason,
+            'supervisor_name' => $supervisor->full_name ?? 'Supervisor',
+            'supervisor_profile_picture' => $supervisorProfilePicture,
         ];
     }
 }

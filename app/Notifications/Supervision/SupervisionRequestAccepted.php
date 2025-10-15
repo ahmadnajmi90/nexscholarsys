@@ -34,11 +34,20 @@ class SupervisionRequestAccepted extends Notification implements ShouldQueue
 
     public function toArray($notifiable)
     {
+        // Get supervisor profile picture
+        $supervisorProfilePicture = null;
+        $supervisor = $this->relationship->supervisor;
+        if ($supervisor && $supervisor->academician) {
+            $supervisorProfilePicture = $supervisor->academician->profile_picture;
+        }
+
         return [
             'type' => 'request_accepted',
             'relationship_id' => $this->relationship->id,
             'student_id' => $this->relationship->student_id,
             'academician_id' => $this->relationship->academician_id,
+            'supervisor_name' => $supervisor->full_name ?? 'Supervisor',
+            'supervisor_profile_picture' => $supervisorProfilePicture,
         ];
     }
 }

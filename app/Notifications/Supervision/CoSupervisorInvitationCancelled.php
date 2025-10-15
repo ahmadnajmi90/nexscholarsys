@@ -44,15 +44,22 @@ class CoSupervisorInvitationCancelled extends Notification implements ShouldQueu
     public function toArray($notifiable)
     {
         $relationship = $this->invitation->relationship;
-        $initiator = $this->invitation->initiated_by === 'student'
-            ? $relationship->student->user->full_name
-            : $relationship->academician->user->full_name;
+        
+        // Get initiator details
+        if ($this->invitation->initiated_by === 'student') {
+            $initiator = $relationship->student->user->full_name;
+            $initiatorProfilePicture = $relationship->student->profile_picture;
+        } else {
+            $initiator = $relationship->academician->user->full_name;
+            $initiatorProfilePicture = $relationship->academician->profile_picture;
+        }
 
         return [
             'type' => 'cosupervisor_invitation_cancelled',
             'invitation_id' => $this->invitation->id,
             'relationship_id' => $this->invitation->relationship_id,
             'initiator' => $initiator,
+            'initiator_profile_picture' => $initiatorProfilePicture,
             'initiated_by' => $this->invitation->initiated_by,
             'message' => "The co-supervisor invitation has been cancelled by {$initiator}.",
         ];

@@ -46,10 +46,21 @@ class ConnectionRequestReceived extends Notification
      */
     public function toDatabase($notifiable): array
     {
+        // Get profile picture from requester's role model
+        $profilePicture = null;
+        if ($this->requester->academician) {
+            $profilePicture = $this->requester->academician->profile_picture;
+        } elseif ($this->requester->postgraduate) {
+            $profilePicture = $this->requester->postgraduate->profile_picture;
+        } elseif ($this->requester->undergraduate) {
+            $profilePicture = $this->requester->undergraduate->profile_picture;
+        }
+
         return [
             'connection_id' => $this->connectionRequest->id ?? '',
             'requester_id' => $this->requester->id,
             'requester_name' => $this->requester->full_name,
+            'requester_profile_picture' => $profilePicture,
             'type' => 'connection_request',
             'message' => "{$this->requester->full_name} sent you a connection request."
         ];
@@ -63,10 +74,21 @@ class ConnectionRequestReceived extends Notification
      */
     public function toArray($notifiable): array
     {
+        // Get profile picture from requester's role model
+        $profilePicture = null;
+        if ($this->requester->academician) {
+            $profilePicture = $this->requester->academician->profile_picture;
+        } elseif ($this->requester->postgraduate) {
+            $profilePicture = $this->requester->postgraduate->profile_picture;
+        } elseif ($this->requester->undergraduate) {
+            $profilePicture = $this->requester->undergraduate->profile_picture;
+        }
+
         return [
             'connection_id' => $this->connectionRequest->id ?? '',
             'requester_id' => $this->requester->id,
             'requester_name' => $this->requester->full_name,
+            'requester_profile_picture' => $profilePicture,
             'type' => 'connection_request',
             'message' => "{$this->requester->full_name} sent you a connection request."
         ];

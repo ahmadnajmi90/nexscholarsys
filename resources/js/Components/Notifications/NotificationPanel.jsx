@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  FaBell, FaCheck, FaSpinner, FaUserPlus, FaCheckCircle, 
-  FaEnvelopeOpenText, FaTimesCircle, FaUserGraduate, FaChalkboardTeacher,
-  FaCalendarAlt, FaClock, FaCalendarTimes, FaCalendarCheck,
-  FaExclamationTriangle, FaUnlink, FaBan, FaInfoCircle, FaUsers
-} from 'react-icons/fa';
+import { FaCheck, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
-import { router } from '@inertiajs/react';
 import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
-import { Button } from '@/Components/ui/button';
+import UserAvatar from './UserAvatar';
+import { getRelativeTime } from '@/Utils/notificationHelpers';
 
 const NotificationPanel = ({ isOpen, onClose }) => {
-  const [notifications, setNotifications] = useState({ unread: [], read: [], unread_count: 0 });
+  const [activeTab, setActiveTab] = useState('all'); // 'all' or 'unread'
+  const [allNotifications, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState([]);
   const panelRef = useRef(null);
@@ -38,8 +34,16 @@ const NotificationPanel = ({ isOpen, onClose }) => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-              const response = await axios.get('/api/v1/app/notifications');
-      setNotifications(response.data);
+      const response = await axios.get('/api/v1/app/notifications');
+      // Combine unread and read into single array, sorted by date descending
+      const combined = [
+        ...response.data.unread.map(n => ({ ...n, read_at: null })),
+        ...response.data.read
+      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      // Remove legacy duplicate connection-request notifications if a typed one exists
+      const deduped = dedupeNotifications(combined);
+      
+      setAllNotifications(deduped);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -50,24 +54,18 @@ const NotificationPanel = ({ isOpen, onClose }) => {
   const markAsRead = async (notificationId) => {
     setProcessingIds((prev) => [...prev, notificationId]);
     try {
-              await axios.post('/api/v1/app/notifications/mark-as-read', {
+      await axios.post('/api/v1/app/notifications/mark-as-read', {
         notification_id: notificationId,
       });
       
-      // Update the local state to reflect the change
-      setNotifications((prev) => {
-        const updatedUnread = prev.unread.filter((n) => n.id !== notificationId);
-        const movedNotification = prev.unread.find((n) => n.id === notificationId);
-        if (movedNotification) {
-          movedNotification.read_at = new Date().toISOString();
-          return {
-            unread: updatedUnread,
-            read: [movedNotification, ...prev.read],
-            unread_count: updatedUnread.length,
-          };
-        }
-        return prev;
-      });
+      // Update the local state to mark as read (stays in position)
+      setAllNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId
+            ? { ...n, read_at: new Date().toISOString() }
+            : n
+        )
+      );
     } catch (error) {
       console.error('Error marking notification as read:', error);
     } finally {
@@ -77,39 +75,141 @@ const NotificationPanel = ({ isOpen, onClose }) => {
 
   const markAllAsRead = async () => {
     try {
-              await axios.post('/api/v1/app/notifications/mark-all-as-read');
+      await axios.post('/api/v1/app/notifications/mark-all-as-read');
       
-      // Update the local state to reflect all notifications being read
-      setNotifications((prev) => {
-        const unreadWithReadAt = prev.unread.map(n => ({
-          ...n,
-          read_at: new Date().toISOString()
-        }));
-        
-        return {
-          unread: [],
-          read: [...unreadWithReadAt, ...prev.read],
-          unread_count: 0
-        };
-      });
+      // Mark all notifications as read in local state
+      setAllNotifications((prev) =>
+        prev.map((n) => ({ ...n, read_at: new Date().toISOString() }))
+      );
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
   };
 
-  const handleConnectionAction = (connectionId, action) => {
-    setProcessingIds((prev) => [...prev, connectionId]);
+  // In-panel action buttons have been removed for a cleaner design.
+  // Only "Mark as read" remains (shown on hover).
+
+  // Extract user data from notification
+  const getUserData = (notification) => {
+    const data = notification.data;
     
-    const url = route(`connections.${action}`, connectionId);
-    const method = action === 'accept' ? 'patch' : 'delete';
+    // Priority order for determining which user to show
+    // Connection notifications
+    if (data.requester_name) {
+      return {
+        name: data.requester_name,
+        profilePicture: data.requester_profile_picture,
+      };
+    }
+    if (data.recipient_name) {
+      return {
+        name: data.recipient_name,
+        profilePicture: data.recipient_profile_picture,
+      };
+    }
     
-    router[method](url, {}, {
-      onSuccess: () => {
-        fetchNotifications();
-      },
-      onFinish: () => {
-        setProcessingIds((prev) => prev.filter((id) => id !== connectionId));
+    // Supervision notifications
+    if (data.student_name) {
+      return {
+        name: data.student_name,
+        profilePicture: data.student_profile_picture,
+      };
+    }
+    if (data.supervisor_name) {
+      return {
+        name: data.supervisor_name,
+        profilePicture: data.supervisor_profile_picture,
+      };
+    }
+    
+    // Meeting notifications
+    if (data.scheduler_name) {
+      return {
+        name: data.scheduler_name,
+        profilePicture: data.scheduler_profile_picture,
+      };
+    }
+    if (data.other_party_name) {
+      return {
+        name: data.other_party_name,
+        profilePicture: data.other_party_profile_picture,
+      };
+    }
+    if (data.updater_name) {
+      return {
+        name: data.updater_name,
+        profilePicture: data.updater_profile_picture,
+      };
+    }
+    if (data.canceller_name) {
+      return {
+        name: data.canceller_name,
+        profilePicture: data.canceller_profile_picture,
+      };
+    }
+    
+    // Unbind notifications
+    if (data.initiator_name) {
+      return {
+        name: data.initiator_name,
+        profilePicture: data.initiator_profile_picture,
+      };
+    }
+    if (data.other_party_name) {
+      return {
+        name: data.other_party_name,
+        profilePicture: data.other_party_profile_picture,
+      };
+    }
+    
+    // Co-supervisor notifications
+    if (data.cosupervisor_name) {
+      return {
+        name: data.cosupervisor_name,
+        profilePicture: data.cosupervisor_profile_picture,
+      };
+    }
+    if (data.initiator) {
+      return {
+        name: data.initiator,
+        profilePicture: data.initiator_profile_picture,
+      };
+    }
+    if (data.approver) {
+      return {
+        name: data.approver,
+        profilePicture: data.approver_profile_picture,
+      };
+    }
+    
+    // Default fallback
+    return {
+      name: 'System',
+      profilePicture: null,
+    };
+  };
+
+  // De-duplicate legacy connection request notifications
+  const dedupeNotifications = (items) => {
+    const typedConnKeys = new Set();
+    items.forEach((n) => {
+      const d = n.data || {};
+      if (d.type === 'connection_request') {
+        const key = `rqid:${d.requester_id ?? ''}|name:${(d.requester_name ?? '').toLowerCase()}`;
+        typedConnKeys.add(key);
       }
+    });
+    return items.filter((n) => {
+      const d = n.data || {};
+      // keep all typed connection requests
+      if (d.type === 'connection_request') return true;
+      // drop legacy/plain-text connection requests if a typed one exists
+      const looksLikeLegacyConnReq = !d.type && d.message && /connection request/i.test(String(d.message)) && (d.requester_id || d.requester_name);
+      if (looksLikeLegacyConnReq) {
+        const key = `rqid:${d.requester_id ?? ''}|name:${(d.requester_name ?? '').toLowerCase()}`;
+        if (typedConnKeys.has(key)) return false;
+      }
+      return true;
     });
   };
 
@@ -117,6 +217,8 @@ const NotificationPanel = ({ isOpen, onClose }) => {
     const data = notification.data;
     const isProcessing = processingIds.includes(notification.id) || 
                         (data.connection_id && processingIds.includes(data.connection_id));
+    
+    const userData = getUserData(notification);
 
     if (isProcessing) {
       return (
@@ -127,728 +229,355 @@ const NotificationPanel = ({ isOpen, onClose }) => {
       );
     }
 
+    const renderBasicNotification = (title, description, actionButton = null) => (
+      <div className="flex items-start gap-3 py-3">
+        <UserAvatar 
+          src={userData.profilePicture} 
+          name={userData.name} 
+          size="md"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm">
+            <span className="font-semibold text-gray-900 dark:text-gray-50">{userData.name}</span>
+            {' '}
+            <span className="text-gray-600 dark:text-gray-300">{description}</span>
+          </p>
+          {title && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{title}</p>}
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+          {actionButton && <div className="mt-2">{actionButton}</div>}
+        </div>
+      </div>
+    );
+
     switch (data.type) {
       // ========== CONNECTION NOTIFICATIONS ==========
       case 'connection_request':
-        return (
-          <div className="py-2">
-            <div className="flex items-start mb-1">
-              <div className="bg-blue-100 rounded-full p-2 mr-3">
-                <FaUserPlus className="text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm">{data.message}</p>
-                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('en-GB')}</p>
-              </div>
-            </div>
-            {!notification.read_at && (
-              <div className="flex mt-2 space-x-2">
-                <button
-                  onClick={() => handleConnectionAction(data.connection_id, 'accept')}
-                  className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 flex items-center"
-                >
-                  <FaCheck className="mr-1" /> Accept
-                </button>
-                <button
-                  onClick={() => handleConnectionAction(data.connection_id, 'reject')}
-                  className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                >
-                  Reject
-                </button>
-              </div>
-            )}
-          </div>
+        return renderBasicNotification(
+          null,
+          'sent you a connection request'
         );
 
       case 'connection_accepted':
         return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-green-100 rounded-full p-2 mr-3">
-                <FaCheckCircle className="text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm">{data.message}</p>
-                <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString('en-GB')}</p>
-              </div>
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture} 
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="font-semibold text-gray-900 dark:text-gray-50">{userData.name}</span>
+                {' '}
+                <span className="text-gray-600 dark:text-gray-300">accepted your connection request</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">You are friend now!</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
             </div>
           </div>
         );
 
       // ========== SUPERVISION REQUEST NOTIFICATIONS ==========
       case 'request_submitted':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-indigo-100 rounded-full p-2 mr-3">
-                <FaEnvelopeOpenText className="text-indigo-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">New Supervision Request</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  <span className="font-semibold">{data.student_name || 'Student'}</span> submitted a request
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  <span className="font-medium">Topic:</span> {data.proposal_title || 'No title'}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-                {!notification.read_at && (
-                  <button
-                    onClick={() => router.visit(route('supervision.supervisor.index'))}
-                    className="mt-2 px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700"
-                  >
-                    Review Request
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.proposal_title,
+          'submitted a new supervision request'
         );
 
       case 'request_accepted':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                <FaCheckCircle className="text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Request Accepted!</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  Your supervision relationship is now active
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-                <button
-                  onClick={() => router.visit(route('supervision.student.index'))}
-                  className="mt-2 px-3 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700"
-                >
-                  View Dashboard
-                </button>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          null,
+          'accepted your supervision request'
         );
 
       case 'request_rejected':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-red-100 rounded-full p-2 mr-3">
-                <FaTimesCircle className="text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Request Declined</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.reason ? (
-                    <>
-                      <span className="font-semibold">Reason:</span> {getRejectionReasonLabel(data.reason)}
-                    </>
-                  ) : (
-                    'Your request was not accepted'
-                  )}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-                <button
-                  onClick={() => router.visit(route('supervision.student.index'))}
-                  className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                >
-                  View Details
-                </button>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.reason ? `Reason: ${getRejectionReasonLabel(data.reason)}` : null,
+          'declined your supervision request'
         );
 
       case 'offer_received':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-purple-100 rounded-full p-2 mr-3">
-                <FaUserGraduate className="text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">🎉 Supervision Offer Received!</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.supervisor_name} sent you an offer
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-                {!notification.read_at && (
-                  <button
-                    onClick={() => router.visit(route('supervision.student.index'))}
-                    className="mt-2 px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
-                  >
-                    Review Offer
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.proposal_title,
+          'sent you a supervision offer'
         );
 
       case 'student_accepted_offer':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                <FaCheckCircle className="text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Student Accepted Your Offer!</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.student_name} accepted - supervision is active
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-                <button
-                  onClick={() => router.visit(route('supervision.supervisor.index'))}
-                  className="mt-2 px-3 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700"
-                >
-                  View My Students
-                </button>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          null,
+          'accepted your supervision offer'
         );
 
       case 'student_rejected_offer':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-amber-100 rounded-full p-2 mr-3">
-                <FaInfoCircle className="text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Offer Declined</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.student_name} declined your offer for "{data.proposal_title}"
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.proposal_title && `Re: ${data.proposal_title}`,
+          'declined your supervision offer'
         );
 
       case 'request_cancelled':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-gray-100 rounded-full p-2 mr-3">
-                <FaBan className="text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Request Cancelled</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.student_name} cancelled their request for "{data.proposal_title}"
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.proposal_title && `Re: ${data.proposal_title}`,
+          'cancelled their supervision request'
         );
 
       // ========== UNBIND NOTIFICATIONS ==========
       case 'unbind_request_initiated':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className={`${data.is_force ? 'bg-red-100' : 'bg-orange-100'} rounded-full p-2 mr-3`}>
-                <FaUnlink className={`${data.is_force ? 'text-red-600' : 'text-orange-600'}`} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {data.is_force ? '⚠️ Relationship Terminated' : 'Termination Request'}
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.is_force 
-                    ? `${data.initiator_name} has terminated the relationship (force unbind)`
-                    : `${data.initiator_name} requested to terminate (Attempt ${data.attempt_count}/3)`
-                  }
-                </p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-                {!data.is_force && !notification.read_at && (
-                  <button
-                    onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'supervisor' ? 'student' : 'supervisor') + '.index'))}
-                    className="mt-2 px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700"
-                  >
-                    Review Request
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.is_force ? '⚠️ Force unbind' : `Attempt ${data.attempt_count}/3`,
+          data.is_force 
+            ? 'terminated the supervision relationship'
+            : 'requested to terminate the relationship'
         );
 
       case 'unbind_request_approved':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-red-100 rounded-full p-2 mr-3">
-                <FaUnlink className="text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Relationship Terminated</p>
-                <p className="text-xs text-gray-600 mt-1">{data.message}</p>
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          null,
+          'The supervision relationship has been terminated'
         );
 
       case 'unbind_request_rejected':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-blue-100 rounded-full p-2 mr-3">
-                <FaInfoCircle className="text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Termination Request Declined</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {data.message}
-                </p>
-                {data.cooldown_until && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    Cooldown until: {new Date(data.cooldown_until).toLocaleDateString('en-GB')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">{new Date(notification.created_at).toLocaleString('en-GB')}</p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.cooldown_until && `Cooldown until: ${new Date(data.cooldown_until).toLocaleDateString('en-GB')}`,
+          'declined the termination request'
         );
 
       // ========== MEETING NOTIFICATIONS ==========
       case 'meeting_scheduled':
         return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-blue-100 rounded-full p-2 mr-3">
-                <FaCalendarAlt className="text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Meeting Scheduled</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  "{data.title}" with {data.scheduler_name}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
-                </p>
-                {data.location_link && (
-                  <a
-                    href={data.location_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                  >
-                    Join Meeting
-                  </a>
-                )}
-              </div>
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture} 
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="font-semibold text-gray-900 dark:text-gray-50">{userData.name}</span>
+                {' '}
+                <span className="text-gray-600 dark:text-gray-300">scheduled a meeting</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">"{data.title}"</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
             </div>
           </div>
         );
 
       case 'meeting_reminder':
         return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-amber-100 rounded-full p-2 mr-3 animate-pulse">
-                <FaClock className="text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  ⏰ Meeting Reminder ({data.reminder_type === '1h' ? '1 Hour' : '24 Hours'})
-                </p>
-                <p className="text-xs text-gray-600 mt-1">
-                  "{data.title}" with {data.other_party_name}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
-                </p>
-                {data.location_link && (
-                  <a
-                    href={data.location_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block px-3 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700"
-                  >
-                    Join Meeting
-                  </a>
-                )}
-              </div>
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture} 
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="text-gray-600 dark:text-gray-300">⏰ Meeting with </span>
+                <span className="font-semibold text-gray-900 dark:text-gray-50">{userData.name}</span>
+                <span className="text-gray-600 dark:text-gray-300"> starting {data.reminder_type === '1h' ? 'in 1 hour' : 'in 24 hours'}</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">"{data.title}"</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
             </div>
           </div>
         );
 
       case 'meeting_updated':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-purple-100 rounded-full p-2 mr-3">
-                <FaCalendarCheck className="text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Meeting Updated</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  "{data.title}" updated by {data.updater_name}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  📅 {new Date(data.scheduled_for).toLocaleString('en-GB')}
-                </p>
-                {data.location_link && (
-                  <a
-                    href={data.location_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
-                  >
-                    Join Meeting
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          `"${data.title}" - ${new Date(data.scheduled_for).toLocaleString('en-GB')}`,
+          'updated the meeting'
         );
 
       case 'meeting_cancelled':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-red-100 rounded-full p-2 mr-3">
-                <FaCalendarTimes className="text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Meeting Cancelled</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  "{data.title}" cancelled by {data.canceller_name}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Was scheduled for: {new Date(data.was_scheduled_for).toLocaleString('en-GB')}
-                </p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          `"${data.title}" was scheduled for ${new Date(data.was_scheduled_for).toLocaleString('en-GB')}`,
+          'cancelled the meeting'
         );
 
       // ========== CO-SUPERVISOR NOTIFICATIONS ==========
       case 'cosupervisor_invitation_sent':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-indigo-100 rounded-full p-2 mr-3">
-                <FaUserPlus className="text-indigo-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Co-Supervisor Invitation</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                {data.invitation_message && (
-                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded p-2">
-                    <p className="text-xs text-blue-900 italic">"{data.invitation_message}"</p>
-                  </div>
-                )}
-                <div className="mt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => router.visit(route('supervision.supervisor.index'))}
-                    className="h-7 text-xs"
-                  >
-                    View Invitation
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'cosupervisor_accepted':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-green-100 rounded-full p-2 mr-3">
-                <FaCheckCircle className="text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Co-Supervisor Accepted</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                <p className="text-xs text-gray-500 mt-1">Co-supervisor: {data.cosupervisor_name}</p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'cosupervisor_rejected':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-red-100 rounded-full p-2 mr-3">
-                <FaTimesCircle className="text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Co-Supervisor Declined</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                {data.rejection_reason && (
-                  <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
-                    <p className="text-xs text-red-900">Reason: {data.rejection_reason}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.invitation_message && `"${data.invitation_message}"`,
+          data.initiated_by === 'student' 
+            ? 'invited you to be their co-supervisor'
+            : `invited you to be co-supervisor for ${data.student_name}`
         );
 
       case 'cosupervisor_invitation_initiated':
-        return (
-          <div className="py-2">
-            <div className="flex items-start gap-3">
-              <div className="bg-indigo-100 rounded-full p-2 flex-shrink-0">
-                <FaUserPlus className="text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-semibold text-sm text-gray-900">Co-Supervisor Invitation</p>
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded-full">
-                    Pending
-                  </span>
-                </div>
-                
-                {/* Main Message */}
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  <span className="font-semibold">{data.initiated_by === 'student' ? data.student_name : data.main_supervisor_name}</span>
-                  {' wants to add '}
-                  <span className="font-semibold">{data.cosupervisor_name}</span>
-                  {' as co-supervisor'}
-                  {data.initiated_by === 'main_supervisor' && ` for ${data.student_name}`}
-                </p>
+        return renderBasicNotification(
+          `Adding ${data.cosupervisor_name} as co-supervisor`,
+          data.initiated_by === 'student' 
+            ? 'initiated a co-supervisor invitation'
+            : `wants to add a co-supervisor for ${data.student_name}`
+        );
 
-                {/* Personal Message Preview */}
-                {data.invitation_message && (
-                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
-                    <p className="text-[10px] font-medium text-blue-900 mb-0.5">Personal Message:</p>
-                    <p className="text-xs text-blue-800 italic line-clamp-2">
-                      "{data.invitation_message}"
-                    </p>
-                  </div>
-                )}
+      case 'cosupervisor_accepted':
+        return renderBasicNotification(
+          null,
+          'accepted the co-supervisor invitation. Waiting for approval.'
+        );
 
-                {/* Next Steps Info */}
-                <div className="mt-2 bg-gray-50 border border-gray-200 rounded-md p-2">
-                  <p className="text-[10px] font-medium text-gray-700 mb-1">Next Steps:</p>
-                  <ul className="text-[10px] text-gray-600 space-y-0.5 list-disc list-inside">
-                    <li>Co-supervisor will be notified to review</li>
-                    <li>You'll approve after they accept</li>
-                  </ul>
-                </div>
-
-                {/* Timestamp & Action */}
-                <div className="mt-2 flex items-center justify-between">
-                  <p className="text-[10px] text-gray-500">
-                    {new Date(notification.created_at).toLocaleString('en-GB')}
-                  </p>
-                  {!notification.read_at && (
-                    <Button
-                      size="sm"
-                      onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'student' ? 'supervisor' : 'student') + '.index'))}
-                      className="h-6 text-[10px] px-2"
-                      variant="outline"
-                    >
-                      View Dashboard
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+      case 'cosupervisor_rejected':
+        return renderBasicNotification(
+          data.rejection_reason && `Reason: ${data.rejection_reason}`,
+          'declined the co-supervisor invitation'
         );
 
       case 'cosupervisor_approval_needed':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-yellow-100 rounded-full p-2 mr-3">
-                <FaExclamationTriangle className="text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Approval Required</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                <p className="text-xs text-gray-500 mt-1">Co-supervisor: {data.cosupervisor_name}</p>
-                <div className="mt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => router.visit(route('supervision.' + (data.initiated_by === 'student' ? 'supervisor' : 'student') + '.index'))}
-                    className="h-7 text-xs"
-                  >
-                    Review & Approve
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          `${data.cosupervisor_name} accepted the invitation`,
+          'Your approval is required'
         );
 
       case 'cosupervisor_approved':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-green-100 rounded-full p-2 mr-3">
-                <FaCheckCircle className="text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Co-Supervisor Approved</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                <p className="text-xs text-gray-500 mt-1">Approved by: {data.approver}</p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          `${data.cosupervisor_name} has been approved`,
+          'approved the co-supervisor invitation'
         );
 
       case 'cosupervisor_rejected_by_approver':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-red-100 rounded-full p-2 mr-3">
-                <FaTimesCircle className="text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Co-Supervisor Not Approved</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                {data.rejection_reason && (
-                  <div className="mt-2 bg-red-50 border border-red-200 rounded p-2">
-                    <p className="text-xs text-red-900">Reason: {data.rejection_reason}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          data.rejection_reason && `Reason: ${data.rejection_reason}`,
+          `did not approve ${data.cosupervisor_name} as co-supervisor`
         );
 
       case 'cosupervisor_added':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-emerald-100 rounded-full p-2 mr-3">
-                <FaUsers className="text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">🎉 Co-Supervisor Added!</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                <p className="text-xs text-gray-500 mt-1">Student: {data.student_name}</p>
-                <div className="mt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => router.visit(route('supervision.' + (data.cosupervisor_id ? 'supervisor' : 'student') + '.index'))}
-                    className="h-7 text-xs"
-                  >
-                    View Supervision
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          `Now co-supervising ${data.student_name}`,
+          'has been added as co-supervisor'
         );
 
       case 'cosupervisor_invitation_cancelled':
-        return (
-          <div className="py-2">
-            <div className="flex items-start">
-              <div className="bg-gray-100 rounded-full p-2 mr-3">
-                <FaBan className="text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-sm">Invitation Cancelled</p>
-                <p className="text-sm text-gray-700 mt-1">{data.message}</p>
-                <p className="text-xs text-gray-500 mt-1">Cancelled by: {data.initiator}</p>
-              </div>
-            </div>
-          </div>
+        return renderBasicNotification(
+          null,
+          'cancelled the co-supervisor invitation'
         );
 
       // ========== DEFAULT/FALLBACK ==========
       default:
-        return (
-          <div className="py-2">
-            <p className="text-sm">{data.message || "Notification"}</p>
-            <p className="text-xs text-gray-500">{new Date(notification.created_at).toLocaleDateString()}</p>
-          </div>
+        return renderBasicNotification(
+          null,
+          data.message || 'sent you a notification'
         );
     }
   };
+
+  // Filter notifications based on active tab
+  const displayedNotifications = activeTab === 'all' 
+    ? allNotifications 
+    : allNotifications.filter(n => !n.read_at);
+
+  const unreadCount = allNotifications.filter(n => !n.read_at).length;
 
   if (!isOpen) return null;
 
   return (
     <div 
       ref={panelRef}
-      className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-50 max-h-[80vh] flex flex-col"
+      className="absolute right-0 mt-2 w-96 sm:w-[28rem] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700"
     >
-      <div className="px-4 py-3 bg-gray-100 border-b flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
-        {notifications.unread_count > 0 && (
+      {/* Header */}
+      <div className="px-5 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Notifications</h3>
           <button
             onClick={markAllAsRead}
-            className="text-xs text-blue-600 hover:text-blue-800"
+            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
           >
             Mark all as read
           </button>
-        )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="px-5">
+          <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`
+                py-3 border-b-2 transition-colors -mb-[1px]
+                ${activeTab === 'all' 
+                  ? 'border-blue-600 text-gray-900 dark:text-gray-50' 
+                  : 'border-transparent hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
+                }
+              `}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setActiveTab('unread')}
+              className={`
+                py-3 border-b-2 transition-colors -mb-[1px]
+                ${activeTab === 'unread' 
+                  ? 'border-blue-600 text-gray-900 dark:text-gray-50' 
+                  : 'border-transparent hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
+                }
+              `}
+            >
+              Unread {unreadCount > 0 && `(${unreadCount})`}
+            </button>
+          </div>
+        </div>
       </div>
       
-      <div className="overflow-y-auto flex-grow">
+      {/* Notifications List */}
+      <div className="overflow-y-auto flex-grow divide-y divide-gray-100 dark:divide-gray-700">
         {loading ? (
-          <div className="flex justify-center items-center py-8">
+          <div className="flex justify-center items-center py-12">
             <FaSpinner className="animate-spin text-blue-500 mr-2" />
-            <span>Loading notifications...</span>
+            <span className="text-gray-600">Loading...</span>
           </div>
-        ) : (
-          <>
-            {/* Unread notifications */}
-            {notifications.unread.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-b">
-                <h4 className="text-xs font-semibold text-gray-500 uppercase">New</h4>
-              </div>
-            )}
-            {notifications.unread.map((notification) => (
-              <div 
-                key={notification.id} 
-                className="px-4 border-b hover:bg-gray-50 bg-blue-50"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-grow">
-                    {renderNotificationContent(notification)}
-                  </div>
+        ) : displayedNotifications.length > 0 ? (
+          displayedNotifications.map((notification) => (
+            <div 
+              key={notification.id} 
+              className={`
+                group px-5 transition-colors relative
+                ${!notification.read_at ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}
+                hover:bg-gray-50 dark:hover:bg-gray-800/70
+              `}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-grow">
+                  {renderNotificationContent(notification)}
+                </div>
+                {!notification.read_at && (
                   <button
                     onClick={() => markAsRead(notification.id)}
-                    className="text-xs text-gray-500 hover:text-gray-700 mt-2"
+                    className="ml-2 mt-3 p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    title="Mark as read"
                   >
-                    <FaCheck title="Mark as read" />
+                    <FaCheck className="text-xs" />
                   </button>
-                </div>
+                )}
               </div>
-            ))}
-
-            {/* Read notifications */}
-            {notifications.read.length > 0 && (
-              <div className="px-4 py-2 bg-gray-50 border-b">
-                <h4 className="text-xs font-semibold text-gray-500 uppercase">Earlier</h4>
-              </div>
-            )}
-            {notifications.read.map((notification) => (
-              <div 
-                key={notification.id} 
-                className="px-4 border-b hover:bg-gray-50 text-gray-600"
-              >
-                {renderNotificationContent(notification)}
-              </div>
-            ))}
-
-            {notifications.unread.length === 0 && notifications.read.length === 0 && (
-              <div className="px-4 py-6 text-center text-gray-500">
-                <p>No notifications</p>
-              </div>
-            )}
-          </>
+            </div>
+          ))
+        ) : (
+          <div className="px-5 py-12 text-center text-gray-500">
+            <p className="text-sm">
+              {activeTab === 'unread' ? 'No unread notifications' : 'No notifications'}
+            </p>
+          </div>
         )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-center">
+        <a 
+          href="#" 
+          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+          onClick={(e) => e.preventDefault()}
+        >
+          View all notifications
+        </a>
       </div>
     </div>
   );
 };
 
-export default NotificationPanel; 
+export default NotificationPanel;

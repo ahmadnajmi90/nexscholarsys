@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Notifications\DatabaseNotification;
+use App\Models\User;
 
 class NotificationController extends Controller
 {
@@ -34,11 +35,55 @@ class NotificationController extends Controller
             ->limit(10)
             ->get();
         
+        // Best-effort: augment legacy payloads with profile pictures for known patterns
+        $this->augmentNotificationsWithAvatars([$unreadNotifications, $readNotifications]);
+        
+        // Removed diagnostics logs
+
         return response()->json([
             'unread' => $unreadNotifications,
             'read' => $readNotifications,
             'unread_count' => $unreadNotifications->count()
         ]);
+    }
+    
+    /**
+     * Add missing *_profile_picture to notification data for legacy records.
+     * Only handles safe, user-id-based keys (e.g., requester_id, recipient_id).
+     *
+     * @param array<int, \Illuminate\Support\Collection> $collections
+     */
+    private function augmentNotificationsWithAvatars(array $collections): void
+    {
+        foreach ($collections as $col) {
+            $col->transform(function (DatabaseNotification $n) {
+                $data = $n->data ?? [];
+                // Connection: requester
+                if (isset($data['requester_name']) && empty($data['requester_profile_picture']) && !empty($data['requester_id'])) {
+                    $data['requester_profile_picture'] = $this->resolveUserProfilePicture((int) $data['requester_id']);
+                }
+                // Connection: recipient
+                if (isset($data['recipient_name']) && empty($data['recipient_profile_picture']) && !empty($data['recipient_id'])) {
+                    $data['recipient_profile_picture'] = $this->resolveUserProfilePicture((int) $data['recipient_id']);
+                }
+                // Persist on the model instance (response only)
+                $n->data = $data;
+                return $n;
+            });
+        }
+    }
+    
+    /**
+     * Resolve a user's profile picture from their role models.
+     */
+    private function resolveUserProfilePicture(int $userId): ?string
+    {
+        $user = User::with(['academician', 'postgraduate', 'undergraduate'])->find($userId);
+        if (!$user) return null;
+        if ($user->academician && $user->academician->profile_picture) return $user->academician->profile_picture;
+        if ($user->postgraduate && $user->postgraduate->profile_picture) return $user->postgraduate->profile_picture;
+        if ($user->undergraduate && $user->undergraduate->profile_picture) return $user->undergraduate->profile_picture;
+        return null;
     }
     
     /**

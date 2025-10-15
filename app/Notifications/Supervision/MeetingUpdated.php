@@ -49,9 +49,16 @@ class MeetingUpdated extends Notification implements ShouldQueue
             $notifiable->academician->academician_id === $this->meeting->request?->academician_id
         );
 
-        $updaterName = $isSupervisor
-            ? ($this->meeting->relationship?->student->full_name ?? $this->meeting->request?->student->full_name ?? 'Student')
-            : ($this->meeting->relationship?->academician->full_name ?? $this->meeting->request?->academician->full_name ?? 'Supervisor');
+        // Get updater (opposite of recipient)
+        if ($isSupervisor) {
+            $updater = $this->meeting->relationship?->student ?? $this->meeting->request?->student;
+            $updaterName = $updater?->full_name ?? 'Student';
+            $updaterProfilePicture = $updater?->postgraduate?->profile_picture ?? $updater?->undergraduate?->profile_picture ?? null;
+        } else {
+            $updater = $this->meeting->relationship?->academician ?? $this->meeting->request?->academician;
+            $updaterName = $updater?->full_name ?? 'Supervisor';
+            $updaterProfilePicture = $updater?->profile_picture ?? null;
+        }
 
         return [
             'type' => 'meeting_updated',
@@ -62,6 +69,7 @@ class MeetingUpdated extends Notification implements ShouldQueue
             'scheduled_for' => $this->meeting->scheduled_for->toISOString(),
             'location_link' => $this->meeting->location_link,
             'updater_name' => $updaterName,
+            'updater_profile_picture' => $updaterProfilePicture,
             'changes' => $this->changes,
             'message' => __(':updater has updated the meeting ":title"', [
                 'updater' => $updaterName,
