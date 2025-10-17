@@ -2,8 +2,27 @@
 
 This document provides a comprehensive guide to the RESTful API for the Nexscholar platform. It is intended for developers who need to interact with the platform programmatically, for tasks suchs as data management automation or integration with third-party services.
 
+## Interactive API Documentation
+
+**🎉 NEW: Interactive Swagger UI Documentation**
+
+Nexscholar now features comprehensive OpenAPI/Swagger documentation for all stateless API endpoints. Access the interactive documentation at:
+
+- **Local**: [http://127.0.0.1:8000/api/documentation](http://127.0.0.1:8000/api/documentation)
+- **Production**: `https://nexscholar.com/api/documentation`
+
+The Swagger UI provides:
+- ✅ **Interactive API testing** - Test endpoints directly from your browser
+- ✅ **Auto-generated Postman collections** - Import the OpenAPI spec directly into Postman
+- ✅ **Complete request/response documentation** - See all parameters, schemas, and examples
+- ✅ **Authentication support** - Test with your Sanctum bearer token
+- ✅ **Schema definitions** - View all data models and their properties
+
+**For detailed information on using the Swagger documentation, see [API_SWAGGER_DOCUMENTATION.md](API_SWAGGER_DOCUMENTATION.md)**
+
 ## Table of Contents
 
+- [Interactive API Documentation](#interactive-api-documentation)
 - [Authentication](#authentication)
 - [API Structure](#api-structure)
 - [Data Management API (Stateless)](#data-management-api-stateless)

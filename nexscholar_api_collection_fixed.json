@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "Nexscholar API",
+    "_postman_id": "04ca2c0a-926e-404b-8a54-7306b5a69561",
+    "description": "Comprehensive API collection for Nexscholar platform data management. This collection includes all stateless API endpoints organized by feature domain.\n\n## Authentication\n\nThis collection uses Bearer Token authentication. The token is automatically obtained through the login endpoint before each request.\n\n### Collection Variables:\n- `baseUrl`: The base URL for the API (default: http://127.0.0.1:8000)\n- `bearerToken`: Stores the authentication token (automatically set)\n- `admin_email`: Admin email for authentication (default: nexscholarfc@gmail.com)\n- `admin_password`: Admin password for authentication (default: password)\n\n### Auto-login:\nThe collection includes a pre-request script that automatically logs in and sets the bearer token if it's missing or expired.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "bearerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_email",
+      "value": "nexscholarfc@gmail.com",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "password",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level pre-request script",
+          "// This script automatically logs in if no token exists",
+          "",
+          "const token = pm.collectionVariables.get('bearerToken');",
+          "",
+          "// Skip auto-login for the login request itself",
+          "if (pm.request.url.path && pm.request.url.path.includes('login')) {",
+          "    console.log('Skipping auto-login for login request');",
+          "    return;",
+          "}",
+          "",
+          "if (!token || token === '') {",
+          "    console.log('No token found, attempting auto-login...');",
+          "    ",
+          "    pm.sendRequest({",
+          "        url: pm.collectionVariables.get('baseUrl') + '/api/login',",
+          "        method: 'POST',",
+          "        header: {",
+          "            'Content-Type': 'application/json',",
+          "            'Accept': 'application/json'",
+          "        },",
+          "        body: {",
+          "            mode: 'raw',",
+          "            raw: JSON.stringify({",
+          "                email: pm.collectionVariables.get('admin_email'),",
+          "                password: pm.collectionVariables.get('admin_password')",
+          "            })",
+          "        }",
+          "    }, function (err, response) {",
+          "        if (err) {",
+          "            console.error('Auto-login failed:', err);",
+          "            return;",
+          "        }",
+          "        ",
+          "        if (response.code === 200) {",
+          "            const responseData = response.json();",
+          "            if (responseData.token) {",
+          "                pm.collectionVariables.set('bearerToken', responseData.token);",
+          "                console.log('✓ Auto-login successful! Token set.');",
+          "            } else {",
+          "                console.error('Login response missing token:', responseData);",
+          "            }",
+          "        } else {",
+          "            console.error('Auto-login failed with status:', response.code, response.json());",
+          "        }",
+          "    });",
+          "} else {",
+          "    console.log('✓ Token exists, proceeding with request...');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level test script",
+          "// Clear token on 401 Unauthorized to trigger auto-login on next request",
+          "",
+          "if (pm.response.code === 401) {",
+          "    console.log('⚠ Received 401 Unauthorized - clearing token');",
+          "    pm.collectionVariables.set('bearerToken', '');",
+          "    console.log('Token cleared. Next request will trigger auto-login.');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": []
+}

@@ -23,6 +23,84 @@ class SkillsSubdomainController extends Controller
 
     /**
      * Display a listing of the resource.
+     * 
+     * @OA\Get(
+     * path="/api/v1/skills/subdomains",
+     * operationId="getSkillsSubdomainsList",
+     * tags={"Skills Subdomains"},
+     * summary="Get list of skills subdomains",
+     * description="Returns a paginated list of skills subdomains, optionally filtered by skills_domain_id or search term.",
+     * @OA\Parameter(
+     * name="skills_domain_id",
+     * in="query",
+     * description="Filter subdomains by skills domain ID.",
+     * required=false,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Parameter(
+     * name="search",
+     * in="query",
+     * description="A search term to filter subdomains by name.",
+     * required=false,
+     * @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     * name="with_domain",
+     * in="query",
+     * description="Include skills domain data in the response.",
+     * required=false,
+     * @OA\Schema(type="boolean", default=false)
+     * ),
+     * @OA\Parameter(
+     * name="with_skills",
+     * in="query",
+     * description="Include skills data in the response.",
+     * required=false,
+     * @OA\Schema(type="boolean", default=false)
+     * ),
+     * @OA\Parameter(
+     * name="sort_by",
+     * in="query",
+     * description="Sort field for the results.",
+     * required=false,
+     * @OA\Schema(type="string", default="id")
+     * ),
+     * @OA\Parameter(
+     * name="sort_direction",
+     * in="query",
+     * description="Sort direction (asc or desc).",
+     * required=false,
+     * @OA\Schema(type="string", enum={"asc", "desc"}, default="asc")
+     * ),
+     * @OA\Parameter(
+     * name="per_page",
+     * in="query",
+     * description="Number of items per page.",
+     * required=false,
+     * @OA\Schema(type="integer", default=15)
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Successful operation",
+     * @OA\JsonContent(
+     * allOf={
+     * @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     * @OA\Schema(
+     * @OA\Property(
+     * property="data",
+     * type="array",
+     * @OA\Items(ref="#/components/schemas/SkillsSubdomain")
+     * )
+     * )
+     * }
+     * )
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function index(Request $request)
     {
@@ -62,6 +140,42 @@ class SkillsSubdomainController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * @OA\Post(
+     * path="/api/v1/skills/subdomains",
+     * operationId="storeSkillsSubdomain",
+     * tags={"Skills Subdomains"},
+     * summary="Create a new skills subdomain",
+     * description="Creates a new skills subdomain with the provided data.",
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"name", "skills_domain_id"},
+     * @OA\Property(property="name", type="string", example="Web Development", description="Name of the skills subdomain"),
+     * @OA\Property(property="skills_domain_id", type="integer", example=1, description="ID of the skills domain this subdomain belongs to")
+     * )
+     * ),
+     * @OA\Response(
+     * response=201,
+     * description="Skills subdomain created successfully",
+     * @OA\JsonContent(ref="#/components/schemas/SkillsSubdomain")
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Bad request - validation error",
+     * @OA\JsonContent(ref="#/components/schemas/ValidationError")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function store(StoreSkillsSubdomainRequest $request)
     {
@@ -78,6 +192,36 @@ class SkillsSubdomainController extends Controller
 
     /**
      * Display the specified resource.
+     * 
+     * @OA\Get(
+     * path="/api/v1/skills/subdomains/{id}",
+     * operationId="showSkillsSubdomain",
+     * tags={"Skills Subdomains"},
+     * summary="Get a specific skills subdomain",
+     * description="Returns detailed information about a specific skills subdomain.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="Skills Subdomain ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Successful operation",
+     * @OA\JsonContent(ref="#/components/schemas/SkillsSubdomain")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Skills Subdomain not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function show(string $id)
     {
@@ -88,6 +232,53 @@ class SkillsSubdomainController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * 
+     * @OA\Post(
+     * path="/api/v1/skills/subdomains/{id}",
+     * operationId="updateSkillsSubdomain",
+     * tags={"Skills Subdomains"},
+     * summary="Update a skills subdomain",
+     * description="Updates an existing skills subdomain with the provided data.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="Skills Subdomain ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * @OA\Property(property="name", type="string", example="Web Development", description="Name of the skills subdomain"),
+     * @OA\Property(property="skills_domain_id", type="integer", example=1, description="ID of the skills domain this subdomain belongs to")
+     * )
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Skills subdomain updated successfully",
+     * @OA\JsonContent(ref="#/components/schemas/SkillsSubdomain")
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Bad request - validation error",
+     * @OA\JsonContent(ref="#/components/schemas/ValidationError")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Skills Subdomain not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function update(UpdateSkillsSubdomainRequest $request, string $id)
     {
@@ -109,6 +300,46 @@ class SkillsSubdomainController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * @OA\Delete(
+     * path="/api/v1/skills/subdomains/{id}",
+     * operationId="destroySkillsSubdomain",
+     * tags={"Skills Subdomains"},
+     * summary="Delete a skills subdomain",
+     * description="Deletes a skills subdomain from the system.",
+     * @OA\Parameter(
+     * name="id",
+     * in="path",
+     * description="Skills Subdomain ID",
+     * required=true,
+     * @OA\Schema(type="integer")
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Skills subdomain deleted successfully",
+     * @OA\JsonContent(ref="#/components/schemas/Success")
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Skills Subdomain not found",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=409,
+     * description="Conflict - Cannot delete skills subdomain",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=401,
+     * description="Unauthenticated",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Internal server error",
+     * @OA\JsonContent(ref="#/components/schemas/Error")
+     * )
+     * )
      */
     public function destroy(string $id)
     {
