@@ -468,10 +468,14 @@ class PostgraduateProgramController extends Controller
      * description="Imports postgraduate programs from an Excel/CSV file or JSON data with automatic data cleaning, enrichment, and validation.",
      * @OA\RequestBody(
      * required=true,
-     * @OA\OneOf({
+     * @OA\MediaType(
+     *     mediaType="multipart/form-data",
      *     @OA\Schema(
      *         @OA\Property(property="file", type="string", format="binary", description="Excel or CSV file to import")
-     *     ),
+     *     )
+     * ),
+     * @OA\MediaType(
+     *     mediaType="application/json",
      *     @OA\Schema(
      *         @OA\Property(property="programs", type="array", description="Array of program data to import",
      *             @OA\Items(
@@ -487,7 +491,7 @@ class PostgraduateProgramController extends Controller
      *             )
      *         )
      *     )
-     * })
+     * )
      * ),
      * @OA\Response(
      * response=200,
