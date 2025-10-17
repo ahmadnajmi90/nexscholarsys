@@ -1,0 +1,1546 @@
+{
+  "info": {
+    "name": "Nexscholar API - Complete Import",
+    "_postman_id": "nexscholar-api-complete",
+    "description": "Complete API collection for Nexscholar platform data management. Import this to add all requests to your collection.\n\n**Base URL:** {{base_url}}/api\n**Authentication:** Bearer Token (obtained from /login endpoint)\n\n**Setup Instructions:**\n1. Import this collection\n2. Set the base_url variable to http://127.0.0.1:8000\n3. Run the Login request to get your token\n4. Token is automatically saved to collection variable",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    pm.environment.set('token', jsonData.token);",
+                  "    console.log('✅ Token saved successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@nexscholar.com\",\n  \"password\": \"your_password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Login to obtain Bearer token. Token is automatically saved to collection variables."
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "user"
+              ]
+            },
+            "description": "Get authenticated user information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Postgraduate Programs",
+      "item": [
+        {
+          "name": "List All Programs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/postgraduate-programs?page=1&per_page=15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "postgraduate-programs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get paginated list of all postgraduate programs"
+          }
+        },
+        {
+          "name": "Create Program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Doctor of Philosophy in Computer Science\",\n  \"program_type\": \"PhD\",\n  \"university_id\": 1,\n  \"faculty_id\": 1,\n  \"description\": \"Advanced research program focusing on AI and machine learning\",\n  \"duration_years\": \"3-5 years\",\n  \"funding_info\": \"Full scholarship available for qualified candidates\",\n  \"application_url\": \"https://university.edu/apply/phd-cs\",\n  \"country\": \"Malaysia\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/postgraduate-programs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "postgraduate-programs"
+              ]
+            },
+            "description": "Create a new postgraduate program.\n\n**Required Fields:**\n- name (string, max 255)\n- program_type (required)\n- university_id (must exist)\n- faculty_id (must exist)\n\n**Optional Fields:**\n- description (string)\n- duration_years (string, max 100)\n- funding_info (string, max 255)\n- application_url (string, max 2048)\n- country (string, max 100)"
+          }
+        },
+        {
+          "name": "Get Program by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/postgraduate-programs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "postgraduate-programs",
+                "1"
+              ]
+            },
+            "description": "Get specific program details by ID"
+          }
+        },
+        {
+          "name": "Update Program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Program Name\",\n  \"program_type\": \"PhD\",\n  \"university_id\": 1,\n  \"faculty_id\": 1,\n  \"description\": \"Updated description\",\n  \"duration_years\": \"4 years\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/postgraduate-programs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "postgraduate-programs",
+                "1"
+              ]
+            },
+            "description": "Update program (uses POST instead of PUT for file upload support)"
+          }
+        },
+        {
+          "name": "Delete Program",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/postgraduate-programs/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "postgraduate-programs",
+                "1"
+              ]
+            },
+            "description": "Delete a postgraduate program"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Universities",
+      "item": [
+        {
+          "name": "List All Universities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/universities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "universities"
+              ]
+            },
+            "description": "Get list of all universities"
+          }
+        },
+        {
+          "name": "Create University",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"University of Technology Malaysia\",\n  \"short_name\": \"UTM\",\n  \"country\": \"Malaysia\",\n  \"university_category\": \"Public\",\n  \"university_type\": \"Research University\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/universities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "universities"
+              ]
+            },
+            "description": "Create a new university.\n\n**Required Fields:**\n- full_name (string, max 255, unique)\n- short_name (string, max 50, unique)\n- country (string, max 100)\n\n**Optional Fields:**\n- university_category (string)\n- university_type (string)\n- profile_picture (image file: jpeg, png, jpg, gif, max 2MB)\n- background_image (image file: jpeg, png, jpg, gif, max 2MB)"
+          }
+        },
+        {
+          "name": "Get University by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/universities/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "universities",
+                "1"
+              ]
+            },
+            "description": "Get specific university details"
+          }
+        },
+        {
+          "name": "Update University",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Updated University Name\",\n  \"short_name\": \"UUN\",\n  \"country\": \"Malaysia\",\n  \"university_category\": \"Private\",\n  \"university_type\": \"Comprehensive University\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/universities/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "universities",
+                "1"
+              ]
+            },
+            "description": "Update university (uses POST instead of PUT)"
+          }
+        },
+        {
+          "name": "Delete University",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/universities/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "universities",
+                "1"
+              ]
+            },
+            "description": "Delete a university"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Faculties",
+      "item": [
+        {
+          "name": "List All Faculties",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/faculties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "description": "Get list of all faculties"
+          }
+        },
+        {
+          "name": "Create Faculty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Faculty of Computing\",\n  \"university_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/faculties",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties"
+              ]
+            },
+            "description": "Create a new faculty.\n\n**Required Fields:**\n- name (string, max 255, unique per university)\n- university_id (integer, must exist in university_list)"
+          }
+        },
+        {
+          "name": "Get Faculty by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/faculties/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "1"
+              ]
+            },
+            "description": "Get specific faculty details"
+          }
+        },
+        {
+          "name": "Update Faculty",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Faculty Name\",\n  \"university_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/faculties/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "1"
+              ]
+            },
+            "description": "Update faculty (uses POST instead of PUT)"
+          }
+        },
+        {
+          "name": "Delete Faculty",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/faculties/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "faculties",
+                "1"
+              ]
+            },
+            "description": "Delete a faculty"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Research Taxonomy",
+      "item": [
+        {
+          "name": "Fields of Research",
+          "item": [
+            {
+              "name": "List All Fields",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/fields-of-research",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "fields-of-research"]
+                }
+              }
+            },
+            {
+              "name": "Create Field",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Computer Science\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/fields-of-research",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "fields-of-research"]
+                }
+              }
+            },
+            {
+              "name": "Get Field by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/fields-of-research/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "fields-of-research", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Field",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Field Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/fields-of-research/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "fields-of-research", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Field",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/fields-of-research/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "fields-of-research", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Research Areas",
+          "item": [
+            {
+              "name": "List All Areas",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/research-areas",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "research-areas"]
+                }
+              }
+            },
+            {
+              "name": "Create Area",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Machine Learning\",\n  \"field_of_research_id\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/research-areas",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "research-areas"]
+                }
+              }
+            },
+            {
+              "name": "Get Area by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/research-areas/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "research-areas", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Area",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Area Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/research-areas/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "research-areas", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Area",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/research-areas/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "research-areas", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Niche Domains",
+          "item": [
+            {
+              "name": "List All Domains",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/niche-domains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "niche-domains"]
+                }
+              }
+            },
+            {
+              "name": "Create Domain",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Deep Learning\",\n  \"research_area_id\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/niche-domains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "niche-domains"]
+                }
+              }
+            },
+            {
+              "name": "Get Domain by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/niche-domains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "niche-domains", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Domain",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Domain Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/niche-domains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "niche-domains", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Domain",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/niche-domains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "niche-domains", "1"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Skills Taxonomy",
+      "item": [
+        {
+          "name": "Skills Domains",
+          "item": [
+            {
+              "name": "List All Domains",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains"]
+                }
+              }
+            },
+            {
+              "name": "Create Domain",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Programming\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains"]
+                }
+              }
+            },
+            {
+              "name": "Get Domain by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Domain",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Domain Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Domain",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Skills Subdomains",
+          "item": [
+            {
+              "name": "List All Subdomains",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/subdomains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "subdomains"]
+                }
+              }
+            },
+            {
+              "name": "Create Subdomain",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Web Development\",\n  \"skills_domain_id\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/subdomains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "subdomains"]
+                }
+              }
+            },
+            {
+              "name": "Get Subdomain by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/subdomains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "subdomains", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Subdomain",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Subdomain Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/subdomains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "subdomains", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Subdomain",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/subdomains/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "subdomains", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Skills",
+          "item": [
+            {
+              "name": "List All Skills",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills"]
+                }
+              }
+            },
+            {
+              "name": "Create Skill",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"React.js\",\n  \"description\": \"JavaScript library for building user interfaces\",\n  \"skills_subdomain_id\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills"]
+                }
+              }
+            },
+            {
+              "name": "Get Skill by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Skill",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Skill Name\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Skill",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Skills Utility Endpoints",
+          "item": [
+            {
+              "name": "Get Full Taxonomy",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/taxonomy",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "taxonomy"]
+                },
+                "description": "Get complete hierarchical skills taxonomy"
+              }
+            },
+            {
+              "name": "Search Skills",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/search?query=react",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "search"],
+                  "query": [
+                    {"key": "query", "value": "react", "description": "Search term"}
+                  ]
+                },
+                "description": "Search skills by query"
+              }
+            },
+            {
+              "name": "Get All Skills",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills"]
+                },
+                "description": "Get all skills (flat list)"
+              }
+            },
+            {
+              "name": "Get Domains",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains"]
+                },
+                "description": "Get all domains"
+              }
+            },
+            {
+              "name": "Get Subdomains by Domain",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/domains/1/subdomains",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "domains", "1", "subdomains"]
+                },
+                "description": "Get all subdomains under a domain"
+              }
+            },
+            {
+              "name": "Get Skills by Subdomain",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/subdomains/1/skills",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "subdomains", "1", "skills"]
+                },
+                "description": "Get all skills under a subdomain"
+              }
+            },
+            {
+              "name": "Get Skill Details (Batch)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"skill_ids\": [1, 2, 3, 4, 5]\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/skills/details",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "skills", "details"]
+                },
+                "description": "Get details for multiple skills by IDs"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Content Management",
+      "item": [
+        {
+          "name": "Posts",
+          "item": [
+            {
+              "name": "List All Posts",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/posts",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "posts"]
+                }
+              }
+            },
+            {
+              "name": "Create Post",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Research Update\",\n  \"content\": \"Post content here\",\n  \"images\": []\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/posts",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "posts"]
+                }
+              }
+            },
+            {
+              "name": "Get Post by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/posts/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "posts", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Post",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Post Title\",\n  \"content\": \"Updated content\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/posts/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "posts", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Post",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/posts/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "posts", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Events",
+          "item": [
+            {
+              "name": "List All Events",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/events",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "events"]
+                }
+              }
+            },
+            {
+              "name": "Create Event",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Research Conference 2025\",\n  \"description\": \"Annual conference\",\n  \"event_date\": \"2025-12-01\",\n  \"location\": \"Kuala Lumpur\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/events",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "events"]
+                }
+              }
+            },
+            {
+              "name": "Get Event by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/events/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "events", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Event",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Event Title\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/events/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "events", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Event",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/events/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "events", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grants",
+          "item": [
+            {
+              "name": "List All Grants",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/grants",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "grants"]
+                }
+              }
+            },
+            {
+              "name": "Create Grant",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Research Grant 2025\",\n  \"description\": \"Funding opportunity\",\n  \"amount\": \"RM 50,000\",\n  \"deadline\": \"2025-06-30\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/grants",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "grants"]
+                }
+              }
+            },
+            {
+              "name": "Get Grant by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/grants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "grants", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Grant",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Grant Title\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/grants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "grants", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Grant",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/grants/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "grants", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Scholarships",
+          "item": [
+            {
+              "name": "List All Scholarships",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/scholarships",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "scholarships"]
+                }
+              }
+            },
+            {
+              "name": "Create Scholarship",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"PhD Scholarship 2025\",\n  \"description\": \"Full scholarship\",\n  \"amount\": \"RM 30,000/year\",\n  \"deadline\": \"2025-08-31\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/scholarships",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "scholarships"]
+                }
+              }
+            },
+            {
+              "name": "Get Scholarship by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/scholarships/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "scholarships", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Scholarship",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Scholarship Title\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/scholarships/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "scholarships", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Scholarship",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/scholarships/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "scholarships", "1"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Projects",
+          "item": [
+            {
+              "name": "List All Projects",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/projects",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "projects"]
+                }
+              }
+            },
+            {
+              "name": "Create Project",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Research Project 2025\",\n  \"description\": \"AI research project\",\n  \"status\": \"ongoing\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/projects",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "projects"]
+                }
+              }
+            },
+            {
+              "name": "Get Project by ID",
+              "request": {
+                "method": "GET",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/projects/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "projects", "1"]
+                }
+              }
+            },
+            {
+              "name": "Update Project",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {"key": "Content-Type", "value": "application/json"},
+                  {"key": "Accept", "value": "application/json"}
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Project Title\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/projects/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "projects", "1"]
+                }
+              }
+            },
+            {
+              "name": "Delete Project",
+              "request": {
+                "method": "DELETE",
+                "header": [{"key": "Accept", "value": "application/json"}],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/projects/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "projects", "1"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
