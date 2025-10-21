@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 export default function WhyNexscholar() {
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 3;
+    const [csrfError, setCsrfError] = useState(null);
 
     const { data, setData, post, processing, errors } = useForm({
         main_reason: '',
@@ -97,7 +98,21 @@ export default function WhyNexscholar() {
 
     const handleSubmit = (e) => {
         if (e) e.preventDefault();
-        post(route('why-nexscholar.store'));
+        setCsrfError(null); // Clear any previous errors
+        
+        post(route('why-nexscholar.store'), {
+            onError: (errors) => {
+                // Check if this is a CSRF token error
+                if (errors && (errors.message?.includes('CSRF') || errors.message?.includes('419'))) {
+                    setCsrfError('Your session has expired. Please refresh the page and try again.');
+                    
+                    // Auto-refresh after 3 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                }
+            }
+        });
     };
 
     const currentQuestion = questions[currentStep - 1];
@@ -408,6 +423,26 @@ export default function WhyNexscholar() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {/* CSRF Error Display */}
+                        {csrfError && (
+                            <motion.div
+                                className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <div className="flex items-start">
+                                    <svg className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                    <div>
+                                        <p className="text-red-800 font-semibold text-sm sm:text-base">{csrfError}</p>
+                                        <p className="text-red-600 text-xs sm:text-sm mt-1">Refreshing automatically in 3 seconds...</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
 
                         {/* Error Display */}
                         {errors.main_reason && currentStep === 1 && (

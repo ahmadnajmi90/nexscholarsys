@@ -77,6 +77,32 @@ window.axios.interceptors.response.use(
             } catch (refreshError) {
                 console.error('Failed to refresh CSRF token:', refreshError);
                 
+                // Show user-friendly notification
+                if (typeof window !== 'undefined' && !window._csrfErrorShown) {
+                    window._csrfErrorShown = true;
+                    
+                    // Create a simple notification banner
+                    const banner = document.createElement('div');
+                    banner.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #FEE2E2; border: 2px solid #DC2626; color: #991B1B; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 90%; font-family: system-ui, -apple-system, sans-serif;';
+                    banner.innerHTML = `
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <svg style="width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p style="font-weight: 600; margin: 0 0 4px 0;">Session Expired</p>
+                                <p style="margin: 0; font-size: 14px;">Your session has expired. The page will refresh automatically in 3 seconds...</p>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(banner);
+                    
+                    // Auto-refresh after 3 seconds
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                }
+                
                 // Create a more user-friendly error message
                 const sessionError = new Error('Your session has expired. Please refresh the page and try again.');
                 sessionError.isSessionExpired = true;
@@ -90,6 +116,32 @@ window.axios.interceptors.response.use(
             error.response.status === 419 && 
             originalRequest._retryCount >= 1) {
             console.error('CSRF token refresh failed after maximum retries');
+            
+            // Show user-friendly notification
+            if (typeof window !== 'undefined' && !window._csrfErrorShown) {
+                window._csrfErrorShown = true;
+                
+                // Create a simple notification banner
+                const banner = document.createElement('div');
+                banner.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; background: #FEE2E2; border: 2px solid #DC2626; color: #991B1B; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 90%; font-family: system-ui, -apple-system, sans-serif;';
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <svg style="width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p style="font-weight: 600; margin: 0 0 4px 0;">Session Expired</p>
+                            <p style="margin: 0; font-size: 14px;">Your session has expired. The page will refresh automatically in 3 seconds...</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(banner);
+                
+                // Auto-refresh after 3 seconds
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            }
             
             const sessionError = new Error('Your session has expired. Please refresh the page and try again.');
             sessionError.isSessionExpired = true;

@@ -18,6 +18,11 @@ class RedirectIfMotivationNotCollected
     {
         $user = Auth::user();
 
+        // Exclude CSRF refresh endpoint from this middleware to prevent redirect loops
+        if ($request->is('csrf/refresh') || $request->routeIs('csrf.refresh')) {
+            return $next($request);
+        }
+
         // Only redirect if the user is verified but has not completed profile
         if (
             $user &&
