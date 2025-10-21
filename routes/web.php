@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\ProfileCompletionController;
 use App\Http\Controllers\PostgraduateController;
 use App\Http\Controllers\UndergraduateController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ContentManagement\FundingController;
 use Silber\Bouncer\BouncerFacade;
@@ -397,6 +398,62 @@ Route::get('/csrf/refresh', function () {
         ], 500);
     }
 })->name('csrf.refresh')->middleware('web');
+
+// Automated Task Trigger Route for External Cron Services
+Route::get('/admin/trigger-message-notifications', function (Request $request) {
+    try {
+        // Check secret token from environment
+        $validToken = env('CRON_SECRET');
+        $providedToken = $request->get('token');
+        
+        if (empty($validToken)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cron secret not configured. Please set CRON_SECRET in .env file.'
+            ], 500);
+        }
+        
+        if ($providedToken !== $validToken) {
+            Log::warning('Invalid cron token attempt', [
+                'ip' => $request->ip(),
+                'token_provided' => !empty($providedToken)
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid or missing token'
+            ], 403);
+        }
+        
+        // Execute the command
+        Artisan::call('messages:send-email-notifications');
+        $output = Artisan::output();
+        
+        Log::info('Message notifications triggered via cron', [
+            'ip' => $request->ip(),
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Email notification job triggered successfully',
+            'output' => $output,
+            'timestamp' => now()->toDateTimeString()
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Cron trigger failed: ' . $e->getMessage(), [
+            'exception' => $e,
+            'ip' => $request->ip()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => 'Failed to trigger notification job',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+})->name('admin.trigger.notifications');
 
 
 // Data Management Routes
