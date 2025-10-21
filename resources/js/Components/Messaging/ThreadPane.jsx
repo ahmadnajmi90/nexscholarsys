@@ -11,12 +11,16 @@ import { format, isSameDay } from 'date-fns';
 
 export default function ThreadPane({
   conversationId,
+  conversation: initialConversation = null,
   auth,
+  isPanel = false,
   onConversationRead,
   onConversationIncrementUnread,
   onAfterSend
 }) {
-  const [conversation, setConversation] = useState(null);
+  const page = usePage();
+  const currentAuth = auth || page.props.auth;
+  const [conversation, setConversation] = useState(initialConversation);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -32,7 +36,7 @@ export default function ThreadPane({
   const channelRef = useRef(null);
 
   // Current user ID
-  const currentUserId = auth.user.id;
+  const currentUserId = currentAuth.user.id;
 
   // Adapter function to convert messaging attachment to preview modal format
   const toPreviewFile = (attachment) => {
@@ -446,20 +450,22 @@ export default function ThreadPane({
   
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Chat header */}
-      {conversation ? (
-        <ChatHeader 
-          conversation={conversation} 
-          onArchive={handleArchive}
-        />
-      ) : (
-        <div className="p-3 border-b flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
-          <div className="flex-1">
-            <div className="h-5 w-32 bg-muted animate-pulse rounded"></div>
-            <div className="h-4 w-24 bg-muted animate-pulse rounded mt-1"></div>
+      {/* Chat header - Hidden in panel mode */}
+      {!isPanel && (
+        conversation ? (
+          <ChatHeader 
+            conversation={conversation} 
+            onArchive={handleArchive}
+          />
+        ) : (
+          <div className="p-3 border-b flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-muted animate-pulse"></div>
+            <div className="flex-1">
+              <div className="h-5 w-32 bg-muted animate-pulse rounded"></div>
+              <div className="h-4 w-24 bg-muted animate-pulse rounded mt-1"></div>
+            </div>
           </div>
-        </div>
+        )
       )}
       
       {/* Message list */}

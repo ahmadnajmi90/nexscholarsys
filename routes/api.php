@@ -267,6 +267,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('conversations.show');
         Route::post('/conversations/{conversation}/archive', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'archive'])
             ->name('conversations.archive');
+        Route::get('/unread-count', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'unreadCount'])
+            ->name('unread-count');
             
         // Messages
         Route::get('/conversations/{conversation}/messages', [\App\Http\Controllers\Api\V1\Messaging\MessageController::class, 'index'])

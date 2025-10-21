@@ -1,5 +1,6 @@
 import React from 'react';
 import NotificationBell from './Notifications/NotificationBell';
+import MessagingBell from './Messaging/MessagingBell';
 import Dropdown from './Dropdown';
 import { Settings, User2, LogOut } from 'lucide-react';
 
@@ -7,26 +8,17 @@ const FloatingCommunicationHub = ({ auth, getProfilePicture, showProfile = false
     return (
         // Card Container with rounded-full pill shape
         <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700">
-            {/* Notification Bell */}
-            <NotificationBell />
+            {/* Messaging Bell - Wrapped in circle container */}
+            <div className="h-9 w-9 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <MessagingBell />
+            </div>
             
             {/* Divider */}
             <div className="h-6 w-px bg-gray-200 dark:bg-gray-700"></div>
             
-            {/* Messaging Icon Placeholder - Future Feature */}
-            <div className="relative">
-                <button
-                    className="relative p-1 text-gray-400 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-not-allowed"
-                    disabled
-                    title="Messaging (Coming Soon)"
-                >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    {/* Future: Badge for unread messages */}
-                    {/* <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span> */}
-                </button>
+            {/* Notification Bell - Wrapped in circle container */}
+            <div className="h-9 w-9 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                <NotificationBell />
             </div>
             
             {/* Profile Dropdown - Only shown when header is hidden */}

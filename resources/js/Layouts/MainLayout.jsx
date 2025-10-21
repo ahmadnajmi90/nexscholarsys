@@ -10,6 +10,7 @@ import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, D
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
+import MessagingBell from '../Components/Messaging/MessagingBell';
 import ForceTermsModal from '../Components/ForceTermsModal';
 import TutorialModal from '../Components/Tutorial/TutorialModal';
 import SupervisionTutorialModal from '../Components/SupervisionTutorialModal';
@@ -339,24 +340,20 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             {/* Floating Communication Hub - Mobile Only */}
             {!isDesktop && (
                 <div className="fixed top-20 right-4 z-40">
-                    {/* Card container with vertical layout - tighter padding to align with menu button */}
-                    <div className="flex flex-col gap-1 p-1.5 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-                        <NotificationBell />
+                    {/* Card container with vertical layout - compact size to match menu button */}
+                    <div className="flex flex-col gap-2 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        {/* Messaging Bell - Wrapped in circle container */}
+                        <div className="h-6 w-6 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <MessagingBell />
+                        </div>
                         
                         {/* Divider */}
                         <div className="h-px w-6 mx-auto bg-gray-200 dark:bg-gray-700"></div>
                         
-                        {/* Messaging Icon Placeholder - Future Feature */}
-                        <button
-                            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-not-allowed"
-                            disabled
-                            title="Messaging (Coming Soon)"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                        </button>
+                        {/* Notification Bell - Wrapped in circle container */}
+                        <div className="h-6 w-6 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <NotificationBell />
+                        </div>
                     </div>
                 </div>
             )}
@@ -396,8 +393,16 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                                         )}
                                     </div>
 
-                                    <div className="flex items-center space-x-4">
-                                        <NotificationBell />
+                                    <div className="flex items-center space-x-2">
+                                        {/* Messaging Bell - Wrapped in circle container */}
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                            <MessagingBell />
+                                        </div>
+                                        
+                                        {/* Notification Bell - Wrapped in circle container */}
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                            <NotificationBell />
+                                        </div>
                                         
                                         {/* Profile Dropdown */}
                                         <Dropdown>

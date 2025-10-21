@@ -104,4 +104,29 @@ class ConversationController extends Controller
             'archived_at' => $participant->archived_at,
         ]);
     }
+
+    /**
+     * Get total unread message count for authenticated user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function unreadCount(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get all conversations for user
+        $conversations = Conversation::whereHas('participants', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->get();
+        
+        // Sum up unread counts
+        $totalUnread = $conversations->sum(function ($conversation) use ($user) {
+            return $conversation->getUnreadCountForUser($user->id);
+        });
+
+        return response()->json([
+            'count' => $totalUnread
+        ]);
+    }
 }
