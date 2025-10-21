@@ -152,7 +152,10 @@ A system for users to manage their professional connections within the platform.
 A real-time, one-on-one and group messaging system designed for seamless communication.
 
 -   **Purpose**: To enable private and group conversations between users on the platform.
--   **UI**: A responsive, three-pane layout (`ConversationList`, `ThreadPane`, `MessageComposer`) located in `resources/js/Pages/Messaging/`.
+-   **UI**: 
+    -   **Full Page**: A responsive, three-pane layout (`ConversationList`, `ThreadPane`, `MessageComposer`) at `resources/js/Pages/Messaging/`.
+    -   **Floating Communication Hub**: Quick access messaging panel integrated into `MainLayout` and `FloatingCommunicationHub` components, providing instant access to conversations without leaving the current page.
+    -   **Messaging Panel**: Collapsible panel with conversation list and thread view, accessible from the messaging bell icon.
 -   **Backend Logic**: Controllers under `app/Http/Controllers/Api/V1/Messaging/` handle RESTful operations for conversations and messages.
 -   **Real-Time Updates**:
     -   **Thread Pane**: New messages, edits, and deletions appear instantly for all participants within an open conversation. This is powered by broadcasting events (e.g., `MessageSent`) on a private `conversation.{id}` channel via **Pusher**.
@@ -162,7 +165,60 @@ A real-time, one-on-one and group messaging system designed for seamless communi
     -   Rich text messaging with support for file attachments.
     -   Read receipts (via `last_read_message_id`).
     -   Search and filtering of conversations.
+    -   **Unread count badge**: Real-time unread message tracking across all conversations.
+    -   **Floating access**: Access messages from any page via floating communication hub.
+    -   **Email notifications**: Automated email reminders for inactive users with unread messages.
+-   **Email Notification System**:
+    -   **Purpose**: Re-engage inactive users by notifying them of unread messages via email.
+    -   **Trigger**: Automated daily check (9:00 AM) for users inactive for 7+ days with unread messages.
+    -   **Features**:
+        -   Configurable inactivity threshold (default: 7 days).
+        -   Rate limiting (max 1 email per 24 hours per user).
+        -   Detailed email with sender names and message count.
+        -   Direct link to messaging page.
+        -   Queued for background processing.
+    -   **Implementation**: `SendMessageEmailNotifications` artisan command, `UnreadMessagesNotification` mailable, automated via Laravel scheduler.
 -   **Database Models**: `Conversation`, `Message`, `ConversationParticipant`, `MessageAttachment`.
+-   **UI Components**: `MessagingBell.jsx`, `MessagingPanel.jsx`, `FloatingCommunicationHub.jsx`, `ThreadPane.jsx`.
+
+### Notification System
+
+A comprehensive real-time notification system with email and in-app delivery.
+
+-   **Purpose**: Keep users informed of platform activities, collaborations, and important updates.
+-   **UI**: 
+    -   **Notification Bell**: Icon with unread count badge in header and floating communication hub.
+    -   **Notification Panel**: Dropdown panel with tabbed interface (All/Unread), search, and filtering.
+    -   **Full Page View**: Dedicated notifications page at `/notifications` with advanced filtering and pagination.
+-   **Backend Logic**: `NotificationController.php` handles notification retrieval, marking as read, deletion, and preference management.
+-   **Real-Time Broadcasting**:
+    -   **Event**: `NotificationSent` broadcast on private user channel when notification created.
+    -   **Client Update**: `NotificationBell` component listens via Pusher and updates unread count instantly.
+    -   **Observer**: `DatabaseNotificationObserver` automatically dispatches broadcast event on notification creation.
+-   **Key Features**:
+    -   **14+ Notification Types**: Connection requests, task assignments, supervision updates, workspace changes, etc.
+    -   **Rich Content**: User avatars, action buttons, contextual information, and formatted dates.
+    -   **Preferences**: Granular control over email and database notifications per type.
+    -   **Soft Delete**: Mark notifications as deleted without permanent removal.
+    -   **Pagination**: Efficient handling of large notification lists.
+    -   **Real-time Updates**: Instant notification delivery via WebSockets.
+-   **Notification Types**:
+    -   **Connections**: Request received/accepted.
+    -   **Tasks**: Assigned, due date changed, completed.
+    -   **Workspaces**: Invited, removed, role changed, deleted.
+    -   **Boards**: Deleted.
+    -   **Supervision**: Request submitted/accepted/rejected, meetings scheduled.
+    -   **System**: Profile update reminders, email verifications.
+-   **Database Models**: `DatabaseNotification` (Laravel's notification table).
+-   **UI Components**: `NotificationBell.jsx`, `NotificationPanel.jsx`, `NotificationPreferences.jsx`.
+-   **API Endpoints**: 
+    -   `GET /api/v1/app/notifications` - List notifications
+    -   `GET /api/v1/app/notifications/all` - Paginated with filters
+    -   `POST /api/v1/app/notifications/mark-as-read` - Mark single as read
+    -   `POST /api/v1/app/notifications/mark-all-as-read` - Mark all as read
+    -   `DELETE /api/v1/app/notifications/{id}` - Soft delete notification
+    -   `GET /api/v1/app/notification-preferences` - Get preferences
+    -   `PUT /api/v1/app/notification-preferences` - Update preferences
 
 ### Supervision Management
 
