@@ -16,6 +16,7 @@ import SupervisionTutorialModal from '../Components/SupervisionTutorialModal';
 import StickyBanner from '../Components/ui/StickyBanner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Components/ui/tooltip';
 import BetaBadge from '../Components/BetaBadge';
+import FloatingCommunicationHub from '../Components/FloatingCommunicationHub';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -304,6 +305,17 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 hideOnScroll={bannerConfig.hideOnScroll}
             />
             
+            {/* Floating Communication Hub - Desktop Only, Shows when Header is Hidden */}
+            {isDesktop && !title && (
+                <div className="fixed top-4 right-4 z-50">
+                    <FloatingCommunicationHub 
+                        auth={auth}
+                        getProfilePicture={getProfilePicture}
+                        showProfile={true}
+                    />
+                </div>
+            )}
+            
             {/* New Two-Part Sidebar System for Desktop */}
             {isDesktop && (
                 <>
@@ -322,6 +334,31 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             {/* Mobile Sidebar */}
             {!isDesktop && (
                 <MobileSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+            )}
+
+            {/* Floating Communication Hub - Mobile Only */}
+            {!isDesktop && (
+                <div className="fixed top-20 right-4 z-40">
+                    {/* Card container with vertical layout - tighter padding to align with menu button */}
+                    <div className="flex flex-col gap-1 p-1.5 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <NotificationBell />
+                        
+                        {/* Divider */}
+                        <div className="h-px w-6 mx-auto bg-gray-200 dark:bg-gray-700"></div>
+                        
+                        {/* Messaging Icon Placeholder - Future Feature */}
+                        <button
+                            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-not-allowed"
+                            disabled
+                            title="Messaging (Coming Soon)"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             )}
 
             {/* Main Content Area */}
@@ -411,7 +448,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     <div className="pb-20">
                         {/* Fixed sidebar toggle button for mobile */}
                         <button
-                            className="fixed top-6 right-4 z-40 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
+                            className="fixed top-6 right-4 z-45 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
                             onClick={toggleSidebar}
                         >
                             {isSidebarOpen ? '✕' : '☰'}
@@ -462,7 +499,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
             {/* Feedback Form Bubble - Dismissible & Less Prominent */}
             {showFeedbackBubble && (
-                <div className="fixed z-50 right-4 bottom-24 md:bottom-10 md:right-8 group">
+                <div className="fixed z-40 right-4 bottom-24 md:bottom-10 md:right-8 group">
                     <a
                         href={feedbackFormUrl}
                         target="_blank"
