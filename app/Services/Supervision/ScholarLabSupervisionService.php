@@ -47,17 +47,37 @@ class ScholarLabSupervisionService
                 ]);
             });
 
-            $task = Task::create([
-                'board_list_id' => $lists[0]->id,
-                'title' => __('Complete onboarding checklist'),
-                'description' => __('Review program requirements, complete paperwork, and align expectations.'),
-                'creator_id' => $academician->user->id,
-                'order' => 1,
-            ]);
+            // Create tasks from onboarding checklist items
+            $checklistItems = $relationship->onboardingChecklistItems;
 
-            $task->assignees()->sync([
-                $student->user->id,
-            ]);
+            if ($checklistItems->isNotEmpty()) {
+                foreach ($checklistItems as $index => $item) {
+                    $task = Task::create([
+                        'board_list_id' => $lists[0]->id, // Onboarding list
+                        'title' => $item->task,
+                        'description' => null,
+                        'creator_id' => $academician->user->id,
+                        'order' => $index + 1,
+                    ]);
+
+                    $task->assignees()->sync([
+                        $student->user->id,
+                    ]);
+                }
+            } else {
+                // Fallback: Create default task if no checklist items exist
+                $task = Task::create([
+                    'board_list_id' => $lists[0]->id,
+                    'title' => __('Complete onboarding checklist'),
+                    'description' => __('Review program requirements, complete paperwork, and align expectations.'),
+                    'creator_id' => $academician->user->id,
+                    'order' => 1,
+                ]);
+
+                $task->assignees()->sync([
+                    $student->user->id,
+                ]);
+            }
 
             $relationship->update([
                 'scholarlab_workspace_id' => $workspace->id,
