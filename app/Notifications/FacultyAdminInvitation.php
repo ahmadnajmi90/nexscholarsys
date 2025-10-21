@@ -16,7 +16,7 @@ class FacultyAdminInvitation extends Notification
 
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail($notifiable)
@@ -31,5 +31,21 @@ class FacultyAdminInvitation extends Notification
             ->line('For security purposes, please log in and change your password immediately.')
             ->action('Login to Your Account', route('faculty-admins.confirm', $this->user->id))
             ->line('Thank you for joining us!');
+    }
+
+    /**
+     * Get the array representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return array
+     */
+    public function toArray($notifiable)
+    {
+        return [
+            'type' => 'faculty_admin_invitation',
+            'email' => $this->user->email ?? null,
+            'invited_by' => 'Administrator',
+            'message' => 'You have been invited to join as a Faculty Admin',
+        ];
     }
 }

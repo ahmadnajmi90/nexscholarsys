@@ -51,6 +51,14 @@ class CoSupervisorInvitationInitiated extends Notification implements ShouldQueu
         $mainSupervisor = $relationship->academician;
         $cosupervisor = $this->invitation->cosupervisor;
 
+        // Get initiator and cosupervisor profile pictures
+        $initiatorProfilePicture = null;
+        if ($this->invitation->initiated_by === 'student') {
+            $initiatorProfilePicture = $student->profile_picture;
+        } else {
+            $initiatorProfilePicture = $mainSupervisor->profile_picture;
+        }
+
         return [
             'type' => 'cosupervisor_invitation_initiated',
             'invitation_id' => $this->invitation->id,
@@ -59,7 +67,9 @@ class CoSupervisorInvitationInitiated extends Notification implements ShouldQueu
             'student_id' => $student->postgraduate_id,
             'main_supervisor_name' => $mainSupervisor->user->full_name,
             'cosupervisor_name' => $cosupervisor->user->full_name,
+            'cosupervisor_profile_picture' => $cosupervisor->profile_picture,
             'initiated_by' => $this->invitation->initiated_by,
+            'initiator_profile_picture' => $initiatorProfilePicture,
             'invitation_message' => $this->invitation->invitation_message,
             'message' => $this->invitation->initiated_by === 'student' 
                 ? "{$student->user->full_name} wants to add {$cosupervisor->user->full_name} as a co-supervisor"

@@ -10,7 +10,8 @@ This document provides a comprehensive reference for all custom Artisan commands
 2. [Qdrant Vector Database Commands](#qdrant-vector-database-commands)
 3. [Google Scholar Integration Commands](#google-scholar-integration-commands)
 4. [Data Maintenance Commands](#data-maintenance-commands)
-5. [Testing & Debugging Commands](#testing--debugging-commands)
+5. [Messaging & Communication Commands](#messaging--communication-commands)
+6. [Testing & Debugging Commands](#testing--debugging-commands)
 
 ---
 
@@ -695,6 +696,87 @@ php artisan messaging:test-factories
 
 ---
 
+## Messaging & Communication Commands
+
+### `messages:send-email-notifications`
+
+Send email notifications to inactive users with unread messages.
+
+**Signature:**
+```bash
+php artisan messages:send-email-notifications {--days=7} {--dry-run}
+```
+
+**Options:**
+- `--days=7`: Number of days of inactivity before sending email (default: 7)
+- `--dry-run`: Show what would be sent without actually sending emails
+
+**Usage Examples:**
+```bash
+# Test mode (no emails sent)
+php artisan messages:send-email-notifications --dry-run
+
+# Send actual emails to users inactive for 7 days
+php artisan messages:send-email-notifications
+
+# Custom inactivity period (3 days)
+php artisan messages:send-email-notifications --days=3
+```
+
+**When to Use:**
+- Scheduled daily execution (recommended: 9:00 AM)
+- Re-engaging inactive users with pending messages
+- Improving platform communication and response rates
+- Testing email notification system
+
+**What It Does:**
+1. Finds users who haven't logged in for X days (default: 7)
+2. Checks if they have unread messages in any conversation
+3. Ensures they haven't been emailed in the last 24 hours
+4. Sends personalized email with:
+   - Total unread message count
+   - Names of people who sent messages
+   - Direct link to messaging page
+5. Updates `last_message_email_sent_at` timestamp
+6. Queues emails for background processing
+
+**Console Output:**
+- Detailed processing log for each user
+- Summary table showing:
+  - Users found with unread messages
+  - Emails successfully sent
+  - Emails skipped or failed
+- Real-time progress indicator
+
+**Scheduled Execution:**
+This command runs automatically daily at 9:00 AM (Asia/Kuala_Lumpur timezone) via Laravel scheduler. See `routes/console.php` for configuration.
+
+**Configuration Requirements:**
+- Proper email settings in `.env` (SMTP configuration)
+- Laravel scheduler running via cron job
+- Queue worker active for email processing
+- `last_message_email_sent_at` column in users table
+
+**Error Handling:**
+- Failed emails are logged but don't stop processing
+- Individual user errors don't affect other users
+- Comprehensive logging in `storage/logs/laravel.log`
+
+**Rate Limiting:**
+- Maximum 1 email per 24 hours per user
+- Configurable inactivity threshold (--days option)
+- Smart detection prevents spam
+
+**Email Content:**
+Recipients receive an email with:
+- Personalized greeting with full name
+- Total unread message count
+- List of sender names (formatted: "John, Jane, and 2 others")
+- Call-to-action button linking to /messaging
+- Professional signature from Nexscholar Team
+
+---
+
 ## Common Workflows
 
 ### Initial System Setup
@@ -746,6 +828,12 @@ php artisan qdrant:test
 ```bash
 # Sync Google Scholar profiles not updated in 7 days
 0 2 * * * php artisan scholar:sync-scheduled --days=7 --batch=20
+```
+
+**Daily (9:00 AM):**
+```bash
+# Send message email notifications to inactive users
+0 9 * * * php artisan messages:send-email-notifications
 ```
 
 **Weekly (Sunday 3:00 AM):**

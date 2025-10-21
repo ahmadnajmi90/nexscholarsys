@@ -5,7 +5,6 @@ namespace App\Listeners;
 use App\Events\ConnectionStatusChanged;
 use App\Notifications\ConnectionRequestReceived;
 use App\Notifications\ConnectionRequestAccepted;
-use App\Notifications\InvitationReceived;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -67,8 +66,7 @@ class SendConnectionNotification implements ShouldQueue
             // Notify the recipient about the connection request
             $recipient->notify(new ConnectionRequestReceived($connection, $requester));
             
-            // Also send the new invitation notification
-            $recipient->notify(new InvitationReceived($requester));
+            // Remove legacy duplicate InvitationReceived notification
         }
     }
 

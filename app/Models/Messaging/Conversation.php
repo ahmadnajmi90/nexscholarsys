@@ -114,4 +114,23 @@ class Conversation extends Model
     {
         return $this->participants()->where('user_id', $userId)->first();
     }
+
+    /**
+     * Get the unread message count for a specific user.
+     */
+    public function getUnreadCountForUser(int $userId): int
+    {
+        $participant = $this->getParticipant($userId);
+        
+        if (!$participant) {
+            return 0;
+        }
+
+        $lastReadMessageId = $participant->last_read_message_id ?? 0;
+        
+        return $this->messages()
+            ->where('id', '>', $lastReadMessageId)
+            ->where('user_id', '!=', $userId)
+            ->count();
+    }
 }

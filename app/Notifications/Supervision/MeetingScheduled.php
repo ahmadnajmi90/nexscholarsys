@@ -49,9 +49,16 @@ class MeetingScheduled extends Notification implements ShouldQueue
             $notifiable->academician->academician_id === $this->meeting->request?->academician_id
         );
 
-        $schedulerName = $isSupervisor
-            ? ($this->meeting->relationship?->student->full_name ?? $this->meeting->request?->student->full_name ?? 'Student')
-            : ($this->meeting->relationship?->academician->full_name ?? $this->meeting->request?->academician->full_name ?? 'Supervisor');
+        // Get scheduler (opposite of recipient)
+        if ($isSupervisor) {
+            $scheduler = $this->meeting->relationship?->student ?? $this->meeting->request?->student;
+            $schedulerName = $scheduler?->full_name ?? 'Student';
+            $schedulerProfilePicture = $scheduler?->postgraduate?->profile_picture ?? $scheduler?->undergraduate?->profile_picture ?? null;
+        } else {
+            $scheduler = $this->meeting->relationship?->academician ?? $this->meeting->request?->academician;
+            $schedulerName = $scheduler?->full_name ?? 'Supervisor';
+            $schedulerProfilePicture = $scheduler?->profile_picture ?? null;
+        }
 
         return [
             'type' => 'meeting_scheduled',
@@ -62,6 +69,7 @@ class MeetingScheduled extends Notification implements ShouldQueue
             'scheduled_for' => $this->meeting->scheduled_for->toISOString(),
             'location_link' => $this->meeting->location_link,
             'scheduler_name' => $schedulerName,
+            'scheduler_profile_picture' => $schedulerProfilePicture,
             'message' => __(':scheduler has scheduled a meeting: ":title" on :date', [
                 'scheduler' => $schedulerName,
                 'title' => $this->meeting->title,

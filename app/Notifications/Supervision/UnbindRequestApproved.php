@@ -37,15 +37,24 @@ class UnbindRequestApproved extends Notification implements ShouldQueue
     {
         $isSupervisorRecipient = $notifiable->academician && 
                                  $notifiable->academician->academician_id === $this->unbindRequest->relationship->academician_id;
-        $otherPartyName = $isSupervisorRecipient
-            ? ($this->unbindRequest->relationship->student->full_name ?? 'Student')
-            : ($this->unbindRequest->relationship->academician->full_name ?? 'Supervisor');
+        
+        if ($isSupervisorRecipient) {
+            $otherParty = $this->unbindRequest->relationship->student;
+            $otherPartyName = $otherParty?->full_name ?? 'Student';
+            $otherPartyProfilePicture = $otherParty?->postgraduate?->profile_picture ?? $otherParty?->undergraduate?->profile_picture ?? null;
+        } else {
+            $otherParty = $this->unbindRequest->relationship->academician;
+            $otherPartyName = $otherParty?->full_name ?? 'Supervisor';
+            $otherPartyProfilePicture = $otherParty?->profile_picture ?? null;
+        }
 
         return [
             'type' => 'unbind_request_approved',
             'unbind_request_id' => $this->unbindRequest->id,
             'relationship_id' => $this->unbindRequest->relationship_id,
             'initiated_by' => $this->unbindRequest->initiated_by,
+            'other_party_name' => $otherPartyName,
+            'other_party_profile_picture' => $otherPartyProfilePicture,
             'message' => __('Your supervision relationship with :name has been terminated.', [
                 'name' => $otherPartyName,
             ]),

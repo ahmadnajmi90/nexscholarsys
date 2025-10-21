@@ -15,14 +15,16 @@ class TaskDueDateChangedNotification extends Notification implements ShouldQueue
 
     protected $task;
     protected $oldDueDate;
+    protected $changedByUser;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Task $task, $oldDueDate)
+    public function __construct(Task $task, $oldDueDate, $changedByUser = null)
     {
         $this->task = $task;
         $this->oldDueDate = $oldDueDate;
+        $this->changedByUser = $changedByUser; // Now accepts User object
     }
 
     /**
@@ -125,12 +127,56 @@ class TaskDueDateChangedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         try {
+            // Get changer profile picture and full name
+            $changerProfilePicture = null;
+            $changerName = null;
+            
+            if ($this->changedByUser) {
+                $changerName = $this->changedByUser->full_name ?? 'Someone';
+                
+                if ($this->changedByUser->academician) {
+                    $changerProfilePicture = $this->changedByUser->academician->profile_picture;
+                } elseif ($this->changedByUser->postgraduate) {
+                    $changerProfilePicture = $this->changedByUser->postgraduate->profile_picture;
+                } elseif ($this->changedByUser->undergraduate) {
+                    $changerProfilePicture = $this->changedByUser->undergraduate->profile_picture;
+                }
+            }
+            
+            // Get board and workspace names
+            $boardName = null;
+            $workspaceName = null;
+            $boardId = null;
+            
+            if ($this->task->list && $this->task->list->board) {
+                $boardName = $this->task->list->board->name;
+                $boardId = $this->task->list->board->id;
+                
+                if ($this->task->list->board->workspace) {
+                    $workspaceName = $this->task->list->board->workspace->name;
+                } elseif ($this->task->list->board->project) {
+                    $workspaceName = $this->task->list->board->project->name;
+                }
+            }
+
+            // Format dates consistently
+            $formattedOldDate = $this->oldDueDate ? date('d/m/Y', strtotime($this->oldDueDate)) : null;
+            $formattedNewDate = $this->task->due_date ? $this->task->due_date->format('d/m/Y') : null;
+
             return [
+                'type' => 'task_due_date_changed',
                 'task_id' => $this->task->id ?? null,
                 'task_title' => $this->task->title ?? 'Unknown Task',
                 'old_due_date' => $this->oldDueDate,
                 'new_due_date' => $this->task->due_date ? $this->task->due_date->format('Y-m-d') : null,
-                'board_id' => $this->task->list->board->id ?? null,
+                'old_due_date_formatted' => $formattedOldDate,
+                'new_due_date_formatted' => $formattedNewDate,
+                'changed_by' => $changerName,
+                'changed_by_profile_picture' => $changerProfilePicture,
+                'board_id' => $boardId,
+                'board_name' => $boardName,
+                'workspace_name' => $workspaceName,
+                'message' => 'Due date changed for task "' . ($this->task->title ?? 'Unknown Task') . '"',
             ];
         } catch (\Exception $e) {
             Log::error('TaskDueDateChangedNotification: Exception in toArray', [
@@ -138,6 +184,7 @@ class TaskDueDateChangedNotification extends Notification implements ShouldQueue
             ]);
             
             return [
+                'type' => 'task_due_date_changed',
                 'message' => 'A task due date has been changed.',
             ];
         }

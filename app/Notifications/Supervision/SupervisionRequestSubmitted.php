@@ -34,12 +34,24 @@ class SupervisionRequestSubmitted extends Notification implements ShouldQueue
 
     public function toArray($notifiable)
     {
+        // Get student profile picture
+        $studentProfilePicture = null;
+        $student = $this->request->student;
+        if ($student) {
+            if ($student->postgraduate) {
+                $studentProfilePicture = $student->postgraduate->profile_picture;
+            } elseif ($student->undergraduate) {
+                $studentProfilePicture = $student->undergraduate->profile_picture;
+            }
+        }
+
         return [
             'type' => 'request_submitted',
             'request_id' => $this->request->id,
             'student_id' => $this->request->student_id,
             'academician_id' => $this->request->academician_id,
             'student_name' => $this->request->student->full_name ?? 'Student',
+            'student_profile_picture' => $studentProfilePicture,
             'proposal_title' => $this->request->proposal_title,
             'message' => __(':student submitted a new supervision request for ":title"', [
                 'student' => $this->request->student->full_name ?? 'A student',

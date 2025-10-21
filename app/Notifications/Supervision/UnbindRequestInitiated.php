@@ -39,9 +39,16 @@ class UnbindRequestInitiated extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         $isSupervisorInitiated = $this->unbindRequest->initiated_by === 'supervisor';
-        $initiatorName = $isSupervisorInitiated 
-            ? ($this->unbindRequest->relationship->academician->full_name ?? 'Your supervisor')
-            : ($this->unbindRequest->relationship->student->full_name ?? 'Your student');
+        
+        if ($isSupervisorInitiated) {
+            $initiator = $this->unbindRequest->relationship->academician;
+            $initiatorName = $initiator?->full_name ?? 'Your supervisor';
+            $initiatorProfilePicture = $initiator?->profile_picture ?? null;
+        } else {
+            $initiator = $this->unbindRequest->relationship->student;
+            $initiatorName = $initiator?->full_name ?? 'Your student';
+            $initiatorProfilePicture = $initiator?->postgraduate?->profile_picture ?? $initiator?->undergraduate?->profile_picture ?? null;
+        }
 
         return [
             'type' => 'unbind_request_initiated',
@@ -49,6 +56,7 @@ class UnbindRequestInitiated extends Notification implements ShouldQueue
             'relationship_id' => $this->unbindRequest->relationship_id,
             'initiated_by' => $this->unbindRequest->initiated_by,
             'initiator_name' => $initiatorName,
+            'initiator_profile_picture' => $initiatorProfilePicture,
             'reason' => $this->unbindRequest->reason,
             'attempt_count' => $this->unbindRequest->attempt_count,
             'is_force' => $this->unbindRequest->status === 'force_unbind',

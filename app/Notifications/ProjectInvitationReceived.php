@@ -122,11 +122,25 @@ class ProjectInvitationReceived extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         try {
+            // Get inviter profile picture from role models
+            $inviterProfilePicture = null;
+            if ($this->inviter) {
+                if ($this->inviter->academician) {
+                    $inviterProfilePicture = $this->inviter->academician->profile_picture;
+                } elseif ($this->inviter->postgraduate) {
+                    $inviterProfilePicture = $this->inviter->postgraduate->profile_picture;
+                } elseif ($this->inviter->undergraduate) {
+                    $inviterProfilePicture = $this->inviter->undergraduate->profile_picture;
+                }
+            }
+
             return [
+                'type' => 'project_invitation',
                 'project_id' => $this->project->id ?? null,
                 'project_name' => $this->project->name ?? 'Unknown Project',
                 'inviter_id' => $this->inviter->id ?? null,
                 'inviter_name' => $this->inviter->full_name ?? 'Unknown User',
+                'inviter_profile_picture' => $inviterProfilePicture,
                 'message' => 'You have been invited to join project "' . 
                     ($this->project->name ?? 'Unknown Project') . '" by ' . 
                     ($this->inviter->full_name ?? 'Unknown User'),
@@ -137,6 +151,7 @@ class ProjectInvitationReceived extends Notification implements ShouldQueue
             ]);
             
             return [
+                'type' => 'project_invitation',
                 'message' => 'You have received a project invitation.',
             ];
         }

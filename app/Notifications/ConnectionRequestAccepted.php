@@ -46,10 +46,21 @@ class ConnectionRequestAccepted extends Notification
      */
     public function toDatabase($notifiable): array
     {
+        // Get profile picture from recipient's role model
+        $profilePicture = null;
+        if ($this->recipient->academician) {
+            $profilePicture = $this->recipient->academician->profile_picture;
+        } elseif ($this->recipient->postgraduate) {
+            $profilePicture = $this->recipient->postgraduate->profile_picture;
+        } elseif ($this->recipient->undergraduate) {
+            $profilePicture = $this->recipient->undergraduate->profile_picture;
+        }
+
         return [
             'connection_id' => $this->acceptedConnection->id ?? '',
             'recipient_id' => $this->recipient->id,
             'recipient_name' => $this->recipient->full_name,
+            'recipient_profile_picture' => $profilePicture,
             'type' => 'connection_accepted',
             'message' => "{$this->recipient->full_name} accepted your connection request."
         ];
@@ -63,10 +74,21 @@ class ConnectionRequestAccepted extends Notification
      */
     public function toArray($notifiable): array
     {
+        // Get profile picture from recipient's role model
+        $profilePicture = null;
+        if ($this->recipient->academician) {
+            $profilePicture = $this->recipient->academician->profile_picture;
+        } elseif ($this->recipient->postgraduate) {
+            $profilePicture = $this->recipient->postgraduate->profile_picture;
+        } elseif ($this->recipient->undergraduate) {
+            $profilePicture = $this->recipient->undergraduate->profile_picture;
+        }
+
         return [
             'connection_id' => $this->acceptedConnection->id ?? '',
             'recipient_id' => $this->recipient->id,
             'recipient_name' => $this->recipient->full_name,
+            'recipient_profile_picture' => $profilePicture,
             'type' => 'connection_accepted',
             'message' => "{$this->recipient->full_name} accepted your connection request."
         ];

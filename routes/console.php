@@ -19,6 +19,11 @@ Schedule::command('app:sync-academician-views')->dailyAt('00:00');
 // Schedule meeting reminders to run every 10 minutes
 Schedule::command('supervision:send-meeting-reminders')->everyTenMinutes();
 
+// Schedule message email notifications to run daily at 9:00 AM
+Schedule::command('messages:send-email-notifications')
+    ->dailyAt('09:00')
+    ->timezone('Asia/Kuala_Lumpur');
+
 // Google Scholar scraping is now handled by user-initiated actions
 // The scheduled commands have been removed
 

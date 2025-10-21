@@ -115,7 +115,7 @@ class ProjectMemberController extends Controller
             $project->name,
             'project',
             $validated['role'],
-            $request->user()->name,
+            $request->user(), // Pass User object instead of name
             $project->id
         ));
         

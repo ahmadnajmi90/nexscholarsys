@@ -49,6 +49,7 @@ class CoSupervisorRejected extends Notification implements ShouldQueue
             'relationship_id' => $this->invitation->relationship_id,
             'cosupervisor_name' => $cosupervisor->user->full_name,
             'cosupervisor_id' => $cosupervisor->academician_id,
+            'cosupervisor_profile_picture' => $cosupervisor->profile_picture,
             'rejection_reason' => $this->invitation->rejection_reason,
             'message' => "{$cosupervisor->user->full_name} has declined the co-supervisor invitation.",
         ];

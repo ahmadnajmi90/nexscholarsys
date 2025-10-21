@@ -571,6 +571,100 @@ These endpoints are designed for the frontend, use session-based authentication,
 
 ---
 
+#### Get All Notifications (Paginated)
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/app/notifications/all`
+-   **Description**: Fetches paginated notifications with filtering options.
+-   **Query Parameters**:
+    -   `page` (integer, optional): Page number
+    -   `per_page` (integer, optional): Items per page
+    -   `read_status` (string, optional): Filter by status (`all`, `read`, `unread`)
+    -   `type` (string, optional): Filter by notification type
+-   **Response** (`200 OK`):
+    ```json
+    {
+        "data": [ ... ],
+        "links": { ... },
+        "meta": { ... }
+    }
+    ```
+
+---
+
+#### Delete Notification
+
+-   **Method**: `DELETE`
+-   **Path**: `/api/v1/app/notifications/{id}`
+-   **Description**: Soft deletes a specific notification.
+-   **Response** (`204 No Content`).
+
+---
+
+#### Get Notification Preferences
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/app/notification-preferences`
+-   **Description**: Retrieves user's notification preferences for all types.
+-   **Response** (`200 OK`):
+    ```json
+    {
+        "preferences": [
+            {
+                "notification_type": "connection_request",
+                "email_enabled": true,
+                "database_enabled": true
+            }
+        ],
+        "available_types": [ ... ]
+    }
+    ```
+
+---
+
+#### Update Notification Preferences
+
+-   **Method**: `PUT`
+-   **Path**: `/api/v1/app/notification-preferences`
+-   **Description**: Updates user's notification preferences.
+-   **Request Body**:
+    ```json
+    {
+        "preferences": [
+            {
+                "notification_type": "connection_request",
+                "email_enabled": false,
+                "database_enabled": true
+            }
+        ]
+    }
+    ```
+-   **Response** (`200 OK`).
+
+---
+
+### Messaging
+
+-   **Endpoint**: `/api/v1/app/messaging`
+-   **Controller**: `App\Http\Controllers\Api\V1\Messaging\ConversationController`
+-   **Authentication**: Session
+
+---
+
+#### Get Unread Message Count
+
+-   **Method**: `GET`
+-   **Path**: `/api/v1/app/messaging/unread-count`
+-   **Description**: Fetches total unread message count for authenticated user across all conversations.
+-   **Response** (`200 OK`):
+    ```json
+    {
+        "count": 12
+    }
+    ```
+
+---
+
 ## WebSocket API (Real-Time Events)
 
 The platform uses WebSockets for real-time communication. Clients should subscribe to private channels to receive events.
@@ -613,6 +707,34 @@ The following events are broadcast using the **Pusher** driver.
 -   **Event Name**: `.MessageSent`
 -   **Description**: Fired when a new message is sent. This event contains the full `Message` resource and is intended to update the main thread pane of an open conversation.
 -   **Payload**: A full `MessageResource` JSON object.
+
+---
+
+### Notification Events (via Pusher)
+
+#### Event: `notification.sent`
+
+-   **Channel**: `App.Models.User.{id}` (Private User Channel)
+-   **Event Name**: `notification.sent`
+-   **Description**: Fired when a new notification is created for a user. This event triggers real-time updates to the notification bell and panel, providing instant feedback for platform activities.
+-   **When Triggered**:
+    -   After any database notification is created
+    -   Automatically via `DatabaseNotificationObserver`
+    -   For all notification types (connections, tasks, supervision, workspaces, etc.)
+-   **Payload**: Full notification data including:
+    -   `id`: Notification UUID
+    -   `type`: Notification class name
+    -   `data`: Notification-specific payload with message, user info, and metadata
+    -   `read_at`: Timestamp when read (initially null)
+    -   `created_at`: Timestamp when created
+-   **Client-side Handling**:
+    -   Increment unread notification count in `NotificationBell` component
+    -   Optionally fetch and display new notification in panel
+    -   Show browser notification (if permission granted)
+    -   Play notification sound (if enabled)
+    -   Update UI to reflect new activity
+
+---
 
 ### NexLab Events (via Reverb)
 

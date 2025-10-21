@@ -8,6 +8,8 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use Illuminate\Support\Facades\Event;
 use App\Events\ConnectionStatusChanged;
 use App\Listeners\SendConnectionNotification;
+use Illuminate\Notifications\DatabaseNotification;
+use App\Observers\DatabaseNotificationObserver;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -42,7 +44,8 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register the DatabaseNotification observer
+        DatabaseNotification::observe(DatabaseNotificationObserver::class);
     }
 
     /**

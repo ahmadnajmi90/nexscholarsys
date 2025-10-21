@@ -55,8 +55,10 @@ class CoSupervisorAdded extends Notification implements ShouldQueue
             'cosupervisor_relationship_id' => $this->cosupervisorRelationship->id,
             'cosupervisor_name' => $cosupervisor->user->full_name,
             'cosupervisor_id' => $cosupervisor->academician_id,
+            'cosupervisor_profile_picture' => $cosupervisor->profile_picture,
             'student_name' => $student->user->full_name,
             'student_id' => $student->postgraduate_id,
+            'student_profile_picture' => $student->profile_picture,
             'message' => "{$cosupervisor->user->full_name} has been successfully added as co-supervisor for {$student->user->full_name}.",
         ];
     }

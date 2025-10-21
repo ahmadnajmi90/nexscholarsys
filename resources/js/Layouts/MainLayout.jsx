@@ -10,12 +10,14 @@ import { Home, Calendar1, User, FileBadge, Briefcase, Settings, User2, LogOut, D
 import { trackPageView } from '../Utils/analytics';
 import { Toaster } from 'react-hot-toast';
 import NotificationBell from '../Components/Notifications/NotificationBell';
+import MessagingBell from '../Components/Messaging/MessagingBell';
 import ForceTermsModal from '../Components/ForceTermsModal';
 import TutorialModal from '../Components/Tutorial/TutorialModal';
 import SupervisionTutorialModal from '../Components/SupervisionTutorialModal';
 import StickyBanner from '../Components/ui/StickyBanner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Components/ui/tooltip';
 import BetaBadge from '../Components/BetaBadge';
+import FloatingCommunicationHub from '../Components/FloatingCommunicationHub';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -304,6 +306,17 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 hideOnScroll={bannerConfig.hideOnScroll}
             />
             
+            {/* Floating Communication Hub - Desktop Only, Shows when Header is Hidden */}
+            {isDesktop && !title && (
+                <div className="fixed top-4 right-4 z-50">
+                    <FloatingCommunicationHub 
+                        auth={auth}
+                        getProfilePicture={getProfilePicture}
+                        showProfile={true}
+                    />
+                </div>
+            )}
+            
             {/* New Two-Part Sidebar System for Desktop */}
             {isDesktop && (
                 <>
@@ -322,6 +335,27 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             {/* Mobile Sidebar */}
             {!isDesktop && (
                 <MobileSidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+            )}
+
+            {/* Floating Communication Hub - Mobile Only */}
+            {!isDesktop && (
+                <div className="fixed top-20 right-4 z-40">
+                    {/* Card container with vertical layout - compact size to match menu button */}
+                    <div className="flex flex-col gap-2 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        {/* Messaging Bell - Wrapped in circle container */}
+                        <div className="h-6 w-6 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <MessagingBell />
+                        </div>
+                        
+                        {/* Divider */}
+                        <div className="h-px w-6 mx-auto bg-gray-200 dark:bg-gray-700"></div>
+                        
+                        {/* Notification Bell - Wrapped in circle container */}
+                        <div className="h-6 w-6 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <NotificationBell />
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Main Content Area */}
@@ -359,8 +393,16 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                                         )}
                                     </div>
 
-                                    <div className="flex items-center space-x-4">
-                                        <NotificationBell />
+                                    <div className="flex items-center space-x-2">
+                                        {/* Messaging Bell - Wrapped in circle container */}
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                            <MessagingBell />
+                                        </div>
+                                        
+                                        {/* Notification Bell - Wrapped in circle container */}
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                            <NotificationBell />
+                                        </div>
                                         
                                         {/* Profile Dropdown */}
                                         <Dropdown>
@@ -411,7 +453,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     <div className="pb-20">
                         {/* Fixed sidebar toggle button for mobile */}
                         <button
-                            className="fixed top-6 right-4 z-40 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
+                            className="fixed top-6 right-4 z-45 bg-indigo-600 text-white p-3 rounded-md shadow-md lg:hidden"
                             onClick={toggleSidebar}
                         >
                             {isSidebarOpen ? '✕' : '☰'}
@@ -462,7 +504,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
 
             {/* Feedback Form Bubble - Dismissible & Less Prominent */}
             {showFeedbackBubble && (
-                <div className="fixed z-50 right-4 bottom-24 md:bottom-10 md:right-8 group">
+                <div className="fixed z-40 right-4 bottom-24 md:bottom-10 md:right-8 group">
                     <a
                         href={feedbackFormUrl}
                         target="_blank"

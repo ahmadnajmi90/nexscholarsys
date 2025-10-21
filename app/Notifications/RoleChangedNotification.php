@@ -15,18 +15,18 @@ class RoleChangedNotification extends Notification implements ShouldQueue
     protected $parentName;
     protected $parentType;
     protected $newRole;
-    protected $changedByName;
+    protected $changedByUser;
     protected $parentId;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $parentName, string $parentType, string $newRole, string $changedByName, int $parentId)
+    public function __construct(string $parentName, string $parentType, string $newRole, $changedByUser, int $parentId)
     {
         $this->parentName = $parentName;
         $this->parentType = $parentType; // 'workspace' or 'project'
         $this->newRole = $newRole;
-        $this->changedByName = $changedByName;
+        $this->changedByUser = $changedByUser; // Now accepts User object
         $this->parentId = $parentId;
     }
 
@@ -126,12 +126,32 @@ class RoleChangedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         try {
+            // Get changer profile picture and full name
+            $changerProfilePicture = null;
+            $changerName = 'Administrator';
+            
+            if ($this->changedByUser) {
+                $changerName = $this->changedByUser->full_name ?? 'Administrator';
+                
+                if ($this->changedByUser->academician) {
+                    $changerProfilePicture = $this->changedByUser->academician->profile_picture;
+                } elseif ($this->changedByUser->postgraduate) {
+                    $changerProfilePicture = $this->changedByUser->postgraduate->profile_picture;
+                } elseif ($this->changedByUser->undergraduate) {
+                    $changerProfilePicture = $this->changedByUser->undergraduate->profile_picture;
+                }
+            }
+            
             return [
+                'type' => 'role_changed',
                 'parent_name' => $this->parentName ?? 'Unknown',
                 'parent_type' => $this->parentType ?? 'entity',
-                'new_role' => $this->newRole ?? 'member',
-                'changed_by' => $this->changedByName ?? 'Administrator',
+                'new_role' => ucfirst($this->newRole ?? 'member'), // Capitalize role
+                'changed_by' => $changerName,
+                'changed_by_profile_picture' => $changerProfilePicture,
                 'parent_id' => $this->parentId ?? null,
+                'message' => 'Your role in ' . ($this->parentType ?? 'entity') . ' "' . 
+                    ($this->parentName ?? 'Unknown') . '" changed to ' . ucfirst($this->newRole ?? 'member'),
             ];
         } catch (\Exception $e) {
             Log::error('RoleChangedNotification: Exception in toArray', [
@@ -139,6 +159,7 @@ class RoleChangedNotification extends Notification implements ShouldQueue
             ]);
             
             return [
+                'type' => 'role_changed',
                 'message' => 'Your role has been changed.',
             ];
         }

@@ -67,9 +67,16 @@ class MeetingCancelled extends Notification implements ShouldQueue
             $notifiable->academician->academician_id === $request?->academician_id
         );
 
-        $cancellerName = $isSupervisor
-            ? ($relationship?->student->full_name ?? $request?->student->full_name ?? 'Student')
-            : ($relationship?->academician->full_name ?? $request?->academician->full_name ?? 'Supervisor');
+        // Get canceller (opposite of recipient)
+        if ($isSupervisor) {
+            $canceller = $relationship?->student ?? $request?->student;
+            $cancellerName = $canceller?->full_name ?? 'Student';
+            $cancellerProfilePicture = $canceller?->postgraduate?->profile_picture ?? $canceller?->undergraduate?->profile_picture ?? null;
+        } else {
+            $canceller = $relationship?->academician ?? $request?->academician;
+            $cancellerName = $canceller?->full_name ?? 'Supervisor';
+            $cancellerProfilePicture = $canceller?->profile_picture ?? null;
+        }
 
         return [
             'type' => 'meeting_cancelled',
@@ -81,6 +88,7 @@ class MeetingCancelled extends Notification implements ShouldQueue
                 ? $this->meetingData['scheduled_for']->toISOString()
                 : $this->meetingData['scheduled_for'],
             'canceller_name' => $cancellerName,
+            'canceller_profile_picture' => $cancellerProfilePicture,
             'message' => __(':canceller has cancelled the meeting ":title"', [
                 'canceller' => $cancellerName,
                 'title' => $this->meetingData['title'],

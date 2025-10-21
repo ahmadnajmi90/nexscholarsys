@@ -12,15 +12,15 @@ class WorkspaceDeletedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     protected $workspaceName;
-    protected $deletedByName;
+    protected $deletedByUser;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $workspaceName, string $deletedByName)
+    public function __construct(string $workspaceName, $deletedByUser)
     {
         $this->workspaceName = $workspaceName;
-        $this->deletedByName = $deletedByName;
+        $this->deletedByUser = $deletedByUser; // Now accepts User object
     }
 
     /**
@@ -54,9 +54,28 @@ class WorkspaceDeletedNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        // Get deleter profile picture and full name
+        $deleterProfilePicture = null;
+        $deleterName = 'Administrator';
+        
+        if ($this->deletedByUser) {
+            $deleterName = $this->deletedByUser->full_name ?? 'Administrator';
+            
+            if ($this->deletedByUser->academician) {
+                $deleterProfilePicture = $this->deletedByUser->academician->profile_picture;
+            } elseif ($this->deletedByUser->postgraduate) {
+                $deleterProfilePicture = $this->deletedByUser->postgraduate->profile_picture;
+            } elseif ($this->deletedByUser->undergraduate) {
+                $deleterProfilePicture = $this->deletedByUser->undergraduate->profile_picture;
+            }
+        }
+        
         return [
+            'type' => 'workspace_deleted',
             'workspace_name' => $this->workspaceName,
-            'deleted_by' => $this->deletedByName,
+            'deleted_by' => $deleterName,
+            'deleted_by_profile_picture' => $deleterProfilePicture,
+            'message' => 'Workspace "' . $this->workspaceName . '" was deleted by ' . $deleterName,
         ];
     }
 }

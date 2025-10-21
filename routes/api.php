@@ -243,10 +243,18 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
     // Notification Routes - Stateful for frontend
     Route::get('/notifications', [NotificationController::class, 'index'])
         ->name('api.app.notifications.index');
+    Route::get('/notifications/all', [NotificationController::class, 'viewAll'])
+        ->name('api.app.notifications.all');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])
         ->name('api.app.notifications.mark-as-read');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])
         ->name('api.app.notifications.mark-all-as-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'delete'])
+        ->name('api.app.notifications.delete');
+    Route::get('/notification-preferences', [NotificationController::class, 'preferences'])
+        ->name('api.app.notification-preferences.index');
+    Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences'])
+        ->name('api.app.notification-preferences.update');
         
     // Messaging Routes - Stateful for frontend
     Route::prefix('messaging')->name('messaging.')->group(function () {
@@ -259,6 +267,8 @@ Route::middleware(['web', 'auth:sanctum'])->prefix('v1/app')->group(function () 
             ->name('conversations.show');
         Route::post('/conversations/{conversation}/archive', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'archive'])
             ->name('conversations.archive');
+        Route::get('/unread-count', [\App\Http\Controllers\Api\V1\Messaging\ConversationController::class, 'unreadCount'])
+            ->name('unread-count');
             
         // Messages
         Route::get('/conversations/{conversation}/messages', [\App\Http\Controllers\Api\V1\Messaging\MessageController::class, 'index'])

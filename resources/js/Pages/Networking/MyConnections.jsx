@@ -19,7 +19,11 @@ import {
 } from '@/components/ui/tooltip';
 
 const MyConnections = ({ acceptedConnections, receivedRequests, sentRequests, tags = [], activeTagId = null }) => {
-    const [activeTab, setActiveTab] = useState('connections');
+    // Read initial tab from URL query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab') || 'connections';
+    
+    const [activeTab, setActiveTab] = useState(initialTab);
     const [searchQuery, setSearchQuery] = useState('');
     const [processingIds, setProcessingIds] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
