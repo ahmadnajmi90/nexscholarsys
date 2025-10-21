@@ -14,6 +14,7 @@ use App\Events\TaskMoved;
 use App\Notifications\TaskAssignedNotification;
 use App\Notifications\TaskDueDateChangedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
@@ -236,7 +237,7 @@ class TaskController extends Controller
         if ($dueDateChanged && $task->assignees()->count() > 0) {
             $task->load('list.board'); // Make sure board is loaded for the URL
             foreach ($task->assignees as $assignee) {
-                $assignee->notify(new TaskDueDateChangedNotification($task, $oldDueDate));
+                $assignee->notify(new TaskDueDateChangedNotification($task, $oldDueDate, Auth::user())); // Pass User who changed it
             }
         }
         

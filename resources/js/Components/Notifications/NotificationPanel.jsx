@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaCheck, FaSpinner } from 'react-icons/fa';
+import { Link } from '@inertiajs/react';
 import axios from 'axios';
 import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
 import UserAvatar from './UserAvatar';
@@ -122,6 +123,22 @@ const NotificationPanel = ({ isOpen, onClose }) => {
       };
     }
     
+    // NexLab task notifications
+    if (data.assigner_name) {
+      return {
+        name: data.assigner_name,
+        profilePicture: data.assigner_profile_picture,
+      };
+    }
+    
+    // Workspace/Project invitations
+    if (data.inviter_name) {
+      return {
+        name: data.inviter_name,
+        profilePicture: data.inviter_profile_picture,
+      };
+    }
+    
     // Meeting notifications
     if (data.scheduler_name) {
       return {
@@ -155,10 +172,12 @@ const NotificationPanel = ({ isOpen, onClose }) => {
         profilePicture: data.initiator_profile_picture,
       };
     }
-    if (data.other_party_name) {
+    
+    // Role changed / Board deleted / Workspace deleted / Task due date changed
+    if (data.changed_by_profile_picture || data.deleted_by_profile_picture) {
       return {
-        name: data.other_party_name,
-        profilePicture: data.other_party_profile_picture,
+        name: data.changed_by || data.deleted_by || 'Administrator',
+        profilePicture: data.changed_by_profile_picture || data.deleted_by_profile_picture,
       };
     }
     
@@ -254,7 +273,13 @@ const NotificationPanel = ({ isOpen, onClose }) => {
       case 'connection_request':
         return renderBasicNotification(
           null,
-          'sent you a connection request'
+          'sent you a connection request',
+          <Link
+            href="/connections?tab=received"
+            className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm"
+          >
+            View
+          </Link>
         );
 
       case 'connection_accepted':
@@ -273,6 +298,14 @@ const NotificationPanel = ({ isOpen, onClose }) => {
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">You are friend now!</p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+              <div className="mt-2">
+                <Link
+                  href="/connections?tab=connections"
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm"
+                >
+                  View
+                </Link>
+              </div>
             </div>
           </div>
         );
@@ -456,6 +489,181 @@ const NotificationPanel = ({ isOpen, onClose }) => {
           'cancelled the co-supervisor invitation'
         );
 
+      // ========== NEXLAB TASK NOTIFICATIONS ==========
+      case 'task_assigned':
+        return (
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture} 
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="font-semibold text-gray-900 dark:text-gray-50">{userData.name}</span>
+                {' '}
+                <span className="text-gray-600 dark:text-gray-300">assigned you to task</span>
+                {' '}
+                <span className="font-medium text-gray-900 dark:text-gray-50">"{data.task_title}"</span>
+                {data.workspace_name && (
+                  <span className="text-gray-500 dark:text-gray-400"> in {data.workspace_name}</span>
+                )}
+              </p>
+              {data.task_due_date && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  📅 Due: {new Date(data.task_due_date).toLocaleDateString('en-GB')}
+                </p>
+              )}
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+            </div>
+          </div>
+        );
+
+      case 'task_due_date_changed':
+        return (
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture} 
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="text-gray-600 dark:text-gray-300">Due date changed for task</span>
+                {' '}
+                <span className="font-medium text-gray-900 dark:text-gray-50">"{data.task_title}"</span>
+              </p>
+              {data.old_due_date_formatted && data.new_due_date_formatted && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {data.old_due_date_formatted} → {data.new_due_date_formatted}
+                </p>
+              )}
+              {data.changed_by && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Changed by {data.changed_by}
+                </p>
+              )}
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+            </div>
+          </div>
+        );
+
+      // ========== WORKSPACE & PROJECT INVITATIONS ==========
+      case 'workspace_invitation':
+        return renderBasicNotification(
+          null,
+          `invited you to workspace "${data.workspace_name}"`
+        );
+
+      case 'project_invitation':
+        return renderBasicNotification(
+          null,
+          `invited you to project "${data.project_name}"`
+        );
+
+      // ========== DELETION NOTIFICATIONS ==========
+      case 'workspace_deleted':
+        return (
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture}
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="text-gray-600 dark:text-gray-300">Workspace</span>
+                {' '}
+                <span className="font-medium text-gray-900 dark:text-gray-50">"{data.workspace_name}"</span>
+                {' '}
+                <span className="text-gray-600 dark:text-gray-300">was deleted</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Deleted by {data.deleted_by}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+            </div>
+          </div>
+        );
+
+      case 'board_deleted':
+        return (
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture}
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="text-gray-600 dark:text-gray-300">Board</span>
+                {' '}
+                <span className="font-medium text-gray-900 dark:text-gray-50">"{data.board_name}"</span>
+                {' '}
+                <span className="text-gray-600 dark:text-gray-300">
+                  in {data.parent_type} "{data.parent_name}" was deleted
+                </span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Deleted by {data.deleted_by}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+            </div>
+          </div>
+        );
+
+      // ========== ROLE CHANGE NOTIFICATION ==========
+      case 'role_changed':
+        return (
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={userData.profilePicture} 
+              name={userData.name} 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="text-gray-600 dark:text-gray-300">Your role in {data.parent_type}</span>
+                {' '}
+                <span className="font-medium text-gray-900 dark:text-gray-50">"{data.parent_name}"</span>
+                {' '}
+                <span className="text-gray-600 dark:text-gray-300">changed to</span>
+                {' '}
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  {data.new_role}
+                </span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Changed by {data.changed_by}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+            </div>
+          </div>
+        );
+
+      // ========== FACULTY ADMIN INVITATION ==========
+      case 'faculty_admin_invitation':
+        return (
+          <div className="flex items-start gap-3 py-3">
+            <UserAvatar 
+              src={null} 
+              name="Admin" 
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm">
+                <span className="text-gray-600 dark:text-gray-300">You have been invited to join as</span>
+                {' '}
+                <span className="font-semibold text-blue-600 dark:text-blue-400">Faculty Admin</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Please complete your setup to get started
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{getRelativeTime(notification.created_at)}</p>
+            </div>
+          </div>
+        );
+
       // ========== DEFAULT/FALLBACK ==========
       default:
         return renderBasicNotification(
@@ -537,7 +745,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
               key={notification.id} 
               className={`
                 group px-5 transition-colors relative
-                ${!notification.read_at ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}
+                ${!notification.read_at ? 'bg-blue-50 dark:bg-gray-700' : 'bg-white dark:bg-gray-800'}
                 hover:bg-gray-50 dark:hover:bg-gray-800/70
               `}
             >
@@ -569,9 +777,8 @@ const NotificationPanel = ({ isOpen, onClose }) => {
       {/* Footer */}
       <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-center">
         <a 
-          href="#" 
+          href={route('notifications.index')} 
           className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-          onClick={(e) => e.preventDefault()}
         >
           View all notifications
         </a>

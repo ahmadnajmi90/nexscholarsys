@@ -126,11 +126,25 @@ class WorkspaceInvitationReceived extends Notification
     public function toArray($notifiable)
     {
         try {
+            // Get inviter profile picture from role models
+            $inviterProfilePicture = null;
+            if ($this->inviter) {
+                if ($this->inviter->academician) {
+                    $inviterProfilePicture = $this->inviter->academician->profile_picture;
+                } elseif ($this->inviter->postgraduate) {
+                    $inviterProfilePicture = $this->inviter->postgraduate->profile_picture;
+                } elseif ($this->inviter->undergraduate) {
+                    $inviterProfilePicture = $this->inviter->undergraduate->profile_picture;
+                }
+            }
+
             return [
+                'type' => 'workspace_invitation',
                 'workspace_id' => $this->workspace->id ?? null,
                 'workspace_name' => $this->workspace->name ?? 'Unknown Workspace',
                 'inviter_id' => $this->inviter->id ?? null,
                 'inviter_name' => $this->inviter->full_name ?? 'Unknown User',
+                'inviter_profile_picture' => $inviterProfilePicture,
                 'message' => 'You have been invited to join workspace "' . 
                     ($this->workspace->name ?? 'Unknown Workspace') . '" by ' . 
                     ($this->inviter->full_name ?? 'Unknown User'),
@@ -141,6 +155,7 @@ class WorkspaceInvitationReceived extends Notification
             ]);
             
             return [
+                'type' => 'workspace_invitation',
                 'message' => 'You have received a workspace invitation.',
             ];
         }

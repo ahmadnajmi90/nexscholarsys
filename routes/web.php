@@ -56,8 +56,12 @@ use App\Http\Controllers\ProjectHub\TaskController;
 use App\Http\Controllers\ProjectHub\TaskAttachmentController;
 use App\Http\Controllers\ProjectHub\ProjectMemberController;
 use App\Http\Controllers\ProjectHub\ProjectJoinRequestController;
+use App\Http\Controllers\NotificationPageController;
 
 Route::middleware(['auth'])->group(function () {
+    // Notifications Page
+    Route::get('/notifications', [NotificationPageController::class, 'index'])->name('notifications.index');
+    
     Route::get('/email/create/{receiver}', [EmailController::class, 'create'])->name('email.create');
     Route::post('/email/send', [EmailController::class, 'send'])->name('email.send');
     

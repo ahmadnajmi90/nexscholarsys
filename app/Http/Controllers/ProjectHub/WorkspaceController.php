@@ -214,7 +214,7 @@ class WorkspaceController extends Controller
         foreach ($membersToNotify as $member) {
             $member->notify(new \App\Notifications\WorkspaceDeletedNotification(
                 $workspaceName, 
-                $deletedByUser->name
+                $deletedByUser // Pass User object instead of name
             ));
         }
         
@@ -313,7 +313,7 @@ class WorkspaceController extends Controller
             $workspace->name,
             'workspace',
             $validated['role'],
-            $request->user()->name,
+            $request->user(), // Pass User object instead of name
             $workspace->id
         ));
         

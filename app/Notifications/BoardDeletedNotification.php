@@ -15,18 +15,18 @@ class BoardDeletedNotification extends Notification implements ShouldQueue
     protected $boardName;
     protected $parentName;
     protected $parentType;
-    protected $deletedByName;
+    protected $deletedByUser;
     protected $parentId;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(string $boardName, string $parentName, string $parentType, string $deletedByName, int $parentId)
+    public function __construct(string $boardName, string $parentName, string $parentType, $deletedByUser, int $parentId)
     {
         $this->boardName = $boardName;
         $this->parentName = $parentName;
         $this->parentType = $parentType; // 'workspace' or 'project'
-        $this->deletedByName = $deletedByName;
+        $this->deletedByUser = $deletedByUser; // Now accepts User object
         $this->parentId = $parentId;
     }
 
@@ -121,12 +121,32 @@ class BoardDeletedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         try {
+            // Get deleter profile picture and full name
+            $deleterProfilePicture = null;
+            $deleterName = 'Administrator';
+            
+            if ($this->deletedByUser) {
+                $deleterName = $this->deletedByUser->full_name ?? 'Administrator';
+                
+                if ($this->deletedByUser->academician) {
+                    $deleterProfilePicture = $this->deletedByUser->academician->profile_picture;
+                } elseif ($this->deletedByUser->postgraduate) {
+                    $deleterProfilePicture = $this->deletedByUser->postgraduate->profile_picture;
+                } elseif ($this->deletedByUser->undergraduate) {
+                    $deleterProfilePicture = $this->deletedByUser->undergraduate->profile_picture;
+                }
+            }
+            
             return [
+                'type' => 'board_deleted',
                 'board_name' => $this->boardName ?? 'Unknown Board',
                 'parent_name' => $this->parentName ?? 'Unknown Parent',
                 'parent_type' => $this->parentType ?? 'entity',
-                'deleted_by' => $this->deletedByName ?? 'Administrator',
+                'deleted_by' => $deleterName,
+                'deleted_by_profile_picture' => $deleterProfilePicture,
                 'parent_id' => $this->parentId ?? null,
+                'message' => 'Board "' . ($this->boardName ?? 'Unknown Board') . '" in ' . 
+                    ($this->parentType ?? 'entity') . ' "' . ($this->parentName ?? 'Unknown Parent') . '" was deleted',
             ];
         } catch (\Exception $e) {
             Log::error('BoardDeletedNotification: Exception in toArray', [
@@ -134,6 +154,7 @@ class BoardDeletedNotification extends Notification implements ShouldQueue
             ]);
             
             return [
+                'type' => 'board_deleted',
                 'message' => 'A board has been deleted.',
             ];
         }

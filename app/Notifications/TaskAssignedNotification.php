@@ -121,12 +121,47 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         try {
+            // Get assigner profile picture from role models
+            $assignerProfilePicture = null;
+            if ($this->assigner) {
+                if ($this->assigner->academician) {
+                    $assignerProfilePicture = $this->assigner->academician->profile_picture;
+                } elseif ($this->assigner->postgraduate) {
+                    $assignerProfilePicture = $this->assigner->postgraduate->profile_picture;
+                } elseif ($this->assigner->undergraduate) {
+                    $assignerProfilePicture = $this->assigner->undergraduate->profile_picture;
+                }
+            }
+
+            // Get workspace and board names
+            $boardName = null;
+            $workspaceName = null;
+            $boardId = null;
+            
+            if ($this->task->list && $this->task->list->board) {
+                $boardName = $this->task->list->board->name;
+                $boardId = $this->task->list->board->id;
+                
+                if ($this->task->list->board->workspace) {
+                    $workspaceName = $this->task->list->board->workspace->name;
+                } elseif ($this->task->list->board->project) {
+                    $workspaceName = $this->task->list->board->project->name;
+                }
+            }
+
             return [
+                'type' => 'task_assigned',
                 'task_id' => $this->task->id ?? null,
                 'task_title' => $this->task->title ?? 'Unknown Task',
+                'task_description' => $this->task->description ?? null,
+                'task_due_date' => $this->task->due_date ? $this->task->due_date->format('Y-m-d') : null,
                 'assigner_id' => $this->assigner->id ?? null,
                 'assigner_name' => $this->assigner->full_name ?? 'Unknown User',
-                'board_id' => $this->task->list->board->id ?? null,
+                'assigner_profile_picture' => $assignerProfilePicture,
+                'board_id' => $boardId,
+                'board_name' => $boardName,
+                'workspace_name' => $workspaceName,
+                'message' => ($this->assigner->full_name ?? 'Someone') . ' assigned you to task "' . ($this->task->title ?? 'Unknown Task') . '"',
             ];
         } catch (\Exception $e) {
             Log::error('TaskAssignedNotification: Exception in toArray', [
@@ -134,6 +169,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
             ]);
             
             return [
+                'type' => 'task_assigned',
                 'message' => 'You have been assigned to a task.',
             ];
         }

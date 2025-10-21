@@ -2,23 +2,48 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaBell } from 'react-icons/fa';
 import axios from 'axios';
 import NotificationPanel from './NotificationPanel';
+import { usePage } from '@inertiajs/react';
 
 const NotificationBell = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const bellRef = useRef(null);
+  const { auth } = usePage().props;
 
   // Fetch unread count periodically
   useEffect(() => {
     // Fetch on mount
     fetchUnreadCount();
     
-    // Set up interval to fetch every 30 seconds
+    // Set up interval to fetch every 30 seconds (fallback)
     const interval = setInterval(fetchUnreadCount, 30000);
     
     return () => clearInterval(interval);
   }, []);
+
+  // Listen to real-time notifications via Pusher
+  useEffect(() => {
+    if (window.Echo && auth?.user?.id) {
+      const channel = window.Echo.private(`App.Models.User.${auth.user.id}`);
+      
+      // Listen for notification.sent events
+      channel.notification((notification) => {
+        console.log('Real-time notification received:', notification);
+        
+        // Increment unread count
+        setUnreadCount((prev) => prev + 1);
+        
+        // If panel is open, we could refresh it here
+        // For now, the panel will refresh when opened next time
+      });
+      
+      return () => {
+        // Clean up: stop listening
+        channel.stopListening('.notification.sent');
+      };
+    }
+  }, [auth?.user?.id]);
 
   const fetchUnreadCount = async () => {
     setLoading(true);

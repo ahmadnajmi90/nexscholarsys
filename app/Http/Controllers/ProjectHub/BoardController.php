@@ -252,7 +252,7 @@ class BoardController extends Controller
                 $boardName,
                 $parentName,
                 $parentType,
-                $deletedByUser->name,
+                $deletedByUser, // Pass User object instead of name
                 $parentId
             ));
         }
