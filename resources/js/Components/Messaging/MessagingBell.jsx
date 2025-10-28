@@ -3,10 +3,24 @@ import { MessageSquare } from 'lucide-react';
 import MessagingPanel from './MessagingPanel';
 import axios from 'axios';
 
-const MessagingBell = () => {
+const MessagingBell = ({ dropdownAlign = 'right', dropdownDirection = 'down', onPanelToggle, onUnreadCountChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const bellRef = useRef(null);
+
+  // Notify parent when panel state changes
+  useEffect(() => {
+    if (onPanelToggle) {
+      onPanelToggle(isOpen);
+    }
+  }, [isOpen, onPanelToggle]);
+
+  // Notify parent when unread count changes
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadCountChange]);
 
   // Fetch unread count on mount
   useEffect(() => {
@@ -50,6 +64,8 @@ const MessagingBell = () => {
         isOpen={isOpen} 
         onClose={handleClose}
         onUnreadCountChange={setUnreadCount}
+        align={dropdownAlign}
+        direction={dropdownDirection}
       />
     </div>
   );

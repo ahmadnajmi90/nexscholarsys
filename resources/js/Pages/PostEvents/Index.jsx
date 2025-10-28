@@ -37,12 +37,11 @@ const Index = () => {
   };
 
   return (
-    <MainLayout title="">
-      <Head title="Your Events" />
+    <MainLayout title="Manage Your Events">
+      <Head title="Manage Your Events" />
       {/* Center the content */}
-      <div className="max-w-8xl mx-auto px-4 py-20 md:py-20 lg:py-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-semibold">Your Events</h1>
+      <div className="max-w-8xl mx-auto px-4 lg:px-0 py-20 md:py-20 lg:py-4">
+        <div className="flex justify-end items-right mb-4">
           <Link
             href={route('post-events.create')}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"

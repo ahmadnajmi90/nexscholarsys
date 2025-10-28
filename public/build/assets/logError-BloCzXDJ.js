@@ -1,0 +1,1 @@
+function o(e,s="Supervision"){typeof console>"u"||typeof console.error!="function"||(console.error(`[${s}]`,e),e?.response&&console.error(`[${s}] response`,{status:e.response.status,data:e.response.data,headers:e.response.headers}),e?.request&&!e?.response&&console.error(`[${s}] request`,e.request))}export{o as l};

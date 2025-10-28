@@ -12,26 +12,10 @@ import axios from 'axios';
 import useRoles from '@/Hooks/useRoles';
 import { isSessionExpired, handlePossibleSessionExpiration } from '@/Utils/csrfHelper';
 import { Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
 
-export default function Index({ auth, universities, faculties, users, researchOptions, skills }) {
+export default function Index({ auth, universities, faculties, users, researchOptions, skills, savedSearch }) {
   const { isAdmin, isPostgraduate, isUndergraduate, isFacultyAdmin, isAcademician } = useRoles();
-  
-  // Generate context-aware storage key
-  const getStorageKey = (baseKey, searchTypeParam = 'supervisor') => {
-    return `${baseKey}_${auth.user.id}_${searchTypeParam}`;
-  };
-  
-  // Helper function to get initial state from sessionStorage with context
-  const getInitialState = (baseKey, searchTypeParam, defaultValue) => {
-    try {
-      const key = getStorageKey(baseKey, searchTypeParam);
-      const savedState = sessionStorage.getItem(key);
-      return savedState ? JSON.parse(savedState) : defaultValue;
-    } catch (error) {
-      console.error("Error reading from sessionStorage", error);
-      return defaultValue;
-    }
-  };
   
   // Set default search type based on user role
   const getDefaultSearchType = () => {
@@ -43,9 +27,9 @@ export default function Index({ auth, universities, faculties, users, researchOp
   
   const defaultSearchType = getDefaultSearchType();
   const [searchType, setSearchType] = useState(defaultSearchType);
-  const [searchQuery, setSearchQuery] = useState(() => getInitialState('ai_search_query', defaultSearchType, ''));
+  const [searchQuery, setSearchQuery] = useState(''); // ✅ Always start empty
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState(() => getInitialState('ai_search_results', defaultSearchType, null));
+  const [searchResults, setSearchResults] = useState(null); // ✅ Always start with no results
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   
@@ -72,61 +56,41 @@ export default function Index({ auth, universities, faculties, users, researchOp
   const [loadingSupervisionData, setLoadingSupervisionData] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   
-  // Save state to sessionStorage when navigating away (with context)
+  // Load saved search from database history if provided
   useEffect(() => {
-    // This cleanup function runs when the user navigates away
-    return () => {
-      try {
-        const queryKey = getStorageKey('ai_search_query', searchType);
-        const resultsKey = getStorageKey('ai_search_results', searchType);
-        sessionStorage.setItem(queryKey, JSON.stringify(searchQuery));
-        sessionStorage.setItem(resultsKey, JSON.stringify(searchResults));
-      } catch (error) {
-        console.error("Error saving to sessionStorage", error);
-      }
-    };
-  }, [searchQuery, searchResults, searchType, auth.user.id]);
+    if (savedSearch) {
+      // Set the search type and query
+      setSearchType(savedSearch.search_type);
+      setSearchQuery(savedSearch.search_query);
+      
+      // Set the search results
+      setSearchResults(savedSearch.search_results);
+      
+      // Show preview first (Top 5 results), not full grid
+      setCurrentView('preview');
+      
+      // Show toast notification that this is from history
+      toast.success('Results loaded from search history', {
+        icon: '📂',
+        duration: 3000,
+      });
+    }
+  }, [savedSearch]);
   
   // Handle search type change
   const handleSearchTypeChange = (newType) => {
-    // DEBUG: Log search type change - ENABLE THIS FOR DEBUGGING
-    console.log('🔄 Search type changing:', {
-      from: searchType,
-      to: newType,
-      isAcademician
-    });
-    
     // Only allow academicians to search for students
     if (newType === 'students' && !isAcademician) {
-      console.warn('⚠️ Access denied: Only academicians can search for students');
       setError('You need to be an academician to search for students.');
       return;
     }
     
-    // Load saved query and results for the new search type
-    const savedQuery = getInitialState('ai_search_query', newType, '');
-    const savedResults = getInitialState('ai_search_results', newType, null);
-    
-    console.log('💾 Loading saved state for new search type:', {
-      searchType: newType,
-      hasSavedQuery: !!savedQuery,
-      hasSavedResults: !!savedResults,
-      savedResultsCount: savedResults?.matches?.length || 0
-    });
-    
+    // Reset to empty state when changing search type
     setSearchType(newType);
-    setSearchQuery(savedQuery); // Load saved query for this search type
-    setSearchResults(savedResults); // Load saved results for this search type
+    setSearchQuery(''); // Always start empty
+    setSearchResults(null); // Clear results
     setError(null);
-    
-    // Update current view based on whether we have results
-    if (savedResults && savedResults.matches && savedResults.matches.length > 0) {
-      console.log('✅ Showing preview with cached results');
-      setCurrentView('preview'); // Show preview if we have results
-    } else {
-      console.log('✅ Showing search interface');
-      setCurrentView('search'); // Show search interface if no results
-    }
+    setCurrentView('search'); // Always show search interface
   };
   
   // Fetch supervision data for postgraduate users searching supervisors
@@ -187,18 +151,6 @@ export default function Index({ auth, universities, faculties, users, researchOp
     // Skip if already searching or query is empty
     if (isSearching || !query || query.trim() === '') return;
     
-    // Clear old results from sessionStorage before starting new search (context-aware)
-    const resultsKey = getStorageKey('ai_search_results', searchType);
-    sessionStorage.removeItem(resultsKey);
-    
-    // DEBUG: Log the search parameters
-    // console.log('🔍 AI Matching Search Debug:', {
-    //   query,
-    //   searchType,
-    //   userId: auth.user.id,
-    //   storageKey: resultsKey
-    // });
-    
     setSearchQuery(query);
     setIsSearching(true);
     setError(null);
@@ -208,14 +160,6 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setShowProcessingModal(true);
     
     try {
-      // DEBUG: Log the request payload - ALWAYS ENABLED FOR DEBUGGING
-      console.log('📤 Sending search request:', { 
-        query, 
-        searchType,
-        currentSearchTypeState: searchType,
-        timestamp: new Date().toISOString()
-      });
-      
       // Use the helper function to handle CSRF token refreshing if needed
       const response = await handlePossibleSessionExpiration(() => 
         axios.post(route('ai.matching.search'), { 
@@ -226,20 +170,33 @@ export default function Index({ auth, universities, faculties, users, researchOp
       
       // Process results
       if (response.data && response.data.matches) {
-        // DEBUG: Log the response
-        console.log('📥 Received response:', {
-          searchType: response.data.searchType,
-          totalMatches: response.data.total,
-          matchTypes: response.data.matches.map(m => m.result_type),
-          firstMatch: response.data.matches[0]
-        });
+        // Show toast if results came from cache/previous search
+        if (response.data.from_cache) {
+          toast.success('Results retrieved from previous search', {
+            icon: '⚡',
+            duration: 3000,
+          });
+        }
         
         // Process the results based on the search type
         setSearchResults(response.data);
         // Show top matches preview after loading
         setCurrentView('preview');
+        
+        // Update URL with history ID for proper back navigation
+        if (response.data.history_id) {
+          // Only update URL if we're not already on a history route
+          // This prevents double-loading when clicking from history
+          const currentHistoryId = new URLSearchParams(window.location.search).get('history');
+          if (currentHistoryId !== response.data.history_id.toString()) {
+            router.replace(route('ai.matching.index', { history: response.data.history_id }), {
+              preserveState: true,
+              preserveScroll: true,
+            });
+          }
+        }
       } else {
-        console.error('❌ Invalid search results:', response.data);
+        console.error('Invalid search results:', response.data);
         setError('Received invalid search results');
       }
     } catch (error) {
@@ -275,6 +232,13 @@ export default function Index({ auth, universities, faculties, users, researchOp
     setSearchResults(null);
     setSearchQuery('');
     setError(null);
+    
+    // Clear history parameter from URL
+    router.replace(route('ai.matching.index'), {}, {
+      preserveState: true,
+      preserveScroll: true,
+      only: []
+    });
   };
   
   // Handle collapse to preview

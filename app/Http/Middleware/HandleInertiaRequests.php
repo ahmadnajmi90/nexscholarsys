@@ -77,6 +77,9 @@ class HandleInertiaRequests extends Middleware
                 'google_calendar_prompt' => session('google_calendar_prompt'),
                 'task_for_calendar' => session('task_for_calendar'),
             ],
+            'preferences' => [
+                'feedback_bubble_dismissed' => session('feedback_bubble_dismissed', false),
+            ],
         ]);
     }
 }
