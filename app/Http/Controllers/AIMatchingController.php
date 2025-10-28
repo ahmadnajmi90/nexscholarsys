@@ -213,13 +213,11 @@ class AIMatchingController extends Controller
                     $historyId = $existingHistory->id;
                 } else {
                     // No existing history, save current results
-                    $historyId = $this->saveSearchHistory($searchQuery, $searchType, $results);
+                    $historyId = $this->saveSearchHistory($searchQuery, $searchType, $results, $page);
                 }
             } else {
                 // Fresh search - save current results to history
-                // Note: results already contains paginated data
-                // In the future, consider saving full results (all pages) for complete history
-                $historyId = $this->saveSearchHistory($searchQuery, $searchType, $results);
+                $historyId = $this->saveSearchHistory($searchQuery, $searchType, $results, $page);
             }
         } catch (\Exception $e) {
             Log::warning('Failed to save search history', [
@@ -859,14 +857,35 @@ class AIMatchingController extends Controller
     }
     
     /**
+     * Extract unique identifier from a match result
+     *
+     * @param array $match
+     * @return string
+     */
+    protected function extractMatchId(array $match): string
+    {
+        $resultType = $match['result_type'] ?? 'unknown';
+        
+        if ($resultType === 'academician' && isset($match['academician']['id'])) {
+            return 'academician_' . $match['academician']['id'];
+        } elseif ($resultType === 'student' && isset($match['student']['id'])) {
+            return 'student_' . $match['student']['id'];
+        }
+        
+        // Fallback: use score + name hash
+        return $resultType . '_' . md5(json_encode($match));
+    }
+    
+    /**
      * Save search history to database
      *
      * @param string $query
      * @param string $searchType
      * @param array $results
+     * @param int $page
      * @return int|null History ID
      */
-    protected function saveSearchHistory(string $query, string $searchType, array $results)
+    protected function saveSearchHistory(string $query, string $searchType, array $results, int $page = 1)
     {
         $userId = Auth::id();
         $resultsCount = $results['total_count'] ?? $results['total'] ?? 0;
@@ -878,12 +897,46 @@ class AIMatchingController extends Controller
             ->first();
         
         if ($existingHistory) {
-            // Update existing entry: refresh expiration and update results
-            $existingHistory->update([
-                'search_results' => $results,
-                'results_count' => $resultsCount,
-                'expires_at' => now()->addDays(7),
-            ]);
+            // Page 1: Replace all results (fresh search)
+            // Page 2+: Append new results to existing ones (lazy load)
+            if ($page === 1) {
+                // Fresh search - REPLACE existing results
+                $existingHistory->update([
+                    'search_results' => $results,
+                    'results_count' => $resultsCount,
+                    'expires_at' => now()->addDays(7),
+                ]);
+            } else {
+                // Lazy load - APPEND new results
+                $existingMatches = $existingHistory->search_results['matches'] ?? [];
+                $newMatches = $results['matches'] ?? [];
+                
+                // Create lookup to prevent duplicates
+                $existingIds = [];
+                foreach ($existingMatches as $match) {
+                    $id = $this->extractMatchId($match);
+                    $existingIds[$id] = true;
+                }
+                
+                // Only append truly new matches
+                foreach ($newMatches as $match) {
+                    $id = $this->extractMatchId($match);
+                    if (!isset($existingIds[$id])) {
+                        $existingMatches[] = $match;
+                    }
+                }
+                
+                // Update the results with merged matches
+                $mergedResults = $results;
+                $mergedResults['matches'] = $existingMatches;
+                $mergedResults['total_count'] = count($existingMatches);
+                
+                $existingHistory->update([
+                    'search_results' => $mergedResults,
+                    'results_count' => count($existingMatches),
+                    'expires_at' => now()->addDays(7),
+                ]);
+            }
             
             return $existingHistory->id;
         } else {
