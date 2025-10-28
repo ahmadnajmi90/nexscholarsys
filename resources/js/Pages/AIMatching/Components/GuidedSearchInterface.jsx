@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Search, History, ChevronDown, X } from 'lucide-react';
+import { Sparkles, Search, History, ChevronDown, X, Trash2, Clock, AlertTriangle } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import axios from 'axios';
+import { format } from 'date-fns';
+import toast from 'react-hot-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/Components/ui/alert-dialog';
 
 const GuidedSearchInterface = ({ 
   onSearch, 
@@ -19,15 +33,14 @@ const GuidedSearchInterface = ({
   isAcademician,
   userId
 }) => {
-  // Generate context-aware storage key for recent searches
-  const getRecentSearchesKey = () => {
-    return `ai_recent_searches_${userId}_${searchType}`;
-  };
-  const [recentSearches, setRecentSearches] = useState([]);
+  const [databaseHistory, setDatabaseHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState('history'); // 'history' or 'suggestions'
   const [localError, setLocalError] = useState(null);
   const [suggestedTerms, setSuggestedTerms] = useState([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [historyToDelete, setHistoryToDelete] = useState(null);
   const dropdownRef = useRef(null);
   
   // Handle clicks outside the dropdown
@@ -44,28 +57,31 @@ const GuidedSearchInterface = ({
     };
   }, [dropdownRef]);
   
-  // Load recent searches from localStorage (context-aware)
+  // Fetch database search history
   useEffect(() => {
-    try {
-      const storageKey = getRecentSearchesKey();
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const searches = parsed.slice(0, 5);
-          setRecentSearches(searches);
+    const fetchDatabaseHistory = async () => {
+      setLoadingHistory(true);
+      try {
+        const response = await axios.get(route('ai.matching.history'), {
+          params: { search_type: searchType }
+        });
+        
+        if (response.data && response.data.histories) {
+          setDatabaseHistory(response.data.histories);
           // Set default tab based on whether we have history
-          setActiveTab(searches.length > 0 ? 'history' : 'suggestions');
+          setActiveTab(response.data.histories.length > 0 ? 'history' : 'suggestions');
         }
-      } else {
-        // No history, default to suggestions
+      } catch (error) {
+        console.error('Error fetching search history:', error);
+        // Fall back to suggestions tab if error
         setActiveTab('suggestions');
+      } finally {
+        setLoadingHistory(false);
       }
-    } catch (e) {
-      console.error('Error loading recent searches:', e);
-      setActiveTab('suggestions');
-    }
-  }, [userId, searchType]);
+    };
+    
+    fetchDatabaseHistory();
+  }, [searchType]);
   
   // Generate natural language suggestions that showcase NLP capabilities
   useEffect(() => {
@@ -119,48 +135,52 @@ const GuidedSearchInterface = ({
     setSuggestedTerms(generateSmartSuggestions());
   }, [searchType]);
   
-  // Save a search to recent searches (context-aware)
-  const saveSearchToRecent = (query) => {
-    try {
-      // Ensure query is a string
-      const queryString = typeof query === 'string' ? query : String(query);
-      
-      if (queryString && queryString.trim().length > 0) {
-        // Add to beginning, remove duplicates, limit to 5
-        const updatedSearches = [queryString, ...recentSearches.filter(s => s !== queryString)].slice(0, 5);
-        setRecentSearches(updatedSearches);
-        const storageKey = getRecentSearchesKey();
-        localStorage.setItem(storageKey, JSON.stringify(updatedSearches));
-      }
-    } catch (e) {
-      console.error('Error saving recent search:', e);
-    }
+  
+  // Handle clicking on database history item
+  const handleHistoryClick = (historyId) => {
+    // Navigate to AI matching page with history parameter
+    router.visit(route('ai.matching.index', { history: historyId }));
   };
   
-  // Delete a search from history (context-aware)
-  const deleteSearchFromHistory = (searchToDelete, e) => {
-    e.stopPropagation(); // Prevent triggering the search
+  // Open delete confirmation modal
+  const openDeleteConfirmation = (historyId) => {
+    setHistoryToDelete(historyId);
+    setDeleteConfirmOpen(true);
+  };
+  
+  // Handle deleting database history item
+  const handleDeleteDatabaseHistory = async () => {
+    if (!historyToDelete) return;
+    
     try {
-      const updatedSearches = recentSearches.filter(s => s !== searchToDelete);
-      setRecentSearches(updatedSearches);
-      const storageKey = getRecentSearchesKey();
-      localStorage.setItem(storageKey, JSON.stringify(updatedSearches));
+      // Delete from database (backend will also clear Laravel cache)
+      await axios.delete(route('ai.matching.history.delete', historyToDelete));
+      
+      // Remove from local state
+      setDatabaseHistory(prev => prev.filter(h => h.id !== historyToDelete));
+      
+      // Show success toast
+      toast.success('History deleted');
+      
+      // Close modal and reset
+      setDeleteConfirmOpen(false);
+      setHistoryToDelete(null);
       
       // If no more history, switch to suggestions tab
-      if (updatedSearches.length === 0) {
+      if (databaseHistory.length <= 1) {
         setActiveTab('suggestions');
       }
-    } catch (e) {
-      console.error('Error deleting search:', e);
+    } catch (error) {
+      console.error('Error deleting history:', error);
+      toast.error('Failed to delete history');
+      setDeleteConfirmOpen(false);
+      setHistoryToDelete(null);
     }
   };
   
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    
-    
     setLocalError(null);
-    saveSearchToRecent(searchQuery);
     onSearch(searchQuery);
   };
   
@@ -305,7 +325,7 @@ const GuidedSearchInterface = ({
                   }`}
                 >
                   <History className="inline w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  History {recentSearches.length > 0 && `(${recentSearches.length})`}
+                  History {databaseHistory.length > 0 && `(${databaseHistory.length})`}
                 </button>
                 <button
                   type="button"
@@ -325,24 +345,40 @@ const GuidedSearchInterface = ({
               <div className="overflow-y-auto p-2 sm:p-3" style={{ maxHeight: 'calc(40vh - 42px)' }}>
                 {activeTab === 'history' ? (
                   <>
-                      {recentSearches.length > 0 ? (
+                    {loadingHistory ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+                        <p className="text-sm">Loading history...</p>
+                      </div>
+                    ) : databaseHistory.length > 0 ? (
                       <div className="space-y-1">
-                  {recentSearches.map((search, index) => (
+                        {databaseHistory.map((history) => (
                           <button
-                            key={index}
+                            key={history.id}
                             type="button"
-                            onClick={() => handleItemSelect(search)}
-                            className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors flex items-center group"
+                            onClick={() => handleHistoryClick(history.id)}
+                            className="w-full text-left px-3 py-2.5 hover:bg-blue-50 rounded-lg transition-colors group border border-transparent hover:border-blue-200"
                           >
-                            <History className="mr-3 text-gray-400 group-hover:text-blue-600 w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1">{search}</span>
-                            <button
-                              onClick={(e) => deleteSearchFromHistory(search, e)}
-                              className="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
-                              title="Delete"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-start gap-2">
+                              <Clock className="mt-0.5 text-gray-400 group-hover:text-blue-600 w-4 h-4 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-700 truncate">{history.search_query}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  {format(new Date(history.created_at), 'dd/MM/yyyy')} | {history.results_count} results
+                                </p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  openDeleteConfirmation(history.id);
+                                }}
+                                className="ml-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                title="Delete history"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -350,11 +386,11 @@ const GuidedSearchInterface = ({
                       <div className="text-center py-8 text-gray-500">
                         <History className="mx-auto w-12 h-12 mb-3 text-gray-300" />
                         <p className="text-sm">No search history yet</p>
-                        <p className="text-xs mt-1">Your recent searches will appear here</p>
+                        <p className="text-xs mt-1">Your searches will be saved here for 7 days</p>
                       </div>
                     )}
                   </>
-                  ) : (
+                ) : (
                     <div className="space-y-2">
                       {suggestedTerms.map((term, index) => (
                       <button
@@ -379,6 +415,30 @@ const GuidedSearchInterface = ({
           <p className="text-red-500 mt-2 text-center text-xs sm:text-sm">{localError || error}</p>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Delete Search History?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this search from your history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteDatabaseHistory}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

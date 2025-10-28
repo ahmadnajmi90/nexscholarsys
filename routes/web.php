@@ -374,6 +374,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/ai-matching/diagnostics', [\App\Http\Controllers\AIMatchingController::class, 'diagnostics'])
         ->name('ai.matching.diagnostics');
     
+    // AI Matching Search History routes
+    Route::get('/ai-matching/history', [\App\Http\Controllers\AIMatchingController::class, 'getSearchHistory'])
+        ->name('ai.matching.history');
+    
+    Route::delete('/ai-matching/history/{id}', [\App\Http\Controllers\AIMatchingController::class, 'deleteSearchHistory'])
+        ->name('ai.matching.history.delete');
+    
     // Network Map - Malaysia Research Network Visualization (Admin Only)
     Route::get('/network-map', function () {
         return Inertia::render('NetworkMap/Index');

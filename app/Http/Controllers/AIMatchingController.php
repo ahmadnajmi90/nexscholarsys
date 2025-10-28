@@ -10,6 +10,7 @@ use App\Models\UniversityList;
 use App\Models\FacultyList;
 use App\Models\User;
 use App\Models\Skill;
+use App\Models\AIMatchingSearchHistory;
 use App\Services\SemanticSearchService;
 use App\Services\AIMatchInsightService;
 use App\Services\ProfileComparisonService;
@@ -41,8 +42,22 @@ class AIMatchingController extends Controller
      *
      * @return \Inertia\Response
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Clean expired history entries silently
+        $this->cleanExpiredHistory();
+        
+        // Check if loading a saved search history
+        $historyId = $request->query('history');
+        $savedSearch = null;
+        
+        if ($historyId) {
+            $savedSearch = AIMatchingSearchHistory::where('id', $historyId)
+                ->where('user_id', Auth::id())
+                ->active()
+                ->first();
+        }
+        
         // Load field of research data with its relationships for hierarchical display
         $fieldOfResearches = FieldOfResearch::with('researchAreas.nicheDomains')->get();
         $researchOptions = [];
@@ -82,6 +97,7 @@ class AIMatchingController extends Controller
             'researchOptions' => $researchOptions,
             'users' => $users,
             'skills' => $skills,
+            'savedSearch' => $savedSearch,
         ]);
     }
 
@@ -139,64 +155,84 @@ class AIMatchingController extends Controller
             }
         }
         
-        // Generate a cache key for this specific search
-        $cacheKey = 'ai_matching_' . md5($searchQuery . '_' . $searchType . '_' . $page . '_' . $academicianId . '_' . $studentId . '_' . $studentType);
-        
-        // Check cache first
-        if (Cache::has($cacheKey)) {
-            return response()->json(Cache::get($cacheKey));
-        }
-        
         // Check if the query is vague
         $isVagueQuery = $this->isVagueQuery($searchQuery);
         
-        // Check if the query is highly specific (but we're now much more selective about what's considered "specific")
+        // Check if the query is highly specific
         $isSpecificQuery = $this->isSpecificQuery($searchQuery);
         
-        // Determine the appropriate threshold - using a more forgiving approach that works better with semantic search
-        $threshold = 0.35; // Default moderate threshold for most queries
+        // Determine the appropriate threshold
+        $threshold = 0.35; // Default moderate threshold
         
         if ($isSpecificQuery) {
-            // Only apply a slightly higher threshold for the rare truly specific technical patterns
-            // Threshold is only marginally higher than default to avoid penalizing natural language
             $threshold = 0.4;
             Log::info("Using slightly higher threshold for truly specific technical query");
         } else if ($isVagueQuery) {
-            // Use a more lenient threshold for vague queries
             $threshold = 0.25;
             Log::info("Using lower threshold for vague query");
         }
         
-        // Add detailed logging for debug purposes
-        Log::info("AI matching search parameters", [
-            'query' => $searchQuery,
-            'search_type' => $searchType,
-            'page' => $page,
-            'is_vague_query' => $isVagueQuery,
-            'is_specific_query' => $isSpecificQuery,
-            'threshold' => $threshold,
-            'limit' => 50, // Increased limit to support pagination
-            'student_id' => $studentId,
-            'student_type' => $studentType,
-            'academician_id' => $academicianId,
-            'will_use_student_profile' => ($isVagueQuery && $studentId !== null),
-            'cache_key' => $cacheKey,
-            'use_qdrant' => config('services.qdrant.use_for_request', false)
-        ]);
+        // Generate a cache key for this specific search
+        $cacheKey = 'ai_matching_' . md5($searchQuery . '_' . $searchType . '_' . $page . '_' . $academicianId . '_' . $studentId . '_' . $studentType);
         
-        // Determine which search method to use based on searchType
-        if ($searchType === 'supervisor') {
-            $results = $this->searchForSupervisors($searchQuery, $threshold, $page, $perPage, $studentId, $studentType);
-        } else if ($searchType === 'students') {
-            $results = $this->searchForStudents($searchQuery, $threshold, $page, $perPage, $academicianId);
-        } else if ($searchType === 'collaborators') {
-            $results = $this->searchForCollaborators($searchQuery, $threshold, $page, $perPage, $academicianId);
+        // Check cache first
+        $fromCache = false;
+        if (Cache::has($cacheKey)) {
+            $results = Cache::get($cacheKey);
+            $fromCache = true;
         } else {
-            return response()->json(['error' => 'Invalid search type'], 400);
+            // Perform fresh search
+            if ($searchType === 'supervisor') {
+                $results = $this->searchForSupervisors($searchQuery, $threshold, $page, $perPage, $studentId, $studentType);
+            } else if ($searchType === 'students') {
+                $results = $this->searchForStudents($searchQuery, $threshold, $page, $perPage, $academicianId);
+            } else if ($searchType === 'collaborators') {
+                $results = $this->searchForCollaborators($searchQuery, $threshold, $page, $perPage, $academicianId);
+            } else {
+                return response()->json(['error' => 'Invalid search type'], 400);
+            }
+            
+            // Cache the results (for 30 minutes)
+            Cache::put($cacheKey, $results, now()->addMinutes(30));
         }
         
-        // Cache the results (for 30 minutes)
-        Cache::put($cacheKey, $results, now()->addMinutes(30));
+        // Save search history and get the history ID (even for cached results)
+        // For history, we want to save ALL results (up to 50), not just current page
+        $historyId = null;
+        try {
+            if ($fromCache) {
+                // If from cache, results already contains paginated data
+                // Try to find existing history for this query to get full results
+                $existingHistory = AIMatchingSearchHistory::where('user_id', Auth::id())
+                    ->where('search_type', $searchType)
+                    ->where('search_query', $searchQuery)
+                    ->active()
+                    ->first();
+                
+                if ($existingHistory) {
+                    $historyId = $existingHistory->id;
+                } else {
+                    // No existing history, save current results
+                    $historyId = $this->saveSearchHistory($searchQuery, $searchType, $results);
+                }
+            } else {
+                // Fresh search - save current results to history
+                // Note: results already contains paginated data
+                // In the future, consider saving full results (all pages) for complete history
+                $historyId = $this->saveSearchHistory($searchQuery, $searchType, $results);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to save search history', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+        }
+        
+        // Add history ID to response
+        $results['history_id'] = $historyId;
+        
+        // Add flag indicating if results came from cache/database
+        $results['from_cache'] = $fromCache;
         
         return response()->json($results);
     }
@@ -820,5 +856,177 @@ class AIMatchingController extends Controller
         ];
         
         return response()->json($diagnosticInfo);
+    }
+    
+    /**
+     * Save search history to database
+     *
+     * @param string $query
+     * @param string $searchType
+     * @param array $results
+     * @return int|null History ID
+     */
+    protected function saveSearchHistory(string $query, string $searchType, array $results)
+    {
+        $userId = Auth::id();
+        $resultsCount = $results['total_count'] ?? $results['total'] ?? 0;
+        
+        // Check if identical search already exists
+        $existingHistory = AIMatchingSearchHistory::where('user_id', $userId)
+            ->where('search_type', $searchType)
+            ->where('search_query', $query)
+            ->first();
+        
+        if ($existingHistory) {
+            // Update existing entry: refresh expiration and update results
+            $existingHistory->update([
+                'search_results' => $results,
+                'results_count' => $resultsCount,
+                'expires_at' => now()->addDays(7),
+            ]);
+            
+            return $existingHistory->id;
+        } else {
+            // Create new entry
+            $history = AIMatchingSearchHistory::create([
+                'user_id' => $userId,
+                'search_type' => $searchType,
+                'search_query' => $query,
+                'search_results' => $results,
+                'results_count' => $resultsCount,
+                'expires_at' => now()->addDays(7),
+            ]);
+            
+            // Enforce 10-record limit per user per search type
+            $totalHistories = AIMatchingSearchHistory::where('user_id', $userId)
+                ->where('search_type', $searchType)
+                ->count();
+            
+            if ($totalHistories > 10) {
+                // Delete oldest entries beyond the limit
+                $entriesToDelete = AIMatchingSearchHistory::where('user_id', $userId)
+                    ->where('search_type', $searchType)
+                    ->orderBy('created_at', 'asc')
+                    ->take($totalHistories - 10)
+                    ->pluck('id');
+                
+                AIMatchingSearchHistory::whereIn('id', $entriesToDelete)->delete();
+            }
+            
+            return $history->id;
+        }
+    }
+    
+    /**
+     * Get user's search history for current search type
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSearchHistory(Request $request)
+    {
+        $request->validate([
+            'search_type' => 'required|string|in:supervisor,students,collaborators',
+        ]);
+        
+        $userId = Auth::id();
+        $searchType = $request->input('search_type');
+        
+        $histories = AIMatchingSearchHistory::where('user_id', $userId)
+            ->where('search_type', $searchType)
+            ->active()
+            ->orderBy('created_at', 'desc')
+            ->select('id', 'search_query', 'results_count', 'created_at')
+            ->get();
+        
+        return response()->json([
+            'histories' => $histories
+        ]);
+    }
+    
+    /**
+     * Delete a specific search history entry
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteSearchHistory($id)
+    {
+        $user = Auth::user();
+        $history = AIMatchingSearchHistory::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$history) {
+            return response()->json([
+                'success' => false,
+                'message' => 'History not found or you do not have permission to delete it'
+            ], 404);
+        }
+        
+        // ✅ Clear Laravel cache for this search query to prevent stale results
+        // Need to reconstruct the cache key that was used when saving
+        $searchQuery = $history->search_query;
+        $searchType = $history->search_type;
+        
+        // Get user role-specific IDs for cache key
+        $studentId = null;
+        $studentType = null;
+        $academicianId = null;
+        
+        if ($searchType === 'supervisor' && (BouncerFacade::is($user)->a('postgraduate') || BouncerFacade::is($user)->an('undergraduate'))) {
+            if (BouncerFacade::is($user)->an('undergraduate') && $user->undergraduate) {
+                $studentId = $user->undergraduate->id;
+                $studentType = 'undergraduate';
+            } elseif (BouncerFacade::is($user)->a('postgraduate') && $user->postgraduate) {
+                $studentId = $user->postgraduate->id;
+                $studentType = 'postgraduate';
+            }
+        } else if (($searchType === 'students' || $searchType === 'collaborators') && BouncerFacade::is($user)->an('academician')) {
+            if ($user->academician) {
+                $academicianId = $user->academician->id;
+            }
+        }
+        
+        // Clear cache for all pages of this search (pages 1-5)
+        for ($page = 1; $page <= 5; $page++) {
+            $cacheKey = 'ai_matching_' . md5($searchQuery . '_' . $searchType . '_' . $page . '_' . $academicianId . '_' . $studentId . '_' . $studentType);
+            Cache::forget($cacheKey);
+        }
+        
+        // Clear AI insights cache for all academicians in this search
+        if ($history->search_results && isset($history->search_results['matches'])) {
+            foreach ($history->search_results['matches'] as $match) {
+                if ($match['result_type'] === 'academician' && isset($match['academician']['id'])) {
+                    $academicianId = $match['academician']['id'];
+                    $insightCacheKey = 'academician_insight_' . md5($academicianId . '_' . $searchQuery . '_' . $studentId . '_' . $studentType);
+                    Cache::forget($insightCacheKey);
+                }
+            }
+        }
+        
+        // Delete the history record
+        $history->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Search history deleted successfully'
+        ]);
+    }
+    
+    /**
+     * Clean expired search history entries
+     *
+     * @return void
+     */
+    protected function cleanExpiredHistory()
+    {
+        try {
+            AIMatchingSearchHistory::where('expires_at', '<', now())->delete();
+        } catch (\Exception $e) {
+            Log::warning('Failed to clean expired search history', [
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

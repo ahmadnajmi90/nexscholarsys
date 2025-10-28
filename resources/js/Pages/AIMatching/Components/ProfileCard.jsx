@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { MdVerified } from 'react-icons/md';
-import { MoreVertical, Bookmark, UserPlus, Mail, Star, BookmarkPlus, Send, Eye, CheckCircle2, ChevronDown, User, Info } from 'lucide-react';
+import { MenuIcon, Bookmark, UserPlus, Mail, Star, BookmarkPlus, Send, Eye, CheckCircle2, ChevronDown, User, Info } from 'lucide-react';
 import BookmarkButton from "@/Components/BookmarkButton";
 import ConnectionButton from "@/Components/ConnectionButton";
 import ProposalModal from '@/Pages/Supervision/Partials/ProposalModal';
@@ -478,7 +478,7 @@ export default function ProfileCard({
                     className="bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-all shadow-lg"
                     style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
                   >
-                    <MoreVertical className="w-5 h-5 text-gray-700" />
+                    <MenuIcon className="w-5 h-5 text-gray-700" />
                   </button>
                   
                   {/* Actions Dropdown Menu - Bubble Buttons */}
