@@ -18,6 +18,8 @@ import StickyBanner from '../Components/ui/StickyBanner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Components/ui/tooltip';
 import BetaBadge from '../Components/BetaBadge';
 import FloatingCommunicationHub from '../Components/FloatingCommunicationHub';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../Components/ui/dialog';
+import { Button } from '../Components/ui/button';
 
 const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar toggle for mobile
@@ -27,8 +29,9 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
     const [showTutorialModal, setShowTutorialModal] = useState(false); // Tutorial modal
     const [showSupervisionTutorial, setShowSupervisionTutorial] = useState(false); // Supervision tutorial modal
     const [showFeedbackBubble, setShowFeedbackBubble] = useState(true); // Feedback bubble visibility
+    const [showDismissDialog, setShowDismissDialog] = useState(false); // Feedback dismissal dialog
     const { url } = usePage(); // Get current URL from Inertia
-    const { auth } = usePage().props; // Get current URL and auth from Inertia
+    const { auth, preferences } = usePage().props; // Get current URL, auth, and preferences from Inertia
 
     // Helper function to get profile picture URL
     const getProfilePicture = (user) => {
@@ -230,20 +233,51 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
         }
     }, [auth, url]);
 
-    // Load feedback bubble visibility from localStorage
+    // Load feedback bubble visibility from backend session (via preferences) and localStorage
     useEffect(() => {
-        const feedbackBubbleDismissed = localStorage.getItem('feedbackBubbleDismissed');
-        if (feedbackBubbleDismissed === 'true') {
+        const permanentlyDismissed = localStorage.getItem('feedbackBubbleDismissed');
+        const sessionDismissed = preferences?.feedback_bubble_dismissed;
+        
+        if (permanentlyDismissed === 'true' || sessionDismissed === true) {
             setShowFeedbackBubble(false);
         }
-    }, []);
+    }, [preferences]);
 
-    // Function to dismiss feedback bubble
-    const dismissFeedbackBubble = (e) => {
+    // Function to show dismissal dialog
+    const showDismissalDialog = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        setShowDismissDialog(true);
+    };
+
+    // Function to dismiss feedback bubble permanently
+    const dismissPermanently = () => {
         setShowFeedbackBubble(false);
+        setShowDismissDialog(false);
         localStorage.setItem('feedbackBubbleDismissed', 'true');
+    };
+
+    // Function to dismiss feedback bubble for this session only
+    const dismissForSession = async () => {
+        setShowFeedbackBubble(false);
+        setShowDismissDialog(false);
+        
+        // Call backend API to store in Laravel session
+        try {
+            await fetch(route('preferences.feedback.dismiss'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+                body: JSON.stringify({ type: 'session' }),
+            });
+            
+            // Reload only the preferences prop to get fresh session state
+            router.reload({ only: ['preferences'] });
+        } catch (error) {
+            console.error('Failed to dismiss feedback bubble:', error);
+        }
     };
 
     const isActive = (route) => url.startsWith(route); // Check if the current route matches
@@ -517,7 +551,7 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                             <ClipboardList className="h-5 w-5" />
                             {/* Close button */}
                             <button
-                                onClick={dismissFeedbackBubble}
+                                onClick={showDismissalDialog}
                                 className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
                                 aria-label="Dismiss feedback bubble"
                             >
@@ -527,6 +561,77 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                     </a>
                 </div>
             )}
+
+            {/* Feedback Dismissal Dialog - Enhanced Design */}
+            <Dialog open={showDismissDialog} onOpenChange={setShowDismissDialog}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="h-12 w-12 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                                <ClipboardList className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-xl">Hide Feedback Button?</DialogTitle>
+                                <DialogDescription className="mt-1">
+                                    Choose your preference below
+                                </DialogDescription>
+                            </div>
+                        </div>
+                    </DialogHeader>
+                    
+                    <div className="space-y-3 py-4">
+                        {/* Hide until next login option */}
+                        <button
+                            onClick={dismissForSession}
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-200 group"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                                    <LogOut className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div className="text-left flex-1">
+                                    <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                        Hide until next login
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                        Button will reappear when you log in again. Perfect if you just need a break!
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+
+                        {/* Hide permanently option */}
+                        <button
+                            onClick={dismissPermanently}
+                            className="w-full p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-red-500 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors">
+                                    <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div className="text-left flex-1">
+                                    <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                        Hide permanently
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                        Button won't appear again on this device. You can still access feedback via sidebar.
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <DialogFooter className="sm:justify-center">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowDismissDialog(false)}
+                            className="px-8"
+                        >
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Force Terms Agreement Modal */}
             <ForceTermsModal show={showTermsModal} />

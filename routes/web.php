@@ -45,6 +45,7 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\AcademicianRecommendationController;
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\UserMotivationController;
 use App\Http\Controllers\AIGenerationController;
 use App\Http\Controllers\AIMatchingController;
@@ -76,6 +77,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/bookmarks/toggle', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
     Route::get('/bookmarks/check', [BookmarkController::class, 'check'])->name('bookmarks.check');
     Route::delete('/bookmarks/{id}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
+    
+    // User Preferences routes
+    Route::post('/preferences/feedback-bubble/dismiss', [UserPreferenceController::class, 'dismissFeedbackBubble'])->name('preferences.feedback.dismiss');
+    Route::get('/preferences/feedback-bubble/status', [UserPreferenceController::class, 'getFeedbackBubbleStatus'])->name('preferences.feedback.status');
 });
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
