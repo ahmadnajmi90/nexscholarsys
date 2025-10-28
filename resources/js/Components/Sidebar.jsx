@@ -70,35 +70,35 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                 return (
                     <>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('dashboard')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Home className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Dashboard</span>
+                            <Link href={route('dashboard')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <Home className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Dashboard</span>
                             </Link>
                         </motion.div>
                         {isAdmin && (
                             <>
                                 <motion.div variants={itemVariants}>
-                                    <Link href={route('roles.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                        <Settings className="text-gray-600 mb-2 w-5 h-5" />
-                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Roles & Permissions</span>
+                                    <Link href={route('roles.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                        <Settings className="text-gray-600 mb-1 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Roles & Permissions</span>
                                     </Link>
                                 </motion.div>
                                 <motion.div variants={itemVariants}>
-                                    <Link href={route('faculty-admins.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                        <Building2 className="text-gray-600 mb-2 w-5 h-5" />
-                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Faculty Admin</span>
+                                    <Link href={route('faculty-admins.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                        <Building2 className="text-gray-600 mb-1 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Faculty Admin</span>
                                     </Link>
                                 </motion.div>
                                 <motion.div variants={itemVariants}>
-                                    <Link href={route('admin.profiles.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                        <Users className="text-gray-600 mb-2 w-5 h-5" />
-                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Profile Management</span>
+                                    <Link href={route('admin.profiles.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                        <Users className="text-gray-600 mb-1 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Profile Management</span>
                                     </Link>
                                 </motion.div>
                                 <motion.div variants={itemVariants}>
-                                    <Link href={route('admin.data-management.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                        <Database className="text-gray-600 mb-2 w-5 h-5" />
-                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Data Management</span>
+                                    <Link href={route('admin.data-management.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                        <Database className="text-gray-600 mb-1 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Data Management</span>
                                     </Link>
                                 </motion.div>
                             </>
@@ -106,19 +106,71 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                         {isFacultyAdmin && (
                             <>
                                 <motion.div variants={itemVariants}>
-                                    <Link href={route('faculty-admin.academicians')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                        <Shield className="text-gray-600 mb-2 w-5 h-5" />
-                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Verify Academicians</span>
+                                    <Link href={route('faculty-admin.academicians')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                        <Shield className="text-gray-600 mb-1 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Verify Academicians</span>
                                     </Link>
                                 </motion.div>
                                 <motion.div variants={itemVariants}>
-                                    <Link href={route('faculty-admin.directory')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                        <Users className="text-gray-600 mb-2 w-5 h-5" />
-                                        <span className="text-sm font-medium text-gray-700 truncate w-full">Academicians Directory</span>
+                                    <Link href={route('faculty-admin.directory')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                        <Users className="text-gray-600 mb-1 w-5 h-5" />
+                                        <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Academicians Directory</span>
                                     </Link>
                                 </motion.div>
                             </>
                         )}
+
+                        {/* Horizontal Divider */}
+                        <motion.div variants={itemVariants} className="col-span-2">
+                            <div className="border-t border-gray-300 my-2"></div>
+                        </motion.div>
+
+                        {/* Quick Links Section Header */}
+                        <motion.div variants={itemVariants} className="col-span-2">
+                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Quick Links</h4>
+                        </motion.div>
+
+                        {/* AI Matching */}
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('ai.matching.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <Bot className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">AI Matching</span>
+                                <BetaBadge variant="sidebar" />
+                            </Link>
+                        </motion.div>
+
+                        {/* My Supervisor / Supervisor Dashboard (role-based, hidden for undergrads) */}
+                        {!isUndergraduate && (
+                            <>
+                                {isPostgraduate && (
+                                    <motion.div variants={itemVariants}>
+                                        <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                            <School className="w-5 h-5 text-gray-600 mb-1" />
+                                            <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">My Supervisor</span>
+                                            <BetaBadge variant="sidebar" />
+                                        </Link>
+                                    </motion.div>
+                                )}
+                                {auth.user?.academician && (
+                                    <motion.div variants={itemVariants}>
+                                        <Link href={route('supervision.supervisor.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                            <LayoutDashboard className="w-5 h-5 text-gray-600 mb-1" />
+                                            <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Supervisor Dashboard</span>
+                                            <BetaBadge variant="sidebar" />
+                                        </Link>
+                                    </motion.div>
+                                )}
+                            </>
+                        )}
+
+                        {/* NexLab */}
+                        <motion.div variants={itemVariants}>
+                            <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <FolderKanban className="w-5 h-5 text-gray-600 mb-1" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">NexLab</span>
+                                <BetaBadge variant="sidebar" />
+                            </Link>
+                        </motion.div>
                     </>
                 );
 
@@ -126,55 +178,55 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                 return (
                     <>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('ai.matching.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                <Bot className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">AI Matching</span>
+                            <Link href={route('ai.matching.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <Bot className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">AI Matching</span>
                                 <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                         {isAdmin && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('network.map')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                    <Map className="text-gray-600 mb-2 w-5 h-5" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Network Map</span>
+                                <Link href={route('network.map')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                    <Map className="text-gray-600 mb-1 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Network Map</span>
                                 </Link>
                             </motion.div>
                         )}
                         <motion.div variants={itemVariants}>
-                            <Link href={route('postgraduate-recommendations.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                <Sparkles className="w-5 h-5 text-gray-600 mb-2" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Postgraduate Recommendations</span>
+                            <Link href={route('postgraduate-recommendations.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <Sparkles className="w-5 h-5 text-gray-600 mb-1" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Postgraduate Recommendations</span>
                                 <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('bookmarks.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Bookmark className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">My Bookmarks</span>
+                            <Link href={route('bookmarks.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <Bookmark className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">My Bookmarks</span>
                             </Link>
                         </motion.div>
                         {isPostgraduate && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                    <School className="w-5 h-5 text-gray-600 mb-2" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">My Supervisor</span>
+                                <Link href={route('supervision.student.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                    <School className="w-5 h-5 text-gray-600 mb-1" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">My Supervisor</span>
                                     <BetaBadge variant="sidebar" />
                                 </Link>
                             </motion.div>
                         )}
                         {auth.user?.academician && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('supervision.supervisor.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                    <LayoutDashboard className="w-5 h-5 text-gray-600 mb-2" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Supervisor Dashboard</span>
+                                <Link href={route('supervision.supervisor.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                    <LayoutDashboard className="w-5 h-5 text-gray-600 mb-1" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Supervisor Dashboard</span>
                                     <BetaBadge variant="sidebar" />
                                 </Link>
                             </motion.div>
                         )}
                         <motion.div variants={itemVariants}>
-                            <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                <FolderKanban  className="w-5 h-5 text-gray-600 mb-2" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">NexLab</span>
+                            <Link href={route('project-hub.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <FolderKanban  className="w-5 h-5 text-gray-600 mb-1" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">NexLab</span>
                                 <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
@@ -185,9 +237,9 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                 return (
                     <>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('connections.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                <Users className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">My Network</span>
+                            <Link href={route('connections.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <Users className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">My Network</span>
                                 {pendingRequestCount > 0 && (
                                     <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
                                         {pendingRequestCount}
@@ -196,34 +248,34 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('messaging.inbox')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative">
-                                <MessageSquare className="w-5 h-5 text-gray-600 mb-2" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Messages</span>
+                            <Link href={route('messaging.inbox')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center relative min-h-20">
+                                <MessageSquare className="w-5 h-5 text-gray-600 mb-1" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Messages</span>
                                 <BetaBadge variant="sidebar" />
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href="/postgraduates" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <GraduationCap className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Postgraduate</span>
+                            <Link href="/postgraduates" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <GraduationCap className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Postgraduate</span>
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href="/undergraduates" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <BookUser className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Undergraduate</span>
+                            <Link href="/undergraduates" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <BookUser className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Undergraduate</span>
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href="/academicians" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Library className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Academician</span>
+                            <Link href="/academicians" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <Library className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Academician</span>
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href="/universities" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Building className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">University</span>
+                            <Link href="/universities" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <Building className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">University</span>
                             </Link>
                         </motion.div>
                     </>
@@ -234,64 +286,64 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                     <>
                         {/* Grant Management */}
                         <motion.div variants={itemVariants}>
-                            <Link href="/funding" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <DollarSign className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Funding</span>
+                            <Link href="/funding" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <DollarSign className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">View Funding</span>
                             </Link>
                         </motion.div>
                         {canPostGrants && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('funding.admin.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                    <DollarSign className="text-gray-600 mb-2 w-5 h-5" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Funding</span>
+                                <Link href={route('funding.admin.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                    <DollarSign className="text-gray-600 mb-1 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Manage Funding</span>
                                 </Link>
                             </motion.div>
                         )}
 
                         {/* Project Management */}
                         <motion.div variants={itemVariants}>
-                            <Link href="/projects" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <FolderOpen className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Project</span>
+                            <Link href="/projects" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <FolderOpen className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">View Project</span>
                             </Link>
                         </motion.div>
                         {canPostProjects && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('post-projects.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                    <FolderOpen className="text-gray-600 mb-2 w-5 h-5" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Projects</span>
+                                <Link href={route('post-projects.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                    <FolderOpen className="text-gray-600 mb-1 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Manage Projects</span>
                                 </Link>
                             </motion.div>
                         )}
 
                         {/* Event Management */}
                         <motion.div variants={itemVariants}>
-                            <Link href="/events" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Calendar className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Event</span>
+                            <Link href="/events" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <Calendar className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">View Event</span>
                             </Link>
                         </motion.div>
                         {canPostEvents && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('post-events.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                    <Calendar className="text-gray-600 mb-2 w-5 h-5" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Event</span>
+                                <Link href={route('post-events.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                    <Calendar className="text-gray-600 mb-1 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Manage Event</span>
                                 </Link>
                             </motion.div>
                         )}
 
                         {/* Post Management */}
                         <motion.div variants={itemVariants}>
-                            <Link href="/posts" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <FileText className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">View Post</span>
+                            <Link href="/posts" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <FileText className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">View Post</span>
                             </Link>
                         </motion.div>
                         {canCreatePosts && (
                             <motion.div variants={itemVariants}>
-                                <Link href={route('create-posts.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                    <FileText className="text-gray-600 mb-2 w-5 h-5" />
-                                    <span className="text-sm font-medium text-gray-700 truncate w-full">Manage Post</span>
+                                <Link href={route('create-posts.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                    <FileText className="text-gray-600 mb-1 w-5 h-5" />
+                                    <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Manage Post</span>
                                 </Link>
                             </motion.div>
                         )}
@@ -302,21 +354,21 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                 return (
                     <>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('profile.edit')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <Settings className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">General Account Setting</span>
+                            <Link href={route('profile.edit')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <Settings className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">General Account Setting</span>
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('role.edit')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <User2 className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Personal Information</span>
+                            <Link href={route('role.edit')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <User2 className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Personal Information</span>
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('tutorial.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center">
-                                <BookOpenCheck className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Tutorial Guide</span>
+                            <Link href={route('tutorial.index')} className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20">
+                                <BookOpenCheck className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Tutorial Guide</span>
                             </Link>
                         </motion.div>
                         <motion.div variants={itemVariants}>
@@ -324,16 +376,16 @@ const Sidebar = ({ activeSection, isOpen, onToggleSidebar }) => {
                                 href={feedbackFormUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center"
+                                className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center min-h-20"
                             >
-                                <ClipboardList className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Feedback Form</span>
+                                <ClipboardList className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Feedback Form</span>
                             </a>
                         </motion.div>
                         <motion.div variants={itemVariants}>
-                            <Link href={route('logout')} method="post" as="button" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg p-3 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center w-full">
-                                <LogOut className="text-gray-600 mb-2 w-5 h-5" />
-                                <span className="text-sm font-medium text-gray-700 truncate w-full">Log Out</span>
+                            <Link href={route('logout')} method="post" as="button" className="bg-white bg-opacity-80 backdrop-blur-sm border border-white border-opacity-50 shadow-lg px-3 py-2 rounded-lg cursor-pointer hover:bg-opacity-90 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:rotate-1 flex flex-col items-center justify-center text-center w-full min-h-20">
+                                <LogOut className="text-gray-600 mb-1 w-5 h-5" />
+                                <span className="text-sm font-medium text-gray-700 line-clamp-2 w-full">Log Out</span>
                             </Link>
                         </motion.div>
                     </>

@@ -6,12 +6,16 @@ import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
 import UserAvatar from './UserAvatar';
 import { getRelativeTime } from '@/Utils/notificationHelpers';
 
-const NotificationPanel = ({ isOpen, onClose }) => {
+const NotificationPanel = ({ isOpen, onClose, align = 'right', direction = 'down' }) => {
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'unread'
   const [allNotifications, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState([]);
   const panelRef = useRef(null);
+  
+  // Dynamic positioning classes
+  const alignmentClass = align === 'left' ? 'left-0' : 'right-0';
+  const directionClass = direction === 'up' ? 'mb-2 bottom-full' : 'mt-2';
 
   useEffect(() => {
     // Click outside handler
@@ -685,7 +689,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
   return (
     <div 
       ref={panelRef}
-      className="absolute right-0 mt-2 w-96 sm:w-[28rem] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-[60] max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700"
+      className={`absolute ${alignmentClass} ${directionClass} w-96 sm:w-[28rem] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-[60] max-h-[80vh] flex flex-col border border-gray-200 dark:border-gray-700`}
     >
       {/* Header */}
       <div className="px-5 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">

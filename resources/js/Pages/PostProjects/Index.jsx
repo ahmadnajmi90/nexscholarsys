@@ -37,12 +37,11 @@ const Index = () => {
   };
 
   return (
-    <MainLayout title="">
-      <Head title="Your Projects" />
+    <MainLayout title="Manage Your Projects">
+      <Head title="Manage Your Projects" />
       {/* Center content and add padding */}
-      <div className="max-w-8xl mx-auto px-4 py-20 md:py-20 lg:py-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-semibold">Your Projects</h1>
+      <div className="max-w-8xl mx-auto px-4 lg:px-0 py-20 md:py-20 lg:py-4">
+        <div className="flex justify-end items-right mb-4">
           <Link
             href={route('post-projects.create')}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"

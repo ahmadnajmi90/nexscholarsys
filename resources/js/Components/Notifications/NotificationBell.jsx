@@ -4,12 +4,26 @@ import axios from 'axios';
 import NotificationPanel from './NotificationPanel';
 import { usePage } from '@inertiajs/react';
 
-const NotificationBell = () => {
+const NotificationBell = ({ dropdownAlign = 'right', dropdownDirection = 'down', onPanelToggle, onUnreadCountChange }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const bellRef = useRef(null);
   const { auth } = usePage().props;
+
+  // Notify parent when panel state changes
+  useEffect(() => {
+    if (onPanelToggle) {
+      onPanelToggle(isOpen);
+    }
+  }, [isOpen, onPanelToggle]);
+
+  // Notify parent when unread count changes
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadCountChange]);
 
   // Fetch unread count periodically
   useEffect(() => {
@@ -81,7 +95,7 @@ const NotificationBell = () => {
         )}
       </button>
       
-      <NotificationPanel isOpen={isOpen} onClose={closePanel} />
+      <NotificationPanel isOpen={isOpen} onClose={closePanel} align={dropdownAlign} direction={dropdownDirection} />
     </div>
   );
 };

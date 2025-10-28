@@ -5,13 +5,17 @@ import axios from 'axios';
 import ConversationListItem from './ConversationListItem';
 import ThreadPane from './ThreadPane';
 
-const MessagingPanel = ({ isOpen, onClose, onUnreadCountChange }) => {
+const MessagingPanel = ({ isOpen, onClose, onUnreadCountChange, align = 'right', direction = 'down' }) => {
   const [view, setView] = useState('list'); // 'list' or 'thread'
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const panelRef = useRef(null);
+  
+  // Dynamic positioning classes
+  const alignmentClass = align === 'left' ? 'left-0' : 'right-0';
+  const directionClass = direction === 'up' ? 'mb-2 bottom-full' : 'mt-2';
 
   // Click outside to close
   useEffect(() => {
@@ -91,7 +95,7 @@ const MessagingPanel = ({ isOpen, onClose, onUnreadCountChange }) => {
   return (
     <div 
       ref={panelRef}
-      className="absolute right-0 mt-2 w-96 h-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-[60] flex flex-col border border-gray-200 dark:border-gray-700"
+      className={`absolute ${alignmentClass} ${directionClass} w-96 h-[600px] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-[60] flex flex-col border border-gray-200 dark:border-gray-700`}
     >
       {/* Header */}
       <div className="px-5 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">

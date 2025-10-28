@@ -308,13 +308,11 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
             
             {/* Floating Communication Hub - Desktop Only, Shows when Header is Hidden */}
             {isDesktop && !title && (
-                <div className="fixed top-4 right-4 z-50">
-                    <FloatingCommunicationHub 
-                        auth={auth}
-                        getProfilePicture={getProfilePicture}
-                        showProfile={true}
-                    />
-                </div>
+                <FloatingCommunicationHub 
+                    auth={auth}
+                    getProfilePicture={getProfilePicture}
+                    showProfile={true}
+                />
             )}
             
             {/* New Two-Part Sidebar System for Desktop */}

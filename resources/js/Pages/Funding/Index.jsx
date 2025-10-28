@@ -4,6 +4,7 @@ import MainLayout from '../../Layouts/MainLayout';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { FaEye, FaHeart, FaShareAlt } from 'react-icons/fa';
 import { Head } from '@inertiajs/react';
+import { Tabs, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -44,46 +45,25 @@ const Index = () => {
   };
 
   return (
-    <MainLayout title="">
-      <Head title={`Your ${activeTab === 'grants' ? 'Grants' : 'Scholarships'}`} />
+    <MainLayout title={`Manage Your ${activeTab === 'grants' ? 'Grants' : 'Scholarships'}`}>
+      <Head title={`Manage Your ${activeTab === 'grants' ? 'Grants' : 'Scholarships'}`} />
       {/* Wrap everything in a centered container */}
-      <div className="max-w-8xl mx-auto px-4 py-20 md:py-20 lg:py-4">
-        <div className="flex justify-between items-center my-4">
-          <h1 className="text-2xl font-semibold">Your Funding</h1>
+      <div className="max-w-8xl mx-auto px-4 lg:px-0 py-20 md:py-20 lg:py-4">
+        {/* Tab Navigation with Add Button */}
+        <div className="mb-6 flex justify-between items-center">
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList>
+              <TabsTrigger value="grants">Grants</TabsTrigger>
+              <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
           <Link
             href={route('funding.admin.create', { type: activeTab === 'grants' ? 'grant' : 'scholarship' })}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Add New {activeTab === 'grants' ? 'Grant' : 'Scholarship'}
           </Link>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => handleTabChange('grants')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'grants'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Grants
-              </button>
-              <button
-                onClick={() => handleTabChange('scholarships')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'scholarships'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Scholarships
-              </button>
-            </nav>
-          </div>
         </div>
         
         {/* Search bar */}
