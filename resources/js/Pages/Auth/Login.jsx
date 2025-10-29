@@ -81,20 +81,7 @@ export default function Login({ status, canResetPassword }) {
                         </p>
                     </div>
 
-                    {/* Google Login Unavailable Notice */}
-                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                            <strong>Notice:</strong> Google Sign-In is temporarily unavailable while we complete the verification process. 
-                            If you previously used Google to sign in, please click{' '}
-                            <a href={route('password.request')} className="underline font-medium hover:text-blue-900">
-                                "Forgot Password"
-                            </a>{' '}
-                            to reset your password and use the email login form below.
-                        </p>
-                    </div>
-
-                    {/* SOCIAL SIGN-IN BUTTON (GOOGLE) - TEMPORARILY DISABLED FOR GOOGLE VERIFICATION */}
-                    {/* 
+                    {/* SOCIAL SIGN-IN BUTTON (GOOGLE) */}
                     <div className="flex flex-col sm:flex-row sm:space-x-2">
                         <a
                             href={route('auth.google')}
@@ -110,7 +97,6 @@ export default function Login({ status, canResetPassword }) {
                         <span className="mx-2 text-gray-400 text-sm">OR CONTINUE WITH EMAIL</span>
                         <div className="flex-grow border-t border-gray-300"></div>
                     </div>
-                    */}
 
                     {/* LOGIN FORM */}
                     <form onSubmit={submit} className="space-y-4">

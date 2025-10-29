@@ -24,7 +24,7 @@ class GoogleCalendarService
         $this->client->setClientId(config('services.google.client_id'));
         $this->client->setClientSecret(config('services.google.client_secret'));
         $this->client->setRedirectUri(config('services.google.calendar_redirect'));
-        $this->client->setScopes(config('services.google.scopes'));
+        $this->client->setScopes(config('services.google.calendar_scopes'));
         $this->client->setAccessType('offline');
         $this->client->setPrompt('consent'); // Force consent screen to get refresh token
     }

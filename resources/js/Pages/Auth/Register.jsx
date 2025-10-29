@@ -254,8 +254,7 @@ export default function Register() {
                                 </p>
                             </div>
 
-                            {/* GOOGLE SIGN-UP SECTION - TEMPORARILY DISABLED FOR GOOGLE VERIFICATION */}
-                            {/* 
+                            {/* GOOGLE SIGN-UP SECTION */}
                             <div className="col-span-6">
                                 <div className="flex items-center my-4">
                                     <div className="flex-grow border-t border-gray-300"></div>
@@ -275,7 +274,6 @@ export default function Register() {
                                     </PrimaryButton>
                                 </div>
                             </div>
-                            */}
                         </form>
                     </div>
                 </main>

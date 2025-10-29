@@ -13,7 +13,9 @@ class GoogleController extends Controller
     // Redirect the user to the Google authentication page.
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')
+            ->scopes([]) // Only request basic scopes (email, profile, openid)
+            ->redirect();
     }
 
     // Obtain the user information from Google.
