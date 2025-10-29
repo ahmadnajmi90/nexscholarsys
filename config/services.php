@@ -43,7 +43,9 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
         'calendar_redirect' => env('APP_URL') . '/auth/google/calendar/callback',
-        'scopes' => [
+        
+        // Calendar-specific scopes (only used when explicitly requested for Calendar integration)
+        'calendar_scopes' => [
             'https://www.googleapis.com/auth/calendar.events'
         ],
         

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGoogleCalendar } from '@/Hooks/useGoogleCalendar';
-import { Calendar, Check, RefreshCw, ExternalLink, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { Calendar, Check, RefreshCw, ExternalLink, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { Switch } from '@/Components/ui/switch';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -51,25 +51,7 @@ export default function GoogleCalendarSettings({ className = '' }) {
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Unavailable Notice */}
-      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <div className="flex gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-medium text-yellow-900">
-              Temporarily Unavailable
-            </h4>
-            <p className="mt-1 text-sm text-yellow-700">
-              Google Calendar integration is currently unavailable while we complete the Google verification process. 
-              This feature will be restored soon. Thank you for your patience.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Disabled Content - Grayscale */}
-      <div className="filter grayscale opacity-60 pointer-events-none select-none">
-        {/* Main Toggle Section */}
+      {/* Main Toggle Section */}
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4 flex-1">
             <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
@@ -96,10 +78,38 @@ export default function GoogleCalendarSettings({ className = '' }) {
           <Switch
             checked={isConnected}
             onCheckedChange={handleToggle}
-            disabled={true}
+            disabled={isLoading}
             className="flex-shrink-0 ml-4"
           />
         </div>
+
+      {/* Google Verification Notice */}
+      {!isConnected && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex gap-3">
+            <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-amber-900 mb-2">
+                Google Verification in Progress
+              </h4>
+              <p className="text-sm text-amber-800 mb-2">
+                When connecting your Google Calendar, you may see a warning that says <strong>"Google hasn't verified this app"</strong>. This is normal and safe to proceed.
+              </p>
+              <p className="text-sm text-amber-800">
+                <strong>To continue:</strong>
+              </p>
+              <ol className="text-sm text-amber-800 ml-4 mt-1 space-y-1 list-decimal">
+                <li>Click <strong>"Advanced"</strong> at the bottom of the warning screen</li>
+                <li>Click <strong>"Go to Nexscholar (unsafe)"</strong></li>
+                <li>Grant calendar permissions</li>
+              </ol>
+              <p className="text-xs text-amber-700 mt-3 italic">
+                We're currently awaiting Google's verification approval. Once approved, this warning will no longer appear.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Expandable Details */}
       {isConnected && (
@@ -147,7 +157,7 @@ export default function GoogleCalendarSettings({ className = '' }) {
                 variant="outline"
                 size="sm"
                 onClick={handleSync}
-                disabled={true}
+                disabled={isSyncing || isLoading}
                 className="flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -161,7 +171,7 @@ export default function GoogleCalendarSettings({ className = '' }) {
                     disconnect();
                   }
                 }}
-                disabled={true}
+                disabled={isLoading}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 Disconnect
@@ -198,7 +208,7 @@ export default function GoogleCalendarSettings({ className = '' }) {
                   variant="link"
                   size="sm"
                   onClick={connect}
-                  disabled={true}
+                  disabled={isLoading}
                   className="mt-2 text-blue-600 hover:text-blue-700 p-0 h-auto font-medium flex items-center gap-1"
                 >
                   <ExternalLink className="w-4 h-4" />
@@ -208,8 +218,6 @@ export default function GoogleCalendarSettings({ className = '' }) {
             </div>
           </div>
         )}
-      </div>
-      {/* End of Disabled Content */}
     </div>
   );
 }

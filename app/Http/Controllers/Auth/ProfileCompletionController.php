@@ -49,6 +49,9 @@ class ProfileCompletionController extends Controller
         // Get the current user
         $user = Auth::user();
 
+        // Get Google profile picture from session if available
+        $googleProfilePicture = session('google_profile_picture');
+
         // Additional validation and unique ID generation based on role
         if ($request->role === 'Academician') {
             $request->validate([
@@ -73,10 +76,13 @@ class ProfileCompletionController extends Controller
                     'full_name' => strtoupper($request->full_name),
                     'university' => $request->university,
                     'faculty' => $request->faculty,
-                    'profile_picture' => "profile_pictures/default.jpg",
+                    'profile_picture' => $googleProfilePicture ?? "profile_pictures/default.jpg",
                     'background_image' => "profile_background_images/default.jpg",
                 ]
             );
+
+            // Clear the Google profile picture from session
+            session()->forget('google_profile_picture');
 
             // Redirect to AI Profile Generation page for Academicians
             return redirect()->route('ai.profile.show');
@@ -101,10 +107,13 @@ class ProfileCompletionController extends Controller
                 [
                     'full_name' => strtoupper($request->full_name),
                     'industry' => $request->industry,
-                    'profile_picture' => "profile_pictures/default.jpg",
+                    'profile_picture' => $googleProfilePicture ?? "profile_pictures/default.jpg",
                     'background_image' => "profile_background_images/default.jpg",
                 ]
             );
+
+            // Clear the Google profile picture from session
+            session()->forget('google_profile_picture');
 
             // Redirect to dashboard for Industry users
             return redirect()->route('dashboard');
@@ -133,10 +142,13 @@ class ProfileCompletionController extends Controller
                     'university' => $request->university,
                     'faculty' => $request->faculty,
                     'current_postgraduate_status' => $request->current_postgraduate_status,
-                    'profile_picture' => "profile_pictures/default.jpg",
+                    'profile_picture' => $googleProfilePicture ?? "profile_pictures/default.jpg",
                     'background_image' => "profile_background_images/default.jpg",
                 ]
             );
+            
+            // Clear the Google profile picture from session
+            session()->forget('google_profile_picture');
             
             // Redirect to AI Profile Generation page for Postgraduates
             return redirect()->route('ai.profile.show');
@@ -165,10 +177,13 @@ class ProfileCompletionController extends Controller
                     'university' => $request->university,
                     'faculty' => $request->faculty,
                     'current_undergraduate_status' => $request->current_undergraduate_status,
-                    'profile_picture' => "profile_pictures/default.jpg",
+                    'profile_picture' => $googleProfilePicture ?? "profile_pictures/default.jpg",
                     'background_image' => "profile_background_images/default.jpg",
                 ]
             );
+            
+            // Clear the Google profile picture from session
+            session()->forget('google_profile_picture');
             
             // Redirect to AI Profile Generation page for Undergraduates
             return redirect()->route('ai.profile.show');
