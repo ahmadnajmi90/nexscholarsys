@@ -182,13 +182,15 @@ The AI logic is encapsulated in dedicated service classes within `app/Services`.
 -   `QdrantService`: Interacts with the Qdrant vector database to store and search for embeddings.
 -   These services are called from Controllers or background Jobs.
 
-### Python Scraping Service
+### Google Scholar Scraping Service
 
-To handle the dynamic, JavaScript-heavy nature of Google Scholar, a separate Python service is used.
+Google Scholar profile scraping is handled by an enhanced PHP-based service with pagination support.
 
--   **Location**: `scripts/scholar_scraper.py`
--   **Technology**: Uses Playwright to control a headless browser, allowing it to interact with the page (e.g., click "Show more" buttons) just like a user.
--   **Execution**: It is called from a Laravel background job (`ProcessGoogleScholarScraping`) via a `Symfony/Process` command, passing the Scholar profile URL as an argument. The results (publication data) are returned as a JSON string to be parsed and stored by Laravel.
+-   **Location**: `app/Services/EnhancedGoogleScholarService.php`
+-   **Technology**: Uses Guzzle HTTP Client with Symfony DomCrawler for HTML parsing. Implements URL-based pagination to scrape all publications (not just the first page).
+-   **Anti-Detection**: Employs rotating user agents (20+ browsers), realistic HTTP headers, random delays (5-10s), cookie persistence, and CAPTCHA detection to minimize blocking risks.
+-   **Execution**: Called from `ScrapeGoogleScholarJob` background job. Loops through paginated URLs (`cstart=0,100,200...`) until no more publications are found.
+-   **Supporting Services**: `UserAgentPool` for browser rotation, `config/scraping.php` for configuration.
 
 ## Integration Points
 
@@ -217,5 +219,5 @@ The project follows the standard Laravel directory structure, with key customiza
 -   `routes/`:
     -   `web.php`: Defines routes for the main web application.
     -   `api.php`: Defines routes for the stateless and stateful APIs.
--   `scripts/`: Contains the Python-based Google Scholar scraper and its dependencies.
+-   `config/`: Contains configuration files including `scraping.php` for Google Scholar scraper settings.
 -   `docs/`: Contains all high-level technical documentation.

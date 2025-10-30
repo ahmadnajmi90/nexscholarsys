@@ -67,7 +67,7 @@ Users have comprehensive profiles that serve as their digital academic identity.
     -   **Profile & Background Pictures**: Upload and crop functionality.
     -   **Structured Data**: Research interests are mapped to a hierarchical structure of `FieldOfResearch` -> `ResearchArea` -> `NicheDomain`.
     -   **CV Upload**: Users can upload their CV, which is used for both display and AI Profile Generation.
-    -   **Google Scholar Integration**: Academicians can link their Google Scholar profile to automatically fetch and display their publication list and citation metrics. This is handled by the `GoogleScholarService.php` and a Python scraping script.
+    -   **Google Scholar Integration**: Academicians can link their Google Scholar profile to automatically fetch and display their complete publication list and citation metrics. The enhanced scraping service (`EnhancedGoogleScholarService.php`) uses URL-based pagination to scrape ALL publications with anti-detection measures (rotating user agents, random delays, CAPTCHA detection) to minimize blocking risks.
 
 ### AI Profile Generation
 

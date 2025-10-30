@@ -45,6 +45,14 @@ class ScrapeGoogleScholarJob implements ShouldQueue, ShouldBeUnique
     public $maxExceptions = 2;
 
     /**
+     * The number of seconds the job can run before timing out.
+     * Increased to 5 minutes to accommodate pagination scraping.
+     *
+     * @var int
+     */
+    public $timeout = 300;
+
+    /**
      * Create a new job instance.
      *
      * @param \App\Models\Academician $academician
