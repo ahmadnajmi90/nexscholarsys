@@ -6,6 +6,15 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ## [October 30, 2025]
 
+### Auto-redirect Unauthenticated Users to Welcome Pages
+Implemented automatic redirection for guests viewing content directly.
+- Created `RedirectGuestsToWelcome` middleware to detect unauthenticated users
+- Applied to all public content: events, posts, projects, and funding pages
+- **How it works**: When unauthenticated users access direct URLs (e.g., `/events/icbem25`), they are automatically redirected to welcome routes (e.g., `/welcome/events/icbem25`)
+- Authenticated users continue to view content normally without redirection
+- Preserves query parameters during redirect
+- Solves the issue where users manually copy direct URLs and share them with guests
+
 ### Complete NexLab Real-time Collaboration System
 Implemented comprehensive real-time updates for all NexLab operations using WebSocket broadcasting.
 - All task operations sync instantly (create, update, delete, move, assign, complete, archive)

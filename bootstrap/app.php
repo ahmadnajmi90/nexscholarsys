@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'qdrant.rollout' => \App\Http\Middleware\QdrantRolloutMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'postgraduate' => \App\Http\Middleware\PostgraduateMiddleware::class,
+            'redirect.guests.to.welcome' => \App\Http\Middleware\RedirectGuestsToWelcome::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
