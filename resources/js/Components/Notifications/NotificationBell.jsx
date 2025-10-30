@@ -36,6 +36,33 @@ const NotificationBell = ({ dropdownAlign = 'right', dropdownDirection = 'down',
     return () => clearInterval(interval);
   }, []);
 
+  // Helper function to format notification titles
+  const formatNotificationTitle = (type) => {
+    const titles = {
+      'connection_request': 'New Connection Request',
+      'connection_accepted': 'Connection Accepted',
+      'task_assigned': 'New Task Assigned',
+      'workspace_invitation': 'Workspace Invitation',
+      'project_invitation': 'Project Invitation',
+      'meeting_scheduled': 'Meeting Scheduled',
+      'request_submitted': 'New Supervision Request',
+      'request_accepted': 'Supervision Request Accepted',
+      'request_rejected': 'Supervision Request Declined',
+      'offer_received': 'Supervision Offer Received',
+      'student_accepted_offer': 'Student Accepted Offer',
+      'student_rejected_offer': 'Student Declined Offer',
+      'cosupervisor_invitation_sent': 'Co-supervisor Invitation',
+      'cosupervisor_approved': 'Co-supervisor Approved',
+      'meeting_reminder': 'Meeting Reminder',
+      'unbind_request_initiated': 'Unbind Request',
+      'role_changed': 'Role Changed',
+      'workspace_deleted': 'Workspace Deleted',
+      'board_deleted': 'Board Deleted',
+      // Add more as needed
+    };
+    return titles[type] || 'New Notification';
+  };
+
   // Listen to real-time notifications via Pusher
   useEffect(() => {
     if (window.Echo && auth?.user?.id) {
@@ -43,13 +70,23 @@ const NotificationBell = ({ dropdownAlign = 'right', dropdownDirection = 'down',
       
       // Listen for notification.sent events
       channel.notification((notification) => {
-        console.log('Real-time notification received:', notification);
+        console.log('Real-time notification received in bell:', notification);
         
         // Increment unread count
         setUnreadCount((prev) => prev + 1);
         
-        // If panel is open, we could refresh it here
-        // For now, the panel will refresh when opened next time
+        // Optional: Show browser notification if permission granted
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const notifTitle = notification.data?.type 
+            ? formatNotificationTitle(notification.data.type)
+            : 'New Notification';
+          const notifBody = notification.data?.message || 'You have a new notification';
+          
+          new Notification(notifTitle, {
+            body: notifBody,
+            icon: '/favicon.ico'
+          });
+        }
       });
       
       return () => {

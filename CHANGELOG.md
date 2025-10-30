@@ -6,6 +6,12 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ## [October 30, 2025]
 
+### Real-time Notification Updates
+Enhanced notification system to display new notifications instantly using WebSocket (Pusher + Echo).
+- Notifications appear in the panel immediately without page refresh
+- Browser notifications for incoming alerts when permission is granted
+- Real-time unread count updates on notification bell icon
+
 ### Workspace Grouping Feature with Drag & Drop
 Added personal workspace grouping to help users organize workspaces into collapsible categories.
 - Users can create custom groups to categorize workspaces (e.g., by course, semester, student groups)

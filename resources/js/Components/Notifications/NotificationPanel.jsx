@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaCheck, FaSpinner } from 'react-icons/fa';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { getRejectionReasonLabel } from '@/Utils/supervisionConstants';
 import UserAvatar from './UserAvatar';
@@ -12,6 +12,7 @@ const NotificationPanel = ({ isOpen, onClose, align = 'right', direction = 'down
   const [loading, setLoading] = useState(true);
   const [processingIds, setProcessingIds] = useState([]);
   const panelRef = useRef(null);
+  const { auth } = usePage().props;
   
   // Dynamic positioning classes
   const alignmentClass = align === 'left' ? 'left-0' : 'right-0';
@@ -35,6 +36,46 @@ const NotificationPanel = ({ isOpen, onClose, align = 'right', direction = 'down
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  // Listen to real-time notifications
+  useEffect(() => {
+    if (!window.Echo || !auth?.user?.id) return;
+    
+    const channel = window.Echo.private(`App.Models.User.${auth.user.id}`);
+    
+    // Listen for new notifications
+    channel.notification((notification) => {
+      console.log('Real-time notification received in panel:', notification);
+      
+      // Format the notification to match the expected structure
+      const formattedNotification = {
+        id: notification.id,
+        type: notification.type,
+        data: notification.data,
+        created_at: notification.created_at,
+        read_at: null // New notifications are always unread
+      };
+      
+      // Add to the top of the notification list
+      setAllNotifications(prev => {
+        // Check for duplicates
+        if (prev.some(n => n.id === notification.id)) {
+          return prev;
+        }
+        // Add to top and sort by created_at descending
+        return [formattedNotification, ...prev].sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+      });
+      
+      // Optional: Show toast notification
+      // toast.success('New notification received');
+    });
+    
+    return () => {
+      channel.stopListening('.notification.sent');
+    };
+  }, [auth?.user?.id]);
 
   const fetchNotifications = async () => {
     setLoading(true);
