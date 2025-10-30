@@ -6,6 +6,14 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ## [October 30, 2025]
 
+### Workspace Grouping Feature with Drag & Drop
+Added personal workspace grouping to help users organize workspaces into collapsible categories.
+- Users can create custom groups to categorize workspaces (e.g., by course, semester, student groups)
+- **Unique group names per user** - each user can only have one group with a specific name
+- **Drag and drop** workspaces between groups or click the dropdown to assign to a group
+- Groups displayed as collapsible Shadcn UI sections with edit/delete functionality
+- Ungrouped workspaces always appear at the bottom
+
 ### Enhanced Google Scholar Scraping
 Enhanced scraper to scrape ALL publications using URL-based pagination with anti-detection techniques.
 - Implemented pagination support (not limited to first 20 publications)

@@ -580,6 +580,15 @@ Route::middleware(['auth'])->prefix('project-hub')->name('project-hub.')->group(
     // Main Project Hub routes
     Route::get('/', [ProjectHubController::class, 'index'])->name('index');
     
+    // Workspace Group routes
+    Route::get('/workspace-groups', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'index'])->name('workspace-groups.index');
+    Route::post('/workspace-groups', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'store'])->name('workspace-groups.store');
+    Route::put('/workspace-groups/{workspaceGroup}', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'update'])->name('workspace-groups.update');
+    Route::delete('/workspace-groups/{workspaceGroup}', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'destroy'])->name('workspace-groups.destroy');
+    Route::post('/workspace-groups/reorder', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'reorder'])->name('workspace-groups.reorder');
+    Route::post('/workspace-groups/{workspaceGroup}/assign/{workspace}', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'assignWorkspace'])->name('workspace-groups.assign');
+    Route::post('/workspaces/{workspace}/unassign', [\App\Http\Controllers\ProjectHub\WorkspaceGroupController::class, 'unassignWorkspace'])->name('workspaces.unassign');
+    
     // Workspace routes
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
