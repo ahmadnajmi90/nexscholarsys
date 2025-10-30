@@ -197,7 +197,7 @@ export default function PostContent({
 
   return (
     <div className="px-6 md:px-8 lg:px-4">
-      <div className="max-w-8xl mx-auto py-4 lg:pt-4">
+      <div className="max-w-7xl mx-auto py-4 lg:pt-4">
         {/* Back Button */}
         <div className="mb-6">
           <BackButton />

@@ -42,6 +42,22 @@ class Task extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['list_id'];
+
+    /**
+     * Get the list_id attribute (accessor for board_list_id).
+     * This allows the frontend to use list_id consistently.
+     */
+    public function getListIdAttribute()
+    {
+        return $this->board_list_id;
+    }
+
+    /**
      * Get the list that owns the task.
      */
     public function list(): BelongsTo

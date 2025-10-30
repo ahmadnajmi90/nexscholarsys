@@ -2,7 +2,6 @@
 
 namespace App\Events;
 
-use App\Models\Task;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,19 +11,26 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TaskMoved implements ShouldBroadcast
+class BoardListReordered implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * The task that was moved.
+     * The array of lists with their new order.
      *
-     * @var \App\Models\Task
+     * @var array
      */
-    public $task;
+    public $lists;
 
     /**
-     * The user who moved the task.
+     * The ID of the board the lists belong to.
+     *
+     * @var int
+     */
+    public $boardId;
+
+    /**
+     * The user who reordered the board lists.
      *
      * @var \App\Models\User
      */
@@ -33,20 +39,16 @@ class TaskMoved implements ShouldBroadcast
     /**
      * Create a new event instance.
      *
-     * @param  \App\Models\Task  $task
+     * @param  array  $lists
+     * @param  int  $boardId
      * @param  \App\Models\User  $user
      * @return void
      */
-    public function __construct(Task $task, User $user)
+    public function __construct(array $lists, int $boardId, User $user)
     {
-        $this->task = $task;
+        $this->lists = $lists;
+        $this->boardId = $boardId;
         $this->user = $user;
-        
-        // Make sure we have the board relationship loaded
-        // This is needed for the broadcastOn method
-        if (!$this->task->relationLoaded('list') || !$this->task->list->relationLoaded('board')) {
-            $this->task->load('list.board');
-        }
     }
 
     /**
@@ -56,7 +58,7 @@ class TaskMoved implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('boards.' . $this->task->list->board_id);
+        return new PrivateChannel('boards.' . $this->boardId);
     }
 
     /**
@@ -66,7 +68,7 @@ class TaskMoved implements ShouldBroadcast
      */
     public function broadcastAs()
     {
-        return 'task.moved';
+        return 'board-list.reordered';
     }
 
     /**
@@ -77,21 +79,14 @@ class TaskMoved implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'task' => [
-                'id' => $this->task->id,
-                'title' => $this->task->title,
-                'description' => $this->task->description,
-                'order' => $this->task->order,
-                'due_date' => $this->task->due_date,
-                'priority' => $this->task->priority,
-                'list_id' => $this->task->board_list_id, // Fixed: use board_list_id
-            ],
+            'lists' => $this->lists,
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ],
-            // Include timestamp to help with update conflicts
             'timestamp' => now()->toIso8601String(),
         ];
     }
 }
+
+

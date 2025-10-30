@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\Task;
+use App\Models\Board;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,19 +12,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TaskMoved implements ShouldBroadcast
+class BoardCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * The task that was moved.
+     * The board that was created.
      *
-     * @var \App\Models\Task
+     * @var \App\Models\Board
      */
-    public $task;
+    public $board;
 
     /**
-     * The user who moved the task.
+     * The parent type (workspace or project).
+     *
+     * @var string
+     */
+    public $parentType;
+
+    /**
+     * The ID of the parent (workspace_id or project_id).
+     *
+     * @var int
+     */
+    public $parentId;
+
+    /**
+     * The user who created the board.
      *
      * @var \App\Models\User
      */
@@ -33,20 +47,18 @@ class TaskMoved implements ShouldBroadcast
     /**
      * Create a new event instance.
      *
-     * @param  \App\Models\Task  $task
+     * @param  \App\Models\Board  $board
+     * @param  string  $parentType
+     * @param  int  $parentId
      * @param  \App\Models\User  $user
      * @return void
      */
-    public function __construct(Task $task, User $user)
+    public function __construct(Board $board, string $parentType, int $parentId, User $user)
     {
-        $this->task = $task;
+        $this->board = $board;
+        $this->parentType = $parentType;
+        $this->parentId = $parentId;
         $this->user = $user;
-        
-        // Make sure we have the board relationship loaded
-        // This is needed for the broadcastOn method
-        if (!$this->task->relationLoaded('list') || !$this->task->list->relationLoaded('board')) {
-            $this->task->load('list.board');
-        }
     }
 
     /**
@@ -56,7 +68,8 @@ class TaskMoved implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('boards.' . $this->task->list->board_id);
+        $channel = $this->parentType === 'workspace' ? 'workspaces.' : 'projects.';
+        return new PrivateChannel($channel . $this->parentId);
     }
 
     /**
@@ -66,7 +79,7 @@ class TaskMoved implements ShouldBroadcast
      */
     public function broadcastAs()
     {
-        return 'task.moved';
+        return 'board.created';
     }
 
     /**
@@ -77,21 +90,20 @@ class TaskMoved implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'task' => [
-                'id' => $this->task->id,
-                'title' => $this->task->title,
-                'description' => $this->task->description,
-                'order' => $this->task->order,
-                'due_date' => $this->task->due_date,
-                'priority' => $this->task->priority,
-                'list_id' => $this->task->board_list_id, // Fixed: use board_list_id
+            'board' => [
+                'id' => $this->board->id,
+                'name' => $this->board->name,
+                'boardable_id' => $this->board->boardable_id,
+                'boardable_type' => $this->board->boardable_type,
             ],
+            'parent_type' => $this->parentType,
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ],
-            // Include timestamp to help with update conflicts
             'timestamp' => now()->toIso8601String(),
         ];
     }
 }
+
+

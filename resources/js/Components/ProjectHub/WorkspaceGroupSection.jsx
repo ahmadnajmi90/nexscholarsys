@@ -114,6 +114,19 @@ function WorkspaceCard({ workspace, allGroups, currentGroupId }) {
     const ownerName = ownerProfile?.full_name || workspace.owner?.name || 'Unknown';
     const ownerDisplay = auth.user.id === workspace.owner_id ? 'You' : ownerName;
     
+    // Check if current user is the owner
+    const isOwner = auth.user.id === workspace.owner_id;
+    
+    const handleDeleteWorkspace = () => {
+        if (confirm(`Delete workspace "${workspace.name}"? This action cannot be undone and will delete all boards and tasks.`)) {
+            router.delete(route('project-hub.workspaces.destroy', workspace.id), {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Workspace deleted successfully'),
+                onError: () => toast.error('Failed to delete workspace')
+            });
+        }
+    };
+    
     const handleAssignToGroup = (groupId) => {
         const targetGroupId = groupId === 'ungrouped' ? null : groupId;
         
@@ -154,6 +167,21 @@ function WorkspaceCard({ workspace, allGroups, currentGroupId }) {
             >
                 <GripVertical className="w-4 h-4 text-gray-400" />
             </div>
+            
+            {/* Delete Button (Owner Only) */}
+            {isOwner && (
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteWorkspace();
+                    }}
+                    className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                    title="Delete workspace"
+                >
+                    <Trash2 className="w-4 h-4" />
+                </button>
+            )}
             
             {/* Main Card Content */}
             <Link

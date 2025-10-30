@@ -11,6 +11,12 @@ use App\Models\PaperWritingTask;
 use App\Models\TaskComment;
 use App\Models\User;
 use App\Events\TaskMoved;
+use App\Events\TaskCreated;
+use App\Events\TaskUpdated;
+use App\Events\TaskDeleted;
+use App\Events\TaskAssigneesChanged;
+use App\Events\TaskCompletionToggled;
+use App\Events\TaskArchiveToggled;
 use App\Notifications\TaskAssignedNotification;
 use App\Notifications\TaskDueDateChangedNotification;
 use Illuminate\Http\Request;
@@ -132,6 +138,10 @@ class TaskController extends Controller
                 $assignee->notify(new TaskAssignedNotification($task, $request->user()));
             }
         }
+        
+        // Broadcast task created event for real-time updates
+        $task->load(['list.board', 'assignees']);
+        broadcast(new TaskCreated($task, $request->user()))->toOthers();
         
         // Check if we need to show Google Calendar prompt and store in session
         if ($task->due_date) {
@@ -294,6 +304,10 @@ class TaskController extends Controller
             'paperWritingTask'
         ]);
 
+        // Broadcast task updated event for real-time updates
+        $task->load(['list.board', 'assignees']);
+        broadcast(new TaskUpdated($task, $request->user()))->toOthers();
+
         // Check if we need to show Google Calendar prompt for due date changes
         if ($dueDateChanged && $task->due_date && !$task->hasGoogleCalendarEvent()) {
             $calendarPromptData = $this->buildCalendarPromptData($task, $request->user());
@@ -314,11 +328,19 @@ class TaskController extends Controller
     /**
      * Remove the specified task.
      */
-    public function destroy(Task $task)
+    public function destroy(Request $request, Task $task)
     {
         $this->authorize('delete', $task);
         
+        // Store IDs before deletion for broadcasting
+        $boardId = $task->list->board_id;
+        $listId = $task->list_id;
+        $taskId = $task->id;
+        
         $task->delete();
+        
+        // Broadcast task deleted event for real-time updates
+        broadcast(new TaskDeleted($taskId, $listId, $boardId, $request->user()))->toOthers();
         
         return Redirect::back()->with('success', 'Task deleted successfully.');
     }
@@ -445,6 +467,10 @@ class TaskController extends Controller
         // Load the assignees for the response
         $task->load('assignees');
         
+        // Broadcast task assignees changed event for real-time updates
+        $task->load('list.board');
+        broadcast(new TaskAssigneesChanged($task, $request->user()))->toOthers();
+        
         return Redirect::back()->with('success', 'Users assigned successfully.');
     }
 
@@ -457,7 +483,12 @@ class TaskController extends Controller
         $this->authorize('update', $task);
 
         $task->completed_at = $task->completed_at ? null : now();
+        $task->is_completed = (bool) $task->completed_at;
         $task->save();
+
+        // Broadcast task completion toggled event for real-time updates
+        $task->load('list.board');
+        broadcast(new TaskCompletionToggled($task, $request->user()))->toOthers();
 
         return Redirect::back()->with('success', $task->completed_at ? 'Task marked as completed.' : 'Task marked as incomplete.');
     }
@@ -465,7 +496,7 @@ class TaskController extends Controller
     /**
      * Toggle archive status of a task.
      */
-    public function toggleArchive(Task $task)
+    public function toggleArchive(Request $request, Task $task)
     {
         $this->authorize('update', $task);
 
@@ -475,7 +506,12 @@ class TaskController extends Controller
         }
 
         $task->archived_at = $task->archived_at ? null : now();
+        $task->is_archived = (bool) $task->archived_at;
         $task->save();
+
+        // Broadcast task archive toggled event for real-time updates
+        $task->load('list.board');
+        broadcast(new TaskArchiveToggled($task, $request->user()))->toOthers();
 
         $message = $task->archived_at ? 'Task archived successfully.' : 'Task restored successfully.';
         return Redirect::back()->with('success', $message);

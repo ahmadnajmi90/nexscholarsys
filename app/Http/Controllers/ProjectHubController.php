@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Project;
+use App\Events\ProjectCreated;
+use App\Events\ProjectUpdated;
+use App\Events\ProjectDeleted;
 
 class ProjectHubController extends Controller
 {
@@ -654,6 +657,9 @@ class ProjectHubController extends Controller
             'order' => 3,
         ]);
         
+        // Broadcast project created event for real-time updates
+        broadcast(new ProjectCreated($project, $request->user()))->toOthers();
+        
         return redirect()->route('project-hub.index')->with('success', 'Project created successfully.');
     }
 
@@ -674,8 +680,8 @@ class ProjectHubController extends Controller
         // Update the project
         $scholar_project->update($validated);
 
-        // Optionally, you can broadcast an event for real-time updates
-        // broadcast(new ProjectUpdated($scholar_project, $request->user()))->toOthers();
+        // Broadcast project updated event for real-time updates
+        broadcast(new ProjectUpdated($scholar_project, $request->user()))->toOthers();
 
         // Return JSON response for AJAX calls (Inertia)
         if ($request->wantsJson()) {
@@ -799,13 +805,20 @@ class ProjectHubController extends Controller
     /**
      * Remove the specified project from storage.
      */
-    public function destroyProject(\App\Models\Project $scholar_project)
+    public function destroyProject(Request $request, \App\Models\Project $scholar_project)
     {
         // Authorize that the user can delete this project
         $this->authorize('delete', $scholar_project);
         
+        // Store project details before deletion for broadcasting
+        $projectId = $scholar_project->id;
+        $projectName = $scholar_project->name;
+        
         // Delete the project
         $scholar_project->delete();
+        
+        // Broadcast project deleted event for real-time updates
+        broadcast(new ProjectDeleted($projectId, $projectName, $request->user()))->toOthers();
         
         return redirect()->route('project-hub.index')->with('success', 'Project deleted successfully.');
     }

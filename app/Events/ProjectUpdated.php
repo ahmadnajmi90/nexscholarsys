@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\Task;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -12,19 +12,19 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TaskMoved implements ShouldBroadcast
+class ProjectUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
-     * The task that was moved.
+     * The project that was updated.
      *
-     * @var \App\Models\Task
+     * @var \App\Models\Project
      */
-    public $task;
+    public $project;
 
     /**
-     * The user who moved the task.
+     * The user who updated the project.
      *
      * @var \App\Models\User
      */
@@ -33,20 +33,14 @@ class TaskMoved implements ShouldBroadcast
     /**
      * Create a new event instance.
      *
-     * @param  \App\Models\Task  $task
+     * @param  \App\Models\Project  $project
      * @param  \App\Models\User  $user
      * @return void
      */
-    public function __construct(Task $task, User $user)
+    public function __construct(Project $project, User $user)
     {
-        $this->task = $task;
+        $this->project = $project;
         $this->user = $user;
-        
-        // Make sure we have the board relationship loaded
-        // This is needed for the broadcastOn method
-        if (!$this->task->relationLoaded('list') || !$this->task->list->relationLoaded('board')) {
-            $this->task->load('list.board');
-        }
     }
 
     /**
@@ -56,7 +50,7 @@ class TaskMoved implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('boards.' . $this->task->list->board_id);
+        return new PrivateChannel('projects.' . $this->project->id);
     }
 
     /**
@@ -66,7 +60,7 @@ class TaskMoved implements ShouldBroadcast
      */
     public function broadcastAs()
     {
-        return 'task.moved';
+        return 'project.updated';
     }
 
     /**
@@ -77,21 +71,18 @@ class TaskMoved implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'task' => [
-                'id' => $this->task->id,
-                'title' => $this->task->title,
-                'description' => $this->task->description,
-                'order' => $this->task->order,
-                'due_date' => $this->task->due_date,
-                'priority' => $this->task->priority,
-                'list_id' => $this->task->board_list_id, // Fixed: use board_list_id
+            'project' => [
+                'id' => $this->project->id,
+                'name' => $this->project->name,
+                'description' => $this->project->description,
             ],
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ],
-            // Include timestamp to help with update conflicts
             'timestamp' => now()->toIso8601String(),
         ];
     }
 }
+
+
