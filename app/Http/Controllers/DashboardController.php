@@ -155,7 +155,20 @@ class DashboardController extends Controller
             return Inertia::render('Dashboard', [
                 'postGrants' => $postGrants,
                 'totalUsers' => User::where('id', '!=', Auth::id())->count(), // Except admin itself
-                'events' => PostEvent::where('start_date', '>=', now())->orderBy('start_date', 'asc')->get(),
+                'events' => PostEvent::orderByRaw('
+                    CASE 
+                        WHEN registration_deadline >= CURDATE() THEN 0 
+                        ELSE 1 
+                    END,
+                    CASE 
+                        WHEN registration_deadline >= CURDATE() THEN registration_deadline 
+                        ELSE NULL 
+                    END ASC,
+                    CASE 
+                        WHEN registration_deadline < CURDATE() THEN registration_deadline 
+                        ELSE NULL 
+                    END DESC
+                ')->get(),
                 'posts' => CreatePost::orderBy('created_at', 'desc')->get(),
                 'projects' => PostProject::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),
                 'grants' => PostGrant::where('application_deadline', '>=', now())->orderBy('application_deadline', 'asc')->get(),

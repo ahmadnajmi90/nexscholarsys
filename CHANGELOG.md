@@ -6,6 +6,14 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ## [October 30, 2025]
 
+### Improved Dashboard Event Sorting & Pagination
+Enhanced "Upcoming Academic Events" to prioritize events by registration deadline with smart pagination.
+- **Smart sorting**: Open events (deadline not passed) appear first, sorted by closest deadline
+- **Closed events last**: Events past their deadline appear at the bottom, sorted by most recent first
+- **Better UX**: Users immediately see events they can still register for at the top
+- **Intelligent pagination**: Replaced "show all pages" with smart pagination (1, 2, 3, ... 23) using Shadcn UI components
+- Changed from start_date sorting to registration_deadline sorting
+
 ### Auto-redirect Unauthenticated Users to Welcome Pages
 Implemented automatic redirection for guests viewing content directly.
 - Created `RedirectGuestsToWelcome` middleware to detect unauthenticated users
