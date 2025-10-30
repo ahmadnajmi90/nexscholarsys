@@ -8,7 +8,11 @@ use App\Models\Board;
 use App\Models\Workspace;
 use App\Models\Project;
 use App\Notifications\BoardDeletedNotification;
+use App\Events\BoardCreated;
 use App\Events\BoardUpdated;
+use App\Events\BoardDeleted;
+use App\Events\BoardMemberAdded;
+use App\Events\BoardMemberRemoved;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -42,6 +46,9 @@ class BoardController extends Controller
             $workspace->owner_id
         ]);
         
+        // Broadcast board created event for real-time updates
+        broadcast(new BoardCreated($board, 'workspace', $workspace->id, $request->user()))->toOthers();
+        
         return Redirect::back()->with('success', 'Board created successfully.');
     }
     
@@ -74,6 +81,9 @@ class BoardController extends Controller
             Auth::id(),
             $project->owner_id
         ]);
+        
+        // Broadcast board created event for real-time updates
+        broadcast(new BoardCreated($board, 'project', $project->id, $request->user()))->toOthers();
         
         return Redirect::back()->with('success', 'Board created successfully.');
     }
@@ -243,8 +253,14 @@ class BoardController extends Controller
             ->where('users.id', '!=', $deletedByUser->id)
             ->get();
         
+        // Store board ID before deletion for broadcasting
+        $boardId = $board->id;
+        
         // Delete the board
         $board->delete();
+        
+        // Broadcast board deleted event for real-time updates
+        broadcast(new BoardDeleted($boardId, $boardName, $parentType, $parentId, $deletedByUser))->toOthers();
         
         // Notify members about the deletion
         foreach ($membersToNotify as $member) {
@@ -284,8 +300,28 @@ class BoardController extends Controller
             array_merge($validated['user_ids'], [$boardable->owner_id])
         );
 
-        // sync() is perfect: it adds new users, removes unchecked ones, and leaves existing ones.
-        $board->members()->sync($userIds);
+        // sync() returns array with 'attached', 'detached', 'updated' keys
+        $changes = $board->members()->sync($userIds);
+
+        // Broadcast events for added members
+        if (!empty($changes['attached'])) {
+            foreach ($changes['attached'] as $userId) {
+                $member = \App\Models\User::find($userId);
+                if ($member) {
+                    broadcast(new BoardMemberAdded($board, $member, $request->user()))->toOthers();
+                }
+            }
+        }
+
+        // Broadcast events for removed members
+        if (!empty($changes['detached'])) {
+            foreach ($changes['detached'] as $userId) {
+                $member = \App\Models\User::find($userId);
+                if ($member) {
+                    broadcast(new BoardMemberRemoved($board, $member, $request->user()))->toOthers();
+                }
+            }
+        }
 
         return Redirect::back()->with('success', 'Board access updated successfully.');
     }

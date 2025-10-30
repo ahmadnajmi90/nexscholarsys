@@ -7,6 +7,9 @@ use App\Http\Resources\BoardListResource;
 use App\Models\Board;
 use App\Models\BoardList;
 use App\Events\BoardListUpdated;
+use App\Events\BoardListCreated;
+use App\Events\BoardListDeleted;
+use App\Events\BoardListReordered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -35,6 +38,10 @@ class BoardListController extends Controller
             'name' => $validated['name'],
             'order' => $order,
         ]);
+        
+        // Broadcast board list created event for real-time updates
+        $boardList->load('board');
+        broadcast(new BoardListCreated($boardList, $request->user()))->toOthers();
         
         return Redirect::back()->with('success', 'List created successfully.');
     }
@@ -74,11 +81,18 @@ class BoardListController extends Controller
     /**
      * Remove the specified board list.
      */
-    public function destroy(BoardList $boardList)
+    public function destroy(Request $request, BoardList $boardList)
     {
         $this->authorize('delete', $boardList);
         
+        // Store IDs before deletion for broadcasting
+        $boardId = $boardList->board_id;
+        $listId = $boardList->id;
+        
         $boardList->delete();
+        
+        // Broadcast board list deleted event for real-time updates
+        broadcast(new BoardListDeleted($listId, $boardId, $request->user()))->toOthers();
         
         return Redirect::back()->with('success', 'List deleted successfully.');
     }
@@ -109,6 +123,10 @@ class BoardListController extends Controller
             }
             
             DB::commit();
+            
+            // Broadcast board list reordered event for real-time updates
+            $firstList = BoardList::find($validated['lists'][0]['id']);
+            broadcast(new BoardListReordered($validated['lists'], $firstList->board_id, $request->user()))->toOthers();
             
             return Redirect::back()->with('success', 'List order updated successfully');
         } catch (\Exception $e) {

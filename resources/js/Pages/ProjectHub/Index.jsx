@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import CreateWorkspaceModal from '@/Components/ProjectHub/CreateWorkspaceModal';
@@ -42,6 +42,153 @@ export default function Index({ workspaceGroups = [], ungroupedWorkspaces = [], 
     
     // Check if the user is an academician (can create projects)
     const canCreateProject = auth.user.academician !== null;
+
+    // Set up real-time listeners for all user's workspaces
+    useEffect(() => {
+        if (!window.Echo) return;
+
+        const channels = [];
+
+        // Subscribe to all workspace channels in groups
+        workspaceGroupsArray.forEach(group => {
+            const groupWorkspaces = Array.isArray(group.workspaces) ? group.workspaces : group.workspaces?.data || [];
+            groupWorkspaces.forEach(workspace => {
+                const channel = window.Echo.private(`workspaces.${workspace.id}`);
+                channels.push({ id: workspace.id, type: 'workspace', channel });
+
+                channel.listen('.workspace.updated', () => {
+                    console.log('Workspace updated, reloading...');
+                    router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+                });
+
+                channel.listen('.workspace.deleted', () => {
+                    console.log('Workspace deleted, reloading...');
+                    router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+                });
+
+                channel.listen('.workspace.member.added', () => {
+                    router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+                });
+
+                channel.listen('.workspace.member.removed', () => {
+                    router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+                });
+
+                channel.listen('.board.created', () => {
+                    router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+                });
+
+                channel.listen('.board.deleted', () => {
+                    router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+                });
+            });
+        });
+
+        // Subscribe to ungrouped workspace channels
+        ungroupedWorkspacesArray.forEach(workspace => {
+            const channel = window.Echo.private(`workspaces.${workspace.id}`);
+            channels.push({ id: workspace.id, type: 'workspace', channel });
+
+            channel.listen('.workspace.updated', () => {
+                router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+            });
+
+            channel.listen('.workspace.deleted', () => {
+                router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+            });
+
+            channel.listen('.workspace.member.added', () => {
+                router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+            });
+
+            channel.listen('.workspace.member.removed', () => {
+                router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+            });
+
+            channel.listen('.board.created', () => {
+                router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+            });
+
+            channel.listen('.board.deleted', () => {
+                router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+            });
+        });
+
+        // Subscribe to all project channels
+        projectsArray.forEach(project => {
+            const channel = window.Echo.private(`projects.${project.id}`);
+            channels.push({ id: project.id, type: 'project', channel });
+
+            channel.listen('.project.updated', () => {
+                router.reload({ only: ['projects'] });
+            });
+
+            channel.listen('.project.deleted', () => {
+                router.reload({ only: ['projects'] });
+            });
+
+            channel.listen('.project.member.added', () => {
+                router.reload({ only: ['projects'] });
+            });
+
+            channel.listen('.project.member.removed', () => {
+                router.reload({ only: ['projects'] });
+            });
+
+            channel.listen('.board.created', () => {
+                router.reload({ only: ['projects'] });
+            });
+
+            channel.listen('.board.deleted', () => {
+                router.reload({ only: ['projects'] });
+            });
+        });
+
+        // Cleanup function
+        return () => {
+            channels.forEach(({ id, type }) => {
+                console.log(`Unsubscribing from ${type}.${id}`);
+                window.Echo.leave(`${type}s.${id}`);
+            });
+        };
+    }, [workspaceGroupsArray.length, ungroupedWorkspacesArray.length, projectsArray.length]);
+
+    // Set up personal channel listener for invitations
+    useEffect(() => {
+        if (!window.Echo || !auth.user.id) return;
+
+        const channel = window.Echo.private(`App.Models.User.${auth.user.id}`);
+
+        // Listen for workspace/project/board invitations
+        channel.listen('.workspace.member.added', (event) => {
+            console.log('You were added to a workspace:', event);
+            const workspaceName = event.workspace?.name || 'a workspace';
+            toast.success(`You were added to ${workspaceName}`);
+            router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
+        });
+
+        channel.listen('.project.member.added', (event) => {
+            console.log('You were added to a project:', event);
+            const projectName = event.project?.name || 'a project';
+            toast.success(`You were added to ${projectName}`);
+            router.reload({ only: ['projects'] });
+        });
+
+        channel.listen('.board.member.added', (event) => {
+            console.log('You were added to a board:', event);
+            const boardName = event.board?.name || 'a board';
+            const parentName = event.parent?.name || '';
+            toast.success(`You were added to board "${boardName}"${parentName ? ` in ${parentName}` : ''}`);
+            router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces', 'projects'] });
+        });
+
+        return () => {
+            channel.stopListening('.workspace.member.added');
+            channel.stopListening('.project.member.added');
+            channel.stopListening('.board.member.added');
+            window.Echo.leave(`App.Models.User.${auth.user.id}`);
+        };
+    }, [auth.user.id]);
 
     const handleDeleteWorkspace = (e, workspace) => {
         e.preventDefault();

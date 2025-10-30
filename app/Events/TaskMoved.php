@@ -84,7 +84,7 @@ class TaskMoved implements ShouldBroadcast
                 'order' => $this->task->order,
                 'due_date' => $this->task->due_date,
                 'priority' => $this->task->priority,
-                'list_id' => $this->task->list_id,
+                'list_id' => $this->task->board_list_id, // Fixed: use board_list_id
             ],
             'user' => [
                 'id' => $this->user->id,

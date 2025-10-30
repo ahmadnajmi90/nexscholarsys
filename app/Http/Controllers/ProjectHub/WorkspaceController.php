@@ -12,7 +12,11 @@ use App\Notifications\WorkspaceInvitationReceived;
 use App\Notifications\WorkspaceDeletedNotification;
 use App\Notifications\RoleChangedNotification;
 use App\Notifications\RemovedFromWorkspaceNotification;
+use App\Events\WorkspaceCreated;
 use App\Events\WorkspaceUpdated;
+use App\Events\WorkspaceDeleted;
+use App\Events\WorkspaceMemberAdded;
+use App\Events\WorkspaceMemberRemoved;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +72,9 @@ class WorkspaceController extends Controller
         
         // Load the owner relationship for the resource
         $workspace->load('owner');
+        
+        // Broadcast workspace created event for real-time updates
+        broadcast(new WorkspaceCreated($workspace, $request->user()))->toOthers();
         
         return Redirect::route('project-hub.index')
             ->with('success', 'Workspace created successfully.');
@@ -207,8 +214,14 @@ class WorkspaceController extends Controller
             ->where('users.id', '!=', $deletedByUser->id)
             ->get();
         
+        // Store workspace ID before deletion for broadcasting
+        $workspaceId = $workspace->id;
+        
         // Delete the workspace
         $workspace->delete();
+        
+        // Broadcast workspace deleted event for real-time updates
+        broadcast(new WorkspaceDeleted($workspaceId, $workspaceName, $deletedByUser))->toOthers();
         
         // Notify members about the deletion
         foreach ($membersToNotify as $member) {
@@ -254,6 +267,9 @@ class WorkspaceController extends Controller
         // 5. Reload the workspace with all members and their profile data
         $workspace->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
         
+        // Broadcast workspace member added event for real-time updates
+        broadcast(new WorkspaceMemberAdded($workspace, $invitedUser, $validated['role'], $request->user()))->toOthers();
+        
         return Redirect::back()->with('success', 'Member added successfully.');
     }
 
@@ -274,6 +290,9 @@ class WorkspaceController extends Controller
         
         // Remove the member
         $workspace->members()->detach($member->id);
+        
+        // Broadcast workspace member removed event for real-time updates
+        broadcast(new WorkspaceMemberRemoved($workspace, $member, $request->user()))->toOthers();
         
         // Notify the member about being removed
         $member->notify(new \App\Notifications\RemovedFromWorkspaceNotification(

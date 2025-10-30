@@ -173,43 +173,105 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
         // Subscribe to the private channel for this board
         const channel = window.Echo.private(`boards.${boardState.id}`);
 
-        // Listen for task.moved events
-        channel.listen('.task.moved', (event) => {
-            console.log('Received task.moved event:', event);
-
-            // Extract task data from the event
-            const { task, user, timestamp } = event;
-
-            // Set the recently updated task for animation purposes
-            setRecentlyUpdatedTaskId(task.id);
-
-            // Clear the animation highlight after 2 seconds
-            setTimeout(() => {
-                setRecentlyUpdatedTaskId(null);
-            }, 2000);
-
-            // Update our local board state to reflect the change
-            updateBoardStateFromEvent(task);
+        // TASK EVENTS
+        channel.listen('.task.created', (event) => {
+            console.log('task.created:', event);
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list => 
+                    list.id === event.task.list_id
+                        ? { ...list, tasks: [...list.tasks, event.task] }
+                        : list
+                );
+                return { ...prev, lists: newLists };
+            });
         });
 
-        // Listen for board.updated events
-        channel.listen('.board.updated', (event) => {
-            console.log('Received board.updated event:', event);
-
-            // Update the board name in the local state if it's different
-            if (event.board.name !== boardState.name) {
-                setBoardState(prev => ({
-                    ...prev,
-                    name: event.board.name
+        channel.listen('.task.updated', (event) => {
+            console.log('task.updated:', event);
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list => ({
+                    ...list,
+                    tasks: list.tasks.map(task =>
+                        task.id === event.task.id ? { ...task, ...event.task } : task
+                    )
                 }));
-            }
+                return { ...prev, lists: newLists };
+            });
         });
 
-        // Listen for board-list.updated events
-        channel.listen('.board-list.updated', (event) => {
-            console.log('Received board-list.updated event:', event);
+        channel.listen('.task.deleted', (event) => {
+            console.log('task.deleted:', event);
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list => 
+                    list.id === event.list_id
+                        ? { ...list, tasks: list.tasks.filter(task => task.id !== event.task_id) }
+                        : list
+                );
+                return { ...prev, lists: newLists };
+            });
+        });
 
-            // Update the list name in the local state if it's different
+        channel.listen('.task.moved', (event) => {
+            console.log('task.moved:', event);
+            setRecentlyUpdatedTaskId(event.task.id);
+            setTimeout(() => setRecentlyUpdatedTaskId(null), 2000);
+            updateBoardStateFromEvent(event.task);
+        });
+
+        channel.listen('.task.assignees.changed', (event) => {
+            console.log('task.assignees.changed:', event);
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list => ({
+                    ...list,
+                    tasks: list.tasks.map(task =>
+                        task.id === event.task_id
+                            ? { ...task, assignees: event.assignees }
+                            : task
+                    )
+                }));
+                return { ...prev, lists: newLists };
+            });
+        });
+
+        channel.listen('.task.completion.toggled', (event) => {
+            console.log('task.completion.toggled:', event);
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list => ({
+                    ...list,
+                    tasks: list.tasks.map(task =>
+                        task.id === event.task_id
+                            ? { ...task, is_completed: event.is_completed }
+                            : task
+                    )
+                }));
+                return { ...prev, lists: newLists };
+            });
+        });
+
+        channel.listen('.task.archive.toggled', (event) => {
+            console.log('task.archive.toggled:', event);
+            setBoardState(prev => {
+                const newLists = prev.lists.map(list => ({
+                    ...list,
+                    tasks: event.is_archived
+                        ? list.tasks.filter(task => task.id !== event.task_id)
+                        : list.tasks
+                }));
+                return { ...prev, lists: newLists };
+            });
+        });
+
+        // BOARD LIST EVENTS
+        channel.listen('.board-list.created', (event) => {
+            console.log('board-list.created:', event);
+            setBoardState(prev => ({
+                ...prev,
+                lists: [...prev.lists, { ...event.board_list, tasks: [] }]
+            }));
+        });
+
+        channel.listen('.board-list.updated', (event) => {
+            console.log('board-list.updated:', event);
             setBoardState(prev => {
                 const newLists = prev.lists.map(list =>
                     list.id === event.board_list.id
@@ -220,12 +282,49 @@ export default function Show({ initialBoardData, researchOptions = [] }) {
             });
         });
 
+        channel.listen('.board-list.deleted', (event) => {
+            console.log('board-list.deleted:', event);
+            setBoardState(prev => ({
+                ...prev,
+                lists: prev.lists.filter(list => list.id !== event.list_id)
+            }));
+        });
+
+        channel.listen('.board-list.reordered', (event) => {
+            console.log('board-list.reordered:', event);
+            setBoardState(prev => {
+                const newLists = [...prev.lists].sort((a, b) => {
+                    const aOrder = event.lists.find(l => l.id === a.id)?.order || 0;
+                    const bOrder = event.lists.find(l => l.id === b.id)?.order || 0;
+                    return aOrder - bOrder;
+                });
+                return { ...prev, lists: newLists };
+            });
+        });
+
+        // BOARD EVENTS
+        channel.listen('.board.updated', (event) => {
+            console.log('board.updated:', event);
+            if (event.board.name !== boardState.name) {
+                setBoardState(prev => ({ ...prev, name: event.board.name }));
+            }
+        });
+
         // Clean up the listener when the component unmounts or the board changes
         return () => {
             console.log(`Unsubscribing from board channel: boards.${boardState.id}`);
+            channel.stopListening('.task.created');
+            channel.stopListening('.task.updated');
+            channel.stopListening('.task.deleted');
             channel.stopListening('.task.moved');
+            channel.stopListening('.task.assignees.changed');
+            channel.stopListening('.task.completion.toggled');
+            channel.stopListening('.task.archive.toggled');
             channel.stopListening('.board.updated');
+            channel.stopListening('.board-list.created');
             channel.stopListening('.board-list.updated');
+            channel.stopListening('.board-list.deleted');
+            channel.stopListening('.board-list.reordered');
             window.Echo.leave(`boards.${boardState.id}`);
         };
     }, [boardState?.id]); // Only re-run if the board ID changes

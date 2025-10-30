@@ -4,6 +4,15 @@ import { Link } from '@inertiajs/react';
 import ReactCountryFlag from 'react-country-flag';
 import country from 'country-js';
 import useIsDesktop from '@/Hooks/useIsDesktop';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 // Helper function to get country code from country name
 const getCountryCode = (countryName) => {
@@ -365,6 +374,46 @@ const UpcomingEvents = ({
     ? upcomingEvents
     : upcomingEvents.filter(event => event.type === activeFilter);
 
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
+  // Smart page number generation
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (eventsPage > 3) {
+        pages.push('ellipsis-start');
+      }
+      
+      // Show pages around current page
+      const start = Math.max(2, eventsPage - 1);
+      const end = Math.min(totalPages - 1, eventsPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (eventsPage < totalPages - 2) {
+        pages.push('ellipsis-end');
+      }
+      
+      // Always show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   // If no events are provided, use an empty array to prevent errors
   if (upcomingEvents.length === 0) {
     return (
@@ -510,53 +559,52 @@ const UpcomingEvents = ({
       {/* Enhanced Table Pagination */}
       <div className="px-4 md:px-6 py-4 md:py-5 border-t border-gray-200 bg-gray-50">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="text-sm text-gray-600 text-center md:text-left">
+          <div className="text-sm text-gray-600">
             Showing {((eventsPage - 1) * eventsPerPage) + 1}-{Math.min(eventsPage * eventsPerPage, filteredEvents.length)} of {filteredEvents.length} events
           </div>
           
-          <div className="flex items-center justify-center md:justify-end space-x-2 md:space-x-4">
-          <button
-            onClick={handleEventsPrevPage}
-            disabled={eventsPage === 1}
-            className={`flex items-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-              eventsPage === 1
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-gray-600 hover:text-indigo-600 hover:bg-white shadow-sm'
-            }`}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden md:inline">Prev</span>
-          </button>
-          
-          <div className="flex space-x-1 md:space-x-2">
-            {Array.from({ length: Math.ceil(filteredEvents.length / eventsPerPage) }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setEventsPage(page)}
-                className={`w-8 h-8 md:w-10 md:h-10 rounded-xl font-medium transition-all duration-200 text-sm ${
-                  eventsPage === page
-                    ? 'bg-indigo-600 text-white shadow-md' 
-                    : 'text-gray-600 hover:text-indigo-600 hover:bg-white shadow-sm'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-          
-          <button
-            onClick={handleEventsNextPage}
-            disabled={eventsPage >= Math.ceil(filteredEvents.length / eventsPerPage)}
-            className={`flex items-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-              eventsPage >= Math.ceil(filteredEvents.length / eventsPerPage)
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-white bg-indigo-600 hover:bg-indigo-700 shadow-md'
-            }`}
-          >
-            <span className="hidden md:inline">Next</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          </div>
+          <Pagination className="mx-0 w-auto justify-end">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (eventsPage > 1) handleEventsPrevPage();
+                  }}
+                  className={eventsPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {generatePageNumbers().map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === 'ellipsis-start' || page === 'ellipsis-end' ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setEventsPage(page);
+                      }}
+                      isActive={eventsPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (eventsPage < totalPages) handleEventsNextPage();
+                  }}
+                  className={eventsPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </div>
     </div>

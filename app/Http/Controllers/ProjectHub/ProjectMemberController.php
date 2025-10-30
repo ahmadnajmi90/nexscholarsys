@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Notifications\ProjectInvitationReceived;
 use App\Notifications\RoleChangedNotification;
 use App\Notifications\RemovedFromWorkspaceNotification;
+use App\Events\ProjectMemberAdded;
+use App\Events\ProjectMemberRemoved;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\User;
@@ -51,6 +53,9 @@ class ProjectMemberController extends Controller
         // Reload the project with all members and their profile data
         $project->load(['members.academician', 'members.postgraduate', 'members.undergraduate']);
         
+        // Broadcast project member added event for real-time updates
+        broadcast(new ProjectMemberAdded($project, $invitedUser, $validated['role'], $request->user()))->toOthers();
+        
         return Redirect::back()->with('success', 'Member added successfully');
     }
     
@@ -61,17 +66,20 @@ class ProjectMemberController extends Controller
      * @param  \App\Models\User  $member
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Project $project, User $member)
+    public function destroy(Request $request, Project $project, User $member)
     {
         $this->authorize('removeMember', [$project, $member]);
 
         // Correctly detach the member from the project
         $project->members()->detach($member->id);
+        
+        // Broadcast project member removed event for real-time updates
+        broadcast(new ProjectMemberRemoved($project, $member, $request->user()))->toOthers();
 
         $member->notify(new \App\Notifications\RemovedFromWorkspaceNotification(
             $project->name,
             'project', // parentType
-            auth()->user()->name
+            $request->user()->name
         ));
 
         return Redirect::back()->with('success', 'Member removed from project.');

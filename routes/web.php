@@ -242,7 +242,9 @@ Route::resource('projects', ShowProjectController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::get('projects/{project:url}', [ShowProjectController::class, 'show'])->name('projects.show');
+Route::get('projects/{project:url}', [ShowProjectController::class, 'show'])
+    ->name('projects.show')
+    ->middleware('redirect.guests.to.welcome');
 Route::post('projects/{url}/toggle-like', [ShowProjectController::class, 'toggleLike'])->name('projects.toggleLike');
 Route::post('projects/{url}/share', [ShowProjectController::class, 'share'])->name('projects.share');
 
@@ -250,23 +252,33 @@ Route::resource('events', ShowEventController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::get('events/{event}', [ShowEventController::class, 'show'])->name('events.show');
+Route::get('events/{event}', [ShowEventController::class, 'show'])
+    ->name('events.show')
+    ->middleware('redirect.guests.to.welcome');
 Route::post('events/{url}/toggle-like', [ShowEventController::class, 'toggleLike'])->name('events.toggleLike');
 Route::post('events/{url}/share', [ShowEventController::class, 'share'])->name('events.share');
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('posts', ShowPostController::class)->only(['index']);
-    Route::get('posts/{post}', [ShowPostController::class, 'show'])->name('posts.show');
     Route::post('posts/{url}/toggle-like', [ShowPostController::class, 'toggleLike'])->name('posts.toggleLike');
     Route::post('posts/{url}/share', [ShowPostController::class, 'share'])->name('posts.share');
 });
+
+// Posts show route - accessible to guests with auto-redirect to welcome
+Route::get('posts/{post}', [ShowPostController::class, 'show'])
+    ->name('posts.show')
+    ->middleware('redirect.guests.to.welcome');
 
 Route::resource('funding', ShowFundingController::class)
 ->only(['index'])
 ->middleware(['auth', 'verified']);
 
-Route::get('funding/grants/{url}', [ShowFundingController::class, 'show'])->name('funding.show.grant');
-Route::get('funding/scholarships/{url}', [ShowFundingController::class, 'show'])->name('funding.show.scholarship');
+Route::get('funding/grants/{url}', [ShowFundingController::class, 'show'])
+    ->name('funding.show.grant')
+    ->middleware('redirect.guests.to.welcome');
+Route::get('funding/scholarships/{url}', [ShowFundingController::class, 'show'])
+    ->name('funding.show.scholarship')
+    ->middleware('redirect.guests.to.welcome');
 Route::post('funding/grants/{url}/toggle-like', [ShowFundingController::class, 'toggleLike'])->name('funding.toggleLike.grant');
 Route::post('funding/scholarships/{url}/toggle-like', [ShowFundingController::class, 'toggleLike'])->name('funding.toggleLike.scholarship');
 Route::post('funding/grants/{url}/share', [ShowFundingController::class, 'share'])->name('funding.share.grant');
