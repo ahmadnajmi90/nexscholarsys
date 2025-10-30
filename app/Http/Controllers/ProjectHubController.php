@@ -10,6 +10,7 @@ use App\Models\Workspace;
 use App\Models\Board;
 use App\Models\Connection;
 use App\Models\FieldOfResearch;
+use App\Models\WorkspaceGroup;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -89,7 +90,47 @@ class ProjectHubController extends Controller
             $user->academician->total_publications = $user->academician->publications->count();
         }
         
-        // Fetch WORKSPACES with all necessary nested data
+        // Fetch WORKSPACE GROUPS with their workspaces
+        $workspaceGroups = WorkspaceGroup::where('user_id', $user->id)
+            ->orderBy('order')
+            ->get()
+            ->map(function($group) use ($user) {
+                $workspaces = Workspace::whereHas('members', function ($query) use ($user, $group) {
+                    $query->where('users.id', $user->id)
+                          ->where('workspace_members.workspace_group_id', $group->id);
+                })
+                ->with([
+                    'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
+                    'members' => function($query) {
+                        $query->withPivot('role');
+                    },
+                    'members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate'
+                ])
+                ->latest()
+                ->get();
+                
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'order' => $group->order,
+                    'workspaces' => WorkspaceResource::collection($workspaces)->resolve(),
+                ];
+            });
+        
+        // Fetch UNGROUPED WORKSPACES
+        $ungroupedWorkspaces = $user->workspaces()
+            ->wherePivot('workspace_group_id', null)
+            ->with([
+                'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
+                'members' => function($query) {
+                    $query->withPivot('role');
+                },
+                'members.academician.scholarProfile', 'members.postgraduate', 'members.undergraduate'
+            ])
+            ->latest()
+            ->get();
+        
+        // Fetch ALL WORKSPACES for legacy support
         $workspaces = $user->workspaces()
             ->with([
                 'owner.academician.scholarProfile', 'owner.postgraduate', 'owner.undergraduate',
@@ -179,7 +220,9 @@ class ProjectHubController extends Controller
         
         // Transform collections using API Resources
         return Inertia::render('ProjectHub/Index', [
-            'workspaces' => WorkspaceResource::collection($workspaces),
+            'workspaceGroups' => $workspaceGroups,
+            'ungroupedWorkspaces' => WorkspaceResource::collection($ungroupedWorkspaces),
+            'workspaces' => WorkspaceResource::collection($workspaces), // Keep for legacy support
             'projects' => ProjectResource::collection($projects),
             'linkableProjects' => $linkableProjects,
             'connections' => $connections,
