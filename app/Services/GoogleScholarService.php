@@ -39,70 +39,16 @@ class GoogleScholarService
 
     /**
      * Scrape Google Scholar profile for an academician
+     * Now uses enhanced scraper with pagination support
      *
      * @param Academician $academician
      * @return bool
      */
     public function scrapeProfile(Academician $academician)
     {
-        if (empty($academician->google_scholar)) {
-            $this->logScraping($academician, 'failure', 'Google Scholar URL not found');
-            return false;
-        }
-
-        // Check rate limiting
-        if ($this->shouldThrottle()) {
-            $this->logScraping($academician, 'failure', 'Rate limited by system');
-            return false;
-        }
-
-        try {
-            // Make the HTTP request
-            $response = $this->client->get($academician->google_scholar, [
-                'headers' => [
-                    'User-Agent' => $this->getRandomUserAgent(),
-                ],
-            ]);
-
-            $html = (string) $response->getBody();
-
-            // Check if we got a CAPTCHA
-            if (str_contains($html, 'id="captcha"') || str_contains($html, 'unusual traffic') || str_contains($html, "Sorry, we can't verify")) {
-                $this->logScraping($academician, 'failure', 'CAPTCHA detected or unusual traffic warning');
-                Cache::put('google_scholar_rate_limited', true, now()->addHours(6));
-                return false;
-            }
-
-            // Parse the HTML
-            $dom = new DOMDocument();
-            @$dom->loadHTML($html);
-            $xpath = new DOMXPath($dom);
-
-            // Extract profile data
-            $profileData = $this->extractProfileData($xpath);
-            
-            // Extract publication data
-            $publications = $this->extractPublications($xpath);
-
-            // Save data to database
-            $this->saveProfileData($academician, $profileData);
-            $this->savePublications($academician, $publications);
-
-            // Log successful scraping
-            $this->logScraping($academician, 'success', 'Profile scraped successfully');
-
-            return true;
-        } catch (RequestException $e) {
-            $message = $e->getMessage();
-            Log::error('Google Scholar scraping error: ' . $message);
-            $this->logScraping($academician, 'failure', 'HTTP Request Error: ' . $message);
-            return false;
-        } catch (Exception $e) {
-            $message = $e->getMessage();
-            Log::error('Google Scholar scraping error: ' . $message);
-            $this->logScraping($academician, 'failure', 'Error: ' . $message);
-            return false;
-        }
+        // Use the enhanced scraper service
+        $enhancedScraper = new EnhancedGoogleScholarService();
+        return $enhancedScraper->scrapeProfile($academician);
     }
 
     /**

@@ -3,6 +3,15 @@ import { Link } from "@inertiajs/react";
 import { FaArrowLeft, FaExternalLinkAlt, FaQuoteLeft, FaListAlt, FaChevronDown, FaChevronUp, FaSync } from "react-icons/fa";
 import axios from "axios";
 import BackButton from '@/Components/BackButton';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 const AcademicianPublicationsCard = ({ 
     academician, 
@@ -50,6 +59,43 @@ const AcademicianPublicationsCard = ({
       ...prev,
       [id]: !prev[id]
     }));
+  };
+  
+  // Generate pagination page numbers with ellipsis
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total is small
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('ellipsis-start');
+      }
+      
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis-end');
+      }
+      
+      // Always show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
   
   // Fetch Google Scholar status when in editing mode
@@ -371,37 +417,39 @@ const AcademicianPublicationsCard = ({
                   
                   {/* Pagination */}
                   {publications.length > itemsPerPage && (
-                    <div className="flex justify-center mt-8">
-                      <nav className="flex items-center" aria-label="Pagination">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                          className={`px-3 py-1 rounded-md mr-2 ${
-                            currentPage === 1
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          Previous
-                        </button>
+                    <Pagination className="mt-8">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
                         
-                        <span className="text-gray-700 mx-2">
-                          Page {currentPage} of {totalPages}
-                        </span>
+                        {generatePageNumbers().map((page, index) => (
+                          <PaginationItem key={`page-${page}-${index}`}>
+                            {typeof page === 'number' ? (
+                              <PaginationLink
+                                onClick={() => setCurrentPage(page)}
+                                isActive={currentPage === page}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            ) : (
+                              <PaginationEllipsis />
+                            )}
+                          </PaginationItem>
+                        ))}
                         
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
-                          className={`px-3 py-1 rounded-md ml-2 ${
-                            currentPage === totalPages
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                        >
-                          Next
-                        </button>
-                      </nav>
-                    </div>
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   )}
                 </div>
               )}
