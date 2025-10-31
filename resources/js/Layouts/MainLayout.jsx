@@ -17,7 +17,6 @@ import SupervisionTutorialModal from '../Components/SupervisionTutorialModal';
 import StickyBanner from '../Components/ui/StickyBanner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../Components/ui/tooltip';
 import BetaBadge from '../Components/BetaBadge';
-import FloatingCommunicationHub from '../Components/FloatingCommunicationHub';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../Components/ui/dialog';
 import { Button } from '../Components/ui/button';
 
@@ -339,15 +338,6 @@ const MainLayout = ({ children, title, TopMenuOpen }) => {
                 persistKey={bannerConfig.persistKey}
                 hideOnScroll={bannerConfig.hideOnScroll}
             />
-            
-            {/* Floating Communication Hub - Desktop Only, Shows when Header is Hidden */}
-            {isDesktop && !title && (
-                <FloatingCommunicationHub 
-                    auth={auth}
-                    getProfilePicture={getProfilePicture}
-                    showProfile={true}
-                />
-            )}
             
             {/* New Two-Part Sidebar System for Desktop */}
             {isDesktop && (

@@ -4,57 +4,42 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ---
 
-## [October 30, 2025]
+## [October 31, 2025]
+
+### Dashboard Communication Bubbles
+Replaced floating communication hub with inline bubbles on dashboard pages for cleaner UX.
+- **Inline communication bubbles** - Messaging, notification, and profile bubbles positioned next to "Welcome back" message on desktop
+- **All dashboard types** - Applied to Academician, Admin, and FacultyAdmin dashboards
+- **Mobile unchanged** - Mobile users continue to see existing top-right card communication hub
 
 ### NexLab Visual Enhancements
 Improved the visual layout and consistency of the workspace and project views.
-- **Workspace title alignment** - Fixed workspace card title to align properly with drag handle and delete button icons
-- **Responsive button layout** - New Workspace and New Group buttons now stack below "Your Workspaces" heading on mobile devices while remaining inline on desktop
-- **Standardized project cards** - Project cards now use the same clean, consistent design as workspace cards (white background, border, matching typography) without grouping/draggable features
-- **Consistent card styling** - Both workspace and project cards now share identical visual treatment for better UI cohesion
-- **Bottom info placement** - Moved owner and members count to the bottom of project cards with visual separator (border-top) and proper spacing for better visual hierarchy
+- **Workspace title alignment** - Fixed workspace card title alignment with drag handle and delete button icons
+- **Responsive button layout** - New Workspace and New Group buttons stack below "Your Workspaces" on mobile, inline on desktop
+- **Standardized project cards** - Project cards match workspace card design (white background, border, consistent typography)
+- **Bottom info placement** - Owner and members count moved to bottom of project cards with visual separator
 
-### Fixed NexLab Real-time Collaboration Issues
-Resolved 6 critical real-time synchronization issues affecting workspace and project collaboration.
-- **Fixed duplication bug** - Added X-Socket-ID header to all requests (axios and Inertia) so `.toOthers()` works correctly, eliminating duplicate tasks/lists appearing for creators
-- **Board rename sync** - Users viewing workspace/project list now see board name updates in real-time when others rename boards (added parent channel broadcast to BoardUpdated event)
-- **Member invitation sync** - Board member additions/removals now broadcast to parent workspace/project channels, updating all viewers instantly
-- **Member removal notification** - Users removed from a board receive immediate notification with automatic redirect to parent view
-- **Task reordering broadcast** - Created TasksReordered event to sync task position changes within same list across all users
-- **All events use `.toOthers()`** - Ensures event originator doesn't receive duplicate updates
-- **Removed all debug console logs** - Cleaned up console.log statements from real-time event listeners for production-ready code
+---
+
+## [October 30, 2025]
+
+### Complete NexLab Real-time Collaboration System
+Implemented comprehensive real-time updates for all NexLab operations using Pusher + Echo WebSocket broadcasting.
+- **Full real-time sync** - All task, board, list, and member operations sync instantly across all users without page refresh
+- **Critical fixes** - Fixed duplication bug with X-Socket-ID header, board rename sync, member invitation/removal notifications, and task reordering broadcast
+- **Multi-channel broadcasting** - Events broadcast to workspace/project/board channels and personal channels for instant notifications
 
 ### Improved Dashboard Event Sorting & Pagination
 Enhanced "Upcoming Academic Events" to prioritize events by registration deadline with smart pagination.
-- **Smart sorting**: Open events (deadline not passed) appear first, sorted by closest deadline
-- **Closed events last**: Events past their deadline appear at the bottom, sorted by most recent first
-- **Better UX**: Users immediately see events they can still register for at the top
-- **Intelligent pagination**: Replaced "show all pages" with smart pagination (1, 2, 3, ... 23) using Shadcn UI components
-- Changed from start_date sorting to registration_deadline sorting
+- **Smart sorting** - Open events (deadline not passed) appear first, sorted by closest deadline
+- **Closed events last** - Events past deadline appear at bottom, sorted by most recent first
+- **Intelligent pagination** - Replaced "show all pages" with smart pagination (1, 2, 3, ... 23) using Shadcn UI
 
 ### Auto-redirect Unauthenticated Users to Welcome Pages
 Implemented automatic redirection for guests viewing content directly.
 - Created `RedirectGuestsToWelcome` middleware to detect unauthenticated users
 - Applied to all public content: events, posts, projects, and funding pages
-- **How it works**: When unauthenticated users access direct URLs (e.g., `/events/icbem25`), they are automatically redirected to welcome routes (e.g., `/welcome/events/icbem25`)
-- Authenticated users continue to view content normally without redirection
-- Preserves query parameters during redirect
-- Solves the issue where users manually copy direct URLs and share them with guests
-
-### Complete NexLab Real-time Collaboration System
-Implemented comprehensive real-time updates for all NexLab operations using WebSocket broadcasting.
-- All task operations sync instantly (create, update, delete, move, assign, complete, archive)
-- Board list operations sync in real-time (create, rename, delete, reorder)
-- Board operations update live (create, rename, delete)
-- **Board member management** - added/removed board members update instantly for all users
-- Workspace and project changes broadcast to all members (create, update, delete)
-- Member additions/removals reflect immediately for workspaces, projects, and boards
-- **Workspace list page now receives real-time updates** - users viewing the workspace/project list see instant updates when others rename, create, or delete items
-- **Personal channel for invitations** - users instantly notified when added to workspaces/projects/boards with toast showing details
-- **Dual-channel broadcasting for invitations** - broadcasts to both workspace/project/board channel AND invited user's personal channel
-- **Workspace delete button** - owners can now delete workspaces directly from cards
-- Fixed task movement broadcasting (corrected list_id field mapping)
-- No page refresh needed for any collaboration action
+- Unauthenticated users accessing direct URLs are automatically redirected to welcome routes (e.g., `/events/icbem25` → `/welcome/events/icbem25`)
 
 ### Real-time Notification Updates
 Enhanced notification system to display new notifications instantly using WebSocket (Pusher + Echo).
@@ -65,10 +50,9 @@ Enhanced notification system to display new notifications instantly using WebSoc
 ### Workspace Grouping Feature with Drag & Drop
 Added personal workspace grouping to help users organize workspaces into collapsible categories.
 - Users can create custom groups to categorize workspaces (e.g., by course, semester, student groups)
-- **Unique group names per user** - each user can only have one group with a specific name
-- **Drag and drop** workspaces between groups or click the dropdown to assign to a group
+- **Unique group names per user** - Each user can only have one group with a specific name
+- **Drag and drop** workspaces between groups or use dropdown to assign to a group
 - Groups displayed as collapsible Shadcn UI sections with edit/delete functionality
-- Ungrouped workspaces always appear at the bottom
 
 ### Enhanced Google Scholar Scraping
 Enhanced scraper to scrape ALL publications using URL-based pagination with anti-detection techniques.
