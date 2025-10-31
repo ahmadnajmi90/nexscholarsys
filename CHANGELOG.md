@@ -6,6 +6,14 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ## [October 30, 2025]
 
+### NexLab Visual Enhancements
+Improved the visual layout and consistency of the workspace and project views.
+- **Workspace title alignment** - Fixed workspace card title to align properly with drag handle and delete button icons
+- **Responsive button layout** - New Workspace and New Group buttons now stack below "Your Workspaces" heading on mobile devices while remaining inline on desktop
+- **Standardized project cards** - Project cards now use the same clean, consistent design as workspace cards (white background, border, matching typography) without grouping/draggable features
+- **Consistent card styling** - Both workspace and project cards now share identical visual treatment for better UI cohesion
+- **Bottom info placement** - Moved owner and members count to the bottom of project cards with visual separator (border-top) and proper spacing for better visual hierarchy
+
 ### Fixed NexLab Real-time Collaboration Issues
 Resolved 6 critical real-time synchronization issues affecting workspace and project collaboration.
 - **Fixed duplication bug** - Added X-Socket-ID header to all requests (axios and Inertia) so `.toOthers()` works correctly, eliminating duplicate tasks/lists appearing for creators

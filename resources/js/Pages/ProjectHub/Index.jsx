@@ -6,7 +6,7 @@ import CreateProjectModal from '@/Components/ProjectHub/CreateProjectModal';
 import ManageCollaboratorsModal from '@/Components/ProjectHub/ManageCollaboratorsModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import PrimaryButton from '@/Components/PrimaryButton';
-import { Plus, Users, Calendar, Clock, Trash2, Briefcase, UserPlus, FolderPlus } from 'lucide-react';
+import { Plus, Users, Calendar, Clock, Trash2, Briefcase, UserPlus, FolderPlus, LayoutDashboard } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import toast from 'react-hot-toast';
 import WorkspaceGroupSection from '@/Components/ProjectHub/WorkspaceGroupSection';
@@ -294,19 +294,19 @@ export default function Index({ workspaceGroups = [], ungroupedWorkspaces = [], 
     };
 
     return (
-        <div className="space-y-8 lg:mt-2 mt-20">
+        <div className="space-y-8 lg:mt-2 mt-20 mb-8">
             {/* Workspaces Section */}
         <div className="space-y-6 lg:mx-0 mx-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pl-2">Your Workspaces</h2>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={() => setIsCreateGroupModalOpen(true)}>
-                            <FolderPlus className="w-4 h-4 mr-2" /> New Group
-                        </Button>
-                        <PrimaryButton onClick={() => setIsCreateWorkspaceModalOpen(true)}>
-                            <Plus className="w-4 h-4 mr-2" /> New Workspace
-                        </PrimaryButton>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => setIsCreateGroupModalOpen(true)}>
+                        <FolderPlus className="w-4 h-4 mr-2" /> New Group
+                    </Button>
+                    <PrimaryButton onClick={() => setIsCreateWorkspaceModalOpen(true)}>
+                        <LayoutDashboard className="w-4 h-4 mr-2" /> New Workspace
+                    </PrimaryButton>
+                </div>
             </div>
 
             {/* Show empty state only if no groups and no ungrouped workspaces */}
@@ -401,78 +401,47 @@ export default function Index({ workspaceGroups = [], ungroupedWorkspaces = [], 
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {projectsArray.map((project) => {
                             // Find the owner's specific profile
                             const ownerProfile = project.owner.academician || project.owner.postgraduate || project.owner.undergraduate;
                             // Use the profile's full_name if it exists, otherwise fall back to the base name
                             const ownerName = ownerProfile?.full_name || project.owner.name;
+                            const ownerDisplay = auth.user.id === project.owner_id ? 'You' : ownerName;
+                            
+                            // Check if current user is the owner
+                            const isOwner = auth.user.id === project.owner_id;
                             
                             return (
                                 <div 
                                     key={project.id}
-                                    className="relative bg-blue-50 shadow rounded-lg hover:shadow-md transition-shadow duration-200"
+                                    className="relative border rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow flex flex-col min-h-[140px]"
                                 >
-                                    <Link 
-                                        href={route('project-hub.projects.show', project.id)}
-                                        className="block p-5"
-                                    >
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate pr-24">{project.name}</h3>
-                                        {/* {project.description && (
-                                            <p 
-                                                className="text-gray-500 text-sm mb-3 line-clamp-2"
-                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(project.description) }}
-                                            />
-                                        )} */}
-                                        <div className="flex items-center text-sm text-gray-500 mt-3">
-                                            <div className="flex items-center mr-4 truncate">
-                                                <Users className="w-4 h-4 mr-1" />
-                                                <span>Owner: {auth.user.id === project.owner_id ? 'You' : ownerName}</span>
-                                            </div>
-                                            {/* {project.post_project_id && (
-                                                <div className="flex items-center mr-4">
-                                                    <Briefcase className="w-4 h-4 mr-1" />
-                                                    <span>Linked Project</span>
-                                                </div>
-                                            )} */}
-                                            <div className="flex items-center ml-auto">
-                                                <Clock className="w-4 h-4 mr-1" />
-                                                <span>{new Date(project.created_at).toLocaleDateString('en-GB')}</span>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                    
-                                    {/* Action buttons */}
-                                    <div className="absolute top-2 right-2 flex space-x-1">
-                                        {/* Manage Members button (only for project owner) */}
-                                        {/* {auth.user.id === project.owner_id && (
-                                            <button
-                                                onClick={(e) => handleManageCollaborators(e, project, 'project')}
-                                                className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-100 rounded-full"
-                                                title="Manage members"
-                                            >
-                                                <UserPlus className="w-4 h-4" />
-                                            </button>
-                                        )} */}
-                                        
-                                        {/* Owner badge */}
-                                        {auth.user.id === project.owner_id && (
-                                            <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full flex items-center">
-                                                <span className="mr-1">👑</span>
-                                                <span>Owner</span>
-                                            </div>
-                                        )}
-                                        
-                                        {/* Delete button */}
-                                        {auth.user.id === project.owner_id && (
+                                    {/* Delete Button (Owner Only) */}
+                                    {isOwner && (
                                         <button
                                             onClick={(e) => handleDeleteProject(e, project)}
-                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-blue-100 rounded-full"
+                                            className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors z-10"
                                             title="Delete project"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                        )}
+                                    )}
+                                    
+                                    {/* Main Card Content */}
+                                    <Link 
+                                        href={route('project-hub.projects.show', project.id)}
+                                        className="block pt-2 px-4 flex-grow"
+                                    >
+                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mt-1 pr-8">
+                                            {project.name}
+                                        </h3>
+                                    </Link>
+                                    
+                                    {/* Owner and Members Count - At Bottom */}
+                                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-4 pb-4 border-t pt-3 mt-auto">
+                                        <span>Owner: {ownerDisplay}</span>
+                                        <span>{project.members_count || 0} members</span>
                                     </div>
                                 </div>
                             );
