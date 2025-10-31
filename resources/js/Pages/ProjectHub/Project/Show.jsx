@@ -85,14 +85,11 @@ export default function Show({ project, connections }) {
     useEffect(() => {
         if (!project.data.id) return;
 
-        console.log(`Subscribing to project channel: projects.${project.data.id}`);
-
         // Subscribe to the private channel for this project
         const channel = window.Echo.private(`projects.${project.data.id}`);
 
         // Listen for project.updated events
         channel.listen('.project.updated', (event) => {
-            console.log('project.updated:', event);
             if (event.project.name !== project.data.name || 
                 event.project.description !== project.data.description) {
                 router.reload({ only: ['project'] });
@@ -101,48 +98,47 @@ export default function Show({ project, connections }) {
 
         // Listen for project.member.added events
         channel.listen('.project.member.added', (event) => {
-            console.log('project.member.added:', event);
             router.reload({ only: ['project'] });
         });
 
         // Listen for project.member.removed events
         channel.listen('.project.member.removed', (event) => {
-            console.log('project.member.removed:', event);
             router.reload({ only: ['project'] });
         });
 
         // Listen for board.created events
         channel.listen('.board.created', (event) => {
-            console.log('board.created:', event);
             router.reload({ only: ['project'] });
         });
 
         // Listen for board.deleted events
         channel.listen('.board.deleted', (event) => {
-            console.log('board.deleted:', event);
+            router.reload({ only: ['project'] });
+        });
+
+        // Listen for board.updated events (for renames)
+        channel.listen('.board.updated', (event) => {
             router.reload({ only: ['project'] });
         });
 
         // Listen for board.member.added events
         channel.listen('.board.member.added', (event) => {
-            console.log('board.member.added:', event);
             router.reload({ only: ['project'] });
         });
 
         // Listen for board.member.removed events
         channel.listen('.board.member.removed', (event) => {
-            console.log('board.member.removed:', event);
             router.reload({ only: ['project'] });
         });
 
         // Clean up the listener when the component unmounts or the project changes
         return () => {
-            console.log(`Unsubscribing from project channel: projects.${project.data.id}`);
             channel.stopListening('.project.updated');
             channel.stopListening('.project.member.added');
             channel.stopListening('.project.member.removed');
             channel.stopListening('.board.created');
             channel.stopListening('.board.deleted');
+            channel.stopListening('.board.updated');
             channel.stopListening('.board.member.added');
             channel.stopListening('.board.member.removed');
             window.Echo.leave(`projects.${project.data.id}`);

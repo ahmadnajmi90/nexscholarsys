@@ -147,7 +147,6 @@ export default function Index({ workspaceGroups = [], ungroupedWorkspaces = [], 
         // Cleanup function
         return () => {
             channels.forEach(({ id, type }) => {
-                console.log(`Unsubscribing from ${type}.${id}`);
                 window.Echo.leave(`${type}s.${id}`);
             });
         };
@@ -161,21 +160,18 @@ export default function Index({ workspaceGroups = [], ungroupedWorkspaces = [], 
 
         // Listen for workspace/project/board invitations
         channel.listen('.workspace.member.added', (event) => {
-            console.log('You were added to a workspace:', event);
             const workspaceName = event.workspace?.name || 'a workspace';
             toast.success(`You were added to ${workspaceName}`);
             router.reload({ only: ['workspaceGroups', 'ungroupedWorkspaces', 'workspaces'] });
         });
 
         channel.listen('.project.member.added', (event) => {
-            console.log('You were added to a project:', event);
             const projectName = event.project?.name || 'a project';
             toast.success(`You were added to ${projectName}`);
             router.reload({ only: ['projects'] });
         });
 
         channel.listen('.board.member.added', (event) => {
-            console.log('You were added to a board:', event);
             const boardName = event.board?.name || 'a board';
             const parentName = event.parent?.name || '';
             toast.success(`You were added to board "${boardName}"${parentName ? ` in ${parentName}` : ''}`);

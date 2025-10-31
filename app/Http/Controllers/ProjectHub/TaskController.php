@@ -17,6 +17,7 @@ use App\Events\TaskDeleted;
 use App\Events\TaskAssigneesChanged;
 use App\Events\TaskCompletionToggled;
 use App\Events\TaskArchiveToggled;
+use App\Events\TasksReordered;
 use App\Notifications\TaskAssignedNotification;
 use App\Notifications\TaskDueDateChangedNotification;
 use Illuminate\Http\Request;
@@ -404,6 +405,14 @@ class TaskController extends Controller
                     ->update(['order' => $index]);
             }
         });
+        
+        // Broadcast the reordering event
+        broadcast(new TasksReordered(
+            $validated['list_id'],
+            $list->board_id,
+            $validated['task_ids'],
+            $request->user()
+        ))->toOthers();
 
         return Redirect::back()->with('success', 'Task order updated.');
     }

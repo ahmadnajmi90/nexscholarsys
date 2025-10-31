@@ -6,6 +6,16 @@ All notable changes to the Nexscholar platform will be documented in this file.
 
 ## [October 30, 2025]
 
+### Fixed NexLab Real-time Collaboration Issues
+Resolved 6 critical real-time synchronization issues affecting workspace and project collaboration.
+- **Fixed duplication bug** - Added X-Socket-ID header to all requests (axios and Inertia) so `.toOthers()` works correctly, eliminating duplicate tasks/lists appearing for creators
+- **Board rename sync** - Users viewing workspace/project list now see board name updates in real-time when others rename boards (added parent channel broadcast to BoardUpdated event)
+- **Member invitation sync** - Board member additions/removals now broadcast to parent workspace/project channels, updating all viewers instantly
+- **Member removal notification** - Users removed from a board receive immediate notification with automatic redirect to parent view
+- **Task reordering broadcast** - Created TasksReordered event to sync task position changes within same list across all users
+- **All events use `.toOthers()`** - Ensures event originator doesn't receive duplicate updates
+- **Removed all debug console logs** - Cleaned up console.log statements from real-time event listeners for production-ready code
+
 ### Improved Dashboard Event Sorting & Pagination
 Enhanced "Upcoming Academic Events" to prioritize events by registration deadline with smart pagination.
 - **Smart sorting**: Open events (deadline not passed) appear first, sorted by closest deadline

@@ -1,7 +1,7 @@
 import '../css/app.css';
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
@@ -31,4 +31,12 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
+});
+
+// Configure Inertia to send Socket ID with all requests
+router.on('before', (event) => {
+    if (window.Echo?.socketId()) {
+        event.detail.visit.headers = event.detail.visit.headers || {};
+        event.detail.visit.headers['X-Socket-ID'] = window.Echo.socketId();
+    }
 });

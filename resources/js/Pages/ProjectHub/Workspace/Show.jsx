@@ -83,14 +83,11 @@ export default function Show({ workspace, connections }) {
     useEffect(() => {
         if (!workspace.data.id) return;
 
-        console.log(`Subscribing to workspace channel: workspaces.${workspace.data.id}`);
-
         // Subscribe to the private channel for this workspace
         const channel = window.Echo.private(`workspaces.${workspace.data.id}`);
 
         // Listen for workspace.updated events
         channel.listen('.workspace.updated', (event) => {
-            console.log('workspace.updated:', event);
             if (event.workspace.name !== workspace.data.name || 
                 event.workspace.description !== workspace.data.description) {
                 router.reload({ only: ['workspace'] });
@@ -99,48 +96,47 @@ export default function Show({ workspace, connections }) {
 
         // Listen for workspace.member.added events
         channel.listen('.workspace.member.added', (event) => {
-            console.log('workspace.member.added:', event);
             router.reload({ only: ['workspace'] });
         });
 
         // Listen for workspace.member.removed events
         channel.listen('.workspace.member.removed', (event) => {
-            console.log('workspace.member.removed:', event);
             router.reload({ only: ['workspace'] });
         });
 
         // Listen for board.created events
         channel.listen('.board.created', (event) => {
-            console.log('board.created:', event);
             router.reload({ only: ['workspace'] });
         });
 
         // Listen for board.deleted events
         channel.listen('.board.deleted', (event) => {
-            console.log('board.deleted:', event);
+            router.reload({ only: ['workspace'] });
+        });
+
+        // Listen for board.updated events (for renames)
+        channel.listen('.board.updated', (event) => {
             router.reload({ only: ['workspace'] });
         });
 
         // Listen for board.member.added events
         channel.listen('.board.member.added', (event) => {
-            console.log('board.member.added:', event);
             router.reload({ only: ['workspace'] });
         });
 
         // Listen for board.member.removed events
         channel.listen('.board.member.removed', (event) => {
-            console.log('board.member.removed:', event);
             router.reload({ only: ['workspace'] });
         });
 
         // Clean up the listener when the component unmounts or the workspace changes
         return () => {
-            console.log(`Unsubscribing from workspace channel: workspaces.${workspace.data.id}`);
             channel.stopListening('.workspace.updated');
             channel.stopListening('.workspace.member.added');
             channel.stopListening('.workspace.member.removed');
             channel.stopListening('.board.created');
             channel.stopListening('.board.deleted');
+            channel.stopListening('.board.updated');
             channel.stopListening('.board.member.added');
             channel.stopListening('.board.member.removed');
             window.Echo.leave(`workspaces.${workspace.data.id}`);
