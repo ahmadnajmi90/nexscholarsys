@@ -62,7 +62,18 @@ class BoardUpdated implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('boards.' . $this->board->id);
+        $channels = [
+            new PrivateChannel('boards.' . $this->board->id),
+        ];
+        
+        // Also broadcast to parent workspace/project channel
+        if ($this->board->boardable_type === 'App\Models\Workspace') {
+            $channels[] = new PrivateChannel('workspaces.' . $this->board->boardable_id);
+        } elseif ($this->board->boardable_type === 'App\Models\Project') {
+            $channels[] = new PrivateChannel('projects.' . $this->board->boardable_id);
+        }
+        
+        return $channels;
     }
 
     /**

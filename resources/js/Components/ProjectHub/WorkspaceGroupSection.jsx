@@ -186,16 +186,18 @@ function WorkspaceCard({ workspace, allGroups, currentGroupId }) {
             {/* Main Card Content */}
             <Link
                 href={route('project-hub.workspaces.show', workspace.id)}
-                className="block p-4 pl-10"
+                className="block pt-2 pb-3 px-4 pl-10"
             >
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mt-1">
                     {workspace.name}
                 </h3>
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    <span>Owner: {ownerDisplay}</span>
-                    <span>{workspace.members_count || 0} members</span>
-                </div>
             </Link>
+            
+            {/* Owner and Members Count */}
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-4 mb-3">
+                <span>Owner: {ownerDisplay}</span>
+                <span>{workspace.members_count || 0} members</span>
+            </div>
             
             {/* Assign to Group Dropdown */}
             <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>

@@ -161,3 +161,13 @@ window.axios.interceptors.response.use(
  */
 
 import './echo';
+
+// Add Socket ID to all axios requests for proper .toOthers() exclusion
+if (window.Echo) {
+    window.axios.interceptors.request.use(config => {
+        if (window.Echo.socketId()) {
+            config.headers['X-Socket-ID'] = window.Echo.socketId();
+        }
+        return config;
+    });
+}
